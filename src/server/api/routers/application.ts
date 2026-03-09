@@ -1608,16 +1608,14 @@ export const applicationRouter = createTRPCRouter({
       };
     }),
 
-  // Admin: Update user name for an application
+  // Admin/Floor Lead: Update user name for an application
   updateApplicationUserName: protectedProcedure
     .input(z.object({
       applicationId: z.string(),
       name: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
-      checkAdminAccess(ctx.session.user.role);
-
-      // Get the application to find the user
+      // Get the application to find the user and eventId for auth
       const application = await ctx.db.application.findUnique({
         where: { id: input.applicationId },
         include: { user: true },
@@ -1629,6 +1627,10 @@ export const applicationRouter = createTRPCRouter({
           message: "Application not found",
         });
       }
+
+      await assertAdminOrEventFloorOwner(
+        ctx.db, ctx.session.user.id, ctx.session.user.role, application.eventId
+      );
 
       if (application.user) {
         // Update the user's name
@@ -1665,14 +1667,27 @@ export const applicationRouter = createTRPCRouter({
       });
     }),
 
-  // Admin: Update application affiliation
+  // Admin/Floor Lead: Update application affiliation
   updateApplicationAffiliation: protectedProcedure
     .input(z.object({
       applicationId: z.string(),
       affiliation: z.string().nullable(),
     }))
     .mutation(async ({ ctx, input }) => {
-      checkAdminAccess(ctx.session.user.role);
+      // Fetch eventId for auth check
+      const appForAuth = await ctx.db.application.findUnique({
+        where: { id: input.applicationId },
+        select: { eventId: true },
+      });
+      if (!appForAuth) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Application not found",
+        });
+      }
+      await assertAdminOrEventFloorOwner(
+        ctx.db, ctx.session.user.id, ctx.session.user.role, appForAuth.eventId
+      );
 
       // Update the application's affiliation field directly
       const application = await ctx.db.application.update({
@@ -1701,14 +1716,133 @@ export const applicationRouter = createTRPCRouter({
         },
       });
 
+      return application;
+    }),
+
+  // Admin/Floor Lead: Update user profile fields for an application
+  updateApplicationUserProfile: protectedProcedure
+    .input(z.object({
+      applicationId: z.string(),
+      email: z.string().email().optional(),
+      firstName: z.string().min(1).optional(),
+      surname: z.string().optional().nullable(),
+      bio: z.string().max(1000).optional().nullable(),
+      jobTitle: z.string().max(100).optional().nullable(),
+      company: z.string().max(100).optional().nullable(),
+      website: z.string().url().optional().nullable().or(z.literal("")),
+      linkedinUrl: z.string().url().optional().nullable().or(z.literal("")),
+      twitterUrl: z.string().url().optional().nullable().or(z.literal("")),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const application = await ctx.db.application.findUnique({
+        where: { id: input.applicationId },
+        include: { user: true },
+      });
+
       if (!application) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Application not found",
-        });
+        throw new TRPCError({ code: "NOT_FOUND", message: "Application not found" });
       }
 
-      return application;
+      await assertAdminOrEventFloorOwner(
+        ctx.db, ctx.session.user.id, ctx.session.user.role, application.eventId
+      );
+
+      if (!application.user) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Application has no linked user" });
+      }
+
+      // Email uniqueness check
+      if (input.email && input.email.toLowerCase() !== application.user.email?.toLowerCase()) {
+        const existingUser = await ctx.db.user.findFirst({
+          where: {
+            email: { equals: input.email.toLowerCase(), mode: "insensitive" },
+            id: { not: application.user.id },
+          },
+        });
+        if (existingUser) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "A user with this email already exists",
+          });
+        }
+      }
+
+      // Build User update data
+      const userUpdateData: Record<string, string> = {};
+      if (input.email !== undefined) {
+        userUpdateData.email = input.email.toLowerCase();
+      }
+      if (input.firstName !== undefined) {
+        userUpdateData.firstName = input.firstName;
+        const sn = input.surname !== undefined ? input.surname : (application.user.surname ?? "");
+        userUpdateData.name = sn ? `${input.firstName} ${sn}` : input.firstName;
+      }
+      if (input.surname !== undefined) {
+        userUpdateData.surname = input.surname ?? "";
+        const fn = input.firstName ?? application.user.firstName ?? "";
+        userUpdateData.name = input.surname ? `${fn} ${input.surname}` : fn;
+      }
+
+      // Build UserProfile update data
+      const profileFields: Record<string, string | null> = {};
+      if (input.bio !== undefined) profileFields.bio = input.bio ?? null;
+      if (input.jobTitle !== undefined) profileFields.jobTitle = input.jobTitle ?? null;
+      if (input.company !== undefined) profileFields.company = input.company ?? null;
+      if (input.website !== undefined) profileFields.website = input.website ?? null;
+      if (input.linkedinUrl !== undefined) profileFields.linkedinUrl = input.linkedinUrl ?? null;
+      if (input.twitterUrl !== undefined) profileFields.twitterUrl = input.twitterUrl ?? null;
+
+      // Execute updates in a transaction
+      await ctx.db.$transaction(async (tx) => {
+        if (Object.keys(userUpdateData).length > 0) {
+          await tx.user.update({
+            where: { id: application.user!.id },
+            data: userUpdateData,
+          });
+        }
+
+        // Keep Application.email in sync
+        if (input.email !== undefined) {
+          await tx.application.update({
+            where: { id: input.applicationId },
+            data: { email: input.email.toLowerCase() },
+          });
+        }
+
+        // Upsert UserProfile
+        if (Object.keys(profileFields).length > 0) {
+          await tx.userProfile.upsert({
+            where: { userId: application.user!.id },
+            update: profileFields,
+            create: { userId: application.user!.id, ...profileFields },
+          });
+        }
+      });
+
+      return await ctx.db.application.findUnique({
+        where: { id: input.applicationId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              surname: true,
+              name: true,
+              email: true,
+              adminNotes: true,
+              adminWorkExperience: true,
+              adminLabels: true,
+              adminUpdatedAt: true,
+              profile: true,
+            },
+          },
+          responses: {
+            include: {
+              question: true,
+            },
+          },
+        },
+      });
     }),
 
   // Bulk update application responses

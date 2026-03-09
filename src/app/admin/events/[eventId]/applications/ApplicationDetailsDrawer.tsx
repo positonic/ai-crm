@@ -16,6 +16,9 @@ import {
   Avatar,
   Divider,
   Alert,
+  TextInput,
+  Textarea,
+  ActionIcon,
 } from "@mantine/core";
 import {
   IconCheck,
@@ -28,6 +31,7 @@ import {
   IconCalendar,
   IconEye,
   IconUsers,
+  IconPencil,
 } from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import { notifications } from "@mantine/notifications";
@@ -77,12 +81,91 @@ function getStatusIcon(status: string) {
   }
 }
 
+function EditableField({
+  label,
+  value,
+  fieldKey,
+  editingField,
+  editValue,
+  onStartEdit,
+  onCancelEdit,
+  onSaveEdit,
+  onChangeEdit,
+  isSaving,
+  multiline,
+  hint,
+}: {
+  label: string;
+  value: string | null | undefined;
+  fieldKey: string;
+  editingField: string | null;
+  editValue: string;
+  onStartEdit: (key: string, currentValue: string) => void;
+  onCancelEdit: () => void;
+  onSaveEdit: (key: string) => void;
+  onChangeEdit: (value: string) => void;
+  isSaving: boolean;
+  multiline?: boolean;
+  hint?: string;
+}) {
+  const isEditing = editingField === fieldKey;
+
+  if (isEditing) {
+    return (
+      <div>
+        <Text fw={500} mb={4}>{label}:</Text>
+        {hint && <Text size="xs" c="orange" mb={4}>{hint}</Text>}
+        <Group gap="xs" align="flex-end">
+          <div style={{ flex: 1 }}>
+            {multiline ? (
+              <Textarea
+                value={editValue}
+                onChange={(e) => onChangeEdit(e.currentTarget.value)}
+                size="sm"
+                autosize
+                minRows={2}
+                maxRows={5}
+              />
+            ) : (
+              <TextInput
+                value={editValue}
+                onChange={(e) => onChangeEdit(e.currentTarget.value)}
+                size="sm"
+              />
+            )}
+          </div>
+          <ActionIcon color="green" variant="light" size="sm" onClick={() => onSaveEdit(fieldKey)} loading={isSaving}>
+            <IconCheck size={14} />
+          </ActionIcon>
+          <ActionIcon color="gray" variant="light" size="sm" onClick={onCancelEdit}>
+            <IconX size={14} />
+          </ActionIcon>
+        </Group>
+      </div>
+    );
+  }
+
+  return (
+    <Group justify="space-between">
+      <Text fw={500}>{label}:</Text>
+      <Group gap={4}>
+        <Text size="sm">{value ?? "Not set"}</Text>
+        <ActionIcon variant="subtle" size="xs" onClick={() => onStartEdit(fieldKey, value ?? "")}>
+          <IconPencil size={14} />
+        </ActionIcon>
+      </Group>
+    </Group>
+  );
+}
+
 export default function ApplicationDetailsDrawer({
   applicationId,
   opened,
   onClose,
 }: ApplicationDetailsDrawerProps) {
   const [activeTab, setActiveTab] = useState<string>("overview");
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
 
   // Fetch application details
   const { data: application, isLoading, error, refetch } = api.application.getApplicationById.useQuery(
@@ -109,9 +192,94 @@ export default function ApplicationDetailsDrawer({
     },
   });
 
+  // Profile update mutation
+  const updateProfile = api.application.updateApplicationUserProfile.useMutation({
+    onSuccess: () => {
+      notifications.show({
+        title: "Updated",
+        message: "Profile updated successfully",
+        color: "green",
+      });
+      setEditingField(null);
+      setEditValue("");
+      void refetch();
+    },
+    onError: (err) => {
+      notifications.show({
+        title: "Error",
+        message: err.message,
+        color: "red",
+      });
+    },
+  });
+
   const handleStatusUpdate = (status: "ACCEPTED" | "REJECTED") => {
     if (!applicationId) return;
     updateApplicationStatus.mutate({ applicationId, status });
+  };
+
+  const handleStartEdit = (key: string, currentValue: string) => {
+    setEditingField(key);
+    setEditValue(currentValue);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingField(null);
+    setEditValue("");
+  };
+
+  const handleSaveField = (fieldKey: string) => {
+    if (!applicationId) return;
+    const val = editValue.trim();
+
+    // Email validation
+    if (fieldKey === "email") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(val)) {
+        notifications.show({
+          title: "Invalid email",
+          message: "Please enter a valid email address",
+          color: "red",
+        });
+        return;
+      }
+    }
+
+    // Name validation
+    if (fieldKey === "firstName" && !val) {
+      notifications.show({
+        title: "Invalid name",
+        message: "First name cannot be empty",
+        color: "red",
+      });
+      return;
+    }
+
+    const input: Record<string, string | null> = { applicationId };
+
+    switch (fieldKey) {
+      case "email": input.email = val; break;
+      case "firstName": input.firstName = val; break;
+      case "surname": input.surname = val || null; break;
+      case "bio": input.bio = val || null; break;
+      case "jobTitle": input.jobTitle = val || null; break;
+      case "company": input.company = val || null; break;
+      case "website": input.website = val || null; break;
+      case "linkedinUrl": input.linkedinUrl = val || null; break;
+      case "twitterUrl": input.twitterUrl = val || null; break;
+    }
+
+    updateProfile.mutate(input as Parameters<typeof updateProfile.mutate>[0]);
+  };
+
+  const editableFieldProps = {
+    editingField,
+    editValue,
+    onStartEdit: handleStartEdit,
+    onCancelEdit: handleCancelEdit,
+    onSaveEdit: handleSaveField,
+    onChangeEdit: setEditValue,
+    isSaving: updateProfile.isPending,
   };
 
   if (!opened) {
@@ -154,15 +322,68 @@ export default function ApplicationDetailsDrawer({
                   <IconUser size="1.5rem" />
                 </Avatar>
                 <div>
-                  <Title order={3} mb="xs">
-                    {getDisplayName(application.user, "Unknown")}
-                  </Title>
-                  <Group gap="xs" mb="xs">
-                    <IconMail size={16} />
-                    <Text size="sm" c="dimmed">
-                      {application.email}
-                    </Text>
-                  </Group>
+                  {editingField === "firstName" ? (
+                    <div style={{ marginBottom: 8 }}>
+                      <Text fw={500} mb={4}>Name:</Text>
+                      <Group gap="xs" align="flex-end">
+                        <TextInput
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.currentTarget.value)}
+                          size="sm"
+                          placeholder="First name"
+                          style={{ flex: 1 }}
+                        />
+                        <ActionIcon color="green" variant="light" size="sm" onClick={() => handleSaveField("firstName")} loading={updateProfile.isPending}>
+                          <IconCheck size={14} />
+                        </ActionIcon>
+                        <ActionIcon color="gray" variant="light" size="sm" onClick={handleCancelEdit}>
+                          <IconX size={14} />
+                        </ActionIcon>
+                      </Group>
+                    </div>
+                  ) : (
+                    <Group gap={4} mb="xs">
+                      <Title order={3}>
+                        {getDisplayName(application.user, "Unknown")}
+                      </Title>
+                      <ActionIcon variant="subtle" size="xs" onClick={() => handleStartEdit("firstName", application.user?.firstName ?? application.user?.name ?? "")}>
+                        <IconPencil size={14} />
+                      </ActionIcon>
+                    </Group>
+                  )}
+
+                  {editingField === "email" ? (
+                    <div style={{ marginBottom: 8 }}>
+                      <Text fw={500} mb={4}>Email:</Text>
+                      <Text size="xs" c="orange" mb={4}>This changes the user&apos;s login email</Text>
+                      <Group gap="xs" align="flex-end">
+                        <TextInput
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.currentTarget.value)}
+                          size="sm"
+                          placeholder="email@example.com"
+                          style={{ flex: 1 }}
+                        />
+                        <ActionIcon color="green" variant="light" size="sm" onClick={() => handleSaveField("email")} loading={updateProfile.isPending}>
+                          <IconCheck size={14} />
+                        </ActionIcon>
+                        <ActionIcon color="gray" variant="light" size="sm" onClick={handleCancelEdit}>
+                          <IconX size={14} />
+                        </ActionIcon>
+                      </Group>
+                    </div>
+                  ) : (
+                    <Group gap={4} mb="xs">
+                      <IconMail size={16} />
+                      <Text size="sm" c="dimmed">
+                        {application.email}
+                      </Text>
+                      <ActionIcon variant="subtle" size="xs" onClick={() => handleStartEdit("email", application.email ?? "")}>
+                        <IconPencil size={14} />
+                      </ActionIcon>
+                    </Group>
+                  )}
+
                   <Badge
                     color={getStatusColor(application.status)}
                     variant="light"
@@ -253,43 +474,66 @@ export default function ApplicationDetailsDrawer({
                   </Stack>
                 </Card>
 
-                {application.user?.profile && (
-                  <Card withBorder p="md">
-                    <Title order={4} mb="md">Profile Information</Title>
-                    <Stack gap="sm">
-                      {application.user.profile.bio && (
-                        <div>
-                          <Text fw={500} mb="xs">Bio:</Text>
-                          <Text size="sm">{application.user.profile.bio}</Text>
-                        </div>
-                      )}
-                      {application.user.profile.company && (
-                        <Group justify="space-between">
-                          <Text fw={500}>Company:</Text>
-                          <Text>{application.user.profile.company}</Text>
+                <Card withBorder p="md">
+                  <Title order={4} mb="md">Profile Information</Title>
+                  <Stack gap="sm">
+                    <EditableField
+                      label="Bio"
+                      value={application.user?.profile?.bio}
+                      fieldKey="bio"
+                      multiline
+                      {...editableFieldProps}
+                    />
+                    <EditableField
+                      label="Job Title"
+                      value={application.user?.profile?.jobTitle}
+                      fieldKey="jobTitle"
+                      {...editableFieldProps}
+                    />
+                    <EditableField
+                      label="Company"
+                      value={application.user?.profile?.company}
+                      fieldKey="company"
+                      {...editableFieldProps}
+                    />
+                    <EditableField
+                      label="Website"
+                      value={application.user?.profile?.website}
+                      fieldKey="website"
+                      {...editableFieldProps}
+                    />
+                    <EditableField
+                      label="LinkedIn"
+                      value={application.user?.profile?.linkedinUrl}
+                      fieldKey="linkedinUrl"
+                      {...editableFieldProps}
+                    />
+                    <EditableField
+                      label="Twitter/X"
+                      value={application.user?.profile?.twitterUrl}
+                      fieldKey="twitterUrl"
+                      {...editableFieldProps}
+                    />
+                    {application.user?.profile?.location && (
+                      <Group justify="space-between">
+                        <Text fw={500}>Location:</Text>
+                        <Text size="sm">{application.user.profile.location}</Text>
+                      </Group>
+                    )}
+                    {application.user?.profile?.skills && application.user.profile.skills.length > 0 && (
+                      <div>
+                        <Text fw={500} mb="xs">Skills:</Text>
+                        <Group gap="xs">
+                          {application.user.profile.skills.map((skill, index) => (
+                            <Badge key={index} variant="light" size="sm">
+                              {skill}
+                            </Badge>
+                          ))}
                         </Group>
-                      )}
-                      {application.user.profile.location && (
-                        <Group justify="space-between">
-                          <Text fw={500}>Location:</Text>
-                          <Text>{application.user.profile.location}</Text>
-                        </Group>
-                      )}
-                      {application.user.profile.skills && application.user.profile.skills.length > 0 && (
-                        <div>
-                          <Text fw={500} mb="xs">Skills:</Text>
-                          <Group gap="xs">
-                            {application.user.profile.skills.map((skill, index) => (
-                              <Badge key={index} variant="light" size="sm">
-                                {skill}
-                              </Badge>
-                            ))}
-                          </Group>
-                        </div>
-                      )}
-                    </Stack>
-                  </Card>
-                )}
+                      </div>
+                    )}
+                  </Stack>
+                </Card>
               </Stack>
             </Tabs.Panel>
 
