@@ -36,6 +36,7 @@ import {
   IconDownload,
   IconSend,
   IconPresentation,
+  IconSearch,
 } from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import ApplicationDetailsDrawer from "~/app/admin/events/[eventId]/applications/ApplicationDetailsDrawer";
@@ -58,6 +59,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
   const [mainTab, setMainTab] = useState<string>("applications");
   const [appTab, setAppTab] = useState<string>("all");
   const [floorFilter, setFloorFilter] = useState<string | null>(null);
+  const [appSearch, setAppSearch] = useState("");
 
   // URL hash-based tab linking
   const validMainTabs = ["applications", "invitations", "sessions"];
@@ -287,12 +289,23 @@ export default function SpeakerManagementClient({ eventId }: Props) {
     return apps.filter(app => app.venues?.some(av => av.venue.id === floorFilter));
   };
 
+  const applySearchFilter = (apps: typeof allApplications) => {
+    if (!appSearch.trim()) return apps;
+    const q = appSearch.trim().toLowerCase();
+    return apps.filter(app =>
+      (app.user?.name?.toLowerCase().includes(q) ?? false) ||
+      app.email.toLowerCase().includes(q)
+    );
+  };
+
+  const applyFilters = (apps: typeof allApplications) => applySearchFilter(applyFloorFilter(apps));
+
   const getCurrentTabApplications = () => {
     switch (appTab) {
-      case "accepted": return applyFloorFilter(acceptedApplications);
-      case "rejected": return applyFloorFilter(rejectedApplications);
-      case "invited": return applyFloorFilter(invitedApplications);
-      default: return applyFloorFilter(allApplications);
+      case "accepted": return applyFilters(acceptedApplications);
+      case "rejected": return applyFilters(rejectedApplications);
+      case "invited": return applyFilters(invitedApplications);
+      default: return applyFilters(allApplications);
     }
   };
   const currentApplications = getCurrentTabApplications();
@@ -394,40 +407,49 @@ export default function SpeakerManagementClient({ eventId }: Props) {
             </Card>
           )}
 
-          {availableFloors.length > 1 && (
-            <Card withBorder mb="md" p="md">
-              <Select
-                label="Filter by floor"
-                placeholder="All floors"
-                data={availableFloors}
-                value={floorFilter}
-                onChange={setFloorFilter}
-                clearable
-                w={250}
+          <Card withBorder mb="md" p="md">
+            <Group align="flex-end" gap="md">
+              <TextInput
+                placeholder="Search by name or email..."
+                value={appSearch}
+                onChange={(e) => setAppSearch(e.currentTarget.value)}
+                leftSection={<IconSearch size={16} />}
+                style={{ flex: 1 }}
               />
-            </Card>
-          )}
+              {availableFloors.length > 1 && (
+                <Select
+                  label="Filter by floor"
+                  placeholder="All floors"
+                  data={availableFloors}
+                  value={floorFilter}
+                  onChange={setFloorFilter}
+                  clearable
+                  w={250}
+                />
+              )}
+            </Group>
+          </Card>
 
           <Card withBorder>
             <Tabs value={appTab} onChange={(v) => setAppTab(v ?? "all")}>
               <Tabs.List grow>
                 <Tabs.Tab value="all">
-                  All {applyFloorFilter(allApplications).length > 0 && <Badge size="sm" variant="light" ml="xs">{applyFloorFilter(allApplications).length}</Badge>}
+                  All {applyFilters(allApplications).length > 0 && <Badge size="sm" variant="light" ml="xs">{applyFilters(allApplications).length}</Badge>}
                 </Tabs.Tab>
                 <Tabs.Tab value="accepted">
-                  Accepted {applyFloorFilter(acceptedApplications).length > 0 && <Badge size="sm" variant="light" color="green" ml="xs">{applyFloorFilter(acceptedApplications).length}</Badge>}
+                  Accepted {applyFilters(acceptedApplications).length > 0 && <Badge size="sm" variant="light" color="green" ml="xs">{applyFilters(acceptedApplications).length}</Badge>}
                 </Tabs.Tab>
                 <Tabs.Tab value="rejected">
-                  Rejected {applyFloorFilter(rejectedApplications).length > 0 && <Badge size="sm" variant="light" color="red" ml="xs">{applyFloorFilter(rejectedApplications).length}</Badge>}
+                  Rejected {applyFilters(rejectedApplications).length > 0 && <Badge size="sm" variant="light" color="red" ml="xs">{applyFilters(rejectedApplications).length}</Badge>}
                 </Tabs.Tab>
                 <Tabs.Tab value="invited">
-                  Invited {applyFloorFilter(invitedApplications).length > 0 && <Badge size="sm" variant="light" color="violet" ml="xs">{applyFloorFilter(invitedApplications).length}</Badge>}
+                  Invited {applyFilters(invitedApplications).length > 0 && <Badge size="sm" variant="light" color="violet" ml="xs">{applyFilters(invitedApplications).length}</Badge>}
                 </Tabs.Tab>
               </Tabs.List>
 
               <Tabs.Panel value="all" mt="md">
                 <SpeakerApplicationsTable
-                  applications={applyFloorFilter(allApplications)}
+                  applications={applyFilters(allApplications)}
                   selectedApplications={selectedApplications}
                   invitedEmails={invitedEmails}
                   onSelectAll={() => {
@@ -447,7 +469,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
               </Tabs.Panel>
               <Tabs.Panel value="accepted" mt="md">
                 <SpeakerApplicationsTable
-                  applications={applyFloorFilter(acceptedApplications)}
+                  applications={applyFilters(acceptedApplications)}
                   selectedApplications={selectedApplications}
                   invitedEmails={invitedEmails}
                   onSelectAll={() => {
@@ -467,7 +489,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
               </Tabs.Panel>
               <Tabs.Panel value="rejected" mt="md">
                 <SpeakerApplicationsTable
-                  applications={applyFloorFilter(rejectedApplications)}
+                  applications={applyFilters(rejectedApplications)}
                   selectedApplications={selectedApplications}
                   invitedEmails={invitedEmails}
                   onSelectAll={() => {
@@ -487,7 +509,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
               </Tabs.Panel>
               <Tabs.Panel value="invited" mt="md">
                 <SpeakerApplicationsTable
-                  applications={applyFloorFilter(invitedApplications)}
+                  applications={applyFilters(invitedApplications)}
                   selectedApplications={selectedApplications}
                   invitedEmails={invitedEmails}
                   onSelectAll={() => {
