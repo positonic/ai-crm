@@ -1,26 +1,34 @@
 {
-    "hooks": {
-      "SessionStart": [
-        {
-          "matcher": "",
-          "hooks": [
-            {
-              "type": "command",
-              "command": "bunx tsx scripts/sentry-to-beads.ts --since 7d --limit 10 2>/dev/null || true"
-            }
-          ]
-        }
-      ],
-      "Stop": [
-        {
-          "matcher": "",
-          "hooks": [
-            {
-              "type": "command",
-              "command": "afplay /System/Library/Sounds/Funk.aiff"
-            }
-          ]
-        }
-      ]
-    }
+  "permissions": {
+    "additionalDirectories": [
+      "/tmp"
+    ],
+    "allow": [
+      "Read(//Users/james/code/impactful-events/**)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bunx tsx scripts/sentry-to-beads.ts --since 7d --limit 10 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "afplay /System/Library/Sounds/Funk.aiff"
+          }
+        ]
+      }
+    ]
   }
+}

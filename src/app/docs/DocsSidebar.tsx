@@ -15,6 +15,7 @@ import {
   IconMail,
   IconSettings,
   IconUsers,
+  IconCertificate,
 } from "@tabler/icons-react";
 
 interface SidebarItemProps {
@@ -123,6 +124,12 @@ export default function DocsSidebar() {
             label="Invitations"
             href="/docs/features/invitations"
             active={isActive("/docs/features/invitations")}
+          />
+          <SidebarItem
+            icon={<IconCertificate size={18} />}
+            label="Activity Certs"
+            href="/docs/features/activity-certs"
+            active={isActive("/docs/features/activity-certs")}
           />
         </div>
 

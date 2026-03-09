@@ -19,6 +19,7 @@ const labels: Record<string, string> = {
   invitations: "Invitations",
   "admin-panel": "Admin Panel",
   "floor-owners": "Managing Floor Leads",
+  "activity-certs": "Activity Certs",
 };
 
 export default function DocsBreadcrumb() {
