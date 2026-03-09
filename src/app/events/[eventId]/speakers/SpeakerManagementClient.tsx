@@ -916,7 +916,16 @@ function SpeakerApplicationsTable({
               </Table.Td>
               <Table.Td>
                 <Group gap={6} wrap="nowrap">
-                  <Text size="sm" fw={500}>{application.user?.name ?? "Unknown"}</Text>
+                  <Text
+                    size="sm"
+                    fw={500}
+                    onClick={() => onViewApplication(application.id)}
+                    style={{ cursor: "pointer" }}
+                    td="underline"
+                    c="blue"
+                  >
+                    {application.user?.name ?? "Unknown"}
+                  </Text>
                   {(application.invitationId ?? invitedEmails.has(application.email.toLowerCase())) && (
                     <Badge size="xs" variant="light" color="violet" leftSection={<IconMail size={10} />}>
                       Invited
