@@ -9,10 +9,12 @@
       "Read(//Users/james/code/alpha-chrome-plugin/**)",
       "Read(//Users/james/code/meeting-minutes/**)",
       "Read(//Users/james/code/**)",
-      "Bash(bash .github/issues/create-all.sh)"
+      "Bash(bash .github/issues/create-all.sh)",
+      "Bash(bunx prisma:*)"
     ],
     "additionalDirectories": [
-      "/tmp"
+      "/tmp",
+      "/Users/james/code/impactful-events/.next"
     ]
   },
   "hooks": {
