@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Read(//Users/james/code/impactful-events/**)",
-      "WebFetch(domain:www.dds.xyz)"
+      "WebFetch(domain:www.dds.xyz)",
+      "Read(//Users/james/code/hypgen/**)",
+      "Read(//Users/james/code/father-governance/**)",
+      "Read(//Users/james/code/dds/**)"
     ],
     "additionalDirectories": [
       "/tmp"
