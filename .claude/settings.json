@@ -10,11 +10,19 @@
       "Read(//Users/james/code/meeting-minutes/**)",
       "Read(//Users/james/code/**)",
       "Bash(bash .github/issues/create-all.sh)",
-      "Bash(bunx prisma:*)"
+      "Bash(bunx prisma:*)",
+      "Read(//Users/james/.claude/**)",
+      "Bash(npm list:*)",
+      "Bash(exponential actions:*)",
+      "Bash(ln -s ../../code/ai-tooling/claude-home/.claude/skills/exponential ~/.claude/skills/exponential)"
     ],
     "additionalDirectories": [
       "/tmp",
-      "/Users/james/code/impactful-events/.next"
+      "/Users/james/code/impactful-events/.next",
+      "/Users/james/code/impactful-events/src/app/admin/events/[eventId]",
+      "/Users/james/code/impactful-events/src/app/docs/features",
+      "/Users/james/code/ai-tooling/claude-home/.claude/skills",
+      "/Users/james/code/impactful-events/.claude/commands"
     ]
   },
   "hooks": {
