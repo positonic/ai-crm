@@ -5,7 +5,11 @@
       "WebFetch(domain:www.dds.xyz)",
       "Read(//Users/james/code/hypgen/**)",
       "Read(//Users/james/code/father-governance/**)",
-      "Read(//Users/james/code/dds/**)"
+      "Read(//Users/james/code/dds/**)",
+      "Read(//Users/james/code/alpha-chrome-plugin/**)",
+      "Read(//Users/james/code/meeting-minutes/**)",
+      "Read(//Users/james/code/**)",
+      "Bash(bash .github/issues/create-all.sh)"
     ],
     "additionalDirectories": [
       "/tmp"

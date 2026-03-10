@@ -1,3 +1,7 @@
+> **Note**: Architecture has changed to multi-repo. See GitHub issue #26 for current issue breakdown.
+> **Live Transcription**: See GitHub issue #41 for the Frontier Tower SF deployment plan.
+> Local specs retained for offline reference but GitHub issues are the source of truth.
+
 # Conference Intelligence System
 
 ## Problem
@@ -17,6 +21,8 @@ Two collection channels feed into one analysis:
 ### Automated (transcription)
 
 All floors are recorded and transcribed via Whisper. GPT-4o extracts topic clusters from transcripts, capturing what people are actually discussing across every track simultaneously.
+
+> **Implementation (Frontier Tower SF)**: Tiered approach — Tier 1 rooms use Meetily (local Whisper `medium.en` on Apple Silicon Macs) with live sync to exponential database. Tier 2 rooms use iPhone Voice Memos → FFmpeg → OpenAI Whisper API batch transcription. See #41 and `scripts/meetily-sync.ts`, `scripts/batch-transcribe.ts`.
 
 ### Intentional (deliberation)
 
@@ -40,8 +46,9 @@ Results are published as verifiable, decentralized DDS records on AT Protocol an
 
 ### During the event
 
-1. Floor leads / AV upload audio recordings per floor or session
-2. Whisper transcribes, GPT-4o extracts topics in near-real-time
+1. Tier 1 rooms: Macs run Meetily with local Whisper, sync transcripts to exponential every 30s
+   Tier 2 rooms: Floor leads record on iPhone, batch transcribe post-session via FFmpeg + Whisper API
+2. GPT-4o extracts topics from transcripts in near-real-time (Tier 1) or post-session (Tier 2)
 3. Attendees submit priorities, flag blockers, vote on what matters
 4. Topic clusters sidebar shows what is being discussed across floors
 5. Everything updates live

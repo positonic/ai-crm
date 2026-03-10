@@ -1,3 +1,8 @@
+> **Note**: Architecture has changed to multi-repo. See GitHub issue #26 for current issue breakdown.
+> Local specs retained for offline reference but GitHub issues are the source of truth.
+> Key change: AI services (transcription, clustering, analysis) move to `conference-intel-worker` repo.
+> DDS publication moves to `dds-publisher` repo. Browser-side Whisper to `whisper-browser` repo.
+
 # Conference Intelligence System -- Technical Specification
 
 ## Overview
