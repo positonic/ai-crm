@@ -218,6 +218,15 @@ export default function ActivityCertsPage() {
         </li>
       </ol>
 
+      <div className="docs-callout">
+        <strong>Tip:</strong> Once activity certs are published, they appear in
+        the live{" "}
+        <Link href="/docs/features/hypersphere" className="docs-link">
+          Hypersphere feed
+        </Link>{" "}
+        alongside data from the rest of the ecosystem.
+      </div>
+
       <h2 id="data-stored" className="docs-heading-h2">
         Data Stored
       </h2>

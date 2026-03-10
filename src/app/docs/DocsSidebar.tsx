@@ -16,6 +16,7 @@ import {
   IconSettings,
   IconUsers,
   IconCertificate,
+  IconWorldSearch,
 } from "@tabler/icons-react";
 
 interface SidebarItemProps {
@@ -130,6 +131,12 @@ export default function DocsSidebar() {
             label="Activity Certs"
             href="/docs/features/activity-certs"
             active={isActive("/docs/features/activity-certs")}
+          />
+          <SidebarItem
+            icon={<IconWorldSearch size={18} />}
+            label="Hypersphere"
+            href="/docs/features/hypersphere"
+            active={isActive("/docs/features/hypersphere")}
           />
         </div>
 

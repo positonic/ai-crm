@@ -89,6 +89,31 @@ export default function FeaturesOverviewPage() {
         invitation system handles the onboarding process seamlessly.
       </p>
 
+      <h2 id="activity-certs" className="docs-heading-h2">
+        Activity Certs
+      </h2>
+      <p className="docs-text">
+        <Link href="/docs/features/activity-certs" className="docs-link">
+          Activity Certs
+        </Link>{" "}
+        let organisers publish verifiable impact records for their events on the
+        decentralised AT Protocol network using the Hypercerts schema.
+      </p>
+
+      <h2 id="hypersphere" className="docs-heading-h2">
+        Hypersphere Intelligence
+      </h2>
+      <p className="docs-text">
+        The{" "}
+        <Link href="/docs/features/hypersphere" className="docs-link">
+          Hypersphere integration
+        </Link>{" "}
+        surfaces live network data from the Hypersphere ecosystem. View network
+        stats and feeds on the Impact page, see enriched profile data for users
+        with AT Protocol accounts, and ask the AI assistant about real-time
+        network activity.
+      </p>
+
       <hr className="docs-divider" />
 
       <h2 id="for-organizers" className="docs-heading-h2">
