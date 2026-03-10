@@ -335,6 +335,7 @@ export function AIChatDrawer({
         getConsoleLogs={getConsoleLogs}
         pathname={pathname}
         eventId={eventId}
+        profileUrl={session?.user?.id ? `https://platform.fundingthecommons.io/profiles/${session.user.id}` : undefined}
         onTemporaryClose={onTemporaryClose}
         onTemporaryReopen={onTemporaryReopen}
       />

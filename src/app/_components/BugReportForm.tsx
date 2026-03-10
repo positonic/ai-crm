@@ -32,6 +32,7 @@ interface BugReportFormProps {
   getConsoleLogs: () => ConsoleEntry[];
   pathname: string;
   eventId?: string;
+  profileUrl?: string;
   onTemporaryClose: () => void;
   onTemporaryReopen: () => void;
 }
@@ -44,6 +45,7 @@ export function BugReportForm({
   eventId,
   onTemporaryClose,
   onTemporaryReopen,
+  profileUrl,
 }: BugReportFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -118,6 +120,7 @@ export function BugReportForm({
         screenSize: `${String(window.innerWidth)}x${String(window.innerHeight)}`,
         eventId,
         timestamp: new Date().toISOString(),
+        profileUrl,
       },
     });
   };
