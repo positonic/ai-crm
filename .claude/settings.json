@@ -1,10 +1,11 @@
 {
   "permissions": {
+    "allow": [
+      "Read(//Users/james/code/impactful-events/**)",
+      "WebFetch(domain:www.dds.xyz)"
+    ],
     "additionalDirectories": [
       "/tmp"
-    ],
-    "allow": [
-      "Read(//Users/james/code/impactful-events/**)"
     ]
   },
   "hooks": {

@@ -21,6 +21,7 @@ import {
 import { IconSearch, IconEye, IconCheck, IconUser } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { api } from "~/trpc/react";
 import { getDisplayName } from "~/utils/userDisplay";
 import TimetableView from "./TimetableView";
@@ -64,30 +65,62 @@ export type ScheduleSession = {
 
 interface SchedulePageClientProps {
   eventId: string;
-  initialMySchedule?: boolean;
 }
 
-export default function SchedulePageClient({ eventId, initialMySchedule = false }: SchedulePageClientProps) {
-  const [viewMode, setViewMode] = useState<"simple" | "expanded" | "grid" | "by-floor">("simple");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeVenueId, setActiveVenueId] = useState<string | null>(null);
-  const [activeSessionTypes, setActiveSessionTypes] = useState<string[]>([]);
-  const [activeTracks, setActiveTracks] = useState<string[]>([]);
-  const [showMySessions, setShowMySessions] = useState(initialMySchedule);
+export default function SchedulePageClient({ eventId }: SchedulePageClientProps) {
+  const searchParams = useSearchParams();
+
+  const [viewMode, setViewMode] = useState<"simple" | "expanded" | "grid" | "by-floor">(() => {
+    const view = searchParams.get("view");
+    if (view === "expanded" || view === "grid" || view === "by-floor") return view;
+    return "simple";
+  });
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get("q") ?? "");
+  const [activeVenueId, setActiveVenueId] = useState<string | null>(() => searchParams.get("venue"));
+  const [activeSessionTypes, setActiveSessionTypes] = useState<string[]>(() => {
+    const types = searchParams.get("types");
+    return types ? types.split(",") : [];
+  });
+  const [activeTracks, setActiveTracks] = useState<string[]>(() => {
+    const tracks = searchParams.get("tracks");
+    return tracks ? tracks.split(",") : [];
+  });
+  const [showMySessions, setShowMySessions] = useState(() => searchParams.get("my") === "true");
 
   const { data: authSession } = useSession();
   const userId = authSession?.user?.id;
 
-  const handleToggleMySessions = useCallback((checked: boolean) => {
-    setShowMySessions(checked);
+  const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
     const url = new URL(window.location.href);
-    if (checked) {
-      url.searchParams.set("my", "true");
-    } else {
-      url.searchParams.delete("my");
+    for (const [key, value] of Object.entries(updates)) {
+      if (value != null && value !== "") {
+        url.searchParams.set(key, value);
+      } else {
+        url.searchParams.delete(key);
+      }
     }
     window.history.replaceState({}, "", url.toString());
   }, []);
+
+  const handleSetViewMode = useCallback((mode: "simple" | "expanded" | "grid" | "by-floor") => {
+    setViewMode(mode);
+    updateUrlParams({ view: mode === "simple" ? null : mode });
+  }, [updateUrlParams]);
+
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query);
+    updateUrlParams({ q: query || null });
+  }, [updateUrlParams]);
+
+  const handleVenueChange = useCallback((venueId: string | null) => {
+    setActiveVenueId(venueId);
+    updateUrlParams({ venue: venueId });
+  }, [updateUrlParams]);
+
+  const handleToggleMySessions = useCallback((checked: boolean) => {
+    setShowMySessions(checked);
+    updateUrlParams({ my: checked ? "true" : null });
+  }, [updateUrlParams]);
 
   const { data: scheduleData, isLoading: scheduleLoading } =
     api.schedule.getEventSchedule.useQuery({ eventId });
@@ -194,21 +227,25 @@ export default function SchedulePageClient({ eventId, initialMySchedule = false 
     return byTime;
   }, [selectedDay, sessionsByDay]);
 
-  const toggleSessionType = (typeId: string) => {
-    setActiveSessionTypes((prev) =>
-      prev.includes(typeId)
+  const toggleSessionType = useCallback((typeId: string) => {
+    setActiveSessionTypes((prev) => {
+      const next = prev.includes(typeId)
         ? prev.filter((id) => id !== typeId)
-        : [...prev, typeId]
-    );
-  };
+        : [...prev, typeId];
+      updateUrlParams({ types: next.length > 0 ? next.join(",") : null });
+      return next;
+    });
+  }, [updateUrlParams]);
 
-  const toggleTrack = (trackId: string) => {
-    setActiveTracks((prev) =>
-      prev.includes(trackId)
+  const toggleTrack = useCallback((trackId: string) => {
+    setActiveTracks((prev) => {
+      const next = prev.includes(trackId)
         ? prev.filter((id) => id !== trackId)
-        : [...prev, trackId]
-    );
-  };
+        : [...prev, trackId];
+      updateUrlParams({ tracks: next.length > 0 ? next.join(",") : null });
+      return next;
+    });
+  }, [updateUrlParams]);
 
   if (scheduleLoading) {
     return (
@@ -260,25 +297,25 @@ export default function SchedulePageClient({ eventId, initialMySchedule = false 
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
-              onClick={() => setViewMode("simple")}
+              onClick={() => handleSetViewMode("simple")}
               rightSection={viewMode === "simple" ? <IconCheck size={14} /> : null}
             >
               Simple
             </Menu.Item>
             <Menu.Item
-              onClick={() => setViewMode("expanded")}
+              onClick={() => handleSetViewMode("expanded")}
               rightSection={viewMode === "expanded" ? <IconCheck size={14} /> : null}
             >
               Expanded
             </Menu.Item>
             <Menu.Item
-              onClick={() => setViewMode("grid")}
+              onClick={() => handleSetViewMode("grid")}
               rightSection={viewMode === "grid" ? <IconCheck size={14} /> : null}
             >
               Grid
             </Menu.Item>
             <Menu.Item
-              onClick={() => setViewMode("by-floor")}
+              onClick={() => handleSetViewMode("by-floor")}
               rightSection={viewMode === "by-floor" ? <IconCheck size={14} /> : null}
             >
               By Floor
@@ -441,7 +478,7 @@ export default function SchedulePageClient({ eventId, initialMySchedule = false 
                   placeholder="Schedule or people"
                   leftSection={<IconSearch size={16} />}
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.currentTarget.value)}
+                  onChange={(e) => handleSearchChange(e.currentTarget.value)}
                   styles={{
                     input: {
                       backgroundColor: "var(--schedule-search-bg)",
@@ -462,7 +499,7 @@ export default function SchedulePageClient({ eventId, initialMySchedule = false 
                       label: v.name,
                     }))}
                     value={activeVenueId}
-                    onChange={setActiveVenueId}
+                    onChange={handleVenueChange}
                     clearable
                     styles={{
                       input: {
@@ -572,7 +609,7 @@ export default function SchedulePageClient({ eventId, initialMySchedule = false 
                   placeholder="Schedule or people"
                   leftSection={<IconSearch size={16} />}
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.currentTarget.value)}
+                  onChange={(e) => handleSearchChange(e.currentTarget.value)}
                   styles={{
                     input: {
                       backgroundColor: "var(--schedule-search-bg)",
@@ -593,7 +630,7 @@ export default function SchedulePageClient({ eventId, initialMySchedule = false 
                       label: v.name,
                     }))}
                     value={activeVenueId}
-                    onChange={setActiveVenueId}
+                    onChange={handleVenueChange}
                     clearable
                     styles={{
                       input: {
@@ -695,7 +732,7 @@ export default function SchedulePageClient({ eventId, initialMySchedule = false 
                   placeholder="Schedule or people"
                   leftSection={<IconSearch size={16} />}
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.currentTarget.value)}
+                  onChange={(e) => handleSearchChange(e.currentTarget.value)}
                   styles={{
                     input: {
                       backgroundColor: "var(--schedule-search-bg)",

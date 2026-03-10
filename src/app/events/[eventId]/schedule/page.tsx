@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
+import { Center, Loader } from "@mantine/core";
 import SchedulePageClient from "./SchedulePageClient";
 
 export const metadata: Metadata = {
@@ -6,13 +8,11 @@ export const metadata: Metadata = {
   description: "Event schedule",
 };
 
-interface SchedulePageProps {
-  params: Promise<{ eventId: string }>;
-  searchParams: Promise<{ my?: string }>;
-}
-
-export default async function SchedulePage({ params, searchParams }: SchedulePageProps) {
+export default async function SchedulePage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = await params;
-  const { my } = await searchParams;
-  return <SchedulePageClient eventId={eventId} initialMySchedule={my === "true"} />;
+  return (
+    <Suspense fallback={<Center h={400}><Loader size="lg" /></Center>}>
+      <SchedulePageClient eventId={eventId} />
+    </Suspense>
+  );
 }

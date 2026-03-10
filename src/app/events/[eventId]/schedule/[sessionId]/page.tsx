@@ -21,7 +21,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconArrowLeft, IconClock, IconMapPin, IconLink, IconUserPlus, IconEdit, IconFile, IconUpload, IconTrash } from "@tabler/icons-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { api } from "~/trpc/react";
 import { getDisplayName } from "~/utils/userDisplay";
@@ -48,6 +48,7 @@ function formatTime(date: Date): string {
 
 export default function SessionDetailPage() {
   const params = useParams<{ eventId: string; sessionId: string }>();
+  const router = useRouter();
   const { data: userSession } = useSession();
   const utils = api.useUtils();
 
@@ -221,10 +222,10 @@ export default function SessionDetailPage() {
         {/* Back link + edit button */}
         <Group justify="space-between" align="center">
           <Anchor
-            component={Link}
-            href={`/events/${params.eventId}/schedule`}
             size="sm"
             c="dimmed"
+            onClick={() => router.back()}
+            style={{ cursor: "pointer" }}
           >
             <Group gap={4}>
               <IconArrowLeft size={14} />
