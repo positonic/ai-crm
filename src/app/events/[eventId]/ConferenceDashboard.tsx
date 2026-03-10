@@ -38,6 +38,7 @@ import {
   IconVideo,
   IconInfoCircle,
   IconEdit,
+  IconTarget,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import Link from "next/link";
@@ -104,6 +105,48 @@ function getNextStepsGuidance(status: string): string {
     default:
       return "";
   }
+}
+
+function DeliberationCard({ eventId, eventSlug }: { eventId: string; eventSlug: string }) {
+  const { data: deliberation } = api.deliberation.getDeliberation.useQuery(
+    { eventId },
+    { enabled: !!eventId },
+  );
+
+  if (!deliberation) return null;
+
+  return (
+    <Card withBorder>
+      <Stack gap="sm">
+        <Group gap="xs">
+          <IconTarget size={20} color="var(--mantine-color-grape-6)" />
+          <Title order={4}>Community Priorities</Title>
+          <Badge variant="light" color="green" size="sm">
+            {deliberation.status === "COLLECTING" ? "Open" : deliberation.status.toLowerCase()}
+          </Badge>
+        </Group>
+        <Text size="sm" c="dimmed">
+          {deliberation.description ?? "Share what matters most and vote on community priorities."}
+        </Text>
+        <Group gap="xs">
+          <Text size="xs" c="dimmed">
+            {deliberation._count.priorities} priorities &middot; {deliberation.totalVotes} votes
+          </Text>
+        </Group>
+        <Group>
+          <Button
+            component={Link}
+            href={`/events/${eventSlug}/deliberation`}
+            leftSection={<IconTarget size={16} />}
+            variant="light"
+            color="grape"
+          >
+            View Priorities
+          </Button>
+        </Group>
+      </Stack>
+    </Card>
+  );
 }
 
 const talkFormatLabels: Record<string, string> = {
@@ -719,6 +762,9 @@ export default function ConferenceDashboard({
             </Group>
           </Stack>
         </Card>
+
+        {/* Deliberation - show if active deliberation exists */}
+        <DeliberationCard eventId={eventId} eventSlug={eventSlug} />
 
         {/* Submit Speaker Application - show for floor leads who aren't speakers yet */}
         {!hasSpeakerApplication && !isSpeaker && (

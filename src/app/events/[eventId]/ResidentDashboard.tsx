@@ -35,6 +35,7 @@ import {
   IconBrandTwitter,
   IconWorld,
   IconHandStop,
+  IconTarget,
 } from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import Link from "next/link";
@@ -73,6 +74,12 @@ export default function ResidentDashboard({
   const { data: residentProjects } = api.application.getResidentProjects.useQuery({
     eventId,
   });
+
+  // Check for active deliberation
+  const { data: deliberation } = api.deliberation.getDeliberation.useQuery(
+    { eventId },
+    { enabled: !!eventId },
+  );
 
   const userProjects = userProfile?.projects ?? [];
 
@@ -192,6 +199,11 @@ export default function ResidentDashboard({
                 <Tabs.Tab value="asks-offers" leftSection={<IconHandStop size={20} />}>
                   Asks & Offers
                 </Tabs.Tab>
+                {deliberation && (
+                  <Tabs.Tab value="priorities" leftSection={<IconTarget size={20} />}>
+                    Priorities
+                  </Tabs.Tab>
+                )}
               </Tabs.List>
 
               <Tabs.Panel value="participants" pt="lg">
@@ -214,6 +226,37 @@ export default function ResidentDashboard({
                   session={session}
                 />
               </Tabs.Panel>
+
+              {deliberation && (
+                <Tabs.Panel value="priorities" pt="lg">
+                  <Card withBorder p="lg">
+                    <Stack gap="md" align="center">
+                      <IconTarget size={40} color="var(--mantine-color-grape-6)" />
+                      <Title order={4}>{deliberation.title}</Title>
+                      <Text size="sm" c="dimmed" ta="center">
+                        {deliberation.description ?? "Share what matters most and vote on community priorities."}
+                      </Text>
+                      <Group gap="xs">
+                        <Badge variant="light" color="green" size="sm">
+                          {deliberation._count.priorities} priorities
+                        </Badge>
+                        <Badge variant="light" color="blue" size="sm">
+                          {deliberation.totalVotes} votes
+                        </Badge>
+                      </Group>
+                      <Button
+                        component={Link}
+                        href={`/events/${eventId}/deliberation`}
+                        leftSection={<IconTarget size={16} />}
+                        variant="light"
+                        color="grape"
+                      >
+                        Open Deliberation
+                      </Button>
+                    </Stack>
+                  </Card>
+                </Tabs.Panel>
+              )}
             </Tabs>
           </Grid.Col>
         </Grid>

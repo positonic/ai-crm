@@ -1106,6 +1106,7 @@ export const eventRouter = createTRPCRouter({
         featureSponsorManagement: z.boolean().optional(),
         featureScheduleManagement: z.boolean().optional(),
         featureFloorManagement: z.boolean().optional(),
+        featureDeliberation: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -1305,6 +1306,7 @@ export const eventRouter = createTRPCRouter({
         featureSponsorManagement: z.boolean().optional(),
         featureScheduleManagement: z.boolean().optional(),
         featureFloorManagement: z.boolean().optional(),
+        featureDeliberation: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

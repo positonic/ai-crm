@@ -20,6 +20,7 @@ const labels: Record<string, string> = {
   "admin-panel": "Admin Panel",
   "floor-owners": "Managing Floor Leads",
   "activity-certs": "Activity Certs",
+  deliberation: "Deliberation",
 };
 
 export default function DocsBreadcrumb() {

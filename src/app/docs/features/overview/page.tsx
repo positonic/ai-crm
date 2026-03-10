@@ -89,6 +89,19 @@ export default function FeaturesOverviewPage() {
         invitation system handles the onboarding process seamlessly.
       </p>
 
+      <h2 id="deliberation" className="docs-heading-h2">
+        Deliberation
+      </h2>
+      <p className="docs-text">
+        The{" "}
+        <Link href="/docs/features/deliberation" className="docs-link">
+          Deliberation
+        </Link>{" "}
+        system lets attendees submit, vote on, and discuss community priorities
+        during events. Results combine participant input with session transcript
+        analysis to produce ranked priorities with signal classifications.
+      </p>
+
       <h2 id="activity-certs" className="docs-heading-h2">
         Activity Certs
       </h2>

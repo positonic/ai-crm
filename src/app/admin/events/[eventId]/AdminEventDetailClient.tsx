@@ -35,6 +35,7 @@ import {
   IconLink,
   IconTicket,
   IconCertificate,
+  IconTarget,
 } from "@tabler/icons-react";
 import { useState } from "react";
 import Link from "next/link";
@@ -63,6 +64,7 @@ interface EventData {
   featureSponsorManagement: boolean;
   featureScheduleManagement: boolean;
   featureFloorManagement: boolean;
+  featureDeliberation: boolean;
   registrationUrl: string | null;
   lumaEventId: string | null;
   _count: {
@@ -82,7 +84,8 @@ type FeatureFlagKey =
   | "featureImpactAnalytics"
   | "featureSponsorManagement"
   | "featureScheduleManagement"
-  | "featureFloorManagement";
+  | "featureFloorManagement"
+  | "featureDeliberation";
 
 const FEATURE_FLAGS: {
   key: FeatureFlagKey;
@@ -155,6 +158,12 @@ const FEATURE_FLAGS: {
     label: "Floor Leads",
     description: "Enable floor lead assignments and venue management",
     icon: IconMapPin,
+  },
+  {
+    key: "featureDeliberation",
+    label: "Deliberation",
+    description: "Enable community priority deliberation for this event",
+    icon: IconTarget,
   },
 ];
 
@@ -360,6 +369,14 @@ export default function AdminEventDetailClient({ event }: AdminEventDetailClient
               color: "cyan",
               href: `/admin/events/${eventIdentifier}/floor-owners`,
               visible: event.featureFloorManagement,
+            },
+            {
+              label: "Deliberation",
+              description: "Manage community priority deliberation and results",
+              icon: IconTarget,
+              color: "grape",
+              href: `/admin/events/${eventIdentifier}/deliberations`,
+              visible: event.featureDeliberation,
             },
             {
               label: "Manage Schedule",
