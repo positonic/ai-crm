@@ -25,6 +25,10 @@ import {
   IconPlus,
   IconLock,
   IconExternalLink,
+  IconBrain,
+  IconChartDots,
+  IconRocket,
+  IconCheck,
 } from "@tabler/icons-react";
 import { useState } from "react";
 import { useParams } from "next/navigation";
@@ -126,6 +130,62 @@ export default function DeliberationsAdminClient() {
       notifications.show({
         title: "Error",
         message: error.message,
+        color: "red",
+      });
+    },
+  });
+
+  const triggerClustering = api.deliberation.triggerClustering.useMutation({
+    onSuccess: (data) => {
+      notifications.show({
+        title: "Clustering complete",
+        message: `Extracted ${String(data.clusterCount)} topic clusters from transcripts.`,
+        color: "green",
+      });
+      void utils.deliberation.getDeliberation.invalidate();
+    },
+    onError: (err) => {
+      notifications.show({
+        title: "Clustering failed",
+        message: err.message,
+        color: "red",
+      });
+    },
+  });
+
+  const triggerAnalysis = api.deliberation.triggerAnalysis.useMutation({
+    onSuccess: () => {
+      notifications.show({
+        title: "Analysis complete",
+        message:
+          "Priorities have been classified and synthesis generated.",
+        color: "green",
+      });
+      void utils.deliberation.getDeliberation.invalidate();
+    },
+    onError: (err) => {
+      notifications.show({
+        title: "Analysis failed",
+        message: err.message,
+        color: "red",
+      });
+    },
+  });
+
+  const publishResults = api.deliberation.publishResults.useMutation({
+    onSuccess: (data) => {
+      notifications.show({
+        title: "Published to AT Protocol",
+        message: `Created ${data.summaryUri ? "4" : "0"} DDS records successfully.`,
+        color: "green",
+        autoClose: 10000,
+      });
+      void utils.deliberation.getDeliberation.invalidate();
+    },
+    onError: (err) => {
+      notifications.show({
+        title: "Publication failed",
+        message: err.message,
         color: "red",
       });
     },
@@ -271,40 +331,82 @@ export default function DeliberationsAdminClient() {
 
                 <Group gap="xs">
                   {deliberation.status === "COLLECTING" && (
-                    <Button
-                      variant="light"
-                      color="orange"
-                      leftSection={<IconLock size={14} />}
-                      onClick={() =>
-                        closeDeliberation.mutate({
-                          deliberationId: deliberation.id,
-                        })
-                      }
-                      loading={closeDeliberation.isPending}
-                    >
-                      Close Submissions
-                    </Button>
+                    <>
+                      <Button
+                        variant="light"
+                        color="orange"
+                        leftSection={<IconLock size={14} />}
+                        onClick={() =>
+                          closeDeliberation.mutate({
+                            deliberationId: deliberation.id,
+                          })
+                        }
+                        loading={closeDeliberation.isPending}
+                      >
+                        Close Submissions
+                      </Button>
+                      <Tooltip label="Run topic clustering on available transcripts (can run while still collecting)">
+                        <Button
+                          variant="light"
+                          color="blue"
+                          leftSection={<IconChartDots size={14} />}
+                          onClick={() =>
+                            triggerClustering.mutate({
+                              deliberationId: deliberation.id,
+                            })
+                          }
+                          loading={triggerClustering.isPending}
+                          disabled={deliberation._count.transcripts === 0}
+                        >
+                          Run Clustering
+                        </Button>
+                      </Tooltip>
+                    </>
                   )}
                   {deliberation.status === "CLOSED" && (
-                    <Tooltip label="Handled by external analysis worker">
-                      <Button variant="light" color="blue" disabled>
+                    <>
+                      <Button
+                        variant="light"
+                        color="blue"
+                        leftSection={<IconChartDots size={14} />}
+                        onClick={() =>
+                          triggerClustering.mutate({
+                            deliberationId: deliberation.id,
+                          })
+                        }
+                        loading={triggerClustering.isPending}
+                        disabled={deliberation._count.transcripts === 0}
+                      >
+                        Run Clustering
+                      </Button>
+                      <Button
+                        variant="light"
+                        color="violet"
+                        leftSection={<IconBrain size={14} />}
+                        onClick={() =>
+                          triggerAnalysis.mutate({
+                            deliberationId: deliberation.id,
+                          })
+                        }
+                        loading={triggerAnalysis.isPending}
+                      >
                         Run Analysis
                       </Button>
-                    </Tooltip>
+                    </>
                   )}
                   {deliberation.status === "ANALYZING" && (
                     <Button
                       variant="light"
-                      color="violet"
+                      color="teal"
+                      leftSection={<IconRocket size={14} />}
                       onClick={() =>
-                        updateStatus.mutate({
+                        publishResults.mutate({
                           deliberationId: deliberation.id,
-                          status: "PUBLISHED",
                         })
                       }
-                      loading={updateStatus.isPending}
+                      loading={publishResults.isPending}
                     >
-                      Mark as Published
+                      Publish to AT Protocol
                     </Button>
                   )}
                   {deliberation.status === "PUBLISHED" && (
@@ -319,6 +421,43 @@ export default function DeliberationsAdminClient() {
                     </Button>
                   )}
                 </Group>
+
+                {/* AT Protocol URIs after publication */}
+                {deliberation.status === "PUBLISHED" &&
+                  deliberation.summaryUri && (
+                    <Paper p="sm" radius="sm" withBorder bg="var(--mantine-color-dark-6)">
+                      <Stack gap="xs">
+                        <Group gap="xs">
+                          <IconCheck size={14} color="var(--mantine-color-green-6)" />
+                          <Text size="sm" fw={600}>
+                            Published DDS Records
+                          </Text>
+                        </Group>
+                        <Stack gap={4}>
+                          {deliberation.summaryUri && (
+                            <Text size="xs" c="dimmed" style={{ fontFamily: "monospace" }}>
+                              Summary: {deliberation.summaryUri}
+                            </Text>
+                          )}
+                          {deliberation.pcaUri && (
+                            <Text size="xs" c="dimmed" style={{ fontFamily: "monospace" }}>
+                              PCA: {deliberation.pcaUri}
+                            </Text>
+                          )}
+                          {deliberation.activityUri && (
+                            <Text size="xs" c="dimmed" style={{ fontFamily: "monospace" }}>
+                              Activity: {deliberation.activityUri}
+                            </Text>
+                          )}
+                          {deliberation.boardUri && (
+                            <Text size="xs" c="dimmed" style={{ fontFamily: "monospace" }}>
+                              Board: {deliberation.boardUri}
+                            </Text>
+                          )}
+                        </Stack>
+                      </Stack>
+                    </Paper>
+                  )}
               </Stack>
             </Paper>
 
