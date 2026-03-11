@@ -27,7 +27,14 @@ export const transcriptionRouter = createTRPCRouter({
 
       return ctx.db.transcription.findMany({
         where: { deliberationId: input.deliberationId },
-        include: {
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          source: true,
+          audioFileName: true,
+          createdAt: true,
+          updatedAt: true,
           uploadedBy: { select: { id: true, name: true } },
         },
         orderBy: { createdAt: "desc" },
@@ -46,7 +53,14 @@ export const transcriptionRouter = createTRPCRouter({
 
       return ctx.db.transcription.findMany({
         where: { eventId: input.eventId },
-        include: {
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          source: true,
+          audioFileName: true,
+          createdAt: true,
+          updatedAt: true,
           uploadedBy: { select: { id: true, name: true } },
         },
         orderBy: { createdAt: "desc" },

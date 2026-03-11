@@ -274,6 +274,12 @@ export const deliberationRouter = createTRPCRouter({
           message: "Priority not found",
         });
       }
+      if (priority.deliberation.status !== "COLLECTING") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Deliberation is not accepting submissions",
+        });
+      }
 
       await assertDeliberationAccess(
         ctx.db,
@@ -281,6 +287,13 @@ export const deliberationRouter = createTRPCRouter({
         ctx.session.user.role,
         priority.deliberation.eventId,
       );
+
+      if (priority.deliberation.status !== "COLLECTING") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Deliberation not accepting votes",
+        });
+      }
 
       // Toggle vote
       const existing = await ctx.db.deliberationVote.findUnique({
@@ -322,12 +335,18 @@ export const deliberationRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const priority = await ctx.db.deliberationPriority.findUnique({
         where: { id: input.priorityId },
-        select: { deliberation: { select: { eventId: true } } },
+        select: { deliberation: { select: { eventId: true, status: true } } },
       });
       if (!priority) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Priority not found",
+        });
+      }
+      if (priority.deliberation.status !== "COLLECTING") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Deliberation not in collecting phase",
         });
       }
 
@@ -358,12 +377,20 @@ export const deliberationRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const priority = await ctx.db.deliberationPriority.findUnique({
         where: { id: input.priorityId },
-        select: { deliberation: { select: { eventId: true } } },
+        select: {
+          deliberation: { select: { eventId: true, status: true } },
+        },
       });
       if (!priority) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Priority not found",
+        });
+      }
+      if (priority.deliberation.status !== "COLLECTING") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Deliberation is not accepting submissions",
         });
       }
 
