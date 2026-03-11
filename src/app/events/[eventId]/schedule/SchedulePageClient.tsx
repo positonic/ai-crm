@@ -68,16 +68,26 @@ interface SchedulePageClientProps {
   embed?: boolean;
 }
 
-export default function SchedulePageClient({ eventId, embed = false }: SchedulePageClientProps) {
+export default function SchedulePageClient({
+  eventId,
+  embed = false,
+}: SchedulePageClientProps) {
   const searchParams = useSearchParams();
 
-  const [viewMode, setViewMode] = useState<"simple" | "expanded" | "grid" | "by-floor">(() => {
+  const [viewMode, setViewMode] = useState<
+    "simple" | "expanded" | "grid" | "by-floor"
+  >(() => {
     const view = searchParams.get("view");
-    if (view === "expanded" || view === "grid" || view === "by-floor") return view;
+    if (view === "expanded" || view === "grid" || view === "by-floor")
+      return view;
     return "simple";
   });
-  const [searchQuery, setSearchQuery] = useState(() => searchParams.get("q") ?? "");
-  const [activeVenueId, setActiveVenueId] = useState<string | null>(() => searchParams.get("venue"));
+  const [searchQuery, setSearchQuery] = useState(
+    () => searchParams.get("q") ?? "",
+  );
+  const [activeVenueId, setActiveVenueId] = useState<string | null>(() =>
+    searchParams.get("venue"),
+  );
   const [activeSessionTypes, setActiveSessionTypes] = useState<string[]>(() => {
     const types = searchParams.get("types");
     return types ? types.split(",") : [];
@@ -86,47 +96,65 @@ export default function SchedulePageClient({ eventId, embed = false }: ScheduleP
     const tracks = searchParams.get("tracks");
     return tracks ? tracks.split(",") : [];
   });
-  const [showMySessions, setShowMySessions] = useState(() => searchParams.get("my") === "true");
+  const [showMySessions, setShowMySessions] = useState(
+    () => searchParams.get("my") === "true",
+  );
 
   const { data: authSession } = useSession();
   const userId = authSession?.user?.id;
 
-  const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
-    const url = new URL(window.location.href);
-    for (const [key, value] of Object.entries(updates)) {
-      if (value != null && value !== "") {
-        url.searchParams.set(key, value);
-      } else {
-        url.searchParams.delete(key);
+  const updateUrlParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const url = new URL(window.location.href);
+      for (const [key, value] of Object.entries(updates)) {
+        if (value != null && value !== "") {
+          url.searchParams.set(key, value);
+        } else {
+          url.searchParams.delete(key);
+        }
       }
-    }
-    window.history.replaceState({}, "", url.toString());
-  }, []);
+      window.history.replaceState({}, "", url.toString());
+    },
+    [],
+  );
 
-  const handleSetViewMode = useCallback((mode: "simple" | "expanded" | "grid" | "by-floor") => {
-    setViewMode(mode);
-    updateUrlParams({ view: mode === "simple" ? null : mode });
-  }, [updateUrlParams]);
+  const handleSetViewMode = useCallback(
+    (mode: "simple" | "expanded" | "grid" | "by-floor") => {
+      setViewMode(mode);
+      updateUrlParams({ view: mode === "simple" ? null : mode });
+    },
+    [updateUrlParams],
+  );
 
-  const handleSearchChange = useCallback((query: string) => {
-    setSearchQuery(query);
-    updateUrlParams({ q: query || null });
-  }, [updateUrlParams]);
+  const handleSearchChange = useCallback(
+    (query: string) => {
+      setSearchQuery(query);
+      updateUrlParams({ q: query || null });
+    },
+    [updateUrlParams],
+  );
 
-  const handleVenueChange = useCallback((venueId: string | null) => {
-    setActiveVenueId(venueId);
-    updateUrlParams({ venue: venueId });
-  }, [updateUrlParams]);
+  const handleVenueChange = useCallback(
+    (venueId: string | null) => {
+      setActiveVenueId(venueId);
+      updateUrlParams({ venue: venueId });
+    },
+    [updateUrlParams],
+  );
 
-  const handleToggleMySessions = useCallback((checked: boolean) => {
-    setShowMySessions(checked);
-    updateUrlParams({ my: checked ? "true" : null });
-  }, [updateUrlParams]);
+  const handleToggleMySessions = useCallback(
+    (checked: boolean) => {
+      setShowMySessions(checked);
+      updateUrlParams({ my: checked ? "true" : null });
+    },
+    [updateUrlParams],
+  );
 
   const { data: scheduleData, isLoading: scheduleLoading } =
     api.schedule.getEventSchedule.useQuery({ eventId });
-  const { data: filterData } =
-    api.schedule.getEventScheduleFilters.useQuery({ eventId });
+  const { data: filterData } = api.schedule.getEventScheduleFilters.useQuery({
+    eventId,
+  });
 
   const sessions = scheduleData?.sessions;
 
@@ -137,7 +165,8 @@ export default function SchedulePageClient({ eventId, embed = false }: ScheduleP
     return sessions.filter((session) => {
       // My Sessions filter
       if (showMySessions && userId) {
-        if (!session.sessionSpeakers.some((s) => s.user.id === userId)) return false;
+        if (!session.sessionSpeakers.some((s) => s.user.id === userId))
+          return false;
       }
       // Search filter
       if (searchQuery) {
@@ -148,7 +177,8 @@ export default function SchedulePageClient({ eventId, embed = false }: ScheduleP
           session.sessionSpeakers.some((s) =>
             getDisplayName(s.user, "").toLowerCase().includes(q),
           );
-        const matchesVenue = session.venue?.name.toLowerCase().includes(q) ?? false;
+        const matchesVenue =
+          session.venue?.name.toLowerCase().includes(q) ?? false;
         if (!matchesTitle && !matchesSpeaker && !matchesVenue) return false;
       }
       // Venue filter
@@ -171,7 +201,15 @@ export default function SchedulePageClient({ eventId, embed = false }: ScheduleP
       }
       return true;
     });
-  }, [sessions, showMySessions, userId, searchQuery, activeVenueId, activeSessionTypes, activeTracks]);
+  }, [
+    sessions,
+    showMySessions,
+    userId,
+    searchQuery,
+    activeVenueId,
+    activeSessionTypes,
+    activeTracks,
+  ]);
 
   // Stage 2: Group by day (shared between both views)
   const { days, sessionsByDay } = useMemo(() => {
@@ -188,7 +226,10 @@ export default function SchedulePageClient({ eventId, embed = false }: ScheduleP
       });
 
       if (!dayTimestamps.has(dayKey)) {
-        dayTimestamps.set(dayKey, Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+        dayTimestamps.set(
+          dayKey,
+          Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
+        );
       }
 
       const existing = byDay.get(dayKey) ?? [];
@@ -228,25 +269,31 @@ export default function SchedulePageClient({ eventId, embed = false }: ScheduleP
     return byTime;
   }, [selectedDay, sessionsByDay]);
 
-  const toggleSessionType = useCallback((typeId: string) => {
-    setActiveSessionTypes((prev) => {
-      const next = prev.includes(typeId)
-        ? prev.filter((id) => id !== typeId)
-        : [...prev, typeId];
-      updateUrlParams({ types: next.length > 0 ? next.join(",") : null });
-      return next;
-    });
-  }, [updateUrlParams]);
+  const toggleSessionType = useCallback(
+    (typeId: string) => {
+      setActiveSessionTypes((prev) => {
+        const next = prev.includes(typeId)
+          ? prev.filter((id) => id !== typeId)
+          : [...prev, typeId];
+        updateUrlParams({ types: next.length > 0 ? next.join(",") : null });
+        return next;
+      });
+    },
+    [updateUrlParams],
+  );
 
-  const toggleTrack = useCallback((trackId: string) => {
-    setActiveTracks((prev) => {
-      const next = prev.includes(trackId)
-        ? prev.filter((id) => id !== trackId)
-        : [...prev, trackId];
-      updateUrlParams({ tracks: next.length > 0 ? next.join(",") : null });
-      return next;
-    });
-  }, [updateUrlParams]);
+  const toggleTrack = useCallback(
+    (trackId: string) => {
+      setActiveTracks((prev) => {
+        const next = prev.includes(trackId)
+          ? prev.filter((id) => id !== trackId)
+          : [...prev, trackId];
+        updateUrlParams({ tracks: next.length > 0 ? next.join(",") : null });
+        return next;
+      });
+    },
+    [updateUrlParams],
+  );
 
   if (scheduleLoading) {
     return (
@@ -264,24 +311,32 @@ export default function SchedulePageClient({ eventId, embed = false }: ScheduleP
     );
   }
 
-  const daySessions = selectedDay ? sessionsByDay.get(selectedDay) ?? [] : [];
-  const venues = filterData?.venues?.map((v) => ({
-    id: v.id,
-    name: v.name,
-    rooms: v.rooms ?? [],
-  })) ?? [];
+  const daySessions = selectedDay ? (sessionsByDay.get(selectedDay) ?? []) : [];
+  const venues =
+    filterData?.venues?.map((v) => ({
+      id: v.id,
+      name: v.name,
+      rooms: v.rooms ?? [],
+    })) ?? [];
 
   return (
     <Container size="xl" py={embed ? "sm" : "xl"}>
       {/* Header with title and view toggle - hidden in embed mode */}
       {!embed && (
-        <Group justify="space-between" align="flex-start" mb="lg" wrap="wrap" gap="sm">
+        <Group
+          justify="space-between"
+          align="flex-start"
+          mb="lg"
+          wrap="wrap"
+          gap="sm"
+        >
           <Stack gap="xs">
             <Group gap="xs" align="center">
               <Title order={1}>{scheduleData.event.name}</Title>
               {showMySessions && (
                 <Badge variant="filled" color="blue" size="lg">
-                  {filteredSessions.length} session{filteredSessions.length !== 1 ? "s" : ""}
+                  {filteredSessions.length} session
+                  {filteredSessions.length !== 1 ? "s" : ""}
                 </Badge>
               )}
             </Group>
@@ -293,32 +348,44 @@ export default function SchedulePageClient({ eventId, embed = false }: ScheduleP
           </Stack>
           <Menu shadow="md" width={180}>
             <Menu.Target>
-              <Button variant="default" leftSection={<IconEye size={16} />} size="sm">
+              <Button
+                variant="default"
+                leftSection={<IconEye size={16} />}
+                size="sm"
+              >
                 View
               </Button>
             </Menu.Target>
             <Menu.Dropdown>
               <Menu.Item
                 onClick={() => handleSetViewMode("simple")}
-                rightSection={viewMode === "simple" ? <IconCheck size={14} /> : null}
+                rightSection={
+                  viewMode === "simple" ? <IconCheck size={14} /> : null
+                }
               >
                 Simple
               </Menu.Item>
               <Menu.Item
                 onClick={() => handleSetViewMode("expanded")}
-                rightSection={viewMode === "expanded" ? <IconCheck size={14} /> : null}
+                rightSection={
+                  viewMode === "expanded" ? <IconCheck size={14} /> : null
+                }
               >
                 Expanded
               </Menu.Item>
               <Menu.Item
                 onClick={() => handleSetViewMode("grid")}
-                rightSection={viewMode === "grid" ? <IconCheck size={14} /> : null}
+                rightSection={
+                  viewMode === "grid" ? <IconCheck size={14} /> : null
+                }
               >
                 Grid
               </Menu.Item>
               <Menu.Item
                 onClick={() => handleSetViewMode("by-floor")}
-                rightSection={viewMode === "by-floor" ? <IconCheck size={14} /> : null}
+                rightSection={
+                  viewMode === "by-floor" ? <IconCheck size={14} /> : null
+                }
               >
                 By Floor
               </Menu.Item>
@@ -364,7 +431,11 @@ export default function SchedulePageClient({ eventId, embed = false }: ScheduleP
                     <Text c="dimmed" ta="center">
                       You are not assigned to any sessions yet.
                     </Text>
-                    <Button variant="subtle" size="sm" onClick={() => handleToggleMySessions(false)}>
+                    <Button
+                      variant="subtle"
+                      size="sm"
+                      onClick={() => handleToggleMySessions(false)}
+                    >
                       View all sessions
                     </Button>
                   </>
@@ -409,40 +480,55 @@ export default function SchedulePageClient({ eventId, embed = false }: ScheduleP
                             {session.title}
                           </Text>
                           <Text size="xs" c="dimmed">
-                            {new Date(session.startTime).toLocaleTimeString("en-US", {
-                              hour: "numeric",
-                              minute: "2-digit",
-                              hour12: true,
-                              timeZone: "UTC",
-                            })}
+                            {new Date(session.startTime).toLocaleTimeString(
+                              "en-US",
+                              {
+                                hour: "numeric",
+                                minute: "2-digit",
+                                hour12: true,
+                                timeZone: "UTC",
+                              },
+                            )}
                             {" – "}
-                            {new Date(session.endTime).toLocaleTimeString("en-US", {
-                              hour: "numeric",
-                              minute: "2-digit",
-                              hour12: true,
-                              timeZone: "UTC",
-                            })}
+                            {new Date(session.endTime).toLocaleTimeString(
+                              "en-US",
+                              {
+                                hour: "numeric",
+                                minute: "2-digit",
+                                hour12: true,
+                                timeZone: "UTC",
+                              },
+                            )}
                           </Text>
                           {session.sessionType && (
                             <Text size="xs" c="dimmed">
                               {session.sessionType.name}
                             </Text>
                           )}
-                          {(session.sessionSpeakers.length > 0 || session.speakers.length > 0) && (
+                          {(session.sessionSpeakers.length > 0 ||
+                            session.speakers.length > 0) && (
                             <Group gap={4} wrap="wrap">
                               {session.sessionSpeakers.map((s) => (
                                 <Text key={s.user.id} size="xs" c="dimmed">
                                   {getDisplayName(s.user, "Unknown")}
                                   {s.role !== "Speaker" ? ` (${s.role})` : ""}
                                   {s.user.profile?.company && (
-                                    <Text span size="xs" c="dimmed" style={{ opacity: 0.7 }}>
-                                      {" · "}{s.user.profile.company}
+                                    <Text
+                                      span
+                                      size="xs"
+                                      c="dimmed"
+                                      style={{ opacity: 0.7 }}
+                                    >
+                                      {" · "}
+                                      {s.user.profile.company}
                                     </Text>
                                   )}
                                 </Text>
                               ))}
                               {session.speakers.map((name) => (
-                                <Text key={name} size="xs" c="dimmed">{name}</Text>
+                                <Text key={name} size="xs" c="dimmed">
+                                  {name}
+                                </Text>
                               ))}
                             </Group>
                           )}
@@ -515,36 +601,37 @@ export default function SchedulePageClient({ eventId, embed = false }: ScheduleP
                 </div>
               )}
 
-              {filterData?.sessionTypes && filterData.sessionTypes.length > 0 && (
-                <div className="schedule-filter-section">
-                  <Text fw={600} size="sm" mb="xs">
-                    Filter By Type
-                  </Text>
-                  <Stack gap={6}>
-                    {filterData.sessionTypes.map((type) => (
-                      <Checkbox
-                        key={type.id}
-                        checked={activeSessionTypes.includes(type.id)}
-                        onChange={() => toggleSessionType(type.id)}
-                        label={
-                          <Group gap={8}>
-                            <div
-                              style={{
-                                width: 10,
-                                height: 10,
-                                borderRadius: "50%",
-                                backgroundColor: type.color,
-                                flexShrink: 0,
-                              }}
-                            />
-                            <Text size="sm">{type.name}</Text>
-                          </Group>
-                        }
-                      />
-                    ))}
-                  </Stack>
-                </div>
-              )}
+              {filterData?.sessionTypes &&
+                filterData.sessionTypes.length > 0 && (
+                  <div className="schedule-filter-section">
+                    <Text fw={600} size="sm" mb="xs">
+                      Filter By Type
+                    </Text>
+                    <Stack gap={6}>
+                      {filterData.sessionTypes.map((type) => (
+                        <Checkbox
+                          key={type.id}
+                          checked={activeSessionTypes.includes(type.id)}
+                          onChange={() => toggleSessionType(type.id)}
+                          label={
+                            <Group gap={8}>
+                              <div
+                                style={{
+                                  width: 10,
+                                  height: 10,
+                                  borderRadius: "50%",
+                                  backgroundColor: type.color,
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <Text size="sm">{type.name}</Text>
+                            </Group>
+                          }
+                        />
+                      ))}
+                    </Stack>
+                  </div>
+                )}
 
               {filterData?.tracks && filterData.tracks.length > 0 && (
                 <div className="schedule-filter-section">
@@ -646,36 +733,37 @@ export default function SchedulePageClient({ eventId, embed = false }: ScheduleP
                 </div>
               )}
 
-              {filterData?.sessionTypes && filterData.sessionTypes.length > 0 && (
-                <div className="schedule-filter-section">
-                  <Text fw={600} size="sm" mb="xs">
-                    Filter By Type
-                  </Text>
-                  <Stack gap={6}>
-                    {filterData.sessionTypes.map((type) => (
-                      <Checkbox
-                        key={type.id}
-                        checked={activeSessionTypes.includes(type.id)}
-                        onChange={() => toggleSessionType(type.id)}
-                        label={
-                          <Group gap={8}>
-                            <div
-                              style={{
-                                width: 10,
-                                height: 10,
-                                borderRadius: "50%",
-                                backgroundColor: type.color,
-                                flexShrink: 0,
-                              }}
-                            />
-                            <Text size="sm">{type.name}</Text>
-                          </Group>
-                        }
-                      />
-                    ))}
-                  </Stack>
-                </div>
-              )}
+              {filterData?.sessionTypes &&
+                filterData.sessionTypes.length > 0 && (
+                  <div className="schedule-filter-section">
+                    <Text fw={600} size="sm" mb="xs">
+                      Filter By Type
+                    </Text>
+                    <Stack gap={6}>
+                      {filterData.sessionTypes.map((type) => (
+                        <Checkbox
+                          key={type.id}
+                          checked={activeSessionTypes.includes(type.id)}
+                          onChange={() => toggleSessionType(type.id)}
+                          label={
+                            <Group gap={8}>
+                              <div
+                                style={{
+                                  width: 10,
+                                  height: 10,
+                                  borderRadius: "50%",
+                                  backgroundColor: type.color,
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <Text size="sm">{type.name}</Text>
+                            </Group>
+                          }
+                        />
+                      ))}
+                    </Stack>
+                  </div>
+                )}
 
               {filterData?.tracks && filterData.tracks.length > 0 && (
                 <div className="schedule-filter-section">
@@ -711,10 +799,18 @@ export default function SchedulePageClient({ eventId, embed = false }: ScheduleP
           </div>
         </div>
       ) : viewMode === "grid" ? (
-        <TimetableView sessions={daySessions} venues={venues} eventId={eventId} />
+        <TimetableView
+          sessions={daySessions}
+          venues={venues}
+          eventId={eventId}
+        />
       ) : viewMode === "by-floor" ? (
         <div className="schedule-layout">
-          <ByFloorView sessions={daySessions} venues={venues} eventId={eventId} />
+          <ByFloorView
+            sessions={daySessions}
+            venues={venues}
+            eventId={eventId}
+          />
           {/* Filter sidebar */}
           <div className="schedule-sidebar">
             <Stack gap="md">
@@ -746,36 +842,37 @@ export default function SchedulePageClient({ eventId, embed = false }: ScheduleP
                 />
               </div>
 
-              {filterData?.sessionTypes && filterData.sessionTypes.length > 0 && (
-                <div className="schedule-filter-section">
-                  <Text fw={600} size="sm" mb="xs">
-                    Filter By Type
-                  </Text>
-                  <Stack gap={6}>
-                    {filterData.sessionTypes.map((type) => (
-                      <Checkbox
-                        key={type.id}
-                        checked={activeSessionTypes.includes(type.id)}
-                        onChange={() => toggleSessionType(type.id)}
-                        label={
-                          <Group gap={8}>
-                            <div
-                              style={{
-                                width: 10,
-                                height: 10,
-                                borderRadius: "50%",
-                                backgroundColor: type.color,
-                                flexShrink: 0,
-                              }}
-                            />
-                            <Text size="sm">{type.name}</Text>
-                          </Group>
-                        }
-                      />
-                    ))}
-                  </Stack>
-                </div>
-              )}
+              {filterData?.sessionTypes &&
+                filterData.sessionTypes.length > 0 && (
+                  <div className="schedule-filter-section">
+                    <Text fw={600} size="sm" mb="xs">
+                      Filter By Type
+                    </Text>
+                    <Stack gap={6}>
+                      {filterData.sessionTypes.map((type) => (
+                        <Checkbox
+                          key={type.id}
+                          checked={activeSessionTypes.includes(type.id)}
+                          onChange={() => toggleSessionType(type.id)}
+                          label={
+                            <Group gap={8}>
+                              <div
+                                style={{
+                                  width: 10,
+                                  height: 10,
+                                  borderRadius: "50%",
+                                  backgroundColor: type.color,
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <Text size="sm">{type.name}</Text>
+                            </Group>
+                          }
+                        />
+                      ))}
+                    </Stack>
+                  </div>
+                )}
 
               {filterData?.tracks && filterData.tracks.length > 0 && (
                 <div className="schedule-filter-section">

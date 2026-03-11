@@ -30,12 +30,14 @@ async function signInAs(
   await page.goto("/signin");
 
   await page.getByRole("tab", { name: /sign in/i }).click();
-  const signInForm = page
-    .locator("form")
-    .filter({ has: page.getByRole("button", { name: "Sign In", exact: true }) });
+  const signInForm = page.locator("form").filter({
+    has: page.getByRole("button", { name: "Sign In", exact: true }),
+  });
   await signInForm.getByLabel("Email").fill(email);
   await signInForm.getByLabel("Password").fill(password);
-  await signInForm.getByRole("button", { name: "Sign In", exact: true }).click();
+  await signInForm
+    .getByRole("button", { name: "Sign In", exact: true })
+    .click();
   await expect(page).not.toHaveURL(/\/signin/, { timeout: 15_000 });
 
   return page;
@@ -61,9 +63,9 @@ test("admin accepts speaker application → speaker sees accepted status", async
   });
 
   // Find the test speaker's application
-  await expect(
-    adminPage.getByText(TEST_SPEAKER_EMAIL),
-  ).toBeVisible({ timeout: 15_000 });
+  await expect(adminPage.getByText(TEST_SPEAKER_EMAIL)).toBeVisible({
+    timeout: 15_000,
+  });
 
   // Find the row and click the Accept button (green check icon)
   const speakerRow = adminPage
@@ -107,7 +109,9 @@ test("admin accepts speaker application → speaker sees accepted status", async
 
   // The "My Talk Submission" section should show accepted status
   await expect(speakerPage.getByText(/my talk submission/i)).toBeVisible();
-  await expect(speakerPage.getByText("ACCEPTED", { exact: true })).toBeVisible();
+  await expect(
+    speakerPage.getByText("ACCEPTED", { exact: true }),
+  ).toBeVisible();
 
   await speakerPage.context().close();
 });

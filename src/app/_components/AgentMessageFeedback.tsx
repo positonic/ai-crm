@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Group,
   ActionIcon,
@@ -9,16 +9,16 @@ import {
   Text,
   Collapse,
   Stack,
-} from '@mantine/core';
-import { IconStar, IconStarFilled } from '@tabler/icons-react';
-import { api } from '~/trpc/react';
+} from "@mantine/core";
+import { IconStar, IconStarFilled } from "@tabler/icons-react";
+import { api } from "~/trpc/react";
 
 interface AgentMessageFeedbackProps {
   interactionId: string;
   onFeedbackSubmitted: (rating: number) => void;
 }
 
-const STORAGE_KEY = 'ai-feedback-rated';
+const STORAGE_KEY = "ai-feedback-rated";
 const MAX_STORED = 100;
 
 function getRatedIds(): string[] {
@@ -58,8 +58,8 @@ export function AgentMessageFeedback({
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [comment, setComment] = useState('');
-  const [improvement, setImprovement] = useState('');
+  const [comment, setComment] = useState("");
+  const [improvement, setImprovement] = useState("");
 
   const submitFeedback = api.aiInteraction.submitFeedback.useMutation();
 
@@ -120,7 +120,7 @@ export function AgentMessageFeedback({
             key={star}
             variant="subtle"
             size="xs"
-            color={star <= displayRating ? 'yellow' : 'gray'}
+            color={star <= displayRating ? "yellow" : "gray"}
             onMouseEnter={() => setHoverRating(star)}
             onMouseLeave={() => setHoverRating(null)}
             onClick={() => handleStarClick(star)}
@@ -143,8 +143,8 @@ export function AgentMessageFeedback({
           mt="xs"
           p="sm"
           style={{
-            borderRadius: 'var(--mantine-radius-md)',
-            border: '1px solid var(--mantine-color-default-border)',
+            borderRadius: "var(--mantine-radius-md)",
+            border: "1px solid var(--mantine-color-default-border)",
           }}
         >
           <Textarea

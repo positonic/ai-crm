@@ -107,11 +107,14 @@ interface EventCardProps {
       sponsors?: number;
     };
   };
-  onStatusChange: (eventId: string, status: "ACTIVE" | "COMPLETED" | "CANCELLED") => void;
+  onStatusChange: (
+    eventId: string,
+    status: "ACTIVE" | "COMPLETED" | "CANCELLED",
+  ) => void;
 }
 
 function EventCard({ event, onStatusChange }: EventCardProps) {
-  const Icon = getEventIcon(normalizeEventType(event.type) ?? 'RESIDENCY');
+  const Icon = getEventIcon(normalizeEventType(event.type) ?? "RESIDENCY");
   const gradient = getMantineGradient(event.type);
   // Use slug if available, otherwise fall back to id
   const eventIdentifier = event.slug ?? event.id;
@@ -126,16 +129,16 @@ function EventCard({ event, onStatusChange }: EventCardProps) {
       h="100%"
       component={Link}
       href={`/admin/events/${eventIdentifier}`}
-      style={{ textDecoration: 'none', cursor: 'pointer' }}
+      style={{ textDecoration: "none", cursor: "pointer" }}
     >
       <Card.Section>
         <Box
           h={120}
           style={{
             background: `linear-gradient(135deg, var(--mantine-color-${gradient.from}-6) 0%, var(--mantine-color-${gradient.to}-6) 100%)`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           <ThemeIcon size={60} radius="xl" variant="light" color="white">
@@ -144,7 +147,7 @@ function EventCard({ event, onStatusChange }: EventCardProps) {
         </Box>
       </Card.Section>
 
-      <Stack gap="md" mt="md" style={{ height: 'calc(100% - 120px)' }}>
+      <Stack gap="md" mt="md" style={{ height: "calc(100% - 120px)" }}>
         <Stack gap="xs" style={{ flex: 1 }}>
           <Group justify="space-between" align="flex-start">
             <Title order={3} size="h2" style={{ flex: 1 }}>
@@ -165,7 +168,7 @@ function EventCard({ event, onStatusChange }: EventCardProps) {
                     variant="light"
                     size="sm"
                     tt="uppercase"
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: "pointer" }}
                     onClick={(e: React.MouseEvent) => e.preventDefault()}
                   >
                     {getEventStatusLabel(event.status)}
@@ -175,14 +178,20 @@ function EventCard({ event, onStatusChange }: EventCardProps) {
                   <Menu.Label>Change Status</Menu.Label>
                   <Menu.Item
                     leftSection={<IconPlayerPlay size={14} />}
-                    onClick={(e: React.MouseEvent) => { e.preventDefault(); onStatusChange(event.id, "ACTIVE"); }}
+                    onClick={(e: React.MouseEvent) => {
+                      e.preventDefault();
+                      onStatusChange(event.id, "ACTIVE");
+                    }}
                     disabled={event.status === "ACTIVE"}
                   >
                     Active
                   </Menu.Item>
                   <Menu.Item
                     leftSection={<IconCheck size={14} />}
-                    onClick={(e: React.MouseEvent) => { e.preventDefault(); onStatusChange(event.id, "COMPLETED"); }}
+                    onClick={(e: React.MouseEvent) => {
+                      e.preventDefault();
+                      onStatusChange(event.id, "COMPLETED");
+                    }}
                     disabled={event.status === "COMPLETED"}
                   >
                     Completed
@@ -190,7 +199,10 @@ function EventCard({ event, onStatusChange }: EventCardProps) {
                   <Menu.Item
                     color="red"
                     leftSection={<IconX size={14} />}
-                    onClick={(e: React.MouseEvent) => { e.preventDefault(); onStatusChange(event.id, "CANCELLED"); }}
+                    onClick={(e: React.MouseEvent) => {
+                      e.preventDefault();
+                      onStatusChange(event.id, "CANCELLED");
+                    }}
                     disabled={event.status === "CANCELLED"}
                   >
                     Cancelled
@@ -269,7 +281,10 @@ export default function EventsClient() {
     },
   });
 
-  const handleStatusChange = (eventId: string, status: "ACTIVE" | "COMPLETED" | "CANCELLED") => {
+  const handleStatusChange = (
+    eventId: string,
+    status: "ACTIVE" | "COMPLETED" | "CANCELLED",
+  ) => {
     updateStatus.mutate({ id: eventId, status });
   };
 
@@ -290,15 +305,24 @@ export default function EventsClient() {
   const filteredEvents = eventsWithCounts
     .filter((event) => statusFilter === "ALL" || event.status === statusFilter)
     .sort((a, b) => {
-      const statusDiff = (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3);
+      const statusDiff =
+        (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3);
       if (statusDiff !== 0) return statusDiff;
       return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
     });
 
-  const activeCount = eventsWithCounts.filter((e) => e.status === "ACTIVE").length;
-  const completedCount = eventsWithCounts.filter((e) => e.status === "COMPLETED").length;
-  const cancelledCount = eventsWithCounts.filter((e) => e.status === "CANCELLED").length;
-  const overdueCount = eventsWithCounts.filter((e) => isEventOverdue(e.endDate, e.status)).length;
+  const activeCount = eventsWithCounts.filter(
+    (e) => e.status === "ACTIVE",
+  ).length;
+  const completedCount = eventsWithCounts.filter(
+    (e) => e.status === "COMPLETED",
+  ).length;
+  const cancelledCount = eventsWithCounts.filter(
+    (e) => e.status === "CANCELLED",
+  ).length;
+  const overdueCount = eventsWithCounts.filter((e) =>
+    isEventOverdue(e.endDate, e.status),
+  ).length;
 
   return (
     <Container size="xl" py="xl">
@@ -306,7 +330,12 @@ export default function EventsClient() {
         {/* Header Section */}
         <Stack gap="md" ta="center">
           <Group justify="center" gap="xs">
-            <ThemeIcon size="xl" radius="xl" variant="gradient" gradient={{ from: 'blue', to: 'purple' }}>
+            <ThemeIcon
+              size="xl"
+              radius="xl"
+              variant="gradient"
+              gradient={{ from: "blue", to: "purple" }}
+            >
               <IconCalendarEvent size={28} />
             </ThemeIcon>
             <Title order={1} size="h1" fw={700}>
@@ -314,7 +343,8 @@ export default function EventsClient() {
             </Title>
           </Group>
           <Text size="lg" c="dimmed" maw={600} mx="auto">
-            Manage and explore all events, track participants and sponsors across our ecosystem.
+            Manage and explore all events, track participants and sponsors
+            across our ecosystem.
           </Text>
         </Stack>
 
@@ -325,25 +355,43 @@ export default function EventsClient() {
               <Text size="xl" fw={700} c="green">
                 {activeCount}
               </Text>
-              <Text size="sm" c="dimmed">Active Events</Text>
+              <Text size="sm" c="dimmed">
+                Active Events
+              </Text>
             </Stack>
             <Stack gap={0} ta="center">
               <Text size="xl" fw={700} c="blue">
                 {completedCount}
               </Text>
-              <Text size="sm" c="dimmed">Completed</Text>
+              <Text size="sm" c="dimmed">
+                Completed
+              </Text>
             </Stack>
             <Stack gap={0} ta="center">
               <Text size="xl" fw={700} c="orange">
-                {overdueCount > 0 ? overdueCount : eventsWithCounts.reduce((sum: number, event: EventWithCounts) => sum + (event._count?.sponsors ?? 0), 0)}
+                {overdueCount > 0
+                  ? overdueCount
+                  : eventsWithCounts.reduce(
+                      (sum: number, event: EventWithCounts) =>
+                        sum + (event._count?.sponsors ?? 0),
+                      0,
+                    )}
               </Text>
-              <Text size="sm" c="dimmed">{overdueCount > 0 ? "Overdue" : "Total Sponsors"}</Text>
+              <Text size="sm" c="dimmed">
+                {overdueCount > 0 ? "Overdue" : "Total Sponsors"}
+              </Text>
             </Stack>
             <Stack gap={0} ta="center">
               <Text size="xl" fw={700} c="purple">
-                {eventsWithCounts.reduce((sum: number, event: EventWithCounts) => sum + (event._count?.applications ?? 0), 0)}
+                {eventsWithCounts.reduce(
+                  (sum: number, event: EventWithCounts) =>
+                    sum + (event._count?.applications ?? 0),
+                  0,
+                )}
               </Text>
-              <Text size="sm" c="dimmed">Total Applications</Text>
+              <Text size="sm" c="dimmed">
+                Total Applications
+              </Text>
             </Stack>
           </SimpleGrid>
         </Paper>
@@ -363,7 +411,11 @@ export default function EventsClient() {
         {/* Events Grid */}
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
           {filteredEvents.map((event) => (
-            <EventCard key={event.id} event={event} onStatusChange={handleStatusChange} />
+            <EventCard
+              key={event.id}
+              event={event}
+              onStatusChange={handleStatusChange}
+            />
           ))}
         </SimpleGrid>
 

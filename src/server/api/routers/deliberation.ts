@@ -67,7 +67,10 @@ export const deliberationRouter = createTRPCRouter({
         select: { eventId: true },
       });
       if (!deliberation) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Deliberation not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Deliberation not found",
+        });
       }
 
       await assertDeliberationAccess(
@@ -133,7 +136,10 @@ export const deliberationRouter = createTRPCRouter({
         select: { eventId: true },
       });
       if (!deliberation) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Deliberation not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Deliberation not found",
+        });
       }
 
       await assertDeliberationAccess(
@@ -165,7 +171,10 @@ export const deliberationRouter = createTRPCRouter({
       });
 
       if (!deliberation) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Deliberation not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Deliberation not found",
+        });
       }
 
       if (deliberation.status !== "PUBLISHED") {
@@ -219,7 +228,10 @@ export const deliberationRouter = createTRPCRouter({
         select: { eventId: true, status: true },
       });
       if (!deliberation) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Deliberation not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Deliberation not found",
+        });
       }
       if (deliberation.status !== "COLLECTING") {
         throw new TRPCError({
@@ -257,7 +269,10 @@ export const deliberationRouter = createTRPCRouter({
         },
       });
       if (!priority) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Priority not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Priority not found",
+        });
       }
 
       await assertDeliberationAccess(
@@ -310,7 +325,10 @@ export const deliberationRouter = createTRPCRouter({
         select: { deliberation: { select: { eventId: true } } },
       });
       if (!priority) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Priority not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Priority not found",
+        });
       }
 
       await assertDeliberationAccess(
@@ -343,7 +361,10 @@ export const deliberationRouter = createTRPCRouter({
         select: { deliberation: { select: { eventId: true } } },
       });
       if (!priority) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Priority not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Priority not found",
+        });
       }
 
       await assertDeliberationAccess(
@@ -371,7 +392,10 @@ export const deliberationRouter = createTRPCRouter({
         select: { eventId: true },
       });
       if (!deliberation) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Deliberation not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Deliberation not found",
+        });
       }
 
       await assertDeliberationAdmin(
@@ -400,7 +424,10 @@ export const deliberationRouter = createTRPCRouter({
         select: { eventId: true },
       });
       if (!deliberation) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Deliberation not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Deliberation not found",
+        });
       }
 
       await assertDeliberationAdmin(
@@ -429,7 +456,10 @@ export const deliberationRouter = createTRPCRouter({
         select: { deliberation: { select: { eventId: true } } },
       });
       if (!priority) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Priority not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Priority not found",
+        });
       }
 
       await assertDeliberationAdmin(

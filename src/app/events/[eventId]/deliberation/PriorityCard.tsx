@@ -60,7 +60,10 @@ interface PriorityCardProps {
   isCollecting: boolean;
 }
 
-export default function PriorityCard({ priority, isCollecting }: PriorityCardProps) {
+export default function PriorityCard({
+  priority,
+  isCollecting,
+}: PriorityCardProps) {
   const [showBlockers, setShowBlockers] = useState(false);
   const [showResources, setShowResources] = useState(false);
   const [blockerText, setBlockerText] = useState("");
@@ -291,7 +294,11 @@ export default function PriorityCard({ priority, isCollecting }: PriorityCardPro
                         if (resourceText.trim().length >= 3) {
                           submitResource.mutate({
                             priorityId: priority.id,
-                            category: resourceCategory as "funding" | "talent" | "tooling" | "other",
+                            category: resourceCategory as
+                              | "funding"
+                              | "talent"
+                              | "tooling"
+                              | "other",
                             description: resourceText.trim(),
                           });
                         }

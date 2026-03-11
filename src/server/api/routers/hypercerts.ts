@@ -13,7 +13,7 @@ export const hypercertsRouter = createTRPCRouter({
     .input(
       z.object({
         projectId: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Get the project with all details
@@ -48,13 +48,15 @@ export const hypercertsRouter = createTRPCRouter({
       // Create the hypercert
       const result = await service.createHypercert(ctx.session.user.id, {
         title: project.title,
-        shortDescription: project.description ?? `Impact work on ${project.title}`,
+        shortDescription:
+          project.description ?? `Impact work on ${project.title}`,
         description: project.description
           ? `This hypercert represents the impact work done on ${project.title}.\n\n${project.description}`
           : `This hypercert represents the impact work done on ${project.title}.`,
-        workScope: project.technologies.length > 0
-          ? project.technologies.join(", ")
-          : "Software development and impact work",
+        workScope:
+          project.technologies.length > 0
+            ? project.technologies.join(", ")
+            : "Software development and impact work",
         workTimeFrameFrom: project.createdAt.toISOString(),
         workTimeFrameTo: new Date().toISOString(),
         image: project.bannerUrl ?? project.imageUrl ?? undefined,
@@ -75,12 +77,15 @@ export const hypercertsRouter = createTRPCRouter({
     .input(
       z.object({
         limit: z.number().min(1).max(100).optional().default(20),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       try {
         const service = createHypercertsService(ctx.db);
-        const hypercerts = await service.listHypercerts(ctx.session.user.id, input.limit);
+        const hypercerts = await service.listHypercerts(
+          ctx.session.user.id,
+          input.limit,
+        );
         return hypercerts;
       } catch (error) {
         // Fail gracefully for auth errors - return empty array
@@ -98,12 +103,15 @@ export const hypercertsRouter = createTRPCRouter({
     .input(
       z.object({
         rkey: z.string(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       try {
         const service = createHypercertsService(ctx.db);
-        const hypercert = await service.getHypercert(ctx.session.user.id, input.rkey);
+        const hypercert = await service.getHypercert(
+          ctx.session.user.id,
+          input.rkey,
+        );
         return hypercert;
       } catch (error) {
         // Fail gracefully for auth errors - return null
@@ -121,7 +129,7 @@ export const hypercertsRouter = createTRPCRouter({
     .input(
       z.object({
         eventId: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Admin/staff or event creator check
@@ -132,7 +140,10 @@ export const hypercertsRouter = createTRPCRouter({
         });
 
         if (!event) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Event not found",
+          });
         }
 
         if (event.createdById !== ctx.session.user.id) {

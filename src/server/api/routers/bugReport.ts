@@ -43,7 +43,11 @@ export const bugReportRouter = createTRPCRouter({
         ctx.session.user.name ?? ctx.session.user.email ?? ctx.session.user.id;
 
       // Build a rich action name with key context (capped at 255 chars by Exponential DB)
-      const nameParts = [`[Bug] ${input.title}`, `| ${input.metadata.pathname}`, `| ${userName}`];
+      const nameParts = [
+        `[Bug] ${input.title}`,
+        `| ${input.metadata.pathname}`,
+        `| ${userName}`,
+      ];
       if (input.metadata.profileUrl) {
         nameParts.push(`| ${input.metadata.profileUrl}`);
       }

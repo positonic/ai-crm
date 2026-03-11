@@ -27,10 +27,14 @@ const DAY1 = "2025-03-14"; // Friday
 const DAY2 = "2025-03-15"; // Saturday
 
 function d1(hour: number, min: number): Date {
-  return new Date(`${DAY1}T${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}:00Z`);
+  return new Date(
+    `${DAY1}T${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}:00Z`,
+  );
 }
 function d2(hour: number, min: number): Date {
-  return new Date(`${DAY2}T${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}:00Z`);
+  return new Date(
+    `${DAY2}T${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}:00Z`,
+  );
 }
 
 // ── Venues / Floors ──────────────────────────────────────────────
@@ -423,7 +427,8 @@ const SESSIONS: SessionDef[] = [
   // ── 10:00 CET (09:00 UTC) ──
   {
     title: "Welcome Words",
-    description: "Opening remarks and welcome to the conference. Setting intentions for the day and introducing the themes that will guide our conversations.",
+    description:
+      "Opening remarks and welcome to the conference. Setting intentions for the day and introducing the themes that will guide our conversations.",
     start: d1(9, 0),
     end: d1(9, 20),
     venue: "Einkeller",
@@ -433,7 +438,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Conversation Protocols",
-    description: "An interactive workshop exploring structured dialogue methods for navigating complex topics. Participants will learn and practise conversation frameworks designed to surface collective intelligence.",
+    description:
+      "An interactive workshop exploring structured dialogue methods for navigating complex topics. Participants will learn and practise conversation frameworks designed to surface collective intelligence.",
     start: d1(9, 0),
     end: d1(9, 40),
     venue: "DWeb Terrace",
@@ -443,7 +449,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Unconference Open Space",
-    description: "Self-organised sessions proposed and led by participants. Come with ideas, leave with collaborators. The open space runs throughout the morning \u2014 drop in and out as topics evolve.",
+    description:
+      "Self-organised sessions proposed and led by participants. Come with ideas, leave with collaborators. The open space runs throughout the morning \u2014 drop in and out as topics evolve.",
     start: d1(9, 0),
     end: d1(11, 0),
     venue: "Canopy",
@@ -453,8 +460,9 @@ const SESSIONS: SessionDef[] = [
   },
   // ── 10:20 CET ──
   {
-    title: "\"Studiolo Exile\" Artist Talk",
-    description: "A multimedia presentation exploring displacement, cultural memory, and the role of the studio as a space of refuge. Stephan shares work from his ongoing Studiolo Exile project.",
+    title: '"Studiolo Exile" Artist Talk',
+    description:
+      "A multimedia presentation exploring displacement, cultural memory, and the role of the studio as a space of refuge. Stephan shares work from his ongoing Studiolo Exile project.",
     start: d1(9, 20),
     end: d1(9, 30),
     venue: "Einkeller",
@@ -464,8 +472,10 @@ const SESSIONS: SessionDef[] = [
   },
   // ── 10:30 CET ──
   {
-    title: "Bullerengue, an Embodied Practice of Communitarian Knowledge and Memory",
-    description: "An exploration of Bullerengue \u2014 an Afro-Colombian musical tradition \u2014 as a living archive of communitarian knowledge. This talk examines how embodied practices carry and transmit collective memory across generations.",
+    title:
+      "Bullerengue, an Embodied Practice of Communitarian Knowledge and Memory",
+    description:
+      "An exploration of Bullerengue \u2014 an Afro-Colombian musical tradition \u2014 as a living archive of communitarian knowledge. This talk examines how embodied practices carry and transmit collective memory across generations.",
     start: d1(9, 30),
     end: d1(9, 40),
     venue: "Einkeller",
@@ -476,7 +486,8 @@ const SESSIONS: SessionDef[] = [
   // ── 10:40 CET ──
   {
     title: "Anarchiving as Collective Memory",
-    description: "A roundtable exploring anarchiving \u2014 the practice of creating living, evolving archives that resist fixed narratives. Panellists discuss how decentralised tools can support non-hierarchical memory-keeping.",
+    description:
+      "A roundtable exploring anarchiving \u2014 the practice of creating living, evolving archives that resist fixed narratives. Panellists discuss how decentralised tools can support non-hierarchical memory-keeping.",
     start: d1(9, 40),
     end: d1(10, 20),
     venue: "Einkeller",
@@ -494,7 +505,8 @@ const SESSIONS: SessionDef[] = [
   // ── 11:00 CET ──
   {
     title: "Onboarding to the Covenant Community",
-    description: "A hands-on workshop for newcomers to the Covenant community. Learn about governance structures, contribution pathways, and how to get involved in building shared digital infrastructure.",
+    description:
+      "A hands-on workshop for newcomers to the Covenant community. Learn about governance structures, contribution pathways, and how to get involved in building shared digital infrastructure.",
     start: d1(10, 0),
     end: d1(10, 40),
     venue: "Design Space",
@@ -505,7 +517,8 @@ const SESSIONS: SessionDef[] = [
   // ── 11:20 CET ──
   {
     title: "Welcome and Plenary",
-    description: "The main welcome plenary bringing the full community together. Hear from organisers about the vision for this gathering and the key challenges we will tackle collectively over the coming days.",
+    description:
+      "The main welcome plenary bringing the full community together. Hear from organisers about the vision for this gathering and the key challenges we will tackle collectively over the coming days.",
     start: d1(10, 20),
     end: d1(10, 40),
     venue: "Bread Cube",
@@ -520,7 +533,8 @@ const SESSIONS: SessionDef[] = [
   // ── 11:40 CET ──
   {
     title: "Swirls of Fortune \u2013 A Protocol Art Performance",
-    description: "An immersive performance piece that translates blockchain protocol mechanics into physical movement and visual art. Participants experience firsthand how consensus mechanisms, token flows, and governance decisions feel in embodied form.",
+    description:
+      "An immersive performance piece that translates blockchain protocol mechanics into physical movement and visual art. Participants experience firsthand how consensus mechanisms, token flows, and governance decisions feel in embodied form.",
     start: d1(10, 40),
     end: d1(11, 0),
     venue: "Einkeller",
@@ -530,7 +544,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Circles: Fair Money with Webs of Trust",
-    description: "A deep dive into Circles, a community currency system where money is created through trust relationships rather than debt. Martin shares the latest developments and how trust-based currencies can serve as infrastructure for financial inclusion.",
+    description:
+      "A deep dive into Circles, a community currency system where money is created through trust relationships rather than debt. Martin shares the latest developments and how trust-based currencies can serve as infrastructure for financial inclusion.",
     start: d1(10, 40),
     end: d1(10, 50),
     venue: "Bread Cube",
@@ -541,7 +556,8 @@ const SESSIONS: SessionDef[] = [
   // ── 11:50 CET ──
   {
     title: "Data Sovereignty through Preserving Privacy & Verifying Identity",
-    description: "How can individuals control their data while still participating in systems that require identity verification? This talk explores the tension between privacy and accountability, presenting practical approaches to data sovereignty.",
+    description:
+      "How can individuals control their data while still participating in systems that require identity verification? This talk explores the tension between privacy and accountability, presenting practical approaches to data sovereignty.",
     start: d1(10, 50),
     end: d1(11, 0),
     venue: "Bread Cube",
@@ -552,7 +568,8 @@ const SESSIONS: SessionDef[] = [
   // ── 12:00 CET ──
   {
     title: "Imagining Community-Owned Data Centers",
-    description: "What if the buildings housing our data were owned by the communities they serve? This panel explores models for democratic ownership of physical computing infrastructure, from cooperative data centres to municipal cloud services.",
+    description:
+      "What if the buildings housing our data were owned by the communities they serve? This panel explores models for democratic ownership of physical computing infrastructure, from cooperative data centres to municipal cloud services.",
     start: d1(11, 0),
     end: d1(11, 40),
     venue: "Bread Cube",
@@ -566,8 +583,10 @@ const SESSIONS: SessionDef[] = [
     ],
   },
   {
-    title: "Intents for Impact: Simplifying Cross-Chain Solutions for the Common Good",
-    description: "A practical workshop on using intent-based protocols to build cross-chain applications for social impact. Participants will learn how to design systems where complex blockchain interactions are simplified into clear human intentions.",
+    title:
+      "Intents for Impact: Simplifying Cross-Chain Solutions for the Common Good",
+    description:
+      "A practical workshop on using intent-based protocols to build cross-chain applications for social impact. Participants will learn how to design systems where complex blockchain interactions are simplified into clear human intentions.",
     start: d1(11, 0),
     end: d1(11, 40),
     venue: "Workshop Cube",
@@ -577,7 +596,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Local Live Internationalization",
-    description: "Making decentralised technology accessible across languages and cultures in real time. Ryan demonstrates tools and workflows for live localisation that can be applied to any open-source project.",
+    description:
+      "Making decentralised technology accessible across languages and cultures in real time. Ryan demonstrates tools and workflows for live localisation that can be applied to any open-source project.",
     start: d1(11, 0),
     end: d1(11, 40),
     venue: "DWeb Terrace",
@@ -587,7 +607,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Techno Tyranny, Digital Enclosures & Hospitable States",
-    description: "A roundtable examining how digital platforms create new forms of enclosure and control. Panellists explore resistance strategies and the role of the state in either enabling or countering techno-authoritarianism.",
+    description:
+      "A roundtable examining how digital platforms create new forms of enclosure and control. Panellists explore resistance strategies and the role of the state in either enabling or countering techno-authoritarianism.",
     start: d1(11, 0),
     end: d1(12, 0),
     venue: "Einkeller",
@@ -603,8 +624,10 @@ const SESSIONS: SessionDef[] = [
     ],
   },
   {
-    title: "Decentralised, Community-driven Infrastructures to Transform the Music Industry",
-    description: "How can musicians take back control from centralised streaming platforms? This session explores community-driven alternatives \u2014 from decentralised distribution to fair royalty systems \u2014 that put artists first.",
+    title:
+      "Decentralised, Community-driven Infrastructures to Transform the Music Industry",
+    description:
+      "How can musicians take back control from centralised streaming platforms? This session explores community-driven alternatives \u2014 from decentralised distribution to fair royalty systems \u2014 that put artists first.",
     start: d1(11, 0),
     end: d1(11, 40),
     venue: "Design Space",
@@ -641,7 +664,8 @@ const SESSIONS: SessionDef[] = [
   // ── 14:00 CET ──
   {
     title: "Bridging Tech, Solidarity, and Human Rights",
-    description: "A roundtable exploring how technology can be a tool for solidarity rather than surveillance. Panellists share stories from the frontlines of human rights work and discuss what builders need to understand about the communities they serve.",
+    description:
+      "A roundtable exploring how technology can be a tool for solidarity rather than surveillance. Panellists share stories from the frontlines of human rights work and discuss what builders need to understand about the communities they serve.",
     start: d1(13, 0),
     end: d1(14, 0),
     venue: "Bread Cube",
@@ -656,7 +680,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Unconference Open Space",
-    description: "Afternoon open space sessions. Propose a topic on the board, gather your people, and dive deep into the conversations that matter most to you.",
+    description:
+      "Afternoon open space sessions. Propose a topic on the board, gather your people, and dive deep into the conversations that matter most to you.",
     start: d1(13, 0),
     end: d1(15, 0),
     venue: "Canopy",
@@ -666,7 +691,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Practical Approaches to Building for Financial Inclusion",
-    description: "A hands-on workshop sharing lessons learned from deploying financial inclusion tools in emerging markets. Anke covers common pitfalls, regulatory considerations, and design patterns that actually work for underserved communities.",
+    description:
+      "A hands-on workshop sharing lessons learned from deploying financial inclusion tools in emerging markets. Anke covers common pitfalls, regulatory considerations, and design patterns that actually work for underserved communities.",
     start: d1(13, 0),
     end: d1(13, 40),
     venue: "Workshop Cube",
@@ -675,8 +701,10 @@ const SESSIONS: SessionDef[] = [
     speakers: [{ email: "anke.liu@demo.example" }],
   },
   {
-    title: "Intent-Driven Economies: Rethinking Labor, Markets, and Local Resilience",
-    description: "How might economies look if they were organised around human intentions rather than profit maximisation? Shai presents research on intent-driven market design and its potential to build local economic resilience.",
+    title:
+      "Intent-Driven Economies: Rethinking Labor, Markets, and Local Resilience",
+    description:
+      "How might economies look if they were organised around human intentions rather than profit maximisation? Shai presents research on intent-driven market design and its potential to build local economic resilience.",
     start: d1(13, 0),
     end: d1(13, 30),
     venue: "Einkeller",
@@ -687,7 +715,8 @@ const SESSIONS: SessionDef[] = [
   // ── 15:00 CET ──
   {
     title: "Interfaces of Resilience: Visual designs for Solidarity",
-    description: "How can visual design serve as a tool for solidarity? This session brings together designers who create visual systems for social movements, exploring how aesthetics can strengthen collective action.",
+    description:
+      "How can visual design serve as a tool for solidarity? This session brings together designers who create visual systems for social movements, exploring how aesthetics can strengthen collective action.",
     start: d1(14, 0),
     end: d1(14, 40),
     venue: "Bread Cube",
@@ -701,7 +730,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Value Creation as Collective Practice",
-    description: "An exploration of how open-source communities and commons-based projects create, measure, and distribute value. Stina challenges conventional metrics and proposes alternative frameworks for recognising collective contribution.",
+    description:
+      "An exploration of how open-source communities and commons-based projects create, measure, and distribute value. Stina challenges conventional metrics and proposes alternative frameworks for recognising collective contribution.",
     start: d1(14, 0),
     end: d1(14, 30),
     venue: "Einkeller",
@@ -711,7 +741,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "DWeb Pop-Up Programming",
-    description: "A curated series of short presentations and demos from the DWeb community. See the latest tools, platforms, and experiments in decentralised web technology.",
+    description:
+      "A curated series of short presentations and demos from the DWeb community. See the latest tools, platforms, and experiments in decentralised web technology.",
     start: d1(14, 0),
     end: d1(15, 0),
     venue: "DWeb Terrace",
@@ -722,7 +753,8 @@ const SESSIONS: SessionDef[] = [
   // ── 16:00 CET ──
   {
     title: "Microsolidarity: Whatever the Question, Community is the Answer",
-    description: "An interactive session exploring microsolidarity \u2014 the practice of building mutual support in small groups. Participants experience the core practices and discuss how tiny acts of solidarity scale into systemic change.",
+    description:
+      "An interactive session exploring microsolidarity \u2014 the practice of building mutual support in small groups. Participants experience the core practices and discuss how tiny acts of solidarity scale into systemic change.",
     start: d1(15, 0),
     end: d1(15, 40),
     venue: "Bread Cube",
@@ -732,7 +764,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Vibecoding Governance",
-    description: "Can you encode a community\u2019s vibe into its governance protocol? Oliver presents a provocative framework for translating intangible community values into on-chain decision-making mechanisms.",
+    description:
+      "Can you encode a community\u2019s vibe into its governance protocol? Oliver presents a provocative framework for translating intangible community values into on-chain decision-making mechanisms.",
     start: d1(15, 0),
     end: d1(15, 20),
     venue: "Einkeller",
@@ -743,7 +776,8 @@ const SESSIONS: SessionDef[] = [
   // ── 17:00 CET ──
   {
     title: "Platform State and Digital Public Infrastructure",
-    description: "Closing keynote examining the relationship between states and digital platforms. How should democratic societies govern the platforms that increasingly mediate civic life? A call for digital public infrastructure as a public good.",
+    description:
+      "Closing keynote examining the relationship between states and digital platforms. How should democratic societies govern the platforms that increasingly mediate civic life? A call for digital public infrastructure as a public good.",
     start: d1(16, 0),
     end: d1(16, 30),
     venue: "Bread Cube",
@@ -759,7 +793,8 @@ const SESSIONS: SessionDef[] = [
   // ── 10:00 CET (09:00 UTC) ──
   {
     title: "Day 2 Opening & Reflections",
-    description: "A brief opening to day two. Reflections from yesterday, key themes emerging, and an overview of today\u2019s programme.",
+    description:
+      "A brief opening to day two. Reflections from yesterday, key themes emerging, and an overview of today\u2019s programme.",
     start: d2(9, 0),
     end: d2(9, 20),
     venue: "Bread Cube",
@@ -772,7 +807,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Unconference Open Space",
-    description: "Morning open space sessions for day two. Build on yesterday\u2019s conversations or start something new.",
+    description:
+      "Morning open space sessions for day two. Build on yesterday\u2019s conversations or start something new.",
     start: d2(9, 0),
     end: d2(11, 0),
     venue: "Canopy",
@@ -783,7 +819,8 @@ const SESSIONS: SessionDef[] = [
   // ── 10:20 CET ──
   {
     title: "Protocol Governance & Cryptoeconomic Design",
-    description: "A deep-dive roundtable on the state of protocol governance. Four practitioners share lessons from building and governing decentralised protocols, covering token design, voting mechanisms, and the human dynamics that make or break governance systems.",
+    description:
+      "A deep-dive roundtable on the state of protocol governance. Four practitioners share lessons from building and governing decentralised protocols, covering token design, voting mechanisms, and the human dynamics that make or break governance systems.",
     start: d2(9, 20),
     end: d2(10, 20),
     venue: "Einkeller",
@@ -798,7 +835,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Privacy by Design",
-    description: "A practical workshop on integrating privacy considerations from the start of the design process. Eileen shares frameworks, tools, and case studies for building privacy-preserving products that people actually want to use.",
+    description:
+      "A practical workshop on integrating privacy considerations from the start of the design process. Eileen shares frameworks, tools, and case studies for building privacy-preserving products that people actually want to use.",
     start: d2(9, 20),
     end: d2(10, 0),
     venue: "Workshop Cube",
@@ -808,7 +846,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Collective Worldbuilding through Speculative Fiction",
-    description: "A participatory workshop where participants co-create fictional worlds that embody the values of decentralisation, mutual aid, and ecological stewardship. Through collaborative storytelling, we explore what just futures might look like.",
+    description:
+      "A participatory workshop where participants co-create fictional worlds that embody the values of decentralisation, mutual aid, and ecological stewardship. Through collaborative storytelling, we explore what just futures might look like.",
     start: d2(9, 20),
     end: d2(10, 0),
     venue: "Design Space",
@@ -819,7 +858,8 @@ const SESSIONS: SessionDef[] = [
   // ── 11:00 CET ──
   {
     title: "Multispecies Speculative Design",
-    description: "What if we designed technology with non-human stakeholders in mind? Rita presents a framework for multispecies design thinking that considers ecological relationships as first-class design constraints.",
+    description:
+      "What if we designed technology with non-human stakeholders in mind? Rita presents a framework for multispecies design thinking that considers ecological relationships as first-class design constraints.",
     start: d2(10, 0),
     end: d2(10, 40),
     venue: "Design Space",
@@ -828,8 +868,10 @@ const SESSIONS: SessionDef[] = [
     speakers: [{ email: "rita.palma@demo.example", role: "Facilitator" }],
   },
   {
-    title: "Brand Lab, or reverse-engineering your project\u2019s reputation (no design skills required)",
-    description: "A hands-on workshop for open-source and decentralised projects to understand and shape their brand. Ira guides participants through reverse-engineering their project\u2019s reputation to build authentic, compelling identities.",
+    title:
+      "Brand Lab, or reverse-engineering your project\u2019s reputation (no design skills required)",
+    description:
+      "A hands-on workshop for open-source and decentralised projects to understand and shape their brand. Ira guides participants through reverse-engineering their project\u2019s reputation to build authentic, compelling identities.",
     start: d2(10, 0),
     end: d2(11, 0),
     venue: "Workshop Cube",
@@ -839,17 +881,21 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Circles in Practice: Building Trust Networks",
-    description: "A follow-up workshop to yesterday\u2019s talk. Martin leads a hands-on session where participants create and explore trust-based currency circles, experiencing firsthand how webs of trust can underpin a fairer financial system.",
+    description:
+      "A follow-up workshop to yesterday\u2019s talk. Martin leads a hands-on session where participants create and explore trust-based currency circles, experiencing firsthand how webs of trust can underpin a fairer financial system.",
     start: d2(10, 0),
     end: d2(10, 40),
     venue: "Bread Cube",
     type: "Workshop",
     track: "Governance & Economics",
-    speakers: [{ email: "martin.koppelmann@demo.example", role: "Facilitator" }],
+    speakers: [
+      { email: "martin.koppelmann@demo.example", role: "Facilitator" },
+    ],
   },
   {
     title: "Data Centres for the People: A Design Sprint",
-    description: "Building on yesterday\u2019s roundtable, this workshop invites participants to collaboratively design governance models for community-owned data centres. What does democratic infrastructure actually look like in practice?",
+    description:
+      "Building on yesterday\u2019s roundtable, this workshop invites participants to collaboratively design governance models for community-owned data centres. What does democratic infrastructure actually look like in practice?",
     start: d2(10, 20),
     end: d2(11, 0),
     venue: "Einkeller",
@@ -862,7 +908,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Decentralising the Newsroom",
-    description: "How can journalism survive the platform era? Alessandro leads a discussion on decentralised media infrastructure, community-owned publishing platforms, and the future of independent reporting.",
+    description:
+      "How can journalism survive the platform era? Alessandro leads a discussion on decentralised media infrastructure, community-owned publishing platforms, and the future of independent reporting.",
     start: d2(10, 0),
     end: d2(10, 40),
     venue: "DWeb Terrace",
@@ -894,7 +941,8 @@ const SESSIONS: SessionDef[] = [
   // ── 13:00 CET ──
   {
     title: "Digital Rights at the Frontier",
-    description: "A panel on the state of digital rights in 2025. Speakers share perspectives from legal advocacy, technical development, and grassroots organising, exploring what a rights-respecting digital future requires.",
+    description:
+      "A panel on the state of digital rights in 2025. Speakers share perspectives from legal advocacy, technical development, and grassroots organising, exploring what a rights-respecting digital future requires.",
     start: d2(12, 0),
     end: d2(13, 0),
     venue: "Bread Cube",
@@ -909,7 +957,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "From Extraction to Regeneration: Economic Models That Heal",
-    description: "A roundtable on regenerative economics. How can we move beyond extractive models to create economic systems that restore communities and ecosystems? Practitioners share real-world experiments.",
+    description:
+      "A roundtable on regenerative economics. How can we move beyond extractive models to create economic systems that restore communities and ecosystems? Practitioners share real-world experiments.",
     start: d2(12, 0),
     end: d2(12, 40),
     venue: "Einkeller",
@@ -923,7 +972,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Unconference Open Space",
-    description: "Afternoon open space sessions. The energy of two days of conversations flows into self-organised deep dives.",
+    description:
+      "Afternoon open space sessions. The energy of two days of conversations flows into self-organised deep dives.",
     start: d2(12, 0),
     end: d2(14, 0),
     venue: "Canopy",
@@ -933,7 +983,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Building Secure Tools for Activists",
-    description: "A workshop on security-first design for tools used by human rights defenders. Kat shares threat modelling frameworks and design patterns for high-risk environments.",
+    description:
+      "A workshop on security-first design for tools used by human rights defenders. Kat shares threat modelling frameworks and design patterns for high-risk environments.",
     start: d2(12, 0),
     end: d2(12, 40),
     venue: "Workshop Cube",
@@ -943,8 +994,10 @@ const SESSIONS: SessionDef[] = [
   },
   // ── 14:00 CET ──
   {
-    title: "Art as Infrastructure: Creative Practices for Decentralised Futures",
-    description: "What role does art play in building decentralised infrastructure? Artists and technologists discuss how creative practice can shape the design and culture of the systems we build together.",
+    title:
+      "Art as Infrastructure: Creative Practices for Decentralised Futures",
+    description:
+      "What role does art play in building decentralised infrastructure? Artists and technologists discuss how creative practice can shape the design and culture of the systems we build together.",
     start: d2(13, 0),
     end: d2(13, 40),
     venue: "Einkeller",
@@ -957,17 +1010,21 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Cross-Chain Collaboration: Making Interoperability Real",
-    description: "A technical workshop on building interoperable decentralised applications. Guillermo walks through real-world patterns for cross-chain messaging, asset bridging, and intent-based protocols.",
+    description:
+      "A technical workshop on building interoperable decentralised applications. Guillermo walks through real-world patterns for cross-chain messaging, asset bridging, and intent-based protocols.",
     start: d2(13, 0),
     end: d2(13, 40),
     venue: "Workshop Cube",
     type: "Workshop",
     track: "Infrastructure & Tech",
-    speakers: [{ email: "guillermo.gallardo@demo.example", role: "Facilitator" }],
+    speakers: [
+      { email: "guillermo.gallardo@demo.example", role: "Facilitator" },
+    ],
   },
   {
     title: "Designing for Solidarity: A Visual Workshop",
-    description: "A hands-on design workshop where participants create visual assets for social movements. No design skills required \u2014 Catherine and team guide you through accessible design tools and solidarity aesthetics.",
+    description:
+      "A hands-on design workshop where participants create visual assets for social movements. No design skills required \u2014 Catherine and team guide you through accessible design tools and solidarity aesthetics.",
     start: d2(13, 0),
     end: d2(14, 0),
     venue: "Design Space",
@@ -980,7 +1037,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "The Future of Music Ownership",
-    description: "A lightning talk exploring new models for music ownership and distribution. Jacob and Nusha present case studies from artists who have successfully transitioned to community-owned platforms.",
+    description:
+      "A lightning talk exploring new models for music ownership and distribution. Jacob and Nusha present case studies from artists who have successfully transitioned to community-owned platforms.",
     start: d2(13, 0),
     end: d2(13, 20),
     venue: "DWeb Terrace",
@@ -994,7 +1052,8 @@ const SESSIONS: SessionDef[] = [
   // ── 15:00 CET ──
   {
     title: "DAO Governance in Practice: Lessons from the Trenches",
-    description: "Jake, Theo, and Oliver share unvarnished lessons from running DAOs. What works, what doesn\u2019t, and what they\u2019d do differently. An honest conversation about the gap between governance theory and practice.",
+    description:
+      "Jake, Theo, and Oliver share unvarnished lessons from running DAOs. What works, what doesn\u2019t, and what they\u2019d do differently. An honest conversation about the gap between governance theory and practice.",
     start: d2(14, 0),
     end: d2(14, 40),
     venue: "Einkeller",
@@ -1008,7 +1067,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Localisation Sprint: Making Tools Multilingual",
-    description: "A collaborative sprint where participants contribute translations and localisation improvements to real open-source projects. Ryan provides the tools and frameworks \u2014 you provide the languages.",
+    description:
+      "A collaborative sprint where participants contribute translations and localisation improvements to real open-source projects. Ryan provides the tools and frameworks \u2014 you provide the languages.",
     start: d2(14, 0),
     end: d2(15, 0),
     venue: "DWeb Terrace",
@@ -1019,7 +1079,8 @@ const SESSIONS: SessionDef[] = [
   // ── 16:00 CET ──
   {
     title: "Closing Circle & Commitments",
-    description: "The closing ceremony for the conference. We gather as a community to share key takeaways, make commitments for future collaboration, and celebrate what we\u2019ve built together over these two days.",
+    description:
+      "The closing ceremony for the conference. We gather as a community to share key takeaways, make commitments for future collaboration, and celebrate what we\u2019ve built together over these two days.",
     start: d2(15, 0),
     end: d2(15, 40),
     venue: "Bread Cube",
@@ -1033,7 +1094,8 @@ const SESSIONS: SessionDef[] = [
   },
   {
     title: "Farewell Drinks & Open Jam",
-    description: "Informal socialising and an open music jam session. Bring instruments, bring stories, bring yourselves.",
+    description:
+      "Informal socialising and an open music jam session. Bring instruments, bring stories, bring yourselves.",
     start: d2(15, 40),
     end: d2(17, 0),
     venue: "Canopy",
@@ -1047,7 +1109,9 @@ const SESSIONS: SessionDef[] = [
 async function main() {
   console.log("🌱 Seeding demo schedule data...\n");
   if (RESET) {
-    console.log("🔄 --reset flag detected: will clear existing sessions first\n");
+    console.log(
+      "🔄 --reset flag detected: will clear existing sessions first\n",
+    );
   }
 
   // 1. Find the target event
@@ -1101,7 +1165,12 @@ async function main() {
     const sessionType = await prisma.scheduleSessionType.upsert({
       where: { eventId_name: { eventId: event.id, name: st.name } },
       update: { color: st.color, order: st.order },
-      create: { eventId: event.id, name: st.name, color: st.color, order: st.order },
+      create: {
+        eventId: event.id,
+        name: st.name,
+        color: st.color,
+        order: st.order,
+      },
     });
     typeMap.set(st.name, sessionType.id);
     console.log(`  ✅ ${st.name} (${st.color})`);
@@ -1114,7 +1183,12 @@ async function main() {
     const track = await prisma.scheduleTrack.upsert({
       where: { eventId_name: { eventId: event.id, name: tr.name } },
       update: { color: tr.color, order: tr.order },
-      create: { eventId: event.id, name: tr.name, color: tr.color, order: tr.order },
+      create: {
+        eventId: event.id,
+        name: tr.name,
+        color: tr.color,
+        order: tr.order,
+      },
     });
     trackMap.set(tr.name, track.id);
     console.log(`  ✅ ${tr.name} (${tr.color})`);
@@ -1150,7 +1224,9 @@ async function main() {
         company: sp.company,
       },
     });
-    console.log(`  ✅ ${sp.firstName} ${sp.surname} — ${sp.jobTitle}, ${sp.company}`);
+    console.log(
+      `  ✅ ${sp.firstName} ${sp.surname} — ${sp.jobTitle}, ${sp.company}`,
+    );
   }
 
   // 6. Seed sessions + session speakers
@@ -1160,14 +1236,18 @@ async function main() {
   for (const sess of SESSIONS) {
     const venueId = venueMap.get(sess.venue);
     const typeId = typeMap.get(sess.type);
-    const trackId = sess.track ? trackMap.get(sess.track) ?? null : null;
+    const trackId = sess.track ? (trackMap.get(sess.track) ?? null) : null;
 
     if (!venueId) {
-      console.warn(`  ⚠️  Venue "${sess.venue}" not found, skipping: ${sess.title}`);
+      console.warn(
+        `  ⚠️  Venue "${sess.venue}" not found, skipping: ${sess.title}`,
+      );
       continue;
     }
     if (!typeId) {
-      console.warn(`  ⚠️  Session type "${sess.type}" not found, skipping: ${sess.title}`);
+      console.warn(
+        `  ⚠️  Session type "${sess.type}" not found, skipping: ${sess.title}`,
+      );
       continue;
     }
 
@@ -1240,14 +1320,22 @@ async function main() {
     );
   }
 
-  const day1Count = SESSIONS.filter((s) => s.start.toISOString().startsWith(DAY1)).length;
-  const day2Count = SESSIONS.filter((s) => s.start.toISOString().startsWith(DAY2)).length;
+  const day1Count = SESSIONS.filter((s) =>
+    s.start.toISOString().startsWith(DAY1),
+  ).length;
+  const day2Count = SESSIONS.filter((s) =>
+    s.start.toISOString().startsWith(DAY2),
+  ).length;
 
-  console.log(`\n🎉 Done! Seeded ${sessionCount} sessions across ${VENUES.length} venues.`);
+  console.log(
+    `\n🎉 Done! Seeded ${sessionCount} sessions across ${VENUES.length} venues.`,
+  );
   console.log(`   Day 1 (Mar 14): ${day1Count} sessions`);
   console.log(`   Day 2 (Mar 15): ${day2Count} sessions`);
   console.log(`   ${SPEAKERS.length} speakers with profiles created.`);
-  console.log(`   ${SESSION_TYPES.length} session types, ${TRACKS.length} tracks.\n`);
+  console.log(
+    `   ${SESSION_TYPES.length} session types, ${TRACKS.length} tracks.\n`,
+  );
 }
 
 void main()

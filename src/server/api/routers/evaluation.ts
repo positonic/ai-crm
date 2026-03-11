@@ -1,7 +1,7 @@
-import { z } from 'zod';
-import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
-import { TRPCError } from '@trpc/server';
-import { getAIEvaluationService } from '~/server/services/aiEvaluation';
+import { z } from "zod";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { TRPCError } from "@trpc/server";
+import { getAIEvaluationService } from "~/server/services/aiEvaluation";
 
 // Helper function to check if user has admin/staff role
 function checkAdminAccess(userRole?: string | null) {
@@ -17,7 +17,13 @@ function checkAdminAccess(userRole?: string | null) {
 const CreateReviewerAssignmentSchema = z.object({
   applicationId: z.string(),
   reviewerId: z.string(),
-  stage: z.enum(['SCREENING', 'DETAILED_REVIEW', 'VIDEO_REVIEW', 'CONSENSUS', 'FINAL_DECISION']),
+  stage: z.enum([
+    "SCREENING",
+    "DETAILED_REVIEW",
+    "VIDEO_REVIEW",
+    "CONSENSUS",
+    "FINAL_DECISION",
+  ]),
   priority: z.number().int().min(0).default(0),
   dueDate: z.date().optional(),
   notes: z.string().optional(),
@@ -26,7 +32,15 @@ const CreateReviewerAssignmentSchema = z.object({
 const BulkCreateAssignmentsSchema = z.object({
   applicationIds: z.array(z.string()).min(1),
   reviewerId: z.string(),
-  stage: z.enum(['SCREENING', 'DETAILED_REVIEW', 'VIDEO_REVIEW', 'CONSENSUS', 'FINAL_DECISION']).default('SCREENING'),
+  stage: z
+    .enum([
+      "SCREENING",
+      "DETAILED_REVIEW",
+      "VIDEO_REVIEW",
+      "CONSENSUS",
+      "FINAL_DECISION",
+    ])
+    .default("SCREENING"),
   priority: z.number().int().min(0).default(0),
   dueDate: z.date().optional(),
   notes: z.string().optional(),
@@ -34,10 +48,14 @@ const BulkCreateAssignmentsSchema = z.object({
 
 const UpdateEvaluationSchema = z.object({
   evaluationId: z.string(),
-  status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'REVIEWED']).optional(),
+  status: z
+    .enum(["PENDING", "IN_PROGRESS", "COMPLETED", "REVIEWED"])
+    .optional(),
   overallScore: z.number().min(0).max(10).optional(),
   overallComments: z.string().optional(),
-  recommendation: z.enum(['ACCEPT', 'REJECT', 'WAITLIST', 'NEEDS_MORE_INFO']).optional(),
+  recommendation: z
+    .enum(["ACCEPT", "REJECT", "WAITLIST", "NEEDS_MORE_INFO"])
+    .optional(),
   confidence: z.number().int().min(1).max(5).optional(),
   timeSpentMinutes: z.number().int().min(0).optional(),
   videoWatched: z.boolean().optional(),
@@ -62,23 +80,27 @@ const CreateEvaluationCommentSchema = z.object({
 
 const UpdateConsensusSchema = z.object({
   applicationId: z.string(),
-  finalDecision: z.enum(['ACCEPT', 'REJECT', 'WAITLIST']).optional(),
+  finalDecision: z.enum(["ACCEPT", "REJECT", "WAITLIST"]).optional(),
   consensusScore: z.number().min(0).max(10).optional(),
   discussionNotes: z.string().optional(),
 });
 
-
 // Helper function to calculate weighted score
 async function calculateWeightedScore(
-  prisma: { 
-    evaluationScore: { 
-      findMany: (args: { where: { evaluationId: string }; include: { criteria: true } }) => Promise<Array<{
-        score: number;
-        criteria: { weight: number };
-      }>>
-    } 
-  }, 
-  evaluationId: string
+  prisma: {
+    evaluationScore: {
+      findMany: (args: {
+        where: { evaluationId: string };
+        include: { criteria: true };
+      }) => Promise<
+        Array<{
+          score: number;
+          criteria: { weight: number };
+        }>
+      >;
+    };
+  },
+  evaluationId: string,
 ): Promise<number> {
   const scores = await prisma.evaluationScore.findMany({
     where: { evaluationId },
@@ -88,29 +110,37 @@ async function calculateWeightedScore(
   if (scores.length === 0) return 0;
 
   const totalWeightedScore = scores.reduce((sum: number, score) => {
-    return sum + (score.score * score.criteria.weight);
+    return sum + score.score * score.criteria.weight;
   }, 0);
 
-  const totalWeight = scores.reduce((sum: number, score) => sum + score.criteria.weight, 0);
-  
+  const totalWeight = scores.reduce(
+    (sum: number, score) => sum + score.criteria.weight,
+    0,
+  );
+
   return totalWeight > 0 ? totalWeightedScore / totalWeight : 0;
 }
 // AutoScore schema
 const AutoScoreApplicationSchema = z.object({
   applicationId: z.string(),
-  stage: z.enum(['SCREENING', 'DETAILED_REVIEW', 'VIDEO_REVIEW', 'CONSENSUS', 'FINAL_DECISION']),
+  stage: z.enum([
+    "SCREENING",
+    "DETAILED_REVIEW",
+    "VIDEO_REVIEW",
+    "CONSENSUS",
+    "FINAL_DECISION",
+  ]),
 });
 export const evaluationRouter = createTRPCRouter({
   // Get all evaluation criteria
-  getCriteria: protectedProcedure
-    .query(async ({ ctx }) => {
-      checkAdminAccess(ctx.session.user.role);
-      
-      return await ctx.db.evaluationCriteria.findMany({
-        where: { isActive: true },
-        orderBy: { order: 'asc' },
-      });
-    }),
+  getCriteria: protectedProcedure.query(async ({ ctx }) => {
+    checkAdminAccess(ctx.session.user.role);
+
+    return await ctx.db.evaluationCriteria.findMany({
+      where: { isActive: true },
+      orderBy: { order: "asc" },
+    });
+  }),
 
   // Create reviewer assignment
   createAssignment: protectedProcedure
@@ -121,7 +151,7 @@ export const evaluationRouter = createTRPCRouter({
       // Check if the assigned reviewer is an AI reviewer
       const reviewer = await ctx.db.user.findUnique({
         where: { id: input.reviewerId },
-        select: { id: true, name: true, email: true, isAIReviewer: true }
+        select: { id: true, name: true, email: true, isAIReviewer: true },
       });
 
       if (!reviewer) {
@@ -135,13 +165,15 @@ export const evaluationRouter = createTRPCRouter({
       const assignment = await ctx.db.reviewerAssignment.create({
         data: input,
         include: {
-          reviewer: { select: { id: true, name: true, email: true, isAIReviewer: true } },
-          application: { 
-            select: { 
+          reviewer: {
+            select: { id: true, name: true, email: true, isAIReviewer: true },
+          },
+          application: {
+            select: {
               id: true,
               user: { select: { name: true, email: true } },
-              event: { select: { name: true } }
-            }
+              event: { select: { name: true } },
+            },
           },
         },
       });
@@ -153,7 +185,7 @@ export const evaluationRouter = createTRPCRouter({
           reviewerId: input.reviewerId,
           assignmentId: assignment.id,
           stage: input.stage,
-          status: 'PENDING',
+          status: "PENDING",
         },
       });
 
@@ -162,38 +194,55 @@ export const evaluationRouter = createTRPCRouter({
         // Process AI evaluation asynchronously to avoid blocking the assignment response
         void (async () => {
           try {
-            console.log(`[AI Evaluation] Starting AI evaluation for evaluation ID: ${evaluation.id}, application: ${input.applicationId}`);
-            
+            console.log(
+              `[AI Evaluation] Starting AI evaluation for evaluation ID: ${evaluation.id}, application: ${input.applicationId}`,
+            );
+
             // Get full application data for AI evaluation
             const applicationWithData = await ctx.db.application.findUnique({
               where: { id: input.applicationId },
               include: {
                 responses: {
                   include: { question: true },
-                  orderBy: { question: { order: 'asc' } }
+                  orderBy: { question: { order: "asc" } },
                 },
-                user: { select: { id: true, firstName: true, surname: true, name: true, email: true, adminNotes: true, adminWorkExperience: true, adminLabels: true } },
+                user: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    surname: true,
+                    name: true,
+                    email: true,
+                    adminNotes: true,
+                    adminWorkExperience: true,
+                    adminLabels: true,
+                  },
+                },
                 event: { select: { name: true } },
-              }
+              },
             });
 
             if (!applicationWithData) {
-              console.error(`[AI Evaluation] Application ${input.applicationId} not found`);
+              console.error(
+                `[AI Evaluation] Application ${input.applicationId} not found`,
+              );
               return;
             }
 
             // Get evaluation criteria
             const criteria = await ctx.db.evaluationCriteria.findMany({
               where: { isActive: true },
-              orderBy: { order: 'asc' },
+              orderBy: { order: "asc" },
             });
 
             if (criteria.length === 0) {
-              console.error('[AI Evaluation] No evaluation criteria found');
+              console.error("[AI Evaluation] No evaluation criteria found");
               return;
             }
 
-            console.log(`[AI Evaluation] Found ${criteria.length} criteria, proceeding with AI evaluation`);
+            console.log(
+              `[AI Evaluation] Found ${criteria.length} criteria, proceeding with AI evaluation`,
+            );
 
             // Use AI service to generate scores
             const aiService = getAIEvaluationService();
@@ -203,7 +252,9 @@ export const evaluationRouter = createTRPCRouter({
               stage: input.stage,
             });
 
-            console.log(`[AI Evaluation] AI service returned ${autoScoreResult.scores?.length || 0} scores`);
+            console.log(
+              `[AI Evaluation] AI service returned ${autoScoreResult.scores?.length || 0} scores`,
+            );
 
             // Use transaction to ensure data consistency
             await ctx.db.$transaction(async (tx) => {
@@ -221,7 +272,10 @@ export const evaluationRouter = createTRPCRouter({
                 }
 
                 // Calculate weighted overall score
-                const weightedScore = await calculateWeightedScore(tx, evaluation.id);
+                const weightedScore = await calculateWeightedScore(
+                  tx,
+                  evaluation.id,
+                );
 
                 // Update evaluation with AI results
                 await tx.applicationEvaluation.update({
@@ -231,28 +285,36 @@ export const evaluationRouter = createTRPCRouter({
                     overallComments: autoScoreResult.overallComments,
                     recommendation: autoScoreResult.recommendation,
                     confidence: autoScoreResult.confidence,
-                    status: 'COMPLETED',
+                    status: "COMPLETED",
                     completedAt: new Date(),
                   },
                 });
 
-                console.log(`[AI Evaluation] Successfully completed AI evaluation for evaluation ID: ${evaluation.id}`);
+                console.log(
+                  `[AI Evaluation] Successfully completed AI evaluation for evaluation ID: ${evaluation.id}`,
+                );
               }
             });
           } catch (error) {
-            console.error(`[AI Evaluation] Failed for evaluation ID ${evaluation.id}:`, error);
-            
+            console.error(
+              `[AI Evaluation] Failed for evaluation ID ${evaluation.id}:`,
+              error,
+            );
+
             // Mark evaluation as failed but don't leave it in PENDING state
             try {
               await ctx.db.applicationEvaluation.update({
                 where: { id: evaluation.id },
                 data: {
-                  status: 'PENDING', // Keep as pending so admin can manually review
-                  overallComments: `AI evaluation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                  status: "PENDING", // Keep as pending so admin can manually review
+                  overallComments: `AI evaluation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
                 },
               });
             } catch (updateError) {
-              console.error(`[AI Evaluation] Failed to update evaluation status:`, updateError);
+              console.error(
+                `[AI Evaluation] Failed to update evaluation status:`,
+                updateError,
+              );
             }
           }
         })();
@@ -267,12 +329,13 @@ export const evaluationRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       checkAdminAccess(ctx.session.user.role);
 
-      const { applicationIds, reviewerId, stage, priority, dueDate, notes } = input;
+      const { applicationIds, reviewerId, stage, priority, dueDate, notes } =
+        input;
 
       // Check if the assigned reviewer is an AI reviewer
       const reviewer = await ctx.db.user.findUnique({
         where: { id: reviewerId },
-        select: { id: true, name: true, email: true, isAIReviewer: true }
+        select: { id: true, name: true, email: true, isAIReviewer: true },
       });
 
       if (!reviewer) {
@@ -292,24 +355,31 @@ export const evaluationRouter = createTRPCRouter({
         select: { applicationId: true },
       });
 
-      const existingApplicationIds = new Set(existingAssignments.map(a => a.applicationId));
-      const newApplicationIds = applicationIds.filter(id => !existingApplicationIds.has(id));
+      const existingApplicationIds = new Set(
+        existingAssignments.map((a) => a.applicationId),
+      );
+      const newApplicationIds = applicationIds.filter(
+        (id) => !existingApplicationIds.has(id),
+      );
 
       if (newApplicationIds.length === 0) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "All selected applications are already assigned to this reviewer for this stage",
+          message:
+            "All selected applications are already assigned to this reviewer for this stage",
         });
       }
 
       // Create assignments in batch
-      const assignmentData = newApplicationIds.map(applicationId => ({
+      const assignmentData = newApplicationIds.map((applicationId) => ({
         applicationId,
         reviewerId,
         stage,
         priority,
         dueDate,
-        notes: notes ?? `Bulk assigned for ${stage.replace('_', ' ').toLowerCase()} review`,
+        notes:
+          notes ??
+          `Bulk assigned for ${stage.replace("_", " ").toLowerCase()} review`,
       }));
 
       const assignments = await ctx.db.$transaction(async (tx) => {
@@ -326,24 +396,40 @@ export const evaluationRouter = createTRPCRouter({
             stage,
           },
           include: {
-            reviewer: { select: { id: true, firstName: true, surname: true, name: true, email: true, isAIReviewer: true } },
-            application: { 
-              select: { 
+            reviewer: {
+              select: {
                 id: true,
-                user: { select: { firstName: true, surname: true, name: true, email: true } },
-                event: { select: { name: true } }
-              }
+                firstName: true,
+                surname: true,
+                name: true,
+                email: true,
+                isAIReviewer: true,
+              },
+            },
+            application: {
+              select: {
+                id: true,
+                user: {
+                  select: {
+                    firstName: true,
+                    surname: true,
+                    name: true,
+                    email: true,
+                  },
+                },
+                event: { select: { name: true } },
+              },
             },
           },
         });
 
         // Create corresponding evaluation records
-        const evaluationData = createdAssignments.map(assignment => ({
+        const evaluationData = createdAssignments.map((assignment) => ({
           applicationId: assignment.applicationId,
           reviewerId: assignment.reviewerId,
           assignmentId: assignment.id,
           stage: assignment.stage,
-          status: 'PENDING' as const,
+          status: "PENDING" as const,
         }));
 
         await tx.applicationEvaluation.createMany({
@@ -357,137 +443,181 @@ export const evaluationRouter = createTRPCRouter({
       if (reviewer.isAIReviewer) {
         // Process AI evaluations asynchronously to avoid blocking the response
         void (async () => {
-          console.log(`[AI Bulk Evaluation] Starting bulk AI evaluation for ${newApplicationIds.length} applications`);
-          
+          console.log(
+            `[AI Bulk Evaluation] Starting bulk AI evaluation for ${newApplicationIds.length} applications`,
+          );
+
           // Process AI evaluations in parallel for better performance
-          const aiEvaluationPromises = newApplicationIds.map(async (applicationId) => {
-            try {
-              console.log(`[AI Bulk Evaluation] Processing application: ${applicationId}`);
-              
-              // Get full application data for AI evaluation
-              const applicationWithData = await ctx.db.application.findUnique({
-                where: { id: applicationId },
-                include: {
-                  responses: {
-                    include: { question: true },
-                    orderBy: { question: { order: 'asc' } }
+          const aiEvaluationPromises = newApplicationIds.map(
+            async (applicationId) => {
+              try {
+                console.log(
+                  `[AI Bulk Evaluation] Processing application: ${applicationId}`,
+                );
+
+                // Get full application data for AI evaluation
+                const applicationWithData = await ctx.db.application.findUnique(
+                  {
+                    where: { id: applicationId },
+                    include: {
+                      responses: {
+                        include: { question: true },
+                        orderBy: { question: { order: "asc" } },
+                      },
+                      user: {
+                        select: {
+                          id: true,
+                          firstName: true,
+                          surname: true,
+                          name: true,
+                          email: true,
+                          adminNotes: true,
+                          adminWorkExperience: true,
+                          adminLabels: true,
+                        },
+                      },
+                      event: { select: { name: true } },
+                    },
                   },
-                  user: { select: { id: true, firstName: true, surname: true, name: true, email: true, adminNotes: true, adminWorkExperience: true, adminLabels: true } },
-                  event: { select: { name: true } },
+                );
+
+                if (!applicationWithData) {
+                  console.error(
+                    `[AI Bulk Evaluation] Application ${applicationId} not found`,
+                  );
+                  return;
                 }
-              });
 
-              if (!applicationWithData) {
-                console.error(`[AI Bulk Evaluation] Application ${applicationId} not found`);
-                return;
-              }
+                // Get evaluation criteria
+                const criteria = await ctx.db.evaluationCriteria.findMany({
+                  where: { isActive: true },
+                  orderBy: { order: "asc" },
+                });
 
-              // Get evaluation criteria
-              const criteria = await ctx.db.evaluationCriteria.findMany({
-                where: { isActive: true },
-                orderBy: { order: 'asc' },
-              });
-
-              if (criteria.length === 0) {
-                console.error('[AI Bulk Evaluation] No evaluation criteria found');
-                return;
-              }
-
-              // Find the evaluation record for this application
-              const evaluation = await ctx.db.applicationEvaluation.findUnique({
-                where: {
-                  applicationId_reviewerId_stage: {
-                    applicationId,
-                    reviewerId,
-                    stage,
-                  }
+                if (criteria.length === 0) {
+                  console.error(
+                    "[AI Bulk Evaluation] No evaluation criteria found",
+                  );
+                  return;
                 }
-              });
 
-              if (!evaluation) {
-                console.error(`[AI Bulk Evaluation] Evaluation not found for application ${applicationId}`);
-                return;
-              }
+                // Find the evaluation record for this application
+                const evaluation =
+                  await ctx.db.applicationEvaluation.findUnique({
+                    where: {
+                      applicationId_reviewerId_stage: {
+                        applicationId,
+                        reviewerId,
+                        stage,
+                      },
+                    },
+                  });
 
-              console.log(`[AI Bulk Evaluation] Found evaluation ${evaluation.id}, proceeding with AI evaluation`);
+                if (!evaluation) {
+                  console.error(
+                    `[AI Bulk Evaluation] Evaluation not found for application ${applicationId}`,
+                  );
+                  return;
+                }
 
-              // Use AI service to generate scores
-              const aiService = getAIEvaluationService();
-              const autoScoreResult = await aiService.evaluateApplication({
-                application: applicationWithData,
-                criteria,
-                stage,
-              });
+                console.log(
+                  `[AI Bulk Evaluation] Found evaluation ${evaluation.id}, proceeding with AI evaluation`,
+                );
 
-              console.log(`[AI Bulk Evaluation] AI service returned ${autoScoreResult.scores?.length || 0} scores for application ${applicationId}`);
+                // Use AI service to generate scores
+                const aiService = getAIEvaluationService();
+                const autoScoreResult = await aiService.evaluateApplication({
+                  application: applicationWithData,
+                  criteria,
+                  stage,
+                });
 
-              // Use transaction to ensure data consistency
-              await ctx.db.$transaction(async (tx) => {
-                // Create scores in the database
-                if (autoScoreResult.scores) {
-                  for (const scoreData of autoScoreResult.scores) {
-                    await tx.evaluationScore.create({
+                console.log(
+                  `[AI Bulk Evaluation] AI service returned ${autoScoreResult.scores?.length || 0} scores for application ${applicationId}`,
+                );
+
+                // Use transaction to ensure data consistency
+                await ctx.db.$transaction(async (tx) => {
+                  // Create scores in the database
+                  if (autoScoreResult.scores) {
+                    for (const scoreData of autoScoreResult.scores) {
+                      await tx.evaluationScore.create({
+                        data: {
+                          evaluationId: evaluation.id,
+                          criteriaId: scoreData.criteriaId,
+                          score: scoreData.score,
+                          reasoning: scoreData.reasoning,
+                        },
+                      });
+                    }
+
+                    // Calculate weighted overall score
+                    const weightedScore = await calculateWeightedScore(
+                      tx,
+                      evaluation.id,
+                    );
+
+                    // Update evaluation with AI results
+                    await tx.applicationEvaluation.update({
+                      where: { id: evaluation.id },
                       data: {
-                        evaluationId: evaluation.id,
-                        criteriaId: scoreData.criteriaId,
-                        score: scoreData.score,
-                        reasoning: scoreData.reasoning,
+                        overallScore: weightedScore,
+                        overallComments: autoScoreResult.overallComments,
+                        recommendation: autoScoreResult.recommendation,
+                        confidence: autoScoreResult.confidence,
+                        status: "COMPLETED",
+                        completedAt: new Date(),
+                      },
+                    });
+
+                    console.log(
+                      `[AI Bulk Evaluation] Successfully completed AI evaluation for application ${applicationId}, evaluation ${evaluation.id}`,
+                    );
+                  }
+                });
+              } catch (error) {
+                console.error(
+                  `[AI Bulk Evaluation] Failed for application ${applicationId}:`,
+                  error,
+                );
+
+                // Try to mark evaluation as failed
+                try {
+                  const evaluation =
+                    await ctx.db.applicationEvaluation.findUnique({
+                      where: {
+                        applicationId_reviewerId_stage: {
+                          applicationId,
+                          reviewerId,
+                          stage,
+                        },
+                      },
+                    });
+
+                  if (evaluation) {
+                    await ctx.db.applicationEvaluation.update({
+                      where: { id: evaluation.id },
+                      data: {
+                        status: "PENDING",
+                        overallComments: `AI evaluation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
                       },
                     });
                   }
-
-                  // Calculate weighted overall score
-                  const weightedScore = await calculateWeightedScore(tx, evaluation.id);
-
-                  // Update evaluation with AI results
-                  await tx.applicationEvaluation.update({
-                    where: { id: evaluation.id },
-                    data: {
-                      overallScore: weightedScore,
-                      overallComments: autoScoreResult.overallComments,
-                      recommendation: autoScoreResult.recommendation,
-                      confidence: autoScoreResult.confidence,
-                      status: 'COMPLETED',
-                      completedAt: new Date(),
-                    },
-                  });
-
-                  console.log(`[AI Bulk Evaluation] Successfully completed AI evaluation for application ${applicationId}, evaluation ${evaluation.id}`);
+                } catch (updateError) {
+                  console.error(
+                    `[AI Bulk Evaluation] Failed to update evaluation status for ${applicationId}:`,
+                    updateError,
+                  );
                 }
-              });
-            } catch (error) {
-              console.error(`[AI Bulk Evaluation] Failed for application ${applicationId}:`, error);
-              
-              // Try to mark evaluation as failed
-              try {
-                const evaluation = await ctx.db.applicationEvaluation.findUnique({
-                  where: {
-                    applicationId_reviewerId_stage: {
-                      applicationId,
-                      reviewerId,
-                      stage,
-                    }
-                  }
-                });
-                
-                if (evaluation) {
-                  await ctx.db.applicationEvaluation.update({
-                    where: { id: evaluation.id },
-                    data: {
-                      status: 'PENDING',
-                      overallComments: `AI evaluation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-                    },
-                  });
-                }
-              } catch (updateError) {
-                console.error(`[AI Bulk Evaluation] Failed to update evaluation status for ${applicationId}:`, updateError);
               }
-            }
-          });
+            },
+          );
 
           // Execute all AI evaluations in parallel
           await Promise.all(aiEvaluationPromises);
-          console.log(`[AI Bulk Evaluation] Completed bulk AI evaluation for ${newApplicationIds.length} applications`);
+          console.log(
+            `[AI Bulk Evaluation] Completed bulk AI evaluation for ${newApplicationIds.length} applications`,
+          );
         })();
       }
 
@@ -500,76 +630,91 @@ export const evaluationRouter = createTRPCRouter({
     }),
 
   // Get assignments for a reviewer
-  getMyAssignments: protectedProcedure
-    .query(async ({ ctx }) => {
-      const userId = ctx.session.user.id;
-      
-      return await ctx.db.reviewerAssignment.findMany({
-        where: { reviewerId: userId },
-        include: {
-          application: {
-            select: {
-              id: true,
-              email: true,
-              status: true,
-              createdAt: true,
-              user: { select: { name: true, email: true } },
-              event: { select: { name: true } },
-            }
+  getMyAssignments: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    return await ctx.db.reviewerAssignment.findMany({
+      where: { reviewerId: userId },
+      include: {
+        application: {
+          select: {
+            id: true,
+            email: true,
+            status: true,
+            createdAt: true,
+            user: { select: { name: true, email: true } },
+            event: { select: { name: true } },
           },
-          evaluations: {
-            select: {
-              id: true,
-              status: true,
-              overallScore: true,
-              recommendation: true,
-              completedAt: true,
-            }
-          }
         },
-        orderBy: [
-          { priority: 'desc' },
-          { assignedAt: 'asc' }
-        ],
-      });
-    }),
+        evaluations: {
+          select: {
+            id: true,
+            status: true,
+            overallScore: true,
+            recommendation: true,
+            completedAt: true,
+          },
+        },
+      },
+      orderBy: [{ priority: "desc" }, { assignedAt: "asc" }],
+    });
+  }),
 
   // Get evaluation for a specific assignment
   getEvaluation: protectedProcedure
-    .input(z.object({
-      applicationId: z.string(),
-      stage: z.enum(['SCREENING', 'DETAILED_REVIEW', 'VIDEO_REVIEW', 'CONSENSUS', 'FINAL_DECISION']),
-    }))
+    .input(
+      z.object({
+        applicationId: z.string(),
+        stage: z.enum([
+          "SCREENING",
+          "DETAILED_REVIEW",
+          "VIDEO_REVIEW",
+          "CONSENSUS",
+          "FINAL_DECISION",
+        ]),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      
+
       return await ctx.db.applicationEvaluation.findUnique({
         where: {
           applicationId_reviewerId_stage: {
             applicationId: input.applicationId,
             reviewerId: userId,
             stage: input.stage,
-          }
+          },
         },
         include: {
           scores: {
             include: { criteria: true },
-            orderBy: { criteria: { order: 'asc' } }
+            orderBy: { criteria: { order: "asc" } },
           },
           comments: {
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: "desc" },
           },
           application: {
             include: {
               responses: {
                 include: { question: true },
-                orderBy: { question: { order: 'asc' } }
+                orderBy: { question: { order: "asc" } },
               },
-              user: { select: { id: true, firstName: true, surname: true, name: true, email: true, adminNotes: true, adminWorkExperience: true, adminLabels: true } },
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  surname: true,
+                  name: true,
+                  email: true,
+                  adminNotes: true,
+                  adminWorkExperience: true,
+                  adminLabels: true,
+                },
+              },
               event: { select: { name: true } },
-            }
-          }
-        }
+            },
+          },
+        },
       });
     }),
 
@@ -583,20 +728,23 @@ export const evaluationRouter = createTRPCRouter({
       // Verify the evaluation belongs to the current user or user is admin
       const evaluation = await ctx.db.applicationEvaluation.findUnique({
         where: { id: evaluationId },
-        select: { reviewerId: true }
+        select: { reviewerId: true },
       });
 
       if (!evaluation) {
-        throw new Error('Evaluation not found');
+        throw new Error("Evaluation not found");
       }
 
-      if (evaluation.reviewerId !== userId && !ctx.session.user.role?.includes('admin')) {
-        throw new Error('Unauthorized to update this evaluation');
+      if (
+        evaluation.reviewerId !== userId &&
+        !ctx.session.user.role?.includes("admin")
+      ) {
+        throw new Error("Unauthorized to update this evaluation");
       }
 
       // Set completed timestamp if status is being set to COMPLETED
       const finalUpdateData = { ...updateData };
-      if (updateData.status === 'COMPLETED') {
+      if (updateData.status === "COMPLETED") {
         finalUpdateData.completedAt = new Date();
       }
 
@@ -604,16 +752,19 @@ export const evaluationRouter = createTRPCRouter({
         where: { id: evaluationId },
         data: finalUpdateData,
         include: {
-          scores: { include: { criteria: true } }
-        }
+          scores: { include: { criteria: true } },
+        },
       });
 
       // Recalculate overall score if scores exist
       if (updatedEvaluation.scores.length > 0) {
-        const weightedScore = await calculateWeightedScore(ctx.db, evaluationId);
+        const weightedScore = await calculateWeightedScore(
+          ctx.db,
+          evaluationId,
+        );
         await ctx.db.applicationEvaluation.update({
           where: { id: evaluationId },
-          data: { overallScore: weightedScore }
+          data: { overallScore: weightedScore },
         });
       }
 
@@ -629,11 +780,11 @@ export const evaluationRouter = createTRPCRouter({
       // Verify the evaluation belongs to the current user
       const evaluation = await ctx.db.applicationEvaluation.findUnique({
         where: { id: input.evaluationId },
-        select: { reviewerId: true }
+        select: { reviewerId: true },
       });
 
       if (!evaluation || evaluation.reviewerId !== userId) {
-        throw new Error('Unauthorized to update this evaluation');
+        throw new Error("Unauthorized to update this evaluation");
       }
 
       const score = await ctx.db.evaluationScore.upsert({
@@ -641,21 +792,24 @@ export const evaluationRouter = createTRPCRouter({
           evaluationId_criteriaId: {
             evaluationId: input.evaluationId,
             criteriaId: input.criteriaId,
-          }
+          },
         },
         create: input,
         update: {
           score: input.score,
           reasoning: input.reasoning,
         },
-        include: { criteria: true }
+        include: { criteria: true },
       });
 
       // Recalculate overall score
-      const weightedScore = await calculateWeightedScore(ctx.db, input.evaluationId);
+      const weightedScore = await calculateWeightedScore(
+        ctx.db,
+        input.evaluationId,
+      );
       await ctx.db.applicationEvaluation.update({
         where: { id: input.evaluationId },
-        data: { overallScore: weightedScore }
+        data: { overallScore: weightedScore },
       });
 
       return score;
@@ -670,11 +824,11 @@ export const evaluationRouter = createTRPCRouter({
       // Verify the evaluation belongs to the current user
       const evaluation = await ctx.db.applicationEvaluation.findUnique({
         where: { id: input.evaluationId },
-        select: { reviewerId: true }
+        select: { reviewerId: true },
       });
 
       if (!evaluation || evaluation.reviewerId !== userId) {
-        throw new Error('Unauthorized to add comment to this evaluation');
+        throw new Error("Unauthorized to add comment to this evaluation");
       }
 
       return await ctx.db.evaluationComment.create({
@@ -695,19 +849,26 @@ export const evaluationRouter = createTRPCRouter({
           event: { select: { name: true } },
           evaluations: {
             include: {
-              reviewer: { select: { firstName: true, surname: true, name: true, email: true } },
+              reviewer: {
+                select: {
+                  firstName: true,
+                  surname: true,
+                  name: true,
+                  email: true,
+                },
+              },
               scores: {
-                include: { criteria: true }
-              }
-            }
+                include: { criteria: true },
+              },
+            },
           },
           consensus: true,
           reviewerAssignments: {
             include: {
-              reviewer: { select: { name: true, email: true } }
-            }
-          }
-        }
+              reviewer: { select: { name: true, email: true } },
+            },
+          },
+        },
       });
     }),
 
@@ -731,21 +892,25 @@ export const evaluationRouter = createTRPCRouter({
           ...consensusData,
           decidedBy: ctx.session.user.id,
           decidedAt: consensusData.finalDecision ? new Date() : undefined,
-        }
+        },
       });
     }),
 
   // Get review pipeline overview
   getReviewPipeline: protectedProcedure
-    .input(z.object({
-      reviewerId: z.string().optional(),
-    }).optional())
+    .input(
+      z
+        .object({
+          reviewerId: z.string().optional(),
+        })
+        .optional(),
+    )
     .query(async ({ ctx, input }) => {
       checkAdminAccess(ctx.session.user.role);
 
       const applications = await ctx.db.application.findMany({
         where: {
-          status: { in: ['SUBMITTED', 'UNDER_REVIEW'] }
+          status: { in: ["SUBMITTED", "UNDER_REVIEW"] },
         },
         include: {
           user: { select: { name: true, email: true } },
@@ -757,49 +922,56 @@ export const evaluationRouter = createTRPCRouter({
               overallScore: true,
               recommendation: true,
               reviewerId: true,
-              reviewer: { select: { name: true } }
-            }
+              reviewer: { select: { name: true } },
+            },
           },
           consensus: {
-            select: { 
+            select: {
               finalDecision: true,
               consensusScore: true,
               decidedAt: true,
-            }
+            },
           },
           responses: {
             select: {
               answer: true,
               question: {
                 select: {
-                  questionKey: true
-                }
-              }
-            }
-          }
-        }
+                  questionKey: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       // Filter by reviewer if specified
       let filteredApplications = applications;
       if (input?.reviewerId) {
-        filteredApplications = applications.filter(app =>
-          app.evaluations.some(evaluation => evaluation.reviewerId === input.reviewerId)
+        filteredApplications = applications.filter((app) =>
+          app.evaluations.some(
+            (evaluation) => evaluation.reviewerId === input.reviewerId,
+          ),
         );
       }
 
       // Simplified 2-stage pipeline: Application Review → Consensus
       const pipeline = {
-        applicationReview: filteredApplications.filter(app => 
-          // Applications that have no completed evaluations or are still being reviewed
-          !app.evaluations.some(e => e.status === 'COMPLETED') && !app.consensus?.finalDecision
+        applicationReview: filteredApplications.filter(
+          (app) =>
+            // Applications that have no completed evaluations or are still being reviewed
+            !app.evaluations.some((e) => e.status === "COMPLETED") &&
+            !app.consensus?.finalDecision,
         ),
-        consensus: filteredApplications.filter(app =>
-          // Applications that have at least one completed evaluation but no final decision
-          app.evaluations.some(e => e.status === 'COMPLETED') &&
-          !app.consensus?.finalDecision
+        consensus: filteredApplications.filter(
+          (app) =>
+            // Applications that have at least one completed evaluation but no final decision
+            app.evaluations.some((e) => e.status === "COMPLETED") &&
+            !app.consensus?.finalDecision,
         ),
-        finalDecision: filteredApplications.filter(app => app.consensus?.finalDecision)
+        finalDecision: filteredApplications.filter(
+          (app) => app.consensus?.finalDecision,
+        ),
       };
 
       return pipeline;
@@ -807,9 +979,11 @@ export const evaluationRouter = createTRPCRouter({
 
   // Get consensus data for an application (all completed evaluations)
   getConsensusData: protectedProcedure
-    .input(z.object({
-      applicationId: z.string(),
-    }))
+    .input(
+      z.object({
+        applicationId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       checkAdminAccess(ctx.session.user.role);
 
@@ -819,7 +993,7 @@ export const evaluationRouter = createTRPCRouter({
           user: { select: { name: true, email: true } },
           event: { select: { id: true, name: true } },
           evaluations: {
-            where: { status: 'COMPLETED' },
+            where: { status: "COMPLETED" },
             include: {
               reviewer: {
                 select: {
@@ -838,20 +1012,20 @@ export const evaluationRouter = createTRPCRouter({
               },
               scores: {
                 include: { criteria: true },
-                orderBy: { criteria: { order: 'asc' } }
+                orderBy: { criteria: { order: "asc" } },
               },
               comments: {
-                orderBy: { createdAt: 'desc' }
+                orderBy: { createdAt: "desc" },
               },
             },
-            orderBy: { completedAt: 'desc' }
+            orderBy: { completedAt: "desc" },
           },
           consensus: true,
           responses: {
             include: { question: true },
-            orderBy: { question: { order: 'asc' } }
+            orderBy: { question: { order: "asc" } },
           },
-        }
+        },
       });
 
       if (!application) {
@@ -868,36 +1042,48 @@ export const evaluationRouter = createTRPCRouter({
 
   // Get reviewer competencies
   getReviewerCompetencies: protectedProcedure
-    .input(z.object({
-      reviewerId: z.string().optional(), // If omitted, gets current user's competencies
-    }))
+    .input(
+      z.object({
+        reviewerId: z.string().optional(), // If omitted, gets current user's competencies
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const reviewerId = input.reviewerId ?? ctx.session.user.id;
-      
+
       // Only admins can view other reviewers' competencies
-      if (input.reviewerId && !ctx.session.user.role?.includes('admin')) {
+      if (input.reviewerId && !ctx.session.user.role?.includes("admin")) {
         checkAdminAccess(ctx.session.user.role);
       }
-      
+
       return await ctx.db.reviewerCompetency.findMany({
         where: { reviewerId },
         include: {
           reviewer: { select: { name: true, email: true } },
-          assignedByUser: { select: { firstName: true, surname: true, name: true, email: true } },
+          assignedByUser: {
+            select: { firstName: true, surname: true, name: true, email: true },
+          },
         },
-        orderBy: { category: 'asc' },
+        orderBy: { category: "asc" },
       });
     }),
 
   // Set reviewer competency
   setReviewerCompetency: protectedProcedure
-    .input(z.object({
-      reviewerId: z.string(),
-      category: z.enum(['TECHNICAL', 'PROJECT', 'COMMUNITY_FIT', 'VIDEO', 'OVERALL']),
-      competencyLevel: z.number().int().min(1).max(5),
-      baseWeight: z.number().min(0.1).max(5.0).default(1.0),
-      notes: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        reviewerId: z.string(),
+        category: z.enum([
+          "TECHNICAL",
+          "PROJECT",
+          "COMMUNITY_FIT",
+          "VIDEO",
+          "OVERALL",
+        ]),
+        competencyLevel: z.number().int().min(1).max(5),
+        baseWeight: z.number().min(0.1).max(5.0).default(1.0),
+        notes: z.string().optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       checkAdminAccess(ctx.session.user.role);
 
@@ -906,7 +1092,7 @@ export const evaluationRouter = createTRPCRouter({
           reviewerId_category: {
             reviewerId: input.reviewerId,
             category: input.category,
-          }
+          },
         },
         create: {
           reviewerId: input.reviewerId,
@@ -925,35 +1111,48 @@ export const evaluationRouter = createTRPCRouter({
         },
         include: {
           reviewer: { select: { name: true, email: true } },
-          assignedByUser: { select: { firstName: true, surname: true, name: true, email: true } },
+          assignedByUser: {
+            select: { firstName: true, surname: true, name: true, email: true },
+          },
         },
       });
     }),
 
   // Bulk set reviewer competencies
   bulkSetReviewerCompetencies: protectedProcedure
-    .input(z.object({
-      reviewerId: z.string(),
-      competencies: z.array(z.object({
-        category: z.enum(['TECHNICAL', 'PROJECT', 'COMMUNITY_FIT', 'VIDEO', 'ENTREPRENEURIAL', 'OVERALL']),
-        competencyLevel: z.number().int().min(1).max(5),
-        baseWeight: z.number().min(0.1).max(5.0).default(1.0),
-        notes: z.string().optional(),
-      })),
-    }))
+    .input(
+      z.object({
+        reviewerId: z.string(),
+        competencies: z.array(
+          z.object({
+            category: z.enum([
+              "TECHNICAL",
+              "PROJECT",
+              "COMMUNITY_FIT",
+              "VIDEO",
+              "ENTREPRENEURIAL",
+              "OVERALL",
+            ]),
+            competencyLevel: z.number().int().min(1).max(5),
+            baseWeight: z.number().min(0.1).max(5.0).default(1.0),
+            notes: z.string().optional(),
+          }),
+        ),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       checkAdminAccess(ctx.session.user.role);
 
       return await ctx.db.$transaction(async (tx) => {
         const results = [];
-        
+
         for (const competency of input.competencies) {
           const result = await tx.reviewerCompetency.upsert({
             where: {
               reviewerId_category: {
                 reviewerId: input.reviewerId,
                 category: competency.category,
-              }
+              },
             },
             create: {
               reviewerId: input.reviewerId,
@@ -971,23 +1170,45 @@ export const evaluationRouter = createTRPCRouter({
               updatedAt: new Date(),
             },
             include: {
-              reviewer: { select: { firstName: true, surname: true, name: true, email: true } },
-              assignedByUser: { select: { firstName: true, surname: true, name: true, email: true } },
+              reviewer: {
+                select: {
+                  firstName: true,
+                  surname: true,
+                  name: true,
+                  email: true,
+                },
+              },
+              assignedByUser: {
+                select: {
+                  firstName: true,
+                  surname: true,
+                  name: true,
+                  email: true,
+                },
+              },
             },
           });
           results.push(result);
         }
-        
+
         return results;
       });
     }),
 
   // Remove reviewer competency
   removeReviewerCompetency: protectedProcedure
-    .input(z.object({
-      reviewerId: z.string(),
-      category: z.enum(['TECHNICAL', 'PROJECT', 'COMMUNITY_FIT', 'VIDEO', 'OVERALL']),
-    }))
+    .input(
+      z.object({
+        reviewerId: z.string(),
+        category: z.enum([
+          "TECHNICAL",
+          "PROJECT",
+          "COMMUNITY_FIT",
+          "VIDEO",
+          "OVERALL",
+        ]),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       checkAdminAccess(ctx.session.user.role);
 
@@ -996,35 +1217,41 @@ export const evaluationRouter = createTRPCRouter({
           reviewerId_category: {
             reviewerId: input.reviewerId,
             category: input.category,
-          }
+          },
         },
       });
     }),
 
   // Get available applications for self-assignment queue
   getAvailableApplications: protectedProcedure
-    .input(z.object({
-      eventId: z.string().optional(), // Filter by specific event
-      stage: z.enum(['SCREENING', 'DETAILED_REVIEW', 'VIDEO_REVIEW']).optional(),
-      limit: z.number().int().positive().max(100).default(20),
-    }).optional())
+    .input(
+      z
+        .object({
+          eventId: z.string().optional(), // Filter by specific event
+          stage: z
+            .enum(["SCREENING", "DETAILED_REVIEW", "VIDEO_REVIEW"])
+            .optional(),
+          limit: z.number().int().positive().max(100).default(20),
+        })
+        .optional(),
+    )
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const { eventId, stage = 'SCREENING', limit = 20 } = input ?? {};
-      
+      const { eventId, stage = "SCREENING", limit = 20 } = input ?? {};
+
       return await ctx.db.application.findMany({
         where: {
-          status: { in: ['SUBMITTED', 'UNDER_REVIEW'] },
+          status: { in: ["SUBMITTED", "UNDER_REVIEW"] },
           ...(eventId && { eventId }),
           // Exclude applications already assigned to current reviewer
           NOT: {
             reviewerAssignments: {
-              some: { 
+              some: {
                 reviewerId: userId,
-                stage: stage
-              }
-            }
-          }
+                stage: stage,
+              },
+            },
+          },
         },
         select: {
           id: true,
@@ -1039,21 +1266,21 @@ export const evaluationRouter = createTRPCRouter({
             where: { stage },
             select: {
               id: true,
-              reviewer: { select: { name: true } }
-            }
+              reviewer: { select: { name: true } },
+            },
           },
           // Count existing evaluations for this stage
           evaluations: {
             where: { stage },
             select: {
               status: true,
-              reviewer: { select: { name: true } }
-            }
-          }
+              reviewer: { select: { name: true } },
+            },
+          },
         },
         orderBy: [
-          { submittedAt: 'asc' }, // Oldest submissions first
-          { createdAt: 'asc' }
+          { submittedAt: "asc" }, // Oldest submissions first
+          { createdAt: "asc" },
         ],
         take: limit,
       });
@@ -1061,12 +1288,16 @@ export const evaluationRouter = createTRPCRouter({
 
   // Self-assign to an application for review
   selfAssignToApplication: protectedProcedure
-    .input(z.object({
-      applicationId: z.string(),
-      stage: z.enum(['SCREENING', 'DETAILED_REVIEW', 'VIDEO_REVIEW']).default('SCREENING'),
-      priority: z.number().int().min(0).max(10).default(0),
-      notes: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        applicationId: z.string(),
+        stage: z
+          .enum(["SCREENING", "DETAILED_REVIEW", "VIDEO_REVIEW"])
+          .default("SCREENING"),
+        priority: z.number().int().min(0).max(10).default(0),
+        notes: z.string().optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
       const { applicationId, stage, priority, notes } = input;
@@ -1074,12 +1305,12 @@ export const evaluationRouter = createTRPCRouter({
       // Check if application exists and is available for review
       const application = await ctx.db.application.findUnique({
         where: { id: applicationId },
-        select: { 
-          id: true, 
+        select: {
+          id: true,
           status: true,
           user: { select: { name: true, email: true } },
-          event: { select: { name: true } }
-        }
+          event: { select: { name: true } },
+        },
       });
 
       if (!application) {
@@ -1089,7 +1320,7 @@ export const evaluationRouter = createTRPCRouter({
         });
       }
 
-      if (!['SUBMITTED', 'UNDER_REVIEW'].includes(application.status)) {
+      if (!["SUBMITTED", "UNDER_REVIEW"].includes(application.status)) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Application is not available for review",
@@ -1103,14 +1334,15 @@ export const evaluationRouter = createTRPCRouter({
             applicationId,
             reviewerId: userId,
             stage,
-          }
-        }
+          },
+        },
       });
 
       if (existingAssignment) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "You are already assigned to review this application at this stage",
+          message:
+            "You are already assigned to review this application at this stage",
         });
       }
 
@@ -1123,16 +1355,31 @@ export const evaluationRouter = createTRPCRouter({
             reviewerId: userId,
             stage,
             priority,
-            notes: notes ?? 'Self-assigned from review queue',
+            notes: notes ?? "Self-assigned from review queue",
           },
           include: {
-            reviewer: { select: { id: true, firstName: true, surname: true, name: true, email: true } },
-            application: { 
-              select: { 
+            reviewer: {
+              select: {
                 id: true,
-                user: { select: { firstName: true, surname: true, name: true, email: true } },
-                event: { select: { name: true } }
-              }
+                firstName: true,
+                surname: true,
+                name: true,
+                email: true,
+              },
+            },
+            application: {
+              select: {
+                id: true,
+                user: {
+                  select: {
+                    firstName: true,
+                    surname: true,
+                    name: true,
+                    email: true,
+                  },
+                },
+                event: { select: { name: true } },
+              },
             },
           },
         });
@@ -1144,17 +1391,24 @@ export const evaluationRouter = createTRPCRouter({
             reviewerId: userId,
             assignmentId: assignment.id,
             stage,
-            status: 'PENDING',
+            status: "PENDING",
           },
           include: {
             application: {
               select: {
                 id: true,
-                user: { select: { firstName: true, surname: true, name: true, email: true } },
-                event: { select: { name: true } }
-              }
-            }
-          }
+                user: {
+                  select: {
+                    firstName: true,
+                    surname: true,
+                    name: true,
+                    email: true,
+                  },
+                },
+                event: { select: { name: true } },
+              },
+            },
+          },
         });
 
         return { assignment, evaluation };
@@ -1162,48 +1416,56 @@ export const evaluationRouter = createTRPCRouter({
     }),
 
   // Get all reviewers with their competencies (for admin management)
-  getAllReviewersWithCompetencies: protectedProcedure
-    .query(async ({ ctx }) => {
-      checkAdminAccess(ctx.session.user.role);
-      
-      return await ctx.db.user.findMany({
-        where: {
-          OR: [
-            { role: { contains: 'admin' } },
-            { reviewerAssignments: { some: {} } },
-            { applicationEvaluations: { some: {} } },
-          ]
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          reviewerCompetencies: {
-            include: {
-              assignedByUser: { select: { firstName: true, surname: true, name: true, email: true } },
-            },
-            orderBy: { category: 'asc' },
-          },
-          _count: {
-            select: {
-              reviewerAssignments: true,
-              applicationEvaluations: { where: { status: 'COMPLETED' } },
+  getAllReviewersWithCompetencies: protectedProcedure.query(async ({ ctx }) => {
+    checkAdminAccess(ctx.session.user.role);
+
+    return await ctx.db.user.findMany({
+      where: {
+        OR: [
+          { role: { contains: "admin" } },
+          { reviewerAssignments: { some: {} } },
+          { applicationEvaluations: { some: {} } },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        reviewerCompetencies: {
+          include: {
+            assignedByUser: {
+              select: {
+                firstName: true,
+                surname: true,
+                name: true,
+                email: true,
+              },
             },
           },
+          orderBy: { category: "asc" },
         },
-        orderBy: { name: 'asc' },
-      });
-    }),
+        _count: {
+          select: {
+            reviewerAssignments: true,
+            applicationEvaluations: { where: { status: "COMPLETED" } },
+          },
+        },
+      },
+      orderBy: { name: "asc" },
+    });
+  }),
 
   // Get evaluation by ID (for direct evaluation page access)
   getEvaluationById: protectedProcedure
-    .input(z.object({
-      evaluationId: z.string(),
-    }))
+    .input(
+      z.object({
+        evaluationId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      
+
       const evaluation = await ctx.db.applicationEvaluation.findUnique({
         where: { id: input.evaluationId },
         select: {
@@ -1212,27 +1474,30 @@ export const evaluationRouter = createTRPCRouter({
           reviewerId: true,
           stage: true,
           status: true,
-        }
+        },
       });
 
       if (!evaluation) {
-        throw new Error('Evaluation not found');
+        throw new Error("Evaluation not found");
       }
 
       // Verify the evaluation belongs to the current user or user is admin
-      if (evaluation.reviewerId !== userId && !ctx.session.user.role?.includes('admin')) {
-        throw new Error('Unauthorized to view this evaluation');
+      if (
+        evaluation.reviewerId !== userId &&
+        !ctx.session.user.role?.includes("admin")
+      ) {
+        throw new Error("Unauthorized to view this evaluation");
       }
 
       // For CONSENSUS stage, return enhanced data similar to getConsensusData
-      if (evaluation.stage === 'CONSENSUS') {
+      if (evaluation.stage === "CONSENSUS") {
         const application = await ctx.db.application.findUnique({
           where: { id: evaluation.applicationId },
           include: {
             user: { select: { name: true, email: true } },
             event: { select: { name: true } },
             evaluations: {
-              where: { status: 'COMPLETED' },
+              where: { status: "COMPLETED" },
               include: {
                 reviewer: {
                   select: {
@@ -1253,20 +1518,20 @@ export const evaluationRouter = createTRPCRouter({
                 },
                 scores: {
                   include: { criteria: true },
-                  orderBy: { criteria: { order: 'asc' } }
+                  orderBy: { criteria: { order: "asc" } },
                 },
                 comments: {
-                  orderBy: { createdAt: 'desc' }
+                  orderBy: { createdAt: "desc" },
                 },
               },
-              orderBy: { completedAt: 'desc' }
+              orderBy: { completedAt: "desc" },
             },
             consensus: true,
             responses: {
               include: { question: true },
-              orderBy: { question: { order: 'asc' } }
+              orderBy: { question: { order: "asc" } },
             },
-          }
+          },
         });
 
         if (!application) {
@@ -1306,20 +1571,20 @@ export const evaluationRouter = createTRPCRouter({
             applicationId,
             reviewerId: userId,
             stage,
-          }
+          },
         },
         include: {
           application: {
             include: {
               responses: {
                 include: { question: true },
-                orderBy: { question: { order: 'asc' } }
+                orderBy: { question: { order: "asc" } },
               },
               user: { select: { id: true, name: true, email: true } },
               event: { select: { name: true } },
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       if (!evaluation) {
@@ -1332,7 +1597,7 @@ export const evaluationRouter = createTRPCRouter({
       // Get evaluation criteria
       const criteria = await ctx.db.evaluationCriteria.findMany({
         where: { isActive: true },
-        orderBy: { order: 'asc' },
+        orderBy: { order: "asc" },
       });
 
       if (!criteria.length) {

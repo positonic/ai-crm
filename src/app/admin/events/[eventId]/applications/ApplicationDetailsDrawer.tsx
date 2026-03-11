@@ -113,8 +113,14 @@ function EditableField({
   if (isEditing) {
     return (
       <div>
-        <Text fw={500} mb={4}>{label}:</Text>
-        {hint && <Text size="xs" c="orange" mb={4}>{hint}</Text>}
+        <Text fw={500} mb={4}>
+          {label}:
+        </Text>
+        {hint && (
+          <Text size="xs" c="orange" mb={4}>
+            {hint}
+          </Text>
+        )}
         <Group gap="xs" align="flex-end">
           <div style={{ flex: 1 }}>
             {multiline ? (
@@ -134,10 +140,21 @@ function EditableField({
               />
             )}
           </div>
-          <ActionIcon color="green" variant="light" size="sm" onClick={() => onSaveEdit(fieldKey)} loading={isSaving}>
+          <ActionIcon
+            color="green"
+            variant="light"
+            size="sm"
+            onClick={() => onSaveEdit(fieldKey)}
+            loading={isSaving}
+          >
             <IconCheck size={14} />
           </ActionIcon>
-          <ActionIcon color="gray" variant="light" size="sm" onClick={onCancelEdit}>
+          <ActionIcon
+            color="gray"
+            variant="light"
+            size="sm"
+            onClick={onCancelEdit}
+          >
             <IconX size={14} />
           </ActionIcon>
         </Group>
@@ -150,7 +167,11 @@ function EditableField({
       <Text fw={500}>{label}:</Text>
       <Group gap={4}>
         <Text size="sm">{value ?? "Not set"}</Text>
-        <ActionIcon variant="subtle" size="xs" onClick={() => onStartEdit(fieldKey, value ?? "")}>
+        <ActionIcon
+          variant="subtle"
+          size="xs"
+          onClick={() => onStartEdit(fieldKey, value ?? "")}
+        >
           <IconPencil size={14} />
         </ActionIcon>
       </Group>
@@ -168,50 +189,57 @@ export default function ApplicationDetailsDrawer({
   const [editValue, setEditValue] = useState<string>("");
 
   // Fetch application details
-  const { data: application, isLoading, error, refetch } = api.application.getApplicationById.useQuery(
+  const {
+    data: application,
+    isLoading,
+    error,
+    refetch,
+  } = api.application.getApplicationById.useQuery(
     { applicationId: applicationId! },
-    { enabled: !!applicationId && opened }
+    { enabled: !!applicationId && opened },
   );
 
   // Status update mutation
-  const updateApplicationStatus = api.application.updateApplicationStatus.useMutation({
-    onSuccess: () => {
-      notifications.show({
-        title: "Success",
-        message: "Application status updated successfully",
-        color: "green",
-      });
-      void refetch();
-    },
-    onError: (error) => {
-      notifications.show({
-        title: "Error",
-        message: error.message,
-        color: "red",
-      });
-    },
-  });
+  const updateApplicationStatus =
+    api.application.updateApplicationStatus.useMutation({
+      onSuccess: () => {
+        notifications.show({
+          title: "Success",
+          message: "Application status updated successfully",
+          color: "green",
+        });
+        void refetch();
+      },
+      onError: (error) => {
+        notifications.show({
+          title: "Error",
+          message: error.message,
+          color: "red",
+        });
+      },
+    });
 
   // Profile update mutation
-  const updateProfile = api.application.updateApplicationUserProfile.useMutation({
-    onSuccess: () => {
-      notifications.show({
-        title: "Updated",
-        message: "Profile updated successfully",
-        color: "green",
-      });
-      setEditingField(null);
-      setEditValue("");
-      void refetch();
-    },
-    onError: (err) => {
-      notifications.show({
-        title: "Error",
-        message: err.message,
-        color: "red",
-      });
-    },
-  });
+  const updateProfile =
+    api.application.updateApplicationUserProfile.useMutation({
+      onSuccess: () => {
+        notifications.show({
+          title: "Updated",
+          message: "Profile updated successfully",
+          color: "green",
+        });
+        setEditingField(null);
+        setEditValue("");
+        void refetch();
+      },
+      onError: (err) => {
+        notifications.show({
+          title: "Error",
+          message: err.message,
+          color: "red",
+        });
+      },
+    });
 
   const handleStatusUpdate = (status: "ACCEPTED" | "REJECTED") => {
     if (!applicationId) return;
@@ -258,15 +286,33 @@ export default function ApplicationDetailsDrawer({
     const input: Record<string, string | null> = { applicationId };
 
     switch (fieldKey) {
-      case "email": input.email = val; break;
-      case "firstName": input.firstName = val; break;
-      case "surname": input.surname = val || null; break;
-      case "bio": input.bio = val || null; break;
-      case "jobTitle": input.jobTitle = val || null; break;
-      case "company": input.company = val || null; break;
-      case "website": input.website = val || null; break;
-      case "linkedinUrl": input.linkedinUrl = val || null; break;
-      case "twitterUrl": input.twitterUrl = val || null; break;
+      case "email":
+        input.email = val;
+        break;
+      case "firstName":
+        input.firstName = val;
+        break;
+      case "surname":
+        input.surname = val || null;
+        break;
+      case "bio":
+        input.bio = val || null;
+        break;
+      case "jobTitle":
+        input.jobTitle = val || null;
+        break;
+      case "company":
+        input.company = val || null;
+        break;
+      case "website":
+        input.website = val || null;
+        break;
+      case "linkedinUrl":
+        input.linkedinUrl = val || null;
+        break;
+      case "twitterUrl":
+        input.twitterUrl = val || null;
+        break;
     }
 
     updateProfile.mutate(input as Parameters<typeof updateProfile.mutate>[0]);
@@ -324,7 +370,9 @@ export default function ApplicationDetailsDrawer({
                 <div>
                   {editingField === "firstName" ? (
                     <div style={{ marginBottom: 8 }}>
-                      <Text fw={500} mb={4}>Name:</Text>
+                      <Text fw={500} mb={4}>
+                        Name:
+                      </Text>
                       <Group gap="xs" align="flex-end">
                         <TextInput
                           value={editValue}
@@ -333,10 +381,21 @@ export default function ApplicationDetailsDrawer({
                           placeholder="First name"
                           style={{ flex: 1 }}
                         />
-                        <ActionIcon color="green" variant="light" size="sm" onClick={() => handleSaveField("firstName")} loading={updateProfile.isPending}>
+                        <ActionIcon
+                          color="green"
+                          variant="light"
+                          size="sm"
+                          onClick={() => handleSaveField("firstName")}
+                          loading={updateProfile.isPending}
+                        >
                           <IconCheck size={14} />
                         </ActionIcon>
-                        <ActionIcon color="gray" variant="light" size="sm" onClick={handleCancelEdit}>
+                        <ActionIcon
+                          color="gray"
+                          variant="light"
+                          size="sm"
+                          onClick={handleCancelEdit}
+                        >
                           <IconX size={14} />
                         </ActionIcon>
                       </Group>
@@ -346,7 +405,18 @@ export default function ApplicationDetailsDrawer({
                       <Title order={3}>
                         {getDisplayName(application.user, "Unknown")}
                       </Title>
-                      <ActionIcon variant="subtle" size="xs" onClick={() => handleStartEdit("firstName", application.user?.firstName ?? application.user?.name ?? "")}>
+                      <ActionIcon
+                        variant="subtle"
+                        size="xs"
+                        onClick={() =>
+                          handleStartEdit(
+                            "firstName",
+                            application.user?.firstName ??
+                              application.user?.name ??
+                              "",
+                          )
+                        }
+                      >
                         <IconPencil size={14} />
                       </ActionIcon>
                     </Group>
@@ -354,8 +424,12 @@ export default function ApplicationDetailsDrawer({
 
                   {editingField === "email" ? (
                     <div style={{ marginBottom: 8 }}>
-                      <Text fw={500} mb={4}>Email:</Text>
-                      <Text size="xs" c="orange" mb={4}>This changes the user&apos;s login email</Text>
+                      <Text fw={500} mb={4}>
+                        Email:
+                      </Text>
+                      <Text size="xs" c="orange" mb={4}>
+                        This changes the user&apos;s login email
+                      </Text>
                       <Group gap="xs" align="flex-end">
                         <TextInput
                           value={editValue}
@@ -364,10 +438,21 @@ export default function ApplicationDetailsDrawer({
                           placeholder="email@example.com"
                           style={{ flex: 1 }}
                         />
-                        <ActionIcon color="green" variant="light" size="sm" onClick={() => handleSaveField("email")} loading={updateProfile.isPending}>
+                        <ActionIcon
+                          color="green"
+                          variant="light"
+                          size="sm"
+                          onClick={() => handleSaveField("email")}
+                          loading={updateProfile.isPending}
+                        >
                           <IconCheck size={14} />
                         </ActionIcon>
-                        <ActionIcon color="gray" variant="light" size="sm" onClick={handleCancelEdit}>
+                        <ActionIcon
+                          color="gray"
+                          variant="light"
+                          size="sm"
+                          onClick={handleCancelEdit}
+                        >
                           <IconX size={14} />
                         </ActionIcon>
                       </Group>
@@ -378,7 +463,13 @@ export default function ApplicationDetailsDrawer({
                       <Text size="sm" c="dimmed">
                         {application.email}
                       </Text>
-                      <ActionIcon variant="subtle" size="xs" onClick={() => handleStartEdit("email", application.email ?? "")}>
+                      <ActionIcon
+                        variant="subtle"
+                        size="xs"
+                        onClick={() =>
+                          handleStartEdit("email", application.email ?? "")
+                        }
+                      >
                         <IconPencil size={14} />
                       </ActionIcon>
                     </Group>
@@ -424,15 +515,27 @@ export default function ApplicationDetailsDrawer({
           </Card>
 
           {/* Tabs */}
-          <Tabs value={activeTab} onChange={(value) => setActiveTab(value ?? "overview")}>
+          <Tabs
+            value={activeTab}
+            onChange={(value) => setActiveTab(value ?? "overview")}
+          >
             <Tabs.List>
-              <Tabs.Tab value="overview" leftSection={<IconEye size="0.8rem" />}>
+              <Tabs.Tab
+                value="overview"
+                leftSection={<IconEye size="0.8rem" />}
+              >
                 Overview
               </Tabs.Tab>
-              <Tabs.Tab value="responses" leftSection={<IconMail size="0.8rem" />}>
+              <Tabs.Tab
+                value="responses"
+                leftSection={<IconMail size="0.8rem" />}
+              >
                 Responses
               </Tabs.Tab>
-              <Tabs.Tab value="reviewers" leftSection={<IconUsers size="0.8rem" />}>
+              <Tabs.Tab
+                value="reviewers"
+                leftSection={<IconUsers size="0.8rem" />}
+              >
                 Reviewers
               </Tabs.Tab>
             </Tabs.List>
@@ -440,7 +543,9 @@ export default function ApplicationDetailsDrawer({
             <Tabs.Panel value="overview" pt="md">
               <Stack gap="md">
                 <Card withBorder p="md">
-                  <Title order={4} mb="md">Application Details</Title>
+                  <Title order={4} mb="md">
+                    Application Details
+                  </Title>
                   <Stack gap="sm">
                     <Group justify="space-between">
                       <Text fw={500}>Event:</Text>
@@ -461,7 +566,11 @@ export default function ApplicationDetailsDrawer({
                         <Text fw={500}>Submitted:</Text>
                         <Group gap="xs">
                           <IconCalendar size={16} />
-                          <Text>{new Date(application.submittedAt).toLocaleDateString()}</Text>
+                          <Text>
+                            {new Date(
+                              application.submittedAt,
+                            ).toLocaleDateString()}
+                          </Text>
                         </Group>
                       </Group>
                     )}
@@ -475,7 +584,9 @@ export default function ApplicationDetailsDrawer({
                 </Card>
 
                 <Card withBorder p="md">
-                  <Title order={4} mb="md">Profile Information</Title>
+                  <Title order={4} mb="md">
+                    Profile Information
+                  </Title>
                   <Stack gap="sm">
                     <EditableField
                       label="Bio"
@@ -517,21 +628,28 @@ export default function ApplicationDetailsDrawer({
                     {application.user?.profile?.location && (
                       <Group justify="space-between">
                         <Text fw={500}>Location:</Text>
-                        <Text size="sm">{application.user.profile.location}</Text>
+                        <Text size="sm">
+                          {application.user.profile.location}
+                        </Text>
                       </Group>
                     )}
-                    {application.user?.profile?.skills && application.user.profile.skills.length > 0 && (
-                      <div>
-                        <Text fw={500} mb="xs">Skills:</Text>
-                        <Group gap="xs">
-                          {application.user.profile.skills.map((skill, index) => (
-                            <Badge key={index} variant="light" size="sm">
-                              {skill}
-                            </Badge>
-                          ))}
-                        </Group>
-                      </div>
-                    )}
+                    {application.user?.profile?.skills &&
+                      application.user.profile.skills.length > 0 && (
+                        <div>
+                          <Text fw={500} mb="xs">
+                            Skills:
+                          </Text>
+                          <Group gap="xs">
+                            {application.user.profile.skills.map(
+                              (skill, index) => (
+                                <Badge key={index} variant="light" size="sm">
+                                  {skill}
+                                </Badge>
+                              ),
+                            )}
+                          </Group>
+                        </div>
+                      )}
                   </Stack>
                 </Card>
               </Stack>
@@ -539,31 +657,41 @@ export default function ApplicationDetailsDrawer({
 
             <Tabs.Panel value="responses" pt="md">
               <Card withBorder p="md">
-                <Title order={4} mb="md">Application Responses</Title>
-                {application.applicationType === "MENTOR" && application.user?.profile ? (
+                <Title order={4} mb="md">
+                  Application Responses
+                </Title>
+                {application.applicationType === "MENTOR" &&
+                application.user?.profile ? (
                   <Stack gap="md">
                     {/* Mentor Specializations */}
-                    {application.user.profile.mentorSpecializations && application.user.profile.mentorSpecializations.length > 0 && (
-                      <div>
-                        <Text fw={500} mb="xs">
-                          Specializations *
-                          <Text component="span" c="red" ml="xs">*</Text>
-                        </Text>
-                        <Text size="sm" c="dimmed" mb="xs">
-                          What specific topics or skills do you want to mentor on during the residency?
-                        </Text>
-                        <Card withBorder p="sm" bg="gray.0">
-                          <Group gap="xs">
-                            {application.user.profile.mentorSpecializations.map((spec, index) => (
-                              <Badge key={index} variant="light" size="sm">
-                                {spec}
-                              </Badge>
-                            ))}
-                          </Group>
-                        </Card>
-                        <Divider mt="md" />
-                      </div>
-                    )}
+                    {application.user.profile.mentorSpecializations &&
+                      application.user.profile.mentorSpecializations.length >
+                        0 && (
+                        <div>
+                          <Text fw={500} mb="xs">
+                            Specializations *
+                            <Text component="span" c="red" ml="xs">
+                              *
+                            </Text>
+                          </Text>
+                          <Text size="sm" c="dimmed" mb="xs">
+                            What specific topics or skills do you want to mentor
+                            on during the residency?
+                          </Text>
+                          <Card withBorder p="sm" bg="gray.0">
+                            <Group gap="xs">
+                              {application.user.profile.mentorSpecializations.map(
+                                (spec, index) => (
+                                  <Badge key={index} variant="light" size="sm">
+                                    {spec}
+                                  </Badge>
+                                ),
+                              )}
+                            </Group>
+                          </Card>
+                          <Divider mt="md" />
+                        </div>
+                      )}
 
                     {/* Mentorship Style & Approach */}
                     {application.user.profile.mentorshipStyle && (
@@ -608,7 +736,8 @@ export default function ApplicationDetailsDrawer({
                           Mentoring Goals
                         </Text>
                         <Text size="sm" c="dimmed" mb="xs">
-                          What are your goals for mentoring during this residency?
+                          What are your goals for mentoring during this
+                          residency?
                         </Text>
                         <Card withBorder p="sm" bg="gray.0">
                           <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
@@ -620,14 +749,16 @@ export default function ApplicationDetailsDrawer({
                     )}
 
                     {/* Show message if no mentor data */}
-                    {(!application.user.profile.mentorSpecializations || application.user.profile.mentorSpecializations.length === 0) &&
-                     !application.user.profile.mentorshipStyle &&
-                     !application.user.profile.previousMentoringExp &&
-                     !application.user.profile.mentorGoals && (
-                      <Text c="dimmed" ta="center" py="xl">
-                        No mentor responses found
-                      </Text>
-                    )}
+                    {(!application.user.profile.mentorSpecializations ||
+                      application.user.profile.mentorSpecializations.length ===
+                        0) &&
+                      !application.user.profile.mentorshipStyle &&
+                      !application.user.profile.previousMentoringExp &&
+                      !application.user.profile.mentorGoals && (
+                        <Text c="dimmed" ta="center" py="xl">
+                          No mentor responses found
+                        </Text>
+                      )}
                   </Stack>
                 ) : application.responses.length === 0 ? (
                   <Text c="dimmed" ta="center" py="xl">
@@ -640,7 +771,9 @@ export default function ApplicationDetailsDrawer({
                         <Text fw={500} mb="xs">
                           {response.question.questionEn}
                           {response.question.required && (
-                            <Text component="span" c="red" ml="xs">*</Text>
+                            <Text component="span" c="red" ml="xs">
+                              *
+                            </Text>
                           )}
                         </Text>
                         <Text size="sm" c="dimmed" mb="xs">
@@ -648,7 +781,9 @@ export default function ApplicationDetailsDrawer({
                         </Text>
                         <Card withBorder p="sm" bg="gray.0">
                           <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
-                            {response.answer || <Text c="dimmed">No answer provided</Text>}
+                            {response.answer || (
+                              <Text c="dimmed">No answer provided</Text>
+                            )}
                           </Text>
                         </Card>
                         <Divider mt="md" />
@@ -661,7 +796,9 @@ export default function ApplicationDetailsDrawer({
 
             <Tabs.Panel value="reviewers" pt="md">
               <Card withBorder p="md">
-                <Title order={4} mb="md">Reviewer Assignments</Title>
+                <Title order={4} mb="md">
+                  Reviewer Assignments
+                </Title>
                 {application.reviewerAssignments.length === 0 ? (
                   <Text c="dimmed" ta="center" py="xl">
                     No reviewers assigned
@@ -683,7 +820,9 @@ export default function ApplicationDetailsDrawer({
                               <Avatar src={assignment.reviewer.image} size="sm">
                                 {getInitials(assignment.reviewer)}
                               </Avatar>
-                              <Text size="sm">{getDisplayName(assignment.reviewer)}</Text>
+                              <Text size="sm">
+                                {getDisplayName(assignment.reviewer)}
+                              </Text>
                             </Group>
                           </Table.Td>
                           <Table.Td>
@@ -691,7 +830,9 @@ export default function ApplicationDetailsDrawer({
                           </Table.Td>
                           <Table.Td>
                             <Text size="sm">
-                              {new Date(assignment.assignedAt).toLocaleDateString()}
+                              {new Date(
+                                assignment.assignedAt,
+                              ).toLocaleDateString()}
                             </Text>
                           </Table.Td>
                         </Table.Tr>

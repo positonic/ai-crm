@@ -13,7 +13,10 @@ interface ManageSchedulePageProps {
   searchParams: Promise<{ welcome?: string }>;
 }
 
-export default async function ManageSchedulePage({ params, searchParams }: ManageSchedulePageProps) {
+export default async function ManageSchedulePage({
+  params,
+  searchParams,
+}: ManageSchedulePageProps) {
   const { eventId } = await params;
   const { welcome } = await searchParams;
 
@@ -22,5 +25,7 @@ export default async function ManageSchedulePage({ params, searchParams }: Manag
     redirect(`/signin?callbackUrl=/events/${eventId}/manage-schedule`);
   }
 
-  return <ManageScheduleClient eventId={eventId} showWelcome={welcome === "true"} />;
+  return (
+    <ManageScheduleClient eventId={eventId} showWelcome={welcome === "true"} />
+  );
 }

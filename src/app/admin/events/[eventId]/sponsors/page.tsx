@@ -7,15 +7,17 @@ interface AdminSponsorsPageProps {
   params: Promise<{ eventId: string }>;
 }
 
-export default async function AdminSponsorsPage({ params }: AdminSponsorsPageProps) {
+export default async function AdminSponsorsPage({
+  params,
+}: AdminSponsorsPageProps) {
   const { eventId } = await params;
-  
+
   const session = await auth();
-  
+
   if (!session?.user) {
     redirect(`/signin?callbackUrl=/admin/events/${eventId}/sponsors`);
   }
-  
+
   if (session.user.role !== "staff" && session.user.role !== "admin") {
     redirect("/unauthorized");
   }
@@ -46,33 +48,44 @@ export default async function AdminSponsorsPage({ params }: AdminSponsorsPagePro
     <Container size="lg" py="md">
       <Stack gap="md">
         <Title order={2}>Sponsors - {event.name}</Title>
-        
+
         <Paper p="xl" withBorder>
           <Stack gap="lg">
             <Stack align="center" gap="md">
-              <Title order={3} c="dimmed">Coming Soon</Title>
+              <Title order={3} c="dimmed">
+                Coming Soon
+              </Title>
               <Text c="dimmed" ta="center">
-                Sponsor management functionality will be available in a future update.
+                Sponsor management functionality will be available in a future
+                update.
               </Text>
             </Stack>
 
             <Stack gap="md">
               <Title order={4}>Discussion Points for Sponsor Onboarding</Title>
-              
-              <Text fw={500}>Should we use this platform for sponsor onboarding?</Text>
-              
+
+              <Text fw={500}>
+                Should we use this platform for sponsor onboarding?
+              </Text>
+
               <Stack gap="sm">
-                <Text fw={500} c="blue">Self-Service vs. White Glove Approach:</Text>
-                <Text size="sm" c="dimmed" pl="md">
-                  • Do we want sponsors to create accounts and submit forms themselves?
+                <Text fw={500} c="blue">
+                  Self-Service vs. White Glove Approach:
                 </Text>
                 <Text size="sm" c="dimmed" pl="md">
-                  • Or should we handle submissions on their behalf for a more white-glove experience?
+                  • Do we want sponsors to create accounts and submit forms
+                  themselves?
+                </Text>
+                <Text size="sm" c="dimmed" pl="md">
+                  • Or should we handle submissions on their behalf for a more
+                  white-glove experience?
                 </Text>
               </Stack>
 
               <Stack gap="sm">
-                <Text fw={500} c="blue">Information Requirements - Self-Service Model:</Text>
+                <Text fw={500} c="blue">
+                  Information Requirements - Self-Service Model:
+                </Text>
                 <Text size="sm" c="dimmed" pl="md">
                   • Company details (name, website, description, logo)
                 </Text>
@@ -91,7 +104,9 @@ export default async function AdminSponsorsPage({ params }: AdminSponsorsPagePro
               </Stack>
 
               <Stack gap="sm">
-                <Text fw={500} c="blue">Information Requirements - White Glove Model:</Text>
+                <Text fw={500} c="blue">
+                  Information Requirements - White Glove Model:
+                </Text>
                 <Text size="sm" c="dimmed" pl="md">
                   • Internal notes and relationship history
                 </Text>
@@ -110,7 +125,8 @@ export default async function AdminSponsorsPage({ params }: AdminSponsorsPagePro
               </Stack>
 
               <Text size="sm" c="dimmed" fs="italic">
-                These considerations will help shape the sponsor management system architecture and user experience.
+                These considerations will help shape the sponsor management
+                system architecture and user experience.
               </Text>
             </Stack>
           </Stack>

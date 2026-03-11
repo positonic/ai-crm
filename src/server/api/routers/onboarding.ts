@@ -8,7 +8,7 @@ const MentoringOpennessSchema = z.enum(["YES", "NO", "MAYBE"]);
 
 const onboardingDataSchema = z.object({
   applicationId: z.string(),
-  
+
   // Contact & Logistics
   bloodType: z.string().optional(),
   emergencyContactName: z.string().optional(),
@@ -16,47 +16,47 @@ const onboardingDataSchema = z.object({
   emergencyContactPhone: z.string().optional(),
   arrivalDateTime: z.date().optional(),
   departureDateTime: z.date().optional(),
-  
+
   // Travel Documents
   eTicketUrl: z.string().url().optional(),
   eTicketFileName: z.string().optional(),
   healthInsuranceUrl: z.string().url().optional(),
   healthInsuranceFileName: z.string().optional(),
-  
+
   // Food & Dietary Needs
   dietType: DietTypeSchema.optional(),
   dietTypeOther: z.string().optional(),
   allergiesIntolerances: z.string().optional(),
   dietaryRequirements: z.string().optional(), // Legacy field
-  
+
   // English Proficiency
   englishProficiencyLevel: z.number().min(0).max(100).optional(),
-  
+
   // Knowledge Sharing, Community & Mentorship
   primaryGoals: z.string().optional(),
   skillsToGain: z.string().optional(),
   openToMentoring: MentoringOpennessSchema.optional(),
   mentorsToLearnFrom: z.string().optional(),
   organizationsToConnect: z.string().optional(),
-  
+
   // Technical Workshop
   technicalWorkshopTitle: z.string().optional(),
   technicalWorkshopDescription: z.string().optional(),
   technicalWorkshopDuration: z.string().optional(),
   technicalWorkshopMaterials: z.string().optional(),
-  
+
   // Beyond Work Activities
   beyondWorkInterests: z.string().optional(),
   beyondWorkTitle: z.string().optional(),
   beyondWorkDescription: z.string().optional(),
   beyondWorkDuration: z.string().optional(),
   beyondWorkMaterials: z.string().optional(),
-  
+
   // Media & Bio
   headshotUrl: z.string().url().optional(),
   headshotFileName: z.string().optional(),
   shortBio: z.string().optional(),
-  
+
   // Commitments & Confirmations
   participateExperiments: z.boolean(),
   mintHypercert: z.boolean(),
@@ -64,7 +64,7 @@ const onboardingDataSchema = z.object({
   liabilityWaiverConsent: z.boolean(),
   codeOfConductAgreement: z.boolean(),
   communityActivitiesConsent: z.boolean(),
-  
+
   // Additional Information
   additionalComments: z.string().optional(),
 });
@@ -104,14 +104,21 @@ export const onboardingRouter = createTRPCRouter({
       }
 
       // Validate required fields
-      if (!onboardingData.participateExperiments || !onboardingData.mintHypercert) {
+      if (
+        !onboardingData.participateExperiments ||
+        !onboardingData.mintHypercert
+      ) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Participation commitments are required",
         });
       }
 
-      if (!onboardingData.liabilityWaiverConsent || !onboardingData.codeOfConductAgreement || !onboardingData.communityActivitiesConsent) {
+      if (
+        !onboardingData.liabilityWaiverConsent ||
+        !onboardingData.codeOfConductAgreement ||
+        !onboardingData.communityActivitiesConsent
+      ) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "All final confirmations are required",
@@ -158,7 +165,7 @@ export const onboardingRouter = createTRPCRouter({
       // Verify that the application belongs to the current user
       const application = await ctx.db.application.findUnique({
         where: { id: input.applicationId },
-        include: { 
+        include: {
           onboarding: true,
           user: true,
         },
@@ -189,68 +196,70 @@ export const onboardingRouter = createTRPCRouter({
 
   // Save draft onboarding data (partial save)
   saveDraft: protectedProcedure
-    .input(z.object({
-      applicationId: z.string(),
-      
-      // Contact & Logistics
-      bloodType: z.string().optional(),
-      emergencyContactName: z.string().optional(),
-      emergencyContactRelationship: z.string().optional(),
-      emergencyContactPhone: z.string().optional(),
-      arrivalDateTime: z.date().optional(),
-      departureDateTime: z.date().optional(),
-      
-      // Travel Documents
-      eTicketUrl: z.string().url().optional(),
-      eTicketFileName: z.string().optional(),
-      healthInsuranceUrl: z.string().url().optional(),
-      healthInsuranceFileName: z.string().optional(),
-      
-      // Food & Dietary Needs
-      dietType: DietTypeSchema.optional(),
-      dietTypeOther: z.string().optional(),
-      allergiesIntolerances: z.string().optional(),
-      dietaryRequirements: z.string().optional(),
-      
-      // English Proficiency
-      englishProficiencyLevel: z.number().min(0).max(100).optional(),
-      
-      // Knowledge Sharing, Community & Mentorship
-      primaryGoals: z.string().optional(),
-      skillsToGain: z.string().optional(),
-      openToMentoring: MentoringOpennessSchema.optional(),
-      mentorsToLearnFrom: z.string().optional(),
-      organizationsToConnect: z.string().optional(),
-      
-      // Technical Workshop
-      technicalWorkshopTitle: z.string().optional(),
-      technicalWorkshopDescription: z.string().optional(),
-      technicalWorkshopDuration: z.string().optional(),
-      technicalWorkshopMaterials: z.string().optional(),
-      
-      // Beyond Work Activities
-      beyondWorkInterests: z.string().optional(),
-      beyondWorkTitle: z.string().optional(),
-      beyondWorkDescription: z.string().optional(),
-      beyondWorkDuration: z.string().optional(),
-      beyondWorkMaterials: z.string().optional(),
-      
-      // Media & Bio
-      headshotUrl: z.string().url().optional(),
-      headshotFileName: z.string().optional(),
-      shortBio: z.string().optional(),
-      
-      // Commitments & Confirmations
-      participateExperiments: z.boolean().optional(),
-      mintHypercert: z.boolean().optional(),
-      interestedIncubation: z.boolean().optional(),
-      liabilityWaiverConsent: z.boolean().optional(),
-      codeOfConductAgreement: z.boolean().optional(),
-      communityActivitiesConsent: z.boolean().optional(),
-      
-      // Additional Information
-      additionalComments: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        applicationId: z.string(),
+
+        // Contact & Logistics
+        bloodType: z.string().optional(),
+        emergencyContactName: z.string().optional(),
+        emergencyContactRelationship: z.string().optional(),
+        emergencyContactPhone: z.string().optional(),
+        arrivalDateTime: z.date().optional(),
+        departureDateTime: z.date().optional(),
+
+        // Travel Documents
+        eTicketUrl: z.string().url().optional(),
+        eTicketFileName: z.string().optional(),
+        healthInsuranceUrl: z.string().url().optional(),
+        healthInsuranceFileName: z.string().optional(),
+
+        // Food & Dietary Needs
+        dietType: DietTypeSchema.optional(),
+        dietTypeOther: z.string().optional(),
+        allergiesIntolerances: z.string().optional(),
+        dietaryRequirements: z.string().optional(),
+
+        // English Proficiency
+        englishProficiencyLevel: z.number().min(0).max(100).optional(),
+
+        // Knowledge Sharing, Community & Mentorship
+        primaryGoals: z.string().optional(),
+        skillsToGain: z.string().optional(),
+        openToMentoring: MentoringOpennessSchema.optional(),
+        mentorsToLearnFrom: z.string().optional(),
+        organizationsToConnect: z.string().optional(),
+
+        // Technical Workshop
+        technicalWorkshopTitle: z.string().optional(),
+        technicalWorkshopDescription: z.string().optional(),
+        technicalWorkshopDuration: z.string().optional(),
+        technicalWorkshopMaterials: z.string().optional(),
+
+        // Beyond Work Activities
+        beyondWorkInterests: z.string().optional(),
+        beyondWorkTitle: z.string().optional(),
+        beyondWorkDescription: z.string().optional(),
+        beyondWorkDuration: z.string().optional(),
+        beyondWorkMaterials: z.string().optional(),
+
+        // Media & Bio
+        headshotUrl: z.string().url().optional(),
+        headshotFileName: z.string().optional(),
+        shortBio: z.string().optional(),
+
+        // Commitments & Confirmations
+        participateExperiments: z.boolean().optional(),
+        mintHypercert: z.boolean().optional(),
+        interestedIncubation: z.boolean().optional(),
+        liabilityWaiverConsent: z.boolean().optional(),
+        codeOfConductAgreement: z.boolean().optional(),
+        communityActivitiesConsent: z.boolean().optional(),
+
+        // Additional Information
+        additionalComments: z.string().optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const { applicationId, ...onboardingData } = input;
 
@@ -307,7 +316,7 @@ export const onboardingRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       // This endpoint can be used by admins to check onboarding completion status
       // TODO: Add admin role check if needed
-      
+
       const onboardings = await ctx.db.applicationOnboarding.findMany({
         where: {
           applicationId: { in: input.applicationIds },
@@ -323,21 +332,28 @@ export const onboardingRouter = createTRPCRouter({
         },
       });
 
-      return onboardings.reduce((acc, onboarding) => {
-        acc[onboarding.applicationId] = {
-          completed: onboarding.completed,
-          submittedAt: onboarding.submittedAt,
-          hasETicket: !!onboarding.eTicketUrl,
-          hasInsurance: !!onboarding.healthInsuranceUrl,
-          hasCommitments: onboarding.participateExperiments && onboarding.mintHypercert,
-        };
-        return acc;
-      }, {} as Record<string, {
-        completed: boolean;
-        submittedAt: Date | null;
-        hasETicket: boolean;
-        hasInsurance: boolean;
-        hasCommitments: boolean;
-      }>);
+      return onboardings.reduce(
+        (acc, onboarding) => {
+          acc[onboarding.applicationId] = {
+            completed: onboarding.completed,
+            submittedAt: onboarding.submittedAt,
+            hasETicket: !!onboarding.eTicketUrl,
+            hasInsurance: !!onboarding.healthInsuranceUrl,
+            hasCommitments:
+              onboarding.participateExperiments && onboarding.mintHypercert,
+          };
+          return acc;
+        },
+        {} as Record<
+          string,
+          {
+            completed: boolean;
+            submittedAt: Date | null;
+            hasETicket: boolean;
+            hasInsurance: boolean;
+            hasCommitments: boolean;
+          }
+        >,
+      );
     }),
 });

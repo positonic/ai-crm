@@ -11,11 +11,11 @@ import {
   Group,
   Tooltip,
 } from "@mantine/core";
-import { 
-  IconDeviceFloppy, 
-  IconCheck, 
+import {
+  IconDeviceFloppy,
+  IconCheck,
   IconAlertCircle,
-  IconInfoCircle 
+  IconInfoCircle,
 } from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import { notifications } from "@mantine/notifications";
@@ -38,7 +38,7 @@ export const ADMIN_LABELS = [
   { value: "ZK", label: "ZK" },
 ] as const;
 
-export type AdminLabel = typeof ADMIN_LABELS[number]["value"];
+export type AdminLabel = (typeof ADMIN_LABELS)[number]["value"];
 
 interface AdminFieldsEditorProps {
   user: {
@@ -55,23 +55,28 @@ interface AdminFieldsEditorProps {
   backgroundColor?: string;
 }
 
-export default function AdminFieldsEditor({ 
-  user, 
-  eventId, 
-  onSaved, 
+export default function AdminFieldsEditor({
+  user,
+  eventId,
+  onSaved,
   disabled = false,
   showTitle = true,
-  backgroundColor = "yellow.0"
+  backgroundColor = "yellow.0",
 }: AdminFieldsEditorProps) {
   const [adminNotes, setAdminNotes] = useState(user.adminNotes ?? "");
-  const [adminWorkExperience, setAdminWorkExperience] = useState(user.adminWorkExperience ?? "");
-  const [adminLabels, setAdminLabels] = useState<string[]>(user.adminLabels ?? []);
+  const [adminWorkExperience, setAdminWorkExperience] = useState(
+    user.adminWorkExperience ?? "",
+  );
+  const [adminLabels, setAdminLabels] = useState<string[]>(
+    user.adminLabels ?? [],
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   // tRPC mutations
   const utils = api.useUtils();
   const updateUserAdminNotes = api.user.updateUserAdminNotes.useMutation();
-  const updateUserAdminWorkExperience = api.user.updateUserAdminWorkExperience.useMutation();
+  const updateUserAdminWorkExperience =
+    api.user.updateUserAdminWorkExperience.useMutation();
   const updateUserAdminLabels = api.user.updateUserAdminLabels.useMutation();
 
   // Update local state when user prop changes
@@ -82,8 +87,9 @@ export default function AdminFieldsEditor({
   }, [user.adminNotes, user.adminWorkExperience, user.adminLabels]);
 
   // Check if labels have changed
-  const labelsChanged = adminLabels.length !== (user.adminLabels?.length ?? 0) || 
-    !adminLabels.every(label => user.adminLabels?.includes(label));
+  const labelsChanged =
+    adminLabels.length !== (user.adminLabels?.length ?? 0) ||
+    !adminLabels.every((label) => user.adminLabels?.includes(label));
 
   // Save admin notes
   const saveAdminNotes = async () => {
@@ -93,13 +99,15 @@ export default function AdminFieldsEditor({
         userId: user.id,
         adminNotes: adminNotes.trim() || null,
       });
-      
+
       // Invalidate queries to refresh data
       if (eventId) {
         await utils.application.getEventApplications.invalidate({ eventId });
-        await utils.application.getConsensusApplications.invalidate({ eventId });
+        await utils.application.getConsensusApplications.invalidate({
+          eventId,
+        });
       }
-      
+
       onSaved?.();
     } catch {
       notifications.show({
@@ -121,13 +129,15 @@ export default function AdminFieldsEditor({
         userId: user.id,
         adminWorkExperience: adminWorkExperience.trim() || null,
       });
-      
+
       // Invalidate queries to refresh data
       if (eventId) {
         await utils.application.getEventApplications.invalidate({ eventId });
-        await utils.application.getConsensusApplications.invalidate({ eventId });
+        await utils.application.getConsensusApplications.invalidate({
+          eventId,
+        });
       }
-      
+
       onSaved?.();
     } catch {
       notifications.show({
@@ -149,13 +159,15 @@ export default function AdminFieldsEditor({
         userId: user.id,
         adminLabels: adminLabels as AdminLabel[],
       });
-      
+
       // Invalidate queries to refresh data
       if (eventId) {
         await utils.application.getEventApplications.invalidate({ eventId });
-        await utils.application.getConsensusApplications.invalidate({ eventId });
+        await utils.application.getConsensusApplications.invalidate({
+          eventId,
+        });
       }
-      
+
       notifications.show({
         title: "Success",
         message: "Admin labels saved successfully",
@@ -179,13 +191,16 @@ export default function AdminFieldsEditor({
       <Stack gap="lg">
         {showTitle && (
           <>
-            <Text fw={600} size="lg" c="orange.8">Internal Admin Notes</Text>
+            <Text fw={600} size="lg" c="orange.8">
+              Internal Admin Notes
+            </Text>
             <Text size="sm" c="dimmed">
-              These fields are for internal use only and are not visible to the applicant.
+              These fields are for internal use only and are not visible to the
+              applicant.
             </Text>
           </>
         )}
-        
+
         <MultiSelect
           label="Admin Labels"
           placeholder="Select applicable labels"
@@ -204,11 +219,11 @@ export default function AdminFieldsEditor({
             )
           }
           styles={{
-            label: { fontSize: '14px', fontWeight: 600, marginBottom: '8px' },
-            input: { fontSize: '14px' }
+            label: { fontSize: "14px", fontWeight: 600, marginBottom: "8px" },
+            input: { fontSize: "14px" },
           }}
         />
-        
+
         {labelsChanged && (
           <Group justify="flex-end">
             <Button
@@ -222,9 +237,11 @@ export default function AdminFieldsEditor({
             </Button>
           </Group>
         )}
-        
+
         <Group gap="xs" align="center">
-          <Text fw={600} size="md">Work Experience</Text>
+          <Text fw={600} size="md">
+            Work Experience
+          </Text>
           <Tooltip
             label="Copy work experience from LinkedIn or other professional profiles for internal reference during application review"
             multiline
@@ -235,11 +252,13 @@ export default function AdminFieldsEditor({
             <IconInfoCircle size={16} color="gray" style={{ cursor: "help" }} />
           </Tooltip>
         </Group>
-        
+
         <Textarea
           placeholder="Paste LinkedIn work experience or other professional background..."
           value={adminWorkExperience}
-          onChange={(event) => setAdminWorkExperience(event.currentTarget.value)}
+          onChange={(event) =>
+            setAdminWorkExperience(event.currentTarget.value)
+          }
           onBlur={saveAdminWorkExperience}
           minRows={4}
           size="md"
@@ -252,10 +271,10 @@ export default function AdminFieldsEditor({
             )
           }
           styles={{
-            input: { fontSize: '14px' }
+            input: { fontSize: "14px" },
           }}
         />
-        
+
         <Textarea
           label="Admin Notes"
           placeholder="Add internal notes about this applicant..."
@@ -273,11 +292,11 @@ export default function AdminFieldsEditor({
             )
           }
           styles={{
-            label: { fontSize: '14px', fontWeight: 600, marginBottom: '8px' },
-            input: { fontSize: '14px' }
+            label: { fontSize: "14px", fontWeight: 600, marginBottom: "8px" },
+            input: { fontSize: "14px" },
           }}
         />
-        
+
         {user.adminUpdatedAt && (
           <Text size="xs" c="dimmed">
             Last updated: {new Date(user.adminUpdatedAt).toLocaleString()}

@@ -35,18 +35,18 @@ export function getAvatarUrl(data: AvatarData): string | null {
  */
 export function getAvatarInitials(data: AvatarData): string {
   if (data.name) {
-    const nameParts = data.name.trim().split(' ');
+    const nameParts = data.name.trim().split(" ");
     if (nameParts.length >= 2) {
-      return `${nameParts[0]![0]?.toUpperCase() ?? ''}${nameParts[nameParts.length - 1]![0]?.toUpperCase() ?? ''}`;
+      return `${nameParts[0]![0]?.toUpperCase() ?? ""}${nameParts[nameParts.length - 1]![0]?.toUpperCase() ?? ""}`;
     }
-    return nameParts[0]![0]?.toUpperCase() ?? '';
+    return nameParts[0]![0]?.toUpperCase() ?? "";
   }
 
   if (data.email) {
-    return data.email[0]?.toUpperCase() ?? 'U';
+    return data.email[0]?.toUpperCase() ?? "U";
   }
 
-  return 'U';
+  return "U";
 }
 
 /**
@@ -54,12 +54,12 @@ export function getAvatarInitials(data: AvatarData): string {
  */
 export function getAvatarSourceDescription(data: AvatarData): string {
   if (data.customAvatarUrl) {
-    return 'Custom avatar';
+    return "Custom avatar";
   }
 
   if (data.oauthImageUrl) {
-    return 'OAuth provider image';
+    return "OAuth provider image";
   }
 
-  return 'Initials';
+  return "Initials";
 }

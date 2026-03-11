@@ -3,7 +3,8 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Testimonials - Funding the Commons Residency 2025",
-  description: "Hear from past residents and participants of the Funding the Commons Residency program",
+  description:
+    "Hear from past residents and participants of the Funding the Commons Residency program",
 };
 
 interface Testimonial {
@@ -16,41 +17,47 @@ interface Testimonial {
 
 const testimonials: Testimonial[] = [
   {
-    quote: "The Funding the Commons Residency transformed how I think about public goods funding. The intensive collaboration with experts and fellow builders gave me the tools and network to launch a project that's now serving thousands of users in emerging markets.",
+    quote:
+      "The Funding the Commons Residency transformed how I think about public goods funding. The intensive collaboration with experts and fellow builders gave me the tools and network to launch a project that's now serving thousands of users in emerging markets.",
     author: "Maria González",
     role: "Founder",
     organization: "DecentralPay",
     year: "2024",
   },
   {
-    quote: "What struck me most was the quality of mentorship and the diversity of perspectives. Working alongside builders from different backgrounds and specializations pushed me to think beyond my own assumptions. The project we built during the residency became the foundation for our Series A fundraise.",
+    quote:
+      "What struck me most was the quality of mentorship and the diversity of perspectives. Working alongside builders from different backgrounds and specializations pushed me to think beyond my own assumptions. The project we built during the residency became the foundation for our Series A fundraise.",
     author: "Jamal Osei",
     role: "Technical Lead",
     organization: "PrivacyDAO",
     year: "2024",
   },
   {
-    quote: "I came to the residency with an idea and left with a working prototype, a community of supporters, and partnerships that are still driving my work today. The three weeks were intense but incredibly rewarding.",
+    quote:
+      "I came to the residency with an idea and left with a working prototype, a community of supporters, and partnerships that are still driving my work today. The three weeks were intense but incredibly rewarding.",
     author: "Yuki Tanaka",
     role: "Researcher",
     organization: "Tokyo Institute of Technology",
     year: "2023",
   },
   {
-    quote: "The residency gave me space to experiment with ideas I'd been thinking about for years but never had the time or resources to pursue. The no-pressure environment combined with world-class mentorship was exactly what I needed to take my project to the next level.",
+    quote:
+      "The residency gave me space to experiment with ideas I'd been thinking about for years but never had the time or resources to pursue. The no-pressure environment combined with world-class mentorship was exactly what I needed to take my project to the next level.",
     author: "Alex Chen",
     role: "Independent Developer",
     year: "2023",
   },
   {
-    quote: "Beyond the technical skills and project outcomes, the connections I made during the residency have been invaluable. I'm still collaborating with people I met there, and we continue to support each other's work in the public goods space.",
+    quote:
+      "Beyond the technical skills and project outcomes, the connections I made during the residency have been invaluable. I'm still collaborating with people I met there, and we continue to support each other's work in the public goods space.",
     author: "Sofia Petrov",
     role: "Product Manager",
     organization: "Commons Protocol",
     year: "2024",
   },
   {
-    quote: "As someone working on privacy-preserving technologies, finding a community that truly understands both the technical challenges and the social impact was transformative. The residency brought together the right people at the right time.",
+    quote:
+      "As someone working on privacy-preserving technologies, finding a community that truly understands both the technical challenges and the social impact was transformative. The residency brought together the right people at the right time.",
     author: "Rashid Ahmed",
     role: "Cryptography Engineer",
     organization: "ZK Labs",
@@ -65,7 +72,10 @@ export default function TestimonialsPage() {
       <div className="bg-gradient-to-r from-blue-600 to-purple-700 text-white">
         <div className="container mx-auto px-4 py-16 max-w-6xl">
           <nav className="text-sm breadcrumbs mb-6 opacity-90">
-            <Link href="/events/funding-commons-residency-2025" className="hover:text-blue-200 transition-colors">
+            <Link
+              href="/events/funding-commons-residency-2025"
+              className="hover:text-blue-200 transition-colors"
+            >
               ← Back to Residency
             </Link>
           </nav>
@@ -75,7 +85,8 @@ export default function TestimonialsPage() {
               Testimonials
             </h1>
             <p className="text-xl mb-4 leading-relaxed opacity-95 max-w-3xl mx-auto">
-              Hear from past residents and participants who have experienced the Funding the Commons Residency
+              Hear from past residents and participants who have experienced the
+              Funding the Commons Residency
             </p>
             <div className="flex items-center justify-center gap-8 mt-8">
               <div className="text-center">
@@ -168,7 +179,8 @@ export default function TestimonialsPage() {
                 Privacy Infrastructure
               </h3>
               <p className="text-gray-600 text-sm">
-                Zero-knowledge proof systems, secure messaging platforms, and confidential compute solutions
+                Zero-knowledge proof systems, secure messaging platforms, and
+                confidential compute solutions
               </p>
             </div>
             <div className="text-center">
@@ -191,7 +203,8 @@ export default function TestimonialsPage() {
                 Decentralized Identity
               </h3>
               <p className="text-gray-600 text-sm">
-                DID systems, credential platforms, and privacy-preserving reputation mechanisms
+                DID systems, credential platforms, and privacy-preserving
+                reputation mechanisms
               </p>
             </div>
             <div className="text-center">
@@ -214,7 +227,8 @@ export default function TestimonialsPage() {
                 Public Goods Funding
               </h3>
               <p className="text-gray-600 text-sm">
-                Quadratic funding platforms, retroactive public goods funding, and governance systems
+                Quadratic funding platforms, retroactive public goods funding,
+                and governance systems
               </p>
             </div>
           </div>
@@ -224,8 +238,8 @@ export default function TestimonialsPage() {
         <div className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-3xl p-12 text-center text-white">
           <h2 className="text-3xl font-bold mb-6">Join Our Community</h2>
           <p className="text-xl mb-8 opacity-95 max-w-3xl mx-auto leading-relaxed">
-            Be part of the next cohort building the future of public goods funding.
-            Applications are now open for the 2025 residency program.
+            Be part of the next cohort building the future of public goods
+            funding. Applications are now open for the 2025 residency program.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link

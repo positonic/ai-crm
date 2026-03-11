@@ -18,10 +18,7 @@ import {
   Center,
   Image,
 } from "@mantine/core";
-import {
-  IconExternalLink,
-  IconBrandGithub,
-} from "@tabler/icons-react";
+import { IconExternalLink, IconBrandGithub } from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import Link from "next/link";
 import { getAvatarUrl, getAvatarInitials } from "~/utils/avatarUtils";
@@ -45,14 +42,15 @@ export default function ProjectsPage({ params }: ProjectsPageProps) {
   // Get event details
   const { data: event, isLoading: eventLoading } = api.event.getEvent.useQuery(
     { id: eventId },
-    { enabled: !!eventId }
+    { enabled: !!eventId },
   );
 
   // Get resident projects
-  const { data: residentProjects, isLoading: projectsLoading } = api.application.getResidentProjects.useQuery(
-    { eventId },
-    { enabled: !!eventId }
-  );
+  const { data: residentProjects, isLoading: projectsLoading } =
+    api.application.getResidentProjects.useQuery(
+      { eventId },
+      { enabled: !!eventId },
+    );
 
   if (status === "loading" || eventLoading || projectsLoading || !eventId) {
     return (
@@ -68,7 +66,9 @@ export default function ProjectsPage({ params }: ProjectsPageProps) {
     return (
       <Container size="lg" py="xl">
         <Title order={1}>Event Not Found</Title>
-        <Text c="dimmed">The event you&apos;re looking for doesn&apos;t exist.</Text>
+        <Text c="dimmed">
+          The event you&apos;re looking for doesn&apos;t exist.
+        </Text>
       </Container>
     );
   }
@@ -87,7 +87,9 @@ export default function ProjectsPage({ params }: ProjectsPageProps) {
 
         <Card shadow="sm" padding="lg" radius="md" withBorder>
           <Group justify="space-between" mb="md">
-            <Text fw={600} size="lg">All Projects</Text>
+            <Text fw={600} size="lg">
+              All Projects
+            </Text>
             <Badge variant="light" size="lg">
               {residentProjects?.length ?? 0} projects
             </Badge>
@@ -105,11 +107,23 @@ export default function ProjectsPage({ params }: ProjectsPageProps) {
                     h="100%"
                     component={Link}
                     href={`/projects/${project.id}`}
-                    style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}
+                    style={{
+                      textDecoration: "none",
+                      color: "inherit",
+                      cursor: "pointer",
+                    }}
                   >
                     <Stack gap="xs">
-                      <Group justify="space-between" align="flex-start" wrap="nowrap">
-                        <Group gap="xs" wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
+                      <Group
+                        justify="space-between"
+                        align="flex-start"
+                        wrap="nowrap"
+                      >
+                        <Group
+                          gap="xs"
+                          wrap="nowrap"
+                          style={{ minWidth: 0, flex: 1 }}
+                        >
                           {project.imageUrl ? (
                             <Image
                               src={project.imageUrl}
@@ -124,15 +138,30 @@ export default function ProjectsPage({ params }: ProjectsPageProps) {
                             <Avatar
                               size={24}
                               radius="sm"
-                              color={["blue", "cyan", "grape", "green", "indigo", "orange", "pink", "teal", "violet"][
-                                project.id.charCodeAt(0) % 9
-                              ]}
+                              color={
+                                [
+                                  "blue",
+                                  "cyan",
+                                  "grape",
+                                  "green",
+                                  "indigo",
+                                  "orange",
+                                  "pink",
+                                  "teal",
+                                  "violet",
+                                ][project.id.charCodeAt(0) % 9]
+                              }
                               style={{ flexShrink: 0 }}
                             >
                               {project.title.charAt(0).toUpperCase()}
                             </Avatar>
                           )}
-                          <Text fw={500} size="sm" lineClamp={1} style={{ minWidth: 0 }}>
+                          <Text
+                            fw={500}
+                            size="sm"
+                            lineClamp={1}
+                            style={{ minWidth: 0 }}
+                          >
                             {project.title}
                           </Text>
                         </Group>
@@ -144,7 +173,7 @@ export default function ProjectsPage({ params }: ProjectsPageProps) {
                                 size="xs"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  window.open(project.liveUrl!, '_blank');
+                                  window.open(project.liveUrl!, "_blank");
                                 }}
                               >
                                 <IconExternalLink size={12} />
@@ -158,7 +187,10 @@ export default function ProjectsPage({ params }: ProjectsPageProps) {
                                 size="xs"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  window.open(getPrimaryRepoUrl(project)!, '_blank');
+                                  window.open(
+                                    getPrimaryRepoUrl(project)!,
+                                    "_blank",
+                                  );
                                 }}
                               >
                                 <IconBrandGithub size={12} />
@@ -193,7 +225,13 @@ export default function ProjectsPage({ params }: ProjectsPageProps) {
                         <LikeButton
                           updateId={project.id}
                           initialLikeCount={project.likes.length}
-                          initialHasLiked={session?.user ? project.likes.some(like => like.userId === session.user.id) : false}
+                          initialHasLiked={
+                            session?.user
+                              ? project.likes.some(
+                                  (like) => like.userId === session.user.id,
+                                )
+                              : false
+                          }
                           userId={session?.user.id}
                           likeType="userProject"
                         />

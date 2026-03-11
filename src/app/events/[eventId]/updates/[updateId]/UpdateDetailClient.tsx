@@ -104,7 +104,7 @@ export default function UpdateDetailClient({
     {
       // Keep data fresh for a short time to avoid unnecessary refetches
       staleTime: 1000 * 30, // 30 seconds
-    }
+    },
   );
 
   // Fall back to initial data while loading
@@ -112,13 +112,18 @@ export default function UpdateDetailClient({
 
   const getRelativeTime = (date: Date) => {
     const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - new Date(date).getTime()) / 1000);
+    const diffInSeconds = Math.floor(
+      (now.getTime() - new Date(date).getTime()) / 1000,
+    );
 
     if (diffInSeconds < 60) return "just now";
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w ago`;
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800)
+      return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    if (diffInSeconds < 2592000)
+      return `${Math.floor(diffInSeconds / 604800)}w ago`;
     return new Date(date).toLocaleDateString("en-US", { timeZone: "UTC" });
   };
 
@@ -129,42 +134,49 @@ export default function UpdateDetailClient({
       await utils.project.getUpdateById.cancel({ updateId: initialUpdate.id });
 
       // Snapshot the previous value
-      const previousUpdate = utils.project.getUpdateById.getData({ updateId: initialUpdate.id });
+      const previousUpdate = utils.project.getUpdateById.getData({
+        updateId: initialUpdate.id,
+      });
 
       // Optimistically update the cache with a temporary comment
-      utils.project.getUpdateById.setData({ updateId: initialUpdate.id }, (old) => {
-        if (!old) return old;
+      utils.project.getUpdateById.setData(
+        { updateId: initialUpdate.id },
+        (old) => {
+          if (!old) return old;
 
-        // Create optimistic comment with temporary ID
-        const optimisticComment = {
-          id: `temp-${Date.now()}`,
-          content: newCommentData.content,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          userId: userId ?? "",
-          projectUpdateId: initialUpdate.id,
-          user: {
-            id: userId ?? "",
-            name: null,
-            firstName: null,
-            surname: null,
-            image: null,
-            profile: null,
-          },
-        };
+          // Create optimistic comment with temporary ID
+          const optimisticComment = {
+            id: `temp-${Date.now()}`,
+            content: newCommentData.content,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            userId: userId ?? "",
+            projectUpdateId: initialUpdate.id,
+            user: {
+              id: userId ?? "",
+              name: null,
+              firstName: null,
+              surname: null,
+              image: null,
+              profile: null,
+            },
+          };
 
-        return {
-          ...old,
-          comments: [...old.comments, optimisticComment],
-        };
-      });
+          return {
+            ...old,
+            comments: [...old.comments, optimisticComment],
+          };
+        },
+      );
 
       return { previousUpdate };
     },
     onSuccess: async () => {
       setNewComment("");
       // Refetch to get the real comment data from server
-      await utils.project.getUpdateById.invalidate({ updateId: initialUpdate.id });
+      await utils.project.getUpdateById.invalidate({
+        updateId: initialUpdate.id,
+      });
       notifications.show({
         title: "Comment posted",
         message: "Your comment has been added",
@@ -174,7 +186,10 @@ export default function UpdateDetailClient({
     onError: (error, _newComment, context) => {
       // Rollback to previous state on error
       if (context?.previousUpdate) {
-        utils.project.getUpdateById.setData({ updateId: initialUpdate.id }, context.previousUpdate);
+        utils.project.getUpdateById.setData(
+          { updateId: initialUpdate.id },
+          context.previousUpdate,
+        );
       }
       notifications.show({
         title: "Error",
@@ -189,7 +204,9 @@ export default function UpdateDetailClient({
     onSuccess: async () => {
       setIsEditing(null);
       setEditContent("");
-      await utils.project.getUpdateById.invalidate({ updateId: initialUpdate.id });
+      await utils.project.getUpdateById.invalidate({
+        updateId: initialUpdate.id,
+      });
       notifications.show({
         title: "Comment updated",
         message: "Your comment has been updated",
@@ -208,7 +225,9 @@ export default function UpdateDetailClient({
   // Delete comment mutation
   const deleteComment = api.project.deleteUpdateComment.useMutation({
     onSuccess: async () => {
-      await utils.project.getUpdateById.invalidate({ updateId: initialUpdate.id });
+      await utils.project.getUpdateById.invalidate({
+        updateId: initialUpdate.id,
+      });
       notifications.show({
         title: "Comment deleted",
         message: "Your comment has been removed",
@@ -296,7 +315,10 @@ export default function UpdateDetailClient({
             {/* Images */}
             {displayUpdate.imageUrls.length > 0 && (
               <SimpleGrid
-                cols={{ base: 1, sm: displayUpdate.imageUrls.length === 1 ? 1 : 2 }}
+                cols={{
+                  base: 1,
+                  sm: displayUpdate.imageUrls.length === 1 ? 1 : 2,
+                }}
                 spacing="md"
               >
                 {displayUpdate.imageUrls.map((url, index) => (
@@ -415,7 +437,9 @@ export default function UpdateDetailClient({
                       <Stack gap="sm">
                         <Textarea
                           value={editContent}
-                          onChange={(e) => setEditContent(e.currentTarget.value)}
+                          onChange={(e) =>
+                            setEditContent(e.currentTarget.value)
+                          }
                           minRows={3}
                           autoFocus
                         />
@@ -450,7 +474,8 @@ export default function UpdateDetailClient({
                           <Group gap="sm">
                             <UserAvatar
                               user={{
-                                customAvatarUrl: comment.user.profile?.avatarUrl,
+                                customAvatarUrl:
+                                  comment.user.profile?.avatarUrl,
                                 oauthImageUrl: comment.user.image,
                                 name: comment.user.name,
                                 firstName: comment.user.firstName,
@@ -517,7 +542,11 @@ export default function UpdateDetailClient({
 
             {/* Add Comment Form */}
             {userId && (
-              <Card withBorder padding="md" style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
+              <Card
+                withBorder
+                padding="md"
+                style={{ backgroundColor: "var(--mantine-color-gray-0)" }}
+              >
                 <Stack gap="sm">
                   <MentionTextarea
                     placeholder="Add a comment... (supports Markdown and @mentions)"

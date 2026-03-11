@@ -13,7 +13,7 @@ export const atprotoRouter = createTRPCRouter({
         handle: z.string().min(1, "Handle is required"),
         appPassword: z.string().min(4, "App password is required"),
         customPdsUrl: z.string().url().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const service = createAtProtoService(ctx.db, input.customPdsUrl);
@@ -60,12 +60,15 @@ export const atprotoRouter = createTRPCRouter({
     .input(
       z.object({
         limit: z.number().min(1).max(100).optional().default(10),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       try {
         const service = createAtProtoService(ctx.db);
-        const posts = await service.getUserPosts(ctx.session.user.id, input.limit);
+        const posts = await service.getUserPosts(
+          ctx.session.user.id,
+          input.limit,
+        );
         return posts;
       } catch (error) {
         // Fail gracefully for auth errors - return empty array
@@ -82,9 +85,12 @@ export const atprotoRouter = createTRPCRouter({
   createPost: protectedProcedure
     .input(
       z.object({
-        text: z.string().min(1, "Post text is required").max(300, "Post is too long (max 300 characters)"),
+        text: z
+          .string()
+          .min(1, "Post text is required")
+          .max(300, "Post is too long (max 300 characters)"),
         customPdsUrl: z.string().url().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const service = createAtProtoService(ctx.db, input.customPdsUrl);
@@ -120,7 +126,7 @@ export const atprotoRouter = createTRPCRouter({
         projectTitle: z.string().min(1, "Project title is required"),
         projectUrl: z.string().url("Invalid project URL"),
         customPdsUrl: z.string().url().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const service = createAtProtoService(ctx.db, input.customPdsUrl);

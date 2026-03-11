@@ -6,10 +6,16 @@ export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, SALT_ROUNDS);
 }
 
-export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
+export async function verifyPassword(
+  password: string,
+  hashedPassword: string,
+): Promise<boolean> {
   console.log("[PASSWORD] Verifying password - length:", password.length);
-  console.log("[PASSWORD] Hashed password starts with:", hashedPassword.substring(0, 10));
-  
+  console.log(
+    "[PASSWORD] Hashed password starts with:",
+    hashedPassword.substring(0, 10),
+  );
+
   try {
     const result = await bcrypt.compare(password, hashedPassword);
     console.log("[PASSWORD] Verification result:", result);
@@ -20,7 +26,10 @@ export async function verifyPassword(password: string, hashedPassword: string): 
   }
 }
 
-export function validatePassword(password: string): { isValid: boolean; errors: string[] } {
+export function validatePassword(password: string): {
+  isValid: boolean;
+  errors: string[];
+} {
   const errors: string[] = [];
 
   if (password.length < 8) {

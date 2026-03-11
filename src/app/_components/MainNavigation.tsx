@@ -10,7 +10,15 @@ import {
 } from "@tabler/icons-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Drawer, Burger, NavLink, Stack, Text, Divider, Group } from "@mantine/core";
+import {
+  Drawer,
+  Burger,
+  NavLink,
+  Stack,
+  Text,
+  Divider,
+  Group,
+} from "@mantine/core";
 import { NavigationContainer } from "./nav/NavigationContainer";
 import { NavigationTabs } from "./nav/NavigationTabs";
 import { NavigationTab } from "./nav/NavigationTab";
@@ -26,7 +34,9 @@ interface MainNavigationProps {
   acceptedEvents?: AcceptedEvent[];
 }
 
-export default function MainNavigation({ acceptedEvents = [] }: MainNavigationProps) {
+export default function MainNavigation({
+  acceptedEvents = [],
+}: MainNavigationProps) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -60,9 +70,24 @@ export default function MainNavigation({ acceptedEvents = [] }: MainNavigationPr
 
   const navItems = [
     { value: "home", href: "/", icon: <IconHome size={18} />, label: "Home" },
-    { value: "community", href: "/community", icon: <IconHeartHandshake size={18} />, label: "Community" },
-    { value: "profiles", href: "/profiles", icon: <IconUsers size={18} />, label: "Profiles" },
-    { value: "projects", href: "/projects", icon: <IconBulb size={18} />, label: "Projects" },
+    {
+      value: "community",
+      href: "/community",
+      icon: <IconHeartHandshake size={18} />,
+      label: "Community",
+    },
+    {
+      value: "profiles",
+      href: "/profiles",
+      icon: <IconUsers size={18} />,
+      label: "Profiles",
+    },
+    {
+      value: "projects",
+      href: "/projects",
+      icon: <IconBulb size={18} />,
+      label: "Projects",
+    },
   ];
 
   return (
@@ -133,13 +158,25 @@ export default function MainNavigation({ acceptedEvents = [] }: MainNavigationPr
             <NavigationTab value="home" href="/" icon={<IconHome size={18} />}>
               Home
             </NavigationTab>
-            <NavigationTab value="community" href="/community" icon={<IconHeartHandshake size={18} />}>
+            <NavigationTab
+              value="community"
+              href="/community"
+              icon={<IconHeartHandshake size={18} />}
+            >
               Community
             </NavigationTab>
-            <NavigationTab value="profiles" href="/profiles" icon={<IconUsers size={18} />}>
+            <NavigationTab
+              value="profiles"
+              href="/profiles"
+              icon={<IconUsers size={18} />}
+            >
               Profiles
             </NavigationTab>
-            <NavigationTab value="projects" href="/projects" icon={<IconBulb size={18} />}>
+            <NavigationTab
+              value="projects"
+              href="/projects"
+              icon={<IconBulb size={18} />}
+            >
               Projects
             </NavigationTab>
             {acceptedEvents.map((event) => (

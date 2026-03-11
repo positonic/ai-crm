@@ -1,10 +1,6 @@
 "use client";
 import { Container, Title, Text, Badge, Stack, Paper } from "@mantine/core";
-import {
-  IconBug,
-  IconSparkles,
-  IconTools,
-} from "@tabler/icons-react";
+import { IconBug, IconSparkles, IconTools } from "@tabler/icons-react";
 import { GitCommitTimeline } from "~/app/_components/GitCommitTimeline";
 
 export default function RoadmapPage() {
@@ -30,13 +26,28 @@ export default function RoadmapPage() {
               Legend
             </Text>
             <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-              <Badge size="sm" color="blue" variant="light" leftSection={<IconSparkles size={14} />}>
+              <Badge
+                size="sm"
+                color="blue"
+                variant="light"
+                leftSection={<IconSparkles size={14} />}
+              >
                 Feature
               </Badge>
-              <Badge size="sm" color="red" variant="light" leftSection={<IconBug size={14} />}>
+              <Badge
+                size="sm"
+                color="red"
+                variant="light"
+                leftSection={<IconBug size={14} />}
+              >
                 Fix
               </Badge>
-              <Badge size="sm" color="gray" variant="light" leftSection={<IconTools size={14} />}>
+              <Badge
+                size="sm"
+                color="gray"
+                variant="light"
+                leftSection={<IconTools size={14} />}
+              >
                 Chore
               </Badge>
             </div>

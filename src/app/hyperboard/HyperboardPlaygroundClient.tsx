@@ -286,8 +286,7 @@ export function HyperboardPlaygroundClient() {
       backgroundFilter: "grayscale(100%)",
     },
     validate: {
-      height: (value) =>
-        value < 400 ? "Height must be at least 400px" : null,
+      height: (value) => (value < 400 ? "Height must be at least 400px" : null),
       label: (value) => (value.trim() === "" ? "Label is required" : null),
       logoSize: (value) => {
         const regex = /^(\d+)%$/;
@@ -340,7 +339,10 @@ export function HyperboardPlaygroundClient() {
 
       {/* Configuration Tabs Below */}
       <Container size="xl" py="xl">
-        <Tabs value={activeTab} onChange={(value) => setActiveTab(value ?? "preview")}>
+        <Tabs
+          value={activeTab}
+          onChange={(value) => setActiveTab(value ?? "preview")}
+        >
           <Tabs.List>
             <Tabs.Tab value="preview" leftSection={<IconEye size={16} />}>
               Preview Info

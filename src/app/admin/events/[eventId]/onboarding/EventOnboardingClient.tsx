@@ -20,11 +20,11 @@ import {
   Button,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { 
-  IconEye, 
-  IconDownload, 
-  IconCheck, 
-  IconX, 
+import {
+  IconEye,
+  IconDownload,
+  IconCheck,
+  IconX,
   IconClock,
   IconUser,
   IconLanguage,
@@ -45,7 +45,7 @@ interface OnboardingSubmission {
   id: string;
   completed: boolean;
   submittedAt: Date | null;
-  
+
   // Contact & Logistics
   bloodType: string | null;
   emergencyContactName: string | null;
@@ -53,46 +53,46 @@ interface OnboardingSubmission {
   emergencyContactPhone: string | null;
   arrivalDateTime: Date | null;
   departureDateTime: Date | null;
-  
+
   // Travel Documents - Deprecated but kept for existing data
   eTicketUrl: string | null;
   eTicketFileName: string | null;
   healthInsuranceUrl: string | null;
   healthInsuranceFileName: string | null;
-  
+
   // Food & Dietary Needs
   dietType: "OMNIVORE" | "VEGETARIAN" | "VEGAN" | "OTHER" | null;
   dietTypeOther: string | null;
   allergiesIntolerances: string | null;
-  
+
   // English Proficiency
   englishProficiencyLevel: number | null;
-  
+
   // Knowledge Sharing, Community & Mentorship
   primaryGoals: string | null;
   skillsToGain: string | null;
   openToMentoring: "YES" | "NO" | "MAYBE" | null;
   mentorsToLearnFrom: string | null;
   organizationsToConnect: string | null;
-  
+
   // Technical Workshop
   technicalWorkshopTitle: string | null;
   technicalWorkshopDescription: string | null;
   technicalWorkshopDuration: string | null;
   technicalWorkshopMaterials: string | null;
-  
+
   // Beyond Work Activities
   beyondWorkInterests: string | null;
   beyondWorkTitle: string | null;
   beyondWorkDescription: string | null;
   beyondWorkDuration: string | null;
   beyondWorkMaterials: string | null;
-  
+
   // Media & Bio
   headshotUrl: string | null;
   headshotFileName: string | null;
   shortBio: string | null;
-  
+
   // Commitments & Confirmations
   participateExperiments: boolean | null;
   mintHypercert: boolean | null;
@@ -101,10 +101,10 @@ interface OnboardingSubmission {
   liabilityWaiverConsent: boolean | null;
   codeOfConductAgreement: boolean | null;
   communityActivitiesConsent: boolean | null;
-  
+
   // Additional Information
   additionalComments: string | null;
-  
+
   createdAt: Date;
   updatedAt: Date;
   application: {
@@ -137,25 +137,38 @@ interface EventOnboardingClientProps {
 
 function getStatusBadge(submission: OnboardingSubmission) {
   if (submission.completed && submission.submittedAt) {
-    return <Badge color="green" leftSection={<IconCheck size={12} />}>Completed</Badge>;
+    return (
+      <Badge color="green" leftSection={<IconCheck size={12} />}>
+        Completed
+      </Badge>
+    );
   }
-  
+
   // Check if they have provided any substantial information
   const hasBasicInfo = submission.emergencyContactName;
-  const hasCommitments = submission.participateExperiments ?? submission.mintHypercert;
-  
+  const hasCommitments =
+    submission.participateExperiments ?? submission.mintHypercert;
+
   if (!submission.completed && (hasBasicInfo ?? hasCommitments)) {
-    return <Badge color="yellow" leftSection={<IconClock size={12} />}>In Progress</Badge>;
+    return (
+      <Badge color="yellow" leftSection={<IconClock size={12} />}>
+        In Progress
+      </Badge>
+    );
   }
-  
-  return <Badge color="gray" leftSection={<IconX size={12} />}>Not Started</Badge>;
+
+  return (
+    <Badge color="gray" leftSection={<IconX size={12} />}>
+      Not Started
+    </Badge>
+  );
 }
 
-function OnboardingDetailModal({ 
-  submission, 
-  opened, 
-  onClose 
-}: { 
+function OnboardingDetailModal({
+  submission,
+  opened,
+  onClose,
+}: {
   submission: OnboardingSubmission | null;
   opened: boolean;
   onClose: () => void;
@@ -168,9 +181,9 @@ function OnboardingDetailModal({
   };
 
   return (
-    <Modal 
-      opened={opened} 
-      onClose={onClose} 
+    <Modal
+      opened={opened}
+      onClose={onClose}
       title={`Onboarding Details - ${submission.application.user?.name ?? "Unknown"}`}
       size="xl"
     >
@@ -183,19 +196,33 @@ function OnboardingDetailModal({
           </Group>
           <Grid>
             <Grid.Col span={6}>
-              <Text size="sm" fw={500}>Name</Text>
-              <Text size="sm" c="dimmed">{submission.application.user?.name ?? "N/A"}</Text>
+              <Text size="sm" fw={500}>
+                Name
+              </Text>
+              <Text size="sm" c="dimmed">
+                {submission.application.user?.name ?? "N/A"}
+              </Text>
             </Grid.Col>
             <Grid.Col span={6}>
-              <Text size="sm" fw={500}>Email</Text>
-              <Text size="sm" c="dimmed">{submission.application.user?.email ?? "N/A"}</Text>
+              <Text size="sm" fw={500}>
+                Email
+              </Text>
+              <Text size="sm" c="dimmed">
+                {submission.application.user?.email ?? "N/A"}
+              </Text>
             </Grid.Col>
             <Grid.Col span={6}>
-              <Text size="sm" fw={500}>Event</Text>
-              <Text size="sm" c="dimmed">{submission.application.event.name}</Text>
+              <Text size="sm" fw={500}>
+                Event
+              </Text>
+              <Text size="sm" c="dimmed">
+                {submission.application.event.name}
+              </Text>
             </Grid.Col>
             <Grid.Col span={6}>
-              <Text size="sm" fw={500}>Status</Text>
+              <Text size="sm" fw={500}>
+                Status
+              </Text>
               {getStatusBadge(submission)}
             </Grid.Col>
           </Grid>
@@ -209,32 +236,58 @@ function OnboardingDetailModal({
           </Group>
           <Grid>
             <Grid.Col span={6}>
-              <Text size="sm" fw={500}>Blood Type</Text>
-              <Text size="sm" c="dimmed">{submission.bloodType ?? "Not provided"}</Text>
+              <Text size="sm" fw={500}>
+                Blood Type
+              </Text>
+              <Text size="sm" c="dimmed">
+                {submission.bloodType ?? "Not provided"}
+              </Text>
             </Grid.Col>
             <Grid.Col span={12}>
               <Divider my="xs" />
-              <Text size="sm" fw={600} mb="xs">Emergency Contact</Text>
+              <Text size="sm" fw={600} mb="xs">
+                Emergency Contact
+              </Text>
             </Grid.Col>
             <Grid.Col span={4}>
-              <Text size="sm" fw={500}>Name</Text>
-              <Text size="sm" c="dimmed">{submission.emergencyContactName ?? "Not provided"}</Text>
+              <Text size="sm" fw={500}>
+                Name
+              </Text>
+              <Text size="sm" c="dimmed">
+                {submission.emergencyContactName ?? "Not provided"}
+              </Text>
             </Grid.Col>
             <Grid.Col span={4}>
-              <Text size="sm" fw={500}>Relationship</Text>
-              <Text size="sm" c="dimmed">{submission.emergencyContactRelationship ?? "Not provided"}</Text>
+              <Text size="sm" fw={500}>
+                Relationship
+              </Text>
+              <Text size="sm" c="dimmed">
+                {submission.emergencyContactRelationship ?? "Not provided"}
+              </Text>
             </Grid.Col>
             <Grid.Col span={4}>
-              <Text size="sm" fw={500}>Phone</Text>
-              <Text size="sm" c="dimmed">{submission.emergencyContactPhone ?? "Not provided"}</Text>
+              <Text size="sm" fw={500}>
+                Phone
+              </Text>
+              <Text size="sm" c="dimmed">
+                {submission.emergencyContactPhone ?? "Not provided"}
+              </Text>
             </Grid.Col>
             <Grid.Col span={6}>
-              <Text size="sm" fw={500}>Arrival Date & Time</Text>
-              <Text size="sm" c="dimmed">{formatDate(submission.arrivalDateTime)}</Text>
+              <Text size="sm" fw={500}>
+                Arrival Date & Time
+              </Text>
+              <Text size="sm" c="dimmed">
+                {formatDate(submission.arrivalDateTime)}
+              </Text>
             </Grid.Col>
             <Grid.Col span={6}>
-              <Text size="sm" fw={500}>Departure Date & Time</Text>
-              <Text size="sm" c="dimmed">{formatDate(submission.departureDateTime)}</Text>
+              <Text size="sm" fw={500}>
+                Departure Date & Time
+              </Text>
+              <Text size="sm" c="dimmed">
+                {formatDate(submission.departureDateTime)}
+              </Text>
             </Grid.Col>
           </Grid>
         </Card>
@@ -249,17 +302,31 @@ function OnboardingDetailModal({
             <Grid>
               {submission.eTicketUrl && (
                 <Grid.Col span={6}>
-                  <Text size="sm" fw={500}>E-Ticket</Text>
-                  <Anchor href={submission.eTicketUrl} target="_blank" size="sm">
-                    {submission.eTicketFileName ?? "View E-Ticket"} <IconDownload size={12} />
+                  <Text size="sm" fw={500}>
+                    E-Ticket
+                  </Text>
+                  <Anchor
+                    href={submission.eTicketUrl}
+                    target="_blank"
+                    size="sm"
+                  >
+                    {submission.eTicketFileName ?? "View E-Ticket"}{" "}
+                    <IconDownload size={12} />
                   </Anchor>
                 </Grid.Col>
               )}
               {submission.healthInsuranceUrl && (
                 <Grid.Col span={6}>
-                  <Text size="sm" fw={500}>Health Insurance</Text>
-                  <Anchor href={submission.healthInsuranceUrl} target="_blank" size="sm">
-                    {submission.healthInsuranceFileName ?? "View Insurance"} <IconDownload size={12} />
+                  <Text size="sm" fw={500}>
+                    Health Insurance
+                  </Text>
+                  <Anchor
+                    href={submission.healthInsuranceUrl}
+                    target="_blank"
+                    size="sm"
+                  >
+                    {submission.healthInsuranceFileName ?? "View Insurance"}{" "}
+                    <IconDownload size={12} />
                   </Anchor>
                 </Grid.Col>
               )}
@@ -275,21 +342,26 @@ function OnboardingDetailModal({
           </Group>
           <Grid>
             <Grid.Col span={6}>
-              <Text size="sm" fw={500}>Diet Type</Text>
-              <Badge 
-                color={submission.dietType ? "green" : "gray"} 
-                size="sm"
-              >
+              <Text size="sm" fw={500}>
+                Diet Type
+              </Text>
+              <Badge color={submission.dietType ? "green" : "gray"} size="sm">
                 {submission.dietType ?? "Not specified"}
               </Badge>
             </Grid.Col>
             <Grid.Col span={6}>
-              <Text size="sm" fw={500}>Other Diet Details</Text>
-              <Text size="sm" c="dimmed">{submission.dietTypeOther ?? "N/A"}</Text>
+              <Text size="sm" fw={500}>
+                Other Diet Details
+              </Text>
+              <Text size="sm" c="dimmed">
+                {submission.dietTypeOther ?? "N/A"}
+              </Text>
             </Grid.Col>
             <Grid.Col span={12}>
-              <Text size="sm" fw={500}>Allergies & Intolerances</Text>
-              <Text size="sm" c="dimmed" style={{ whiteSpace: 'pre-wrap' }}>
+              <Text size="sm" fw={500}>
+                Allergies & Intolerances
+              </Text>
+              <Text size="sm" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
                 {submission.allergiesIntolerances ?? "None specified"}
               </Text>
             </Grid.Col>
@@ -304,14 +376,19 @@ function OnboardingDetailModal({
           </Group>
           <Grid>
             <Grid.Col span={12}>
-              <Text size="sm" fw={500}>Proficiency Level</Text>
+              <Text size="sm" fw={500}>
+                Proficiency Level
+              </Text>
               <Group gap="sm" align="center">
                 <Badge size="lg" color="blue">
                   {submission.englishProficiencyLevel ?? 0}%
                 </Badge>
                 <Text size="sm" c="dimmed">
-                  {(submission.englishProficiencyLevel ?? 0) < 30 ? "Beginner" : 
-                   (submission.englishProficiencyLevel ?? 0) < 70 ? "Intermediate" : "Fluent"}
+                  {(submission.englishProficiencyLevel ?? 0) < 30
+                    ? "Beginner"
+                    : (submission.englishProficiencyLevel ?? 0) < 70
+                      ? "Intermediate"
+                      : "Fluent"}
                 </Text>
               </Group>
             </Grid.Col>
@@ -326,35 +403,53 @@ function OnboardingDetailModal({
           </Group>
           <Grid>
             <Grid.Col span={12}>
-              <Text size="sm" fw={500}>Primary Goals</Text>
-              <Text size="sm" c="dimmed" style={{ whiteSpace: 'pre-wrap' }}>
+              <Text size="sm" fw={500}>
+                Primary Goals
+              </Text>
+              <Text size="sm" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
                 {submission.primaryGoals ?? "Not provided"}
               </Text>
             </Grid.Col>
             <Grid.Col span={12}>
-              <Text size="sm" fw={500}>Skills to Gain</Text>
-              <Text size="sm" c="dimmed" style={{ whiteSpace: 'pre-wrap' }}>
+              <Text size="sm" fw={500}>
+                Skills to Gain
+              </Text>
+              <Text size="sm" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
                 {submission.skillsToGain ?? "Not provided"}
               </Text>
             </Grid.Col>
             <Grid.Col span={6}>
-              <Text size="sm" fw={500}>Open to Mentoring</Text>
-              <Badge 
-                color={submission.openToMentoring === "YES" ? "green" : submission.openToMentoring === "MAYBE" ? "yellow" : submission.openToMentoring === "NO" ? "red" : "gray"} 
+              <Text size="sm" fw={500}>
+                Open to Mentoring
+              </Text>
+              <Badge
+                color={
+                  submission.openToMentoring === "YES"
+                    ? "green"
+                    : submission.openToMentoring === "MAYBE"
+                      ? "yellow"
+                      : submission.openToMentoring === "NO"
+                        ? "red"
+                        : "gray"
+                }
                 size="sm"
               >
                 {submission.openToMentoring ?? "Not specified"}
               </Badge>
             </Grid.Col>
             <Grid.Col span={12}>
-              <Text size="sm" fw={500}>Mentors to Learn From</Text>
-              <Text size="sm" c="dimmed" style={{ whiteSpace: 'pre-wrap' }}>
+              <Text size="sm" fw={500}>
+                Mentors to Learn From
+              </Text>
+              <Text size="sm" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
                 {submission.mentorsToLearnFrom ?? "Not provided"}
               </Text>
             </Grid.Col>
             <Grid.Col span={12}>
-              <Text size="sm" fw={500}>Organizations to Connect With</Text>
-              <Text size="sm" c="dimmed" style={{ whiteSpace: 'pre-wrap' }}>
+              <Text size="sm" fw={500}>
+                Organizations to Connect With
+              </Text>
+              <Text size="sm" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
                 {submission.organizationsToConnect ?? "Not provided"}
               </Text>
             </Grid.Col>
@@ -369,22 +464,34 @@ function OnboardingDetailModal({
           </Group>
           <Grid>
             <Grid.Col span={6}>
-              <Text size="sm" fw={500}>Workshop Title</Text>
-              <Text size="sm" c="dimmed">{submission.technicalWorkshopTitle ?? "Not provided"}</Text>
+              <Text size="sm" fw={500}>
+                Workshop Title
+              </Text>
+              <Text size="sm" c="dimmed">
+                {submission.technicalWorkshopTitle ?? "Not provided"}
+              </Text>
             </Grid.Col>
             <Grid.Col span={6}>
-              <Text size="sm" fw={500}>Duration</Text>
-              <Text size="sm" c="dimmed">{submission.technicalWorkshopDuration ?? "Not provided"}</Text>
+              <Text size="sm" fw={500}>
+                Duration
+              </Text>
+              <Text size="sm" c="dimmed">
+                {submission.technicalWorkshopDuration ?? "Not provided"}
+              </Text>
             </Grid.Col>
             <Grid.Col span={12}>
-              <Text size="sm" fw={500}>Description</Text>
-              <Text size="sm" c="dimmed" style={{ whiteSpace: 'pre-wrap' }}>
+              <Text size="sm" fw={500}>
+                Description
+              </Text>
+              <Text size="sm" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
                 {submission.technicalWorkshopDescription ?? "Not provided"}
               </Text>
             </Grid.Col>
             <Grid.Col span={12}>
-              <Text size="sm" fw={500}>Materials Needed</Text>
-              <Text size="sm" c="dimmed" style={{ whiteSpace: 'pre-wrap' }}>
+              <Text size="sm" fw={500}>
+                Materials Needed
+              </Text>
+              <Text size="sm" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
                 {submission.technicalWorkshopMaterials ?? "Not provided"}
               </Text>
             </Grid.Col>
@@ -399,28 +506,42 @@ function OnboardingDetailModal({
           </Group>
           <Grid>
             <Grid.Col span={12}>
-              <Text size="sm" fw={500}>Interests</Text>
-              <Text size="sm" c="dimmed" style={{ whiteSpace: 'pre-wrap' }}>
+              <Text size="sm" fw={500}>
+                Interests
+              </Text>
+              <Text size="sm" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
                 {submission.beyondWorkInterests ?? "Not provided"}
               </Text>
             </Grid.Col>
             <Grid.Col span={6}>
-              <Text size="sm" fw={500}>Activity Title</Text>
-              <Text size="sm" c="dimmed">{submission.beyondWorkTitle ?? "Not provided"}</Text>
+              <Text size="sm" fw={500}>
+                Activity Title
+              </Text>
+              <Text size="sm" c="dimmed">
+                {submission.beyondWorkTitle ?? "Not provided"}
+              </Text>
             </Grid.Col>
             <Grid.Col span={6}>
-              <Text size="sm" fw={500}>Duration</Text>
-              <Text size="sm" c="dimmed">{submission.beyondWorkDuration ?? "Not provided"}</Text>
+              <Text size="sm" fw={500}>
+                Duration
+              </Text>
+              <Text size="sm" c="dimmed">
+                {submission.beyondWorkDuration ?? "Not provided"}
+              </Text>
             </Grid.Col>
             <Grid.Col span={12}>
-              <Text size="sm" fw={500}>Activity Description</Text>
-              <Text size="sm" c="dimmed" style={{ whiteSpace: 'pre-wrap' }}>
+              <Text size="sm" fw={500}>
+                Activity Description
+              </Text>
+              <Text size="sm" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
                 {submission.beyondWorkDescription ?? "Not provided"}
               </Text>
             </Grid.Col>
             <Grid.Col span={12}>
-              <Text size="sm" fw={500}>Materials Needed</Text>
-              <Text size="sm" c="dimmed" style={{ whiteSpace: 'pre-wrap' }}>
+              <Text size="sm" fw={500}>
+                Materials Needed
+              </Text>
+              <Text size="sm" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
                 {submission.beyondWorkMaterials ?? "Not provided"}
               </Text>
             </Grid.Col>
@@ -436,16 +557,21 @@ function OnboardingDetailModal({
           <Grid>
             {submission.headshotUrl && (
               <Grid.Col span={6}>
-                <Text size="sm" fw={500}>Headshot (Legacy)</Text>
+                <Text size="sm" fw={500}>
+                  Headshot (Legacy)
+                </Text>
                 <Anchor href={submission.headshotUrl} target="_blank" size="sm">
-                  {submission.headshotFileName ?? "View Headshot"} <IconDownload size={12} />
+                  {submission.headshotFileName ?? "View Headshot"}{" "}
+                  <IconDownload size={12} />
                 </Anchor>
               </Grid.Col>
             )}
             {submission.shortBio && (
               <Grid.Col span={12}>
-                <Text size="sm" fw={500}>Short Bio (Legacy)</Text>
-                <Text size="sm" c="dimmed" style={{ whiteSpace: 'pre-wrap' }}>
+                <Text size="sm" fw={500}>
+                  Short Bio (Legacy)
+                </Text>
+                <Text size="sm" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
                   {submission.shortBio}
                 </Text>
               </Grid.Col>
@@ -453,7 +579,8 @@ function OnboardingDetailModal({
             {!submission.headshotUrl && !submission.shortBio && (
               <Grid.Col span={12}>
                 <Text size="sm" c="dimmed">
-                  Profile information should be managed via the main profile system.
+                  Profile information should be managed via the main profile
+                  system.
                 </Text>
               </Grid.Col>
             )}
@@ -468,73 +595,131 @@ function OnboardingDetailModal({
           </Group>
           <Grid>
             <Grid.Col span={4}>
-              <Text size="sm" fw={500}>Full Participation</Text>
-              <Badge 
-                color={submission.participateExperiments ? "green" : "red"} 
+              <Text size="sm" fw={500}>
+                Full Participation
+              </Text>
+              <Badge
+                color={submission.participateExperiments ? "green" : "red"}
                 size="sm"
-                leftSection={submission.participateExperiments ? <IconCheck size={12} /> : <IconX size={12} />}
+                leftSection={
+                  submission.participateExperiments ? (
+                    <IconCheck size={12} />
+                  ) : (
+                    <IconX size={12} />
+                  )
+                }
               >
                 {submission.participateExperiments ? "Yes" : "No"}
               </Badge>
             </Grid.Col>
             <Grid.Col span={4}>
-              <Text size="sm" fw={500}>Documentation Commitment</Text>
-              <Badge 
-                color={submission.mintHypercert ? "green" : "red"} 
+              <Text size="sm" fw={500}>
+                Documentation Commitment
+              </Text>
+              <Badge
+                color={submission.mintHypercert ? "green" : "red"}
                 size="sm"
-                leftSection={submission.mintHypercert ? <IconCheck size={12} /> : <IconX size={12} />}
+                leftSection={
+                  submission.mintHypercert ? (
+                    <IconCheck size={12} />
+                  ) : (
+                    <IconX size={12} />
+                  )
+                }
               >
                 {submission.mintHypercert ? "Yes" : "No"}
               </Badge>
             </Grid.Col>
             <Grid.Col span={4}>
-              <Text size="sm" fw={500}>Interested in Incubation</Text>
-              <Badge 
-                color={submission.interestedIncubation ? "blue" : "gray"} 
+              <Text size="sm" fw={500}>
+                Interested in Incubation
+              </Text>
+              <Badge
+                color={submission.interestedIncubation ? "blue" : "gray"}
                 size="sm"
-                leftSection={submission.interestedIncubation ? <IconCheck size={12} /> : <IconX size={12} />}
+                leftSection={
+                  submission.interestedIncubation ? (
+                    <IconCheck size={12} />
+                  ) : (
+                    <IconX size={12} />
+                  )
+                }
               >
                 {submission.interestedIncubation ? "Yes" : "No"}
               </Badge>
             </Grid.Col>
             <Grid.Col span={4}>
-              <Text size="sm" fw={500}>Interested in EIR Program</Text>
-              <Badge 
-                color={submission.interestedEIR ? "purple" : "gray"} 
+              <Text size="sm" fw={500}>
+                Interested in EIR Program
+              </Text>
+              <Badge
+                color={submission.interestedEIR ? "purple" : "gray"}
                 size="sm"
-                leftSection={submission.interestedEIR ? <IconCheck size={12} /> : <IconX size={12} />}
+                leftSection={
+                  submission.interestedEIR ? (
+                    <IconCheck size={12} />
+                  ) : (
+                    <IconX size={12} />
+                  )
+                }
               >
                 {submission.interestedEIR ? "Yes" : "No"}
               </Badge>
             </Grid.Col>
             <Grid.Col span={4}>
-              <Text size="sm" fw={500}>Liability Waiver</Text>
-              <Badge 
-                color={submission.liabilityWaiverConsent ? "green" : "red"} 
+              <Text size="sm" fw={500}>
+                Liability Waiver
+              </Text>
+              <Badge
+                color={submission.liabilityWaiverConsent ? "green" : "red"}
                 size="sm"
-                leftSection={submission.liabilityWaiverConsent ? <IconCheck size={12} /> : <IconX size={12} />}
+                leftSection={
+                  submission.liabilityWaiverConsent ? (
+                    <IconCheck size={12} />
+                  ) : (
+                    <IconX size={12} />
+                  )
+                }
               >
                 {submission.liabilityWaiverConsent ? "Agreed" : "Not agreed"}
               </Badge>
             </Grid.Col>
             <Grid.Col span={4}>
-              <Text size="sm" fw={500}>Code of Conduct</Text>
-              <Badge 
-                color={submission.codeOfConductAgreement ? "green" : "red"} 
+              <Text size="sm" fw={500}>
+                Code of Conduct
+              </Text>
+              <Badge
+                color={submission.codeOfConductAgreement ? "green" : "red"}
                 size="sm"
-                leftSection={submission.codeOfConductAgreement ? <IconCheck size={12} /> : <IconX size={12} />}
+                leftSection={
+                  submission.codeOfConductAgreement ? (
+                    <IconCheck size={12} />
+                  ) : (
+                    <IconX size={12} />
+                  )
+                }
               >
                 {submission.codeOfConductAgreement ? "Agreed" : "Not agreed"}
               </Badge>
             </Grid.Col>
             <Grid.Col span={4}>
-              <Text size="sm" fw={500}>Community Activities</Text>
-              <Badge 
-                color={submission.communityActivitiesConsent ? "green" : "red"} 
+              <Text size="sm" fw={500}>
+                Community Activities
+              </Text>
+              <Badge
+                color={submission.communityActivitiesConsent ? "green" : "red"}
                 size="sm"
-                leftSection={submission.communityActivitiesConsent ? <IconCheck size={12} /> : <IconX size={12} />}
+                leftSection={
+                  submission.communityActivitiesConsent ? (
+                    <IconCheck size={12} />
+                  ) : (
+                    <IconX size={12} />
+                  )
+                }
               >
-                {submission.communityActivitiesConsent ? "Agreed" : "Not agreed"}
+                {submission.communityActivitiesConsent
+                  ? "Agreed"
+                  : "Not agreed"}
               </Badge>
             </Grid.Col>
           </Grid>
@@ -549,8 +734,10 @@ function OnboardingDetailModal({
             </Group>
             <Grid>
               <Grid.Col span={12}>
-                <Text size="sm" fw={500}>Additional Comments</Text>
-                <Text size="sm" c="dimmed" style={{ whiteSpace: 'pre-wrap' }}>
+                <Text size="sm" fw={500}>
+                  Additional Comments
+                </Text>
+                <Text size="sm" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
                   {submission.additionalComments}
                 </Text>
               </Grid.Col>
@@ -566,16 +753,28 @@ function OnboardingDetailModal({
           </Group>
           <Grid>
             <Grid.Col span={4}>
-              <Text size="sm" fw={500}>Created</Text>
-              <Text size="sm" c="dimmed">{formatDate(submission.createdAt)}</Text>
+              <Text size="sm" fw={500}>
+                Created
+              </Text>
+              <Text size="sm" c="dimmed">
+                {formatDate(submission.createdAt)}
+              </Text>
             </Grid.Col>
             <Grid.Col span={4}>
-              <Text size="sm" fw={500}>Last Updated</Text>
-              <Text size="sm" c="dimmed">{formatDate(submission.updatedAt)}</Text>
+              <Text size="sm" fw={500}>
+                Last Updated
+              </Text>
+              <Text size="sm" c="dimmed">
+                {formatDate(submission.updatedAt)}
+              </Text>
             </Grid.Col>
             <Grid.Col span={4}>
-              <Text size="sm" fw={500}>Submitted</Text>
-              <Text size="sm" c="dimmed">{formatDate(submission.submittedAt)}</Text>
+              <Text size="sm" fw={500}>
+                Submitted
+              </Text>
+              <Text size="sm" c="dimmed">
+                {formatDate(submission.submittedAt)}
+              </Text>
             </Grid.Col>
           </Grid>
         </Card>
@@ -584,9 +783,13 @@ function OnboardingDetailModal({
   );
 }
 
-export default function EventOnboardingClient({ event, onboardingData }: EventOnboardingClientProps) {
+export default function EventOnboardingClient({
+  event,
+  onboardingData,
+}: EventOnboardingClientProps) {
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedSubmission, setSelectedSubmission] = useState<OnboardingSubmission | null>(null);
+  const [selectedSubmission, setSelectedSubmission] =
+    useState<OnboardingSubmission | null>(null);
 
   const handleViewDetails = (submission: OnboardingSubmission) => {
     setSelectedSubmission(submission);
@@ -596,88 +799,96 @@ export default function EventOnboardingClient({ event, onboardingData }: EventOn
   const downloadCSV = () => {
     // Define CSV headers
     const headers = [
-      'Name',
-      'Email',
-      'Status', 
-      'Submitted At',
-      'Blood Type',
-      'Emergency Contact Name',
-      'Emergency Contact Relationship',
-      'Emergency Contact Phone',
-      'Arrival Date Time',
-      'Departure Date Time',
-      'Diet Type',
-      'Diet Type Other',
-      'Allergies Intolerances',
-      'English Proficiency Level',
-      'Primary Goals',
-      'Skills To Gain',
-      'Open To Mentoring',
-      'Mentors To Learn From',
-      'Organizations To Connect',
-      'Technical Workshop Title',
-      'Technical Workshop Description',
-      'Technical Workshop Duration',
-      'Technical Workshop Materials',
-      'Beyond Work Interests',
-      'Beyond Work Title',
-      'Beyond Work Description',
-      'Beyond Work Duration',
-      'Beyond Work Materials',
-      'Participate Experiments',
-      'Mint Hypercert',
-      'Interested Incubation',
-      'Interested EIR',
-      'Liability Waiver Consent',
-      'Code Of Conduct Agreement',
-      'Community Activities Consent',
-      'Additional Comments'
+      "Name",
+      "Email",
+      "Status",
+      "Submitted At",
+      "Blood Type",
+      "Emergency Contact Name",
+      "Emergency Contact Relationship",
+      "Emergency Contact Phone",
+      "Arrival Date Time",
+      "Departure Date Time",
+      "Diet Type",
+      "Diet Type Other",
+      "Allergies Intolerances",
+      "English Proficiency Level",
+      "Primary Goals",
+      "Skills To Gain",
+      "Open To Mentoring",
+      "Mentors To Learn From",
+      "Organizations To Connect",
+      "Technical Workshop Title",
+      "Technical Workshop Description",
+      "Technical Workshop Duration",
+      "Technical Workshop Materials",
+      "Beyond Work Interests",
+      "Beyond Work Title",
+      "Beyond Work Description",
+      "Beyond Work Duration",
+      "Beyond Work Materials",
+      "Participate Experiments",
+      "Mint Hypercert",
+      "Interested Incubation",
+      "Interested EIR",
+      "Liability Waiver Consent",
+      "Code Of Conduct Agreement",
+      "Community Activities Consent",
+      "Additional Comments",
     ];
 
     // Convert data to CSV format
-    const csvData = onboardingData.map(submission => [
-      submission.application.user?.name ?? '',
-      submission.application.user?.email ?? '',
-      submission.completed ? 'Completed' : 'Incomplete',
-      submission.submittedAt ? submission.submittedAt.toISOString() : '',
-      submission.bloodType ?? '',
-      submission.emergencyContactName ?? '',
-      submission.emergencyContactRelationship ?? '',
-      submission.emergencyContactPhone ?? '',
-      submission.arrivalDateTime ? submission.arrivalDateTime.toISOString() : '',
-      submission.departureDateTime ? submission.departureDateTime.toISOString() : '',
-      submission.dietType ?? '',
-      submission.dietTypeOther ?? '',
-      submission.allergiesIntolerances ?? '',
-      submission.englishProficiencyLevel ?? '',
-      submission.primaryGoals ?? '',
-      submission.skillsToGain ?? '',
-      submission.openToMentoring ?? '',
-      submission.mentorsToLearnFrom ?? '',
-      submission.organizationsToConnect ?? '',
-      submission.technicalWorkshopTitle ?? '',
-      submission.technicalWorkshopDescription ?? '',
-      submission.technicalWorkshopDuration ?? '',
-      submission.technicalWorkshopMaterials ?? '',
-      submission.beyondWorkInterests ?? '',
-      submission.beyondWorkTitle ?? '',
-      submission.beyondWorkDescription ?? '',
-      submission.beyondWorkDuration ?? '',
-      submission.beyondWorkMaterials ?? '',
-      submission.participateExperiments ? 'Yes' : 'No',
-      submission.mintHypercert ? 'Yes' : 'No',
-      submission.interestedIncubation ? 'Yes' : 'No',
-      submission.interestedEIR ? 'Yes' : 'No',
-      submission.liabilityWaiverConsent ? 'Yes' : 'No',
-      submission.codeOfConductAgreement ? 'Yes' : 'No',
-      submission.communityActivitiesConsent ? 'Yes' : 'No',
-      submission.additionalComments ?? ''
+    const csvData = onboardingData.map((submission) => [
+      submission.application.user?.name ?? "",
+      submission.application.user?.email ?? "",
+      submission.completed ? "Completed" : "Incomplete",
+      submission.submittedAt ? submission.submittedAt.toISOString() : "",
+      submission.bloodType ?? "",
+      submission.emergencyContactName ?? "",
+      submission.emergencyContactRelationship ?? "",
+      submission.emergencyContactPhone ?? "",
+      submission.arrivalDateTime
+        ? submission.arrivalDateTime.toISOString()
+        : "",
+      submission.departureDateTime
+        ? submission.departureDateTime.toISOString()
+        : "",
+      submission.dietType ?? "",
+      submission.dietTypeOther ?? "",
+      submission.allergiesIntolerances ?? "",
+      submission.englishProficiencyLevel ?? "",
+      submission.primaryGoals ?? "",
+      submission.skillsToGain ?? "",
+      submission.openToMentoring ?? "",
+      submission.mentorsToLearnFrom ?? "",
+      submission.organizationsToConnect ?? "",
+      submission.technicalWorkshopTitle ?? "",
+      submission.technicalWorkshopDescription ?? "",
+      submission.technicalWorkshopDuration ?? "",
+      submission.technicalWorkshopMaterials ?? "",
+      submission.beyondWorkInterests ?? "",
+      submission.beyondWorkTitle ?? "",
+      submission.beyondWorkDescription ?? "",
+      submission.beyondWorkDuration ?? "",
+      submission.beyondWorkMaterials ?? "",
+      submission.participateExperiments ? "Yes" : "No",
+      submission.mintHypercert ? "Yes" : "No",
+      submission.interestedIncubation ? "Yes" : "No",
+      submission.interestedEIR ? "Yes" : "No",
+      submission.liabilityWaiverConsent ? "Yes" : "No",
+      submission.codeOfConductAgreement ? "Yes" : "No",
+      submission.communityActivitiesConsent ? "Yes" : "No",
+      submission.additionalComments ?? "",
     ]);
 
     // Escape CSV values that contain commas, quotes, or newlines
     const escapeCSVValue = (value: string | number) => {
       const stringValue = String(value);
-      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+      if (
+        stringValue.includes(",") ||
+        stringValue.includes('"') ||
+        stringValue.includes("\n")
+      ) {
         return `"${stringValue.replace(/"/g, '""')}"`;
       }
       return stringValue;
@@ -685,25 +896,32 @@ export default function EventOnboardingClient({ event, onboardingData }: EventOn
 
     // Build CSV content
     const csvContent = [
-      headers.join(','),
-      ...csvData.map(row => row.map(escapeCSVValue).join(','))
-    ].join('\n');
+      headers.join(","),
+      ...csvData.map((row) => row.map(escapeCSVValue).join(",")),
+    ].join("\n");
 
     // Create and trigger download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${event.name.replace(/[^a-zA-Z0-9]/g, '_')}_onboarding_data.csv`);
-    link.style.visibility = 'hidden';
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `${event.name.replace(/[^a-zA-Z0-9]/g, "_")}_onboarding_data.csv`,
+    );
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const completedCount = onboardingData.filter(s => s.completed).length;
-  const inProgressCount = onboardingData.filter(s => !s.completed && s.emergencyContactName).length;
-  const eirInterestedCount = onboardingData.filter(s => s.interestedEIR).length;
+  const completedCount = onboardingData.filter((s) => s.completed).length;
+  const inProgressCount = onboardingData.filter(
+    (s) => !s.completed && s.emergencyContactName,
+  ).length;
+  const eirInterestedCount = onboardingData.filter(
+    (s) => s.interestedEIR,
+  ).length;
 
   return (
     <Container size="xl" py="xl">
@@ -732,8 +950,13 @@ export default function EventOnboardingClient({ event, onboardingData }: EventOn
         <Paper withBorder p="md">
           <Group justify="space-between">
             <div>
-              <Text fw={500} size="lg">{event.name}</Text>
-              <Text size="sm" c="dimmed">{event.type} • {event.startDate.toLocaleDateString()} - {event.endDate.toLocaleDateString()}</Text>
+              <Text fw={500} size="lg">
+                {event.name}
+              </Text>
+              <Text size="sm" c="dimmed">
+                {event.type} • {event.startDate.toLocaleDateString()} -{" "}
+                {event.endDate.toLocaleDateString()}
+              </Text>
             </div>
             <Group gap="md">
               <Badge size="lg" variant="light" color="blue">
@@ -759,7 +982,9 @@ export default function EventOnboardingClient({ event, onboardingData }: EventOn
               <Text size="xl" fw={700} c="blue">
                 {onboardingData.length}
               </Text>
-              <Text size="sm" c="dimmed">Total Submissions</Text>
+              <Text size="sm" c="dimmed">
+                Total Submissions
+              </Text>
             </Card>
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 3 }}>
@@ -767,7 +992,9 @@ export default function EventOnboardingClient({ event, onboardingData }: EventOn
               <Text size="xl" fw={700} c="green">
                 {completedCount}
               </Text>
-              <Text size="sm" c="dimmed">Completed</Text>
+              <Text size="sm" c="dimmed">
+                Completed
+              </Text>
             </Card>
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 3 }}>
@@ -775,7 +1002,9 @@ export default function EventOnboardingClient({ event, onboardingData }: EventOn
               <Text size="xl" fw={700} c="yellow">
                 {inProgressCount}
               </Text>
-              <Text size="sm" c="dimmed">In Progress</Text>
+              <Text size="sm" c="dimmed">
+                In Progress
+              </Text>
             </Card>
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 3 }}>
@@ -783,7 +1012,9 @@ export default function EventOnboardingClient({ event, onboardingData }: EventOn
               <Text size="xl" fw={700} c="purple">
                 {eirInterestedCount}
               </Text>
-              <Text size="sm" c="dimmed">EIR Interested</Text>
+              <Text size="sm" c="dimmed">
+                EIR Interested
+              </Text>
             </Card>
           </Grid.Col>
         </Grid>
@@ -807,7 +1038,9 @@ export default function EventOnboardingClient({ event, onboardingData }: EventOn
               {onboardingData.length === 0 ? (
                 <Table.Tr>
                   <Table.Td colSpan={8} ta="center" py="xl">
-                    <Text c="dimmed">No onboarding submissions found for this event</Text>
+                    <Text c="dimmed">
+                      No onboarding submissions found for this event
+                    </Text>
                   </Table.Td>
                 </Table.Tr>
               ) : (
@@ -815,13 +1048,15 @@ export default function EventOnboardingClient({ event, onboardingData }: EventOn
                   <Table.Tr key={submission.id}>
                     <Table.Td>
                       <div>
-                        <Text fw={500}>{submission.application.user?.name ?? "Unknown"}</Text>
-                        <Text size="sm" c="dimmed">{submission.application.user?.email ?? "N/A"}</Text>
+                        <Text fw={500}>
+                          {submission.application.user?.name ?? "Unknown"}
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                          {submission.application.user?.email ?? "N/A"}
+                        </Text>
                       </div>
                     </Table.Td>
-                    <Table.Td>
-                      {getStatusBadge(submission)}
-                    </Table.Td>
+                    <Table.Td>{getStatusBadge(submission)}</Table.Td>
                     <Table.Td>
                       <Stack gap={2}>
                         {submission.emergencyContactName && (
@@ -830,68 +1065,109 @@ export default function EventOnboardingClient({ event, onboardingData }: EventOn
                           </Text>
                         )}
                         {submission.dietType && (
-                          <Badge size="xs" color="orange">{submission.dietType}</Badge>
+                          <Badge size="xs" color="orange">
+                            {submission.dietType}
+                          </Badge>
                         )}
                       </Stack>
                     </Table.Td>
                     <Table.Td>
                       {submission.arrivalDateTime ? (
                         <div>
-                          <Text size="sm">{submission.arrivalDateTime.toLocaleDateString()}</Text>
-                          <Text size="xs" c="dimmed">{submission.arrivalDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                          <Text size="sm">
+                            {submission.arrivalDateTime.toLocaleDateString()}
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            {submission.arrivalDateTime.toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </Text>
                         </div>
                       ) : (
-                        <Text size="sm" c="dimmed">Not provided</Text>
+                        <Text size="sm" c="dimmed">
+                          Not provided
+                        </Text>
                       )}
                     </Table.Td>
                     <Table.Td>
                       <Stack gap={2}>
                         {submission.technicalWorkshopTitle && (
                           <Tooltip label={submission.technicalWorkshopTitle}>
-                            <Badge size="xs" color="purple" style={{ maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <Badge
+                              size="xs"
+                              color="purple"
+                              style={{
+                                maxWidth: 100,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
+                            >
                               🎓 Workshop
                             </Badge>
                           </Tooltip>
                         )}
                         {submission.beyondWorkTitle && (
                           <Tooltip label={submission.beyondWorkTitle}>
-                            <Badge size="xs" color="pink" style={{ maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <Badge
+                              size="xs"
+                              color="pink"
+                              style={{
+                                maxWidth: 100,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
+                            >
                               🎨 Activity
                             </Badge>
                           </Tooltip>
                         )}
                         {submission.openToMentoring === "YES" && (
-                          <Badge size="xs" color="green">Mentor</Badge>
+                          <Badge size="xs" color="green">
+                            Mentor
+                          </Badge>
                         )}
-                        {!submission.technicalWorkshopTitle && !submission.beyondWorkTitle && (
-                          <Text size="sm" c="dimmed">None</Text>
-                        )}
+                        {!submission.technicalWorkshopTitle &&
+                          !submission.beyondWorkTitle && (
+                            <Text size="sm" c="dimmed">
+                              None
+                            </Text>
+                          )}
                       </Stack>
                     </Table.Td>
                     <Table.Td>
                       <Stack gap={2}>
                         {submission.interestedIncubation && (
-                          <Badge size="xs" color="blue">Incubation</Badge>
+                          <Badge size="xs" color="blue">
+                            Incubation
+                          </Badge>
                         )}
                         {submission.interestedEIR && (
-                          <Badge size="xs" color="purple">EIR</Badge>
+                          <Badge size="xs" color="purple">
+                            EIR
+                          </Badge>
                         )}
-                        {!submission.interestedIncubation && !submission.interestedEIR && (
-                          <Text size="sm" c="dimmed">None</Text>
-                        )}
+                        {!submission.interestedIncubation &&
+                          !submission.interestedEIR && (
+                            <Text size="sm" c="dimmed">
+                              None
+                            </Text>
+                          )}
                       </Stack>
                     </Table.Td>
                     <Table.Td>
                       <div>
                         <Text size="sm" c="dimmed">
-                          {submission.submittedAt 
+                          {submission.submittedAt
                             ? submission.submittedAt.toLocaleDateString()
-                            : "Not submitted"
-                          }
+                            : "Not submitted"}
                         </Text>
                         {submission.submittedAt && (
                           <Text size="xs" c="dimmed">
-                            {submission.submittedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {submission.submittedAt.toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
                           </Text>
                         )}
                       </div>
@@ -923,7 +1199,7 @@ export default function EventOnboardingClient({ event, onboardingData }: EventOn
         </Paper>
       </Stack>
 
-      <OnboardingDetailModal 
+      <OnboardingDetailModal
         submission={selectedSubmission}
         opened={opened}
         onClose={close}

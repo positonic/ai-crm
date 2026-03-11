@@ -14,22 +14,22 @@ async function findDuplicateApplications() {
 
     // Find emails with multiple applications
     const duplicateEmails = await prisma.application.groupBy({
-      by: ['email'],
+      by: ["email"],
       having: {
         email: {
           _count: {
-            gt: 1
-          }
-        }
+            gt: 1,
+          },
+        },
       },
       _count: {
-        email: true
+        email: true,
       },
       orderBy: {
         _count: {
-          email: 'desc'
-        }
-      }
+          email: "desc",
+        },
+      },
     });
 
     if (duplicateEmails.length === 0) {
@@ -37,59 +37,75 @@ async function findDuplicateApplications() {
       return;
     }
 
-    console.log(`❗ Found ${duplicateEmails.length} emails with multiple applications:\n`);
+    console.log(
+      `❗ Found ${duplicateEmails.length} emails with multiple applications:\n`,
+    );
 
     // Get detailed info for each duplicate email
     for (const duplicate of duplicateEmails) {
       const applications = await prisma.application.findMany({
         where: {
-          email: duplicate.email
+          email: duplicate.email,
         },
         include: {
           event: {
             select: {
               name: true,
-              id: true
-            }
+              id: true,
+            },
           },
           user: {
             select: {
               name: true,
-              id: true
-            }
-          }
+              id: true,
+            },
+          },
         },
         orderBy: {
-          createdAt: 'asc'
-        }
+          createdAt: "asc",
+        },
       });
 
-      console.log(`📧 Email: ${duplicate.email} (${duplicate._count.email} applications)`);
-      
+      console.log(
+        `📧 Email: ${duplicate.email} (${duplicate._count.email} applications)`,
+      );
+
       applications.forEach((app, index) => {
         console.log(`  ${index + 1}. Application ID: ${app.id}`);
         console.log(`     Event: ${app.event.name} (${app.eventId})`);
         console.log(`     Status: ${app.status}`);
-        console.log(`     Complete: ${app.isComplete ? '✅ Complete' : '❌ Incomplete'}`);
-        console.log(`     User: ${app.user?.name ?? 'No user linked'} (${app.userId ?? 'null'})`);
+        console.log(
+          `     Complete: ${app.isComplete ? "✅ Complete" : "❌ Incomplete"}`,
+        );
+        console.log(
+          `     User: ${app.user?.name ?? "No user linked"} (${app.userId ?? "null"})`,
+        );
         console.log(`     Created: ${app.createdAt.toISOString()}`);
-        console.log(`     Submitted: ${app.submittedAt?.toISOString() ?? 'Not submitted'}`);
+        console.log(
+          `     Submitted: ${app.submittedAt?.toISOString() ?? "Not submitted"}`,
+        );
         console.log("");
       });
-      
+
       console.log("---\n");
     }
 
     // Summary statistics
-    const totalDuplicateApps = duplicateEmails.reduce((sum, dup) => sum + dup._count.email, 0);
+    const totalDuplicateApps = duplicateEmails.reduce(
+      (sum, dup) => sum + dup._count.email,
+      0,
+    );
     const totalUniqueEmails = duplicateEmails.length;
     const extraApplications = totalDuplicateApps - totalUniqueEmails;
 
     console.log("📊 Summary:");
     console.log(`   • ${totalUniqueEmails} emails have duplicates`);
-    console.log(`   • ${totalDuplicateApps} total applications from these emails`);
-    console.log(`   • ${extraApplications} extra applications (potential duplicates to review)`);
-
+    console.log(
+      `   • ${totalDuplicateApps} total applications from these emails`,
+    );
+    console.log(
+      `   • ${extraApplications} extra applications (potential duplicates to review)`,
+    );
   } catch (error) {
     console.error("❌ Error checking for duplicates:", error);
   } finally {
@@ -99,20 +115,22 @@ async function findDuplicateApplications() {
 
 // Check for same event duplicates specifically
 async function findSameEventDuplicates() {
-  console.log("\n🎯 Checking for duplicate applications to the SAME event...\n");
-  
+  console.log(
+    "\n🎯 Checking for duplicate applications to the SAME event...\n",
+  );
+
   const sameEventDuplicates = await prisma.application.groupBy({
-    by: ['email', 'eventId'],
+    by: ["email", "eventId"],
     having: {
       email: {
         _count: {
-          gt: 1
-        }
-      }
+          gt: 1,
+        },
+      },
     },
     _count: {
-      email: true
-    }
+      email: true,
+    },
   });
 
   if (sameEventDuplicates.length === 0) {
@@ -120,30 +138,36 @@ async function findSameEventDuplicates() {
     return;
   }
 
-  console.log(`❗ Found ${sameEventDuplicates.length} email/event combinations with duplicates:\n`);
+  console.log(
+    `❗ Found ${sameEventDuplicates.length} email/event combinations with duplicates:\n`,
+  );
 
   for (const duplicate of sameEventDuplicates) {
     const applications = await prisma.application.findMany({
       where: {
         email: duplicate.email,
-        eventId: duplicate.eventId
+        eventId: duplicate.eventId,
       },
       include: {
         event: {
           select: {
-            name: true
-          }
-        }
+            name: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: 'asc'
-      }
+        createdAt: "asc",
+      },
     });
 
-    console.log(`📧 ${duplicate.email} → ${applications[0]?.event.name} (${duplicate._count.email} applications)`);
+    console.log(
+      `📧 ${duplicate.email} → ${applications[0]?.event.name} (${duplicate._count.email} applications)`,
+    );
     applications.forEach((app, index) => {
-      const completeness = app.isComplete ? '✅ Complete' : '❌ Incomplete';
-      console.log(`  ${index + 1}. ID: ${app.id} | Status: ${app.status} | ${completeness} | Created: ${app.createdAt.toISOString()}`);
+      const completeness = app.isComplete ? "✅ Complete" : "❌ Incomplete";
+      console.log(
+        `  ${index + 1}. ID: ${app.id} | Status: ${app.status} | ${completeness} | Created: ${app.createdAt.toISOString()}`,
+      );
     });
     console.log("");
   }

@@ -148,7 +148,9 @@ async function fetchSentryIssues(opts: {
 }): Promise<SentryIssue[]> {
   const token = process.env.SENTRY_API_TOKEN;
   if (!token) {
-    console.error("SENTRY_API_TOKEN is not set. Add it to .env.local or export it.");
+    console.error(
+      "SENTRY_API_TOKEN is not set. Add it to .env.local or export it.",
+    );
     process.exit(1);
   }
 
@@ -231,7 +233,9 @@ function createBead(issue: SentryIssue): string {
   const externalRef = `sentry-${issue.id}`;
 
   const description = [
-    issue.metadata.type ? `**${issue.metadata.type}**: ${issue.metadata.value ?? ""}` : "",
+    issue.metadata.type
+      ? `**${issue.metadata.type}**: ${issue.metadata.value ?? ""}`
+      : "",
     issue.culprit ? `Location: \`${issue.culprit}\`` : "",
     `First seen: ${issue.firstSeen}`,
     `Occurrences: ${issue.count} | Users affected: ${issue.userCount}`,
@@ -240,7 +244,8 @@ function createBead(issue: SentryIssue): string {
     .filter(Boolean)
     .join("\n");
 
-  const title = issue.title.length > 120 ? issue.title.slice(0, 117) + "..." : issue.title;
+  const title =
+    issue.title.length > 120 ? issue.title.slice(0, 117) + "..." : issue.title;
 
   const cmd = [
     "bd create",
@@ -286,7 +291,7 @@ async function main() {
   const newIssues = issues.filter((i) => !existingRefs.has(`sentry-${i.id}`));
 
   console.log(
-    `Already tracked: ${issues.length - newIssues.length} | New: ${newIssues.length}\n`
+    `Already tracked: ${issues.length - newIssues.length} | New: ${newIssues.length}\n`,
   );
 
   if (newIssues.length === 0) {
@@ -299,7 +304,7 @@ async function main() {
   for (const issue of newIssues) {
     const priority = sentryLevelToPriority(issue.level, issue.userCount);
     console.log(
-      `  [${issue.level.toUpperCase().padEnd(7)}] P${priority} | ${issue.count.padStart(5)} events | ${String(issue.userCount).padStart(3)} users`
+      `  [${issue.level.toUpperCase().padEnd(7)}] P${priority} | ${issue.count.padStart(5)} events | ${String(issue.userCount).padStart(3)} users`,
     );
     console.log(`  ${issue.title}`);
     if (issue.culprit) {
@@ -315,7 +320,9 @@ async function main() {
 
   // Create beads
   if (!opts.apply) {
-    console.log(`\nDry run complete. Run with --apply to create ${newIssues.length} bead(s).`);
+    console.log(
+      `\nDry run complete. Run with --apply to create ${newIssues.length} bead(s).`,
+    );
     return;
   }
 
@@ -326,7 +333,9 @@ async function main() {
   for (const issue of newIssues) {
     try {
       const beadId = createBead(issue);
-      console.log(`  Created ${beadId} <- sentry-${issue.id}: ${issue.title.slice(0, 60)}`);
+      console.log(
+        `  Created ${beadId} <- sentry-${issue.id}: ${issue.title.slice(0, 60)}`,
+      );
       created++;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);

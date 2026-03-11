@@ -19,7 +19,9 @@ async function main() {
     orderBy: { order: "asc" },
   });
 
-  console.log(`Found ${questions.length} questions for event "${event.name}":\n`);
+  console.log(
+    `Found ${questions.length} questions for event "${event.name}":\n`,
+  );
   for (const q of questions) {
     console.log(`  [${q.id}] (order: ${q.order}) ${q.questionEn}`);
   }
@@ -29,7 +31,9 @@ async function main() {
   );
 
   if (!target) {
-    console.error('\nNo question matching "What would you like to talk about?" found.');
+    console.error(
+      '\nNo question matching "What would you like to talk about?" found.',
+    );
     console.log("Check the list above and update the script if needed.");
     process.exit(1);
   }

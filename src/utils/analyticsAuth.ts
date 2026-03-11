@@ -1,6 +1,6 @@
 /**
  * Analytics Access Control Utility
- * 
+ *
  * Manages role-based access control for analytics endpoints
  * and provides audit logging functionality.
  */
@@ -16,7 +16,8 @@ export function checkResearcherAccess(userRole?: string | null): void {
   if (!userRole || !["admin", "staff", "researcher"].includes(userRole)) {
     throw new TRPCError({
       code: "FORBIDDEN",
-      message: "Researcher access required. Please contact an administrator for analytics access.",
+      message:
+        "Researcher access required. Please contact an administrator for analytics access.",
     });
   }
 }
@@ -27,7 +28,7 @@ export function checkResearcherAccess(userRole?: string | null): void {
 export function checkAnalyticsAdminAccess(userRole?: string | null): void {
   if (!userRole || !["admin", "staff"].includes(userRole)) {
     throw new TRPCError({
-      code: "FORBIDDEN", 
+      code: "FORBIDDEN",
       message: "Admin access required for this analytics operation.",
     });
   }
@@ -47,7 +48,7 @@ export async function logAnalyticsAccess(
     responseSize?: number;
     ipAddress?: string;
     userAgent?: string;
-  }
+  },
 ): Promise<void> {
   try {
     await db.analyticsAudit.create({
@@ -64,7 +65,7 @@ export async function logAnalyticsAccess(
     });
   } catch (error) {
     // Log the error but don't fail the request
-    console.error('Failed to log analytics access:', error);
+    console.error("Failed to log analytics access:", error);
   }
 }
 
@@ -112,15 +113,19 @@ const DEFAULT_RATE_LIMITS: Record<string, RateLimitConfig> = {
 export async function checkRateLimit(
   db: PrismaClient,
   userId: string,
-  endpoint: AnalyticsEndpoint
+  endpoint: AnalyticsEndpoint,
 ): Promise<void> {
   const config = DEFAULT_RATE_LIMITS[endpoint];
   if (!config) {
-    throw new Error(`Rate limit configuration not found for endpoint: ${endpoint}`);
+    throw new Error(
+      `Rate limit configuration not found for endpoint: ${endpoint}`,
+    );
   }
 
   const now = new Date();
-  const windowStart = new Date(now.getTime() - (config.windowMinutes * 60 * 1000));
+  const windowStart = new Date(
+    now.getTime() - config.windowMinutes * 60 * 1000,
+  );
 
   // Get or create rate limit record
   let rateLimitRecord = await db.analyticsRateLimit.findUnique({
@@ -146,11 +151,14 @@ export async function checkRateLimit(
   // Check if user is currently blocked
   if (rateLimitRecord.isBlocked) {
     const blockExpiry = new Date(
-      rateLimitRecord.lastRequest.getTime() + (config.blockDurationMinutes * 60 * 1000)
+      rateLimitRecord.lastRequest.getTime() +
+        config.blockDurationMinutes * 60 * 1000,
     );
-    
+
     if (now < blockExpiry) {
-      const remainingMinutes = Math.ceil((blockExpiry.getTime() - now.getTime()) / (60 * 1000));
+      const remainingMinutes = Math.ceil(
+        (blockExpiry.getTime() - now.getTime()) / (60 * 1000),
+      );
       throw new TRPCError({
         code: "TOO_MANY_REQUESTS",
         message: `Rate limit exceeded. Access blocked for ${remainingMinutes} more minutes.`,
@@ -211,7 +219,7 @@ export async function checkRateLimit(
 export async function getRateLimitStatus(
   db: PrismaClient,
   userId: string,
-  endpoint: AnalyticsEndpoint
+  endpoint: AnalyticsEndpoint,
 ): Promise<{
   requestCount: number;
   maxRequests: number;
@@ -222,7 +230,9 @@ export async function getRateLimitStatus(
 }> {
   const config = DEFAULT_RATE_LIMITS[endpoint];
   if (!config) {
-    throw new Error(`Rate limit configuration not found for endpoint: ${endpoint}`);
+    throw new Error(
+      `Rate limit configuration not found for endpoint: ${endpoint}`,
+    );
   }
 
   const rateLimitRecord = await db.analyticsRateLimit.findUnique({
@@ -246,16 +256,23 @@ export async function getRateLimitStatus(
 
   const now = new Date();
   const windowEnd = new Date(
-    rateLimitRecord.windowStart.getTime() + (config.windowMinutes * 60 * 1000)
+    rateLimitRecord.windowStart.getTime() + config.windowMinutes * 60 * 1000,
   );
-  const timeUntilReset = Math.max(0, Math.ceil((windowEnd.getTime() - now.getTime()) / (60 * 1000)));
+  const timeUntilReset = Math.max(
+    0,
+    Math.ceil((windowEnd.getTime() - now.getTime()) / (60 * 1000)),
+  );
 
   let timeUntilUnblocked: number | undefined;
   if (rateLimitRecord.isBlocked) {
     const blockExpiry = new Date(
-      rateLimitRecord.lastRequest.getTime() + (config.blockDurationMinutes * 60 * 1000)
+      rateLimitRecord.lastRequest.getTime() +
+        config.blockDurationMinutes * 60 * 1000,
     );
-    timeUntilUnblocked = Math.max(0, Math.ceil((blockExpiry.getTime() - now.getTime()) / (60 * 1000)));
+    timeUntilUnblocked = Math.max(
+      0,
+      Math.ceil((blockExpiry.getTime() - now.getTime()) / (60 * 1000)),
+    );
   }
 
   return {
@@ -274,7 +291,7 @@ export async function getRateLimitStatus(
 export async function resetUserRateLimit(
   db: PrismaClient,
   userId: string,
-  endpoint?: AnalyticsEndpoint
+  endpoint?: AnalyticsEndpoint,
 ): Promise<void> {
   if (endpoint) {
     // Reset specific endpoint
@@ -307,18 +324,18 @@ export async function resetUserRateLimit(
  */
 export async function getAnalyticsAccessSummary(
   db: PrismaClient,
-  days = 30
+  days = 30,
 ): Promise<{
   totalRequests: number;
   uniqueUsers: number;
   topEndpoints: Array<{ endpoint: string; count: number }>;
   recentBlocks: Array<{ userId: string; endpoint: string; blockedAt: Date }>;
 }> {
-  const since = new Date(Date.now() - (days * 24 * 60 * 60 * 1000));
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
   // Get audit summary
   const auditSummary = await db.analyticsAudit.groupBy({
-    by: ['endpoint'],
+    by: ["endpoint"],
     where: {
       createdAt: { gte: since },
     },
@@ -327,7 +344,7 @@ export async function getAnalyticsAccessSummary(
     },
     orderBy: {
       _count: {
-        id: 'desc',
+        id: "desc",
       },
     },
   });
@@ -345,7 +362,7 @@ export async function getAnalyticsAccessSummary(
     select: {
       userId: true,
     },
-    distinct: ['userId'],
+    distinct: ["userId"],
   });
 
   const recentBlocks = await db.analyticsRateLimit.findMany({
@@ -359,7 +376,7 @@ export async function getAnalyticsAccessSummary(
       lastRequest: true,
     },
     orderBy: {
-      lastRequest: 'desc',
+      lastRequest: "desc",
     },
     take: 10,
   });
@@ -367,11 +384,11 @@ export async function getAnalyticsAccessSummary(
   return {
     totalRequests,
     uniqueUsers: uniqueUsers.length,
-    topEndpoints: auditSummary.map(item => ({
+    topEndpoints: auditSummary.map((item) => ({
       endpoint: item.endpoint,
       count: item._count.id,
     })),
-    recentBlocks: recentBlocks.map(block => ({
+    recentBlocks: recentBlocks.map((block) => ({
       userId: block.userId,
       endpoint: block.endpoint,
       blockedAt: block.lastRequest,

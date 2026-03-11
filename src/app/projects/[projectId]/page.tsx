@@ -29,9 +29,9 @@ export default async function ProjectDetailPage({ params }: PageProps) {
     });
 
     // Transform weekNumber from null to undefined for type compatibility
-    const timeline = timelineRaw.map(update => ({
+    const timeline = timelineRaw.map((update) => ({
       ...update,
-      weekNumber: update.weekNumber ?? undefined
+      weekNumber: update.weekNumber ?? undefined,
     }));
     // Check if current user is the project owner
     const isOwner = session?.user?.id === project.author.id;

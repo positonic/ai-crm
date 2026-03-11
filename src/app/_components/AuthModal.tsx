@@ -21,8 +21,8 @@ export default function AuthModal({
   subtitle = "Sign in to your account or create a new one",
 }: AuthModalProps) {
   // Detect mobile devices for responsive behavior
-  const isMobile = useMediaQuery('(max-width: 768px)');
-  const isSmallMobile = useMediaQuery('(max-width: 480px)');
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isSmallMobile = useMediaQuery("(max-width: 480px)");
 
   return (
     <Modal
@@ -54,7 +54,11 @@ export default function AuthModal({
       styles={{
         content: {
           maxWidth: isSmallMobile ? "100%" : "600px",
-          width: isSmallMobile ? "100%" : isMobile ? "calc(100vw - 32px)" : "100%",
+          width: isSmallMobile
+            ? "100%"
+            : isMobile
+              ? "calc(100vw - 32px)"
+              : "100%",
           maxHeight: isSmallMobile ? "100vh" : "95vh",
           margin: isSmallMobile ? "0" : isMobile ? "16px" : "auto",
         },
@@ -66,7 +70,9 @@ export default function AuthModal({
         },
         body: {
           padding: isMobile ? "0 16px 16px 16px" : "0 20px 20px 20px",
-          maxHeight: isSmallMobile ? "calc(100vh - 100px)" : "calc(95vh - 140px)",
+          maxHeight: isSmallMobile
+            ? "calc(100vh - 100px)"
+            : "calc(95vh - 140px)",
           overflowY: "auto",
         },
       }}

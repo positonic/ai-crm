@@ -35,7 +35,7 @@ interface ParticipantsPageProps {
 }
 
 // Helper function for social icons
-function getSocialIcon(url: string, type: 'github' | 'linkedin' | 'website') {
+function getSocialIcon(url: string, type: "github" | "linkedin" | "website") {
   const icons = {
     github: IconBrandGithub,
     linkedin: IconBrandLinkedin,
@@ -47,7 +47,7 @@ function getSocialIcon(url: string, type: 'github' | 'linkedin' | 'website') {
       variant="light"
       size="sm"
       color="blue"
-      onClick={() => window.open(url, '_blank')}
+      onClick={() => window.open(url, "_blank")}
     >
       <Icon size={16} />
     </ActionIcon>
@@ -66,14 +66,15 @@ export default function ParticipantsPage({ params }: ParticipantsPageProps) {
   // Get event details
   const { data: event, isLoading: eventLoading } = api.event.getEvent.useQuery(
     { id: eventId },
-    { enabled: !!eventId }
+    { enabled: !!eventId },
   );
 
   // Get accepted residents
-  const { data: residentsData, isLoading: residentsLoading } = api.application.getAcceptedResidents.useQuery(
-    { eventId },
-    { enabled: !!eventId }
-  );
+  const { data: residentsData, isLoading: residentsLoading } =
+    api.application.getAcceptedResidents.useQuery(
+      { eventId },
+      { enabled: !!eventId },
+    );
 
   if (status === "loading" || eventLoading || residentsLoading || !eventId) {
     return (
@@ -89,7 +90,9 @@ export default function ParticipantsPage({ params }: ParticipantsPageProps) {
     return (
       <Container size="lg" py="xl">
         <Title order={1}>Event Not Found</Title>
-        <Text c="dimmed">The event you&apos;re looking for doesn&apos;t exist.</Text>
+        <Text c="dimmed">
+          The event you&apos;re looking for doesn&apos;t exist.
+        </Text>
       </Container>
     );
   }
@@ -108,7 +111,9 @@ export default function ParticipantsPage({ params }: ParticipantsPageProps) {
 
         <Card shadow="sm" padding="lg" radius="md" withBorder>
           <Group justify="space-between" mb="md">
-            <Text fw={600} size="lg">All Participants</Text>
+            <Text fw={600} size="lg">
+              All Participants
+            </Text>
             <Group gap="xs">
               <Badge variant="light" size="lg">
                 {residentsData?.visibleResidents ?? 0} visible
@@ -135,8 +140,9 @@ export default function ParticipantsPage({ params }: ParticipantsPageProps) {
           {residentsData && residentsData.hiddenCount > 0 && (
             <Alert icon={<IconAlertCircle size={16} />} color="blue" mb="md">
               <Text size="sm">
-                <strong>{residentsData.hiddenCount} participants</strong> haven&apos;t completed their profiles yet.
-                Complete your profile to help build our participant community!
+                <strong>{residentsData.hiddenCount} participants</strong>{" "}
+                haven&apos;t completed their profiles yet. Complete your profile
+                to help build our participant community!
               </Text>
             </Alert>
           )}
@@ -144,7 +150,10 @@ export default function ParticipantsPage({ params }: ParticipantsPageProps) {
           {residentsData?.residents && residentsData.residents.length > 0 ? (
             <Grid>
               {residentsData.residents.map((resident) => (
-                <Grid.Col key={resident.user?.id} span={{ base: 12, sm: 6, lg: 4 }}>
+                <Grid.Col
+                  key={resident.user?.id}
+                  span={{ base: 12, sm: 6, lg: 4 }}
+                >
                   <Card
                     shadow="sm"
                     padding="lg"
@@ -153,7 +162,7 @@ export default function ParticipantsPage({ params }: ParticipantsPageProps) {
                     h="100%"
                     component={Link}
                     href={`/profiles/${resident.user?.id}`}
-                    style={{ textDecoration: 'none', color: 'inherit' }}
+                    style={{ textDecoration: "none", color: "inherit" }}
                   >
                     <Card.Section p="lg" pb="xs">
                       <Group gap="sm">
@@ -175,7 +184,8 @@ export default function ParticipantsPage({ params }: ParticipantsPageProps) {
                           {resident.user?.profile?.jobTitle && (
                             <Text size="sm" c="dimmed" lineClamp={1}>
                               {resident.user?.profile?.jobTitle}
-                              {resident.user?.profile?.company && ` at ${resident.user?.profile?.company}`}
+                              {resident.user?.profile?.company &&
+                                ` at ${resident.user?.profile?.company}`}
                             </Text>
                           )}
                         </div>
@@ -198,28 +208,43 @@ export default function ParticipantsPage({ params }: ParticipantsPageProps) {
                         </Text>
                       )}
 
-                      {resident.user?.profile?.skills && resident.user?.profile?.skills.length > 0 && (
-                        <Group gap={4} mb="xs">
-                          {resident.user?.profile?.skills.slice(0, 3).map((skill) => (
-                            <Badge key={skill} size="xs" variant="light">
-                              {skill}
-                            </Badge>
-                          ))}
-                          {resident.user?.profile?.skills.length > 3 && (
-                            <Badge size="xs" variant="outline" color="gray">
-                              +{resident.user?.profile?.skills.length - 3}
-                            </Badge>
-                          )}
-                        </Group>
-                      )}
+                      {resident.user?.profile?.skills &&
+                        resident.user?.profile?.skills.length > 0 && (
+                          <Group gap={4} mb="xs">
+                            {resident.user?.profile?.skills
+                              .slice(0, 3)
+                              .map((skill) => (
+                                <Badge key={skill} size="xs" variant="light">
+                                  {skill}
+                                </Badge>
+                              ))}
+                            {resident.user?.profile?.skills.length > 3 && (
+                              <Badge size="xs" variant="outline" color="gray">
+                                +{resident.user?.profile?.skills.length - 3}
+                              </Badge>
+                            )}
+                          </Group>
+                        )}
                     </Card.Section>
 
                     <Card.Section px="lg" pb="lg">
                       <Group justify="flex-end" align="flex-end" h={40}>
                         <Group gap={4}>
-                          {resident.user?.profile?.githubUrl && getSocialIcon(resident.user?.profile?.githubUrl, 'github')}
-                          {resident.user?.profile?.linkedinUrl && getSocialIcon(resident.user?.profile?.linkedinUrl, 'linkedin')}
-                          {resident.user?.profile?.website && getSocialIcon(resident.user?.profile?.website, 'website')}
+                          {resident.user?.profile?.githubUrl &&
+                            getSocialIcon(
+                              resident.user?.profile?.githubUrl,
+                              "github",
+                            )}
+                          {resident.user?.profile?.linkedinUrl &&
+                            getSocialIcon(
+                              resident.user?.profile?.linkedinUrl,
+                              "linkedin",
+                            )}
+                          {resident.user?.profile?.website &&
+                            getSocialIcon(
+                              resident.user?.profile?.website,
+                              "website",
+                            )}
                         </Group>
                       </Group>
                     </Card.Section>
@@ -233,7 +258,8 @@ export default function ParticipantsPage({ params }: ParticipantsPageProps) {
                 No visible participants yet
               </Text>
               <Text ta="center" size="sm" c="dimmed">
-                Be the first to complete your profile and appear in the directory!
+                Be the first to complete your profile and appear in the
+                directory!
               </Text>
             </Stack>
           )}

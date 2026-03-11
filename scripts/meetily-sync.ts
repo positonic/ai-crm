@@ -32,7 +32,7 @@ const MEETILY_DB_PATH =
     "Library",
     "Application Support",
     "com.meetily.ai",
-    "meeting_minutes.sqlite"
+    "meeting_minutes.sqlite",
   );
 const SYNC_INTERVAL_MS = Number(process.env.SYNC_INTERVAL_MS ?? "30000");
 const FLOOR_TITLE = process.env.FLOOR_TITLE ?? "Floor Transcription";
@@ -97,7 +97,7 @@ async function startSession(title: string): Promise<string> {
 
 async function saveTranscription(
   sessionId: string,
-  text: string
+  text: string,
 ): Promise<void> {
   const url = `${EXPONENTIAL_URL}/api/trpc/transcription.saveTranscription`;
   const res = await fetch(url, {
@@ -126,7 +126,7 @@ function openMeetilyDb(): Database {
   if (!existsSync(MEETILY_DB_PATH)) {
     console.error(`Meetily database not found at: ${MEETILY_DB_PATH}`);
     console.error(
-      "Make sure Meetily is installed and has been run at least once."
+      "Make sure Meetily is installed and has been run at least once.",
     );
     process.exit(1);
   }
@@ -136,7 +136,7 @@ function openMeetilyDb(): Database {
 
 function getNewTranscripts(
   db: Database,
-  sinceTimestamp: string
+  sinceTimestamp: string,
 ): TranscriptRow[] {
   const stmt = db.prepare(`
     SELECT id, meeting_id, transcript, timestamp,
@@ -151,10 +151,7 @@ function getNewTranscripts(
 
 // --- Sync state persistence ---
 
-const SYNC_STATE_PATH = join(
-  homedir(),
-  ".meetily-sync-state.json"
-);
+const SYNC_STATE_PATH = join(homedir(), ".meetily-sync-state.json");
 
 function loadSyncState(): SyncState {
   try {
@@ -179,10 +176,7 @@ async function saveSyncState(state: SyncState): Promise<void> {
 
 // --- Main sync loop ---
 
-async function syncOnce(
-  db: Database,
-  state: SyncState
-): Promise<SyncState> {
+async function syncOnce(db: Database, state: SyncState): Promise<SyncState> {
   const newSegments = getNewTranscripts(db, state.lastTimestamp);
 
   if (newSegments.length === 0) {
@@ -190,7 +184,7 @@ async function syncOnce(
   }
 
   console.log(
-    `[${new Date().toISOString()}] Found ${newSegments.length} new segment(s)`
+    `[${new Date().toISOString()}] Found ${newSegments.length} new segment(s)`,
   );
 
   // Start session if we don't have one yet
@@ -219,7 +213,7 @@ async function syncOnce(
   state.lastTimestamp = lastSegment.timestamp;
 
   console.log(
-    `Synced ${newSegments.length} segment(s), last timestamp: ${state.lastTimestamp}`
+    `Synced ${newSegments.length} segment(s), last timestamp: ${state.lastTimestamp}`,
   );
 
   return state;
@@ -269,7 +263,7 @@ async function main(): Promise<void> {
     } catch (err) {
       console.error(
         `[${new Date().toISOString()}] Sync error:`,
-        err instanceof Error ? err.message : err
+        err instanceof Error ? err.message : err,
       );
       // Don't crash — keep trying next interval
     }

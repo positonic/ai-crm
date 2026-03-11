@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { ActionIcon, Tooltip } from '@mantine/core';
-import { IconMessageChatbot } from '@tabler/icons-react';
-import { useSession } from 'next-auth/react';
-import { usePathname } from 'next/navigation';
-import { AIChatDrawer } from './AIChatDrawer';
-import { useConsoleCapture } from '~/hooks/useConsoleCapture';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { ActionIcon, Tooltip } from "@mantine/core";
+import { IconMessageChatbot } from "@tabler/icons-react";
+import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
+import { AIChatDrawer } from "./AIChatDrawer";
+import { useConsoleCapture } from "~/hooks/useConsoleCapture";
 
-const DRAWER_STORAGE_KEY = 'ai-chat-drawer-opened';
+const DRAWER_STORAGE_KEY = "ai-chat-drawer-opened";
 
 export function AIChatFAB() {
   const { data: session } = useSession();
@@ -23,7 +23,7 @@ export function AIChatFAB() {
     hasRestoredRef.current = true;
     try {
       const saved = sessionStorage.getItem(DRAWER_STORAGE_KEY);
-      if (saved === 'true') {
+      if (saved === "true") {
         setOpened(true);
       }
     } catch {
@@ -64,12 +64,12 @@ export function AIChatFAB() {
           color="violet"
           className="ai-chat-fab"
           style={{
-            position: 'fixed',
-            bottom: '7rem',
-            right: '2rem',
+            position: "fixed",
+            bottom: "7rem",
+            right: "2rem",
             zIndex: 1000,
-            transition: 'all 200ms ease',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            transition: "all 200ms ease",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
           }}
           aria-label="Open AI Assistant"
         >

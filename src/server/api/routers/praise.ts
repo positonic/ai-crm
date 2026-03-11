@@ -252,9 +252,11 @@ export const praiseRouter = createTRPCRouter({
    */
   getAllTransactions: protectedProcedure
     .input(
-      z.object({
-        limit: z.number().min(1).max(100).default(50).optional(),
-      }).optional(),
+      z
+        .object({
+          limit: z.number().min(1).max(100).default(50).optional(),
+        })
+        .optional(),
     )
     .query(async ({ ctx, input }) => {
       const limit = input?.limit ?? 50;

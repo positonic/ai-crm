@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Modal,
-  TextInput,
-  Textarea,
-  Button,
-  Stack,
-} from "@mantine/core";
+import { Modal, TextInput, Textarea, Button, Stack } from "@mantine/core";
 import { useState } from "react";
 import { api } from "~/trpc/react";
 import { notifications } from "@mantine/notifications";
@@ -65,7 +59,12 @@ export default function PrioritySubmitForm({
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Submit a Priority" size="md">
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title="Submit a Priority"
+      size="md"
+    >
       <Stack gap="md">
         <TextInput
           label="What matters most?"

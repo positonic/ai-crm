@@ -50,8 +50,14 @@ export const Hyperboard = (props: HyperboardProps) => {
   const draw = () => {
     // Use actual measured dimensions or fall back to props.height
     // Note: useMeasure returns 0 initially, not undefined, so we need explicit check
-    const effectiveHeight = (dimensions?.height && dimensions.height > 0) ? dimensions.height : props.height;
-    const effectiveWidth = (dimensions?.width && dimensions.width > 0) ? dimensions.width : props.height;
+    const effectiveHeight =
+      dimensions?.height && dimensions.height > 0
+        ? dimensions.height
+        : props.height;
+    const effectiveWidth =
+      dimensions?.width && dimensions.width > 0
+        ? dimensions.width
+        : props.height;
 
     if (!effectiveHeight || effectiveHeight === 0) {
       return;

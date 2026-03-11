@@ -67,30 +67,25 @@ export function ProfilesClient() {
     adminLabels: [],
   });
 
-  const {
-    data,
-    isLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = api.profile.getAllMembers.useInfiniteQuery(
-    {
-      search: filters.search || undefined,
-      skills: filters.skills.length > 0 ? filters.skills : undefined,
-      location: filters.location || undefined,
-      availableForMentoring: filters.availableForMentoring,
-      availableForHiring: filters.availableForHiring,
-      availableForOfficeHours: filters.availableForOfficeHours,
-      limit: 20,
-      // Admin-only (server ignores these for non-admins)
-      eventId: filters.eventId,
-      adminLabels:
-        filters.adminLabels.length > 0 ? filters.adminLabels : undefined,
-    },
-    {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-    },
-  );
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    api.profile.getAllMembers.useInfiniteQuery(
+      {
+        search: filters.search || undefined,
+        skills: filters.skills.length > 0 ? filters.skills : undefined,
+        location: filters.location || undefined,
+        availableForMentoring: filters.availableForMentoring,
+        availableForHiring: filters.availableForHiring,
+        availableForOfficeHours: filters.availableForOfficeHours,
+        limit: 20,
+        // Admin-only (server ignores these for non-admins)
+        eventId: filters.eventId,
+        adminLabels:
+          filters.adminLabels.length > 0 ? filters.adminLabels : undefined,
+      },
+      {
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
+    );
 
   const { data: stats } = api.profile.getProfileStats.useQuery();
   const { data: allSkills = [] } = api.profile.getAllSkills.useQuery();
@@ -100,7 +95,10 @@ export function ProfilesClient() {
 
   const allMembers = data?.pages.flatMap((page) => page.members) ?? [];
 
-  const handleFilterChange = (key: keyof ProfileFilters, value: string | string[] | boolean | undefined) => {
+  const handleFilterChange = (
+    key: keyof ProfileFilters,
+    value: string | string[] | boolean | undefined,
+  ) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -117,7 +115,10 @@ export function ProfilesClient() {
     });
   };
 
-  const getSocialIcon = (url: string, type: 'github' | 'linkedin' | 'twitter' | 'website') => {
+  const getSocialIcon = (
+    url: string,
+    type: "github" | "linkedin" | "twitter" | "website",
+  ) => {
     const icons = {
       github: IconBrandGithub,
       linkedin: IconBrandLinkedin,
@@ -143,13 +144,21 @@ export function ProfilesClient() {
     <Container size="xl" py="xl">
       <Group justify="space-between" mb="xl">
         <div>
-          <Title order={1} mb="xs">Members Directory</Title>
+          <Title order={1} mb="xs">
+            Members Directory
+          </Title>
           <Text c="dimmed">
-            {stats?.totalProfiles ? `${stats.totalProfiles} members` : "Discover and connect with community members"}
+            {stats?.totalProfiles
+              ? `${stats.totalProfiles} members`
+              : "Discover and connect with community members"}
           </Text>
         </div>
         {session && (
-          <Button component={Link} href="/profile/edit" leftSection={<IconUserPlus size={16} />}>
+          <Button
+            component={Link}
+            href="/profile/edit"
+            leftSection={<IconUserPlus size={16} />}
+          >
             Edit My Profile
           </Button>
         )}
@@ -165,7 +174,7 @@ export function ProfilesClient() {
                 Clear all
               </Button>
             </Group>
-            
+
             <Stack gap="md">
               <TextInput
                 placeholder="Search members..."
@@ -193,7 +202,9 @@ export function ProfilesClient() {
               />
 
               <div>
-                <Text size="sm" fw={500} mb="xs">Availability</Text>
+                <Text size="sm" fw={500} mb="xs">
+                  Availability
+                </Text>
                 <Stack gap="xs">
                   <Checkbox
                     label="Available for mentoring"
@@ -202,7 +213,7 @@ export function ProfilesClient() {
                     onChange={(e) =>
                       handleFilterChange(
                         "availableForMentoring",
-                        e.target.checked ? true : undefined
+                        e.target.checked ? true : undefined,
                       )
                     }
                   />
@@ -213,18 +224,20 @@ export function ProfilesClient() {
                     onChange={(e) =>
                       handleFilterChange(
                         "availableForHiring",
-                        e.target.checked ? true : undefined
+                        e.target.checked ? true : undefined,
                       )
                     }
                   />
                   <Checkbox
                     label="Office hours available"
                     checked={filters.availableForOfficeHours === true}
-                    indeterminate={filters.availableForOfficeHours === undefined}
+                    indeterminate={
+                      filters.availableForOfficeHours === undefined
+                    }
                     onChange={(e) =>
                       handleFilterChange(
                         "availableForOfficeHours",
-                        e.target.checked ? true : undefined
+                        e.target.checked ? true : undefined,
                       )
                     }
                   />
@@ -247,10 +260,7 @@ export function ProfilesClient() {
                     }
                     value={filters.eventId ?? null}
                     onChange={(value) =>
-                      handleFilterChange(
-                        "eventId",
-                        value ?? undefined,
-                      )
+                      handleFilterChange("eventId", value ?? undefined)
                     }
                     clearable
                     searchable
@@ -284,15 +294,15 @@ export function ProfilesClient() {
               <Grid>
                 {allMembers.map((member) => (
                   <Grid.Col key={member.id} span={{ base: 12, sm: 6, lg: 4 }}>
-                    <Card 
-                      shadow="sm" 
-                      padding="lg" 
-                      radius="md" 
-                      withBorder 
+                    <Card
+                      shadow="sm"
+                      padding="lg"
+                      radius="md"
+                      withBorder
                       h="100%"
                       component={Link}
                       href={`/profiles/${member.id}`}
-                      style={{ textDecoration: 'none', color: 'inherit' }}
+                      style={{ textDecoration: "none", color: "inherit" }}
                     >
                       <Card.Section p="lg" pb="xs">
                         <Group gap="sm">
@@ -315,7 +325,8 @@ export function ProfilesClient() {
                             {member.profile?.jobTitle && (
                               <Text size="sm" c="dimmed" lineClamp={1}>
                                 {member.profile.jobTitle}
-                                {member.profile.company && ` at ${member.profile.company}`}
+                                {member.profile.company &&
+                                  ` at ${member.profile.company}`}
                               </Text>
                             )}
                           </div>
@@ -341,7 +352,11 @@ export function ProfilesClient() {
                         {member.userSkills && member.userSkills.length > 0 && (
                           <Group gap={4} mb="xs">
                             {member.userSkills.slice(0, 3).map((userSkill) => (
-                              <Badge key={userSkill.id} size="xs" variant="light">
+                              <Badge
+                                key={userSkill.id}
+                                size="xs"
+                                variant="light"
+                              >
                                 {userSkill.skill.name}
                               </Badge>
                             ))}
@@ -425,10 +440,20 @@ export function ProfilesClient() {
                           </Group>
 
                           <Group gap={4}>
-                            {member.profile?.githubUrl && getSocialIcon(member.profile.githubUrl, 'github')}
-                            {member.profile?.linkedinUrl && getSocialIcon(member.profile.linkedinUrl, 'linkedin')}
-                            {member.profile?.twitterUrl && getSocialIcon(member.profile.twitterUrl, 'twitter')}
-                            {member.profile?.website && getSocialIcon(member.profile.website, 'website')}
+                            {member.profile?.githubUrl &&
+                              getSocialIcon(member.profile.githubUrl, "github")}
+                            {member.profile?.linkedinUrl &&
+                              getSocialIcon(
+                                member.profile.linkedinUrl,
+                                "linkedin",
+                              )}
+                            {member.profile?.twitterUrl &&
+                              getSocialIcon(
+                                member.profile.twitterUrl,
+                                "twitter",
+                              )}
+                            {member.profile?.website &&
+                              getSocialIcon(member.profile.website, "website")}
                           </Group>
                         </Group>
                       </Card.Section>
@@ -452,8 +477,12 @@ export function ProfilesClient() {
               {allMembers.length === 0 && !isLoading && (
                 <Center h={200}>
                   <Stack align="center" gap="sm">
-                    <Text size="lg" c="dimmed">No members found</Text>
-                    <Text size="sm" c="dimmed">Try adjusting your search filters</Text>
+                    <Text size="lg" c="dimmed">
+                      No members found
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      Try adjusting your search filters
+                    </Text>
                   </Stack>
                 </Center>
               )}

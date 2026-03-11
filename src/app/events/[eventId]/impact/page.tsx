@@ -44,7 +44,13 @@ import { getDisplayName } from "~/utils/userDisplay";
 import Link from "next/link";
 import { getKudosTier, KUDOS_CONSTANTS } from "~/utils/kudosCalculation";
 
-type SortField = "projects" | "projectsWithMetrics" | "updates" | "praiseSent" | "praiseReceived" | "kudos";
+type SortField =
+  | "projects"
+  | "projectsWithMetrics"
+  | "updates"
+  | "praiseSent"
+  | "praiseReceived"
+  | "kudos";
 type SortDirection = "asc" | "desc";
 
 interface ImpactPageProps {
@@ -83,44 +89,48 @@ export default function ImpactPage({ params }: ImpactPageProps) {
   // Get event details
   const { isLoading: eventLoading } = api.event.getEvent.useQuery(
     { id: eventId },
-    { enabled: !!eventId }
+    { enabled: !!eventId },
   );
 
   // Get resident projects
-  const { data: residentProjects } = api.application.getResidentProjects.useQuery(
-    { eventId },
-    { enabled: !!eventId }
-  );
+  const { data: residentProjects } =
+    api.application.getResidentProjects.useQuery(
+      { eventId },
+      { enabled: !!eventId },
+    );
 
   // Get accepted residents
   const { data: residentsData } = api.application.getAcceptedResidents.useQuery(
     { eventId },
-    { enabled: !!eventId }
+    { enabled: !!eventId },
   );
 
   // Get sponsors for hyperboard
   const { data: sponsors } = api.sponsor.getSponsorsForHyperboard.useQuery(
     { eventId },
-    { enabled: !!eventId }
+    { enabled: !!eventId },
   );
 
   // Get residents for kudosboard (sized by kudos)
-  const { data: residentsKudosboard } = api.application.getResidentsForKudosboard.useQuery(
-    { eventId },
-    { enabled: !!eventId }
-  );
+  const { data: residentsKudosboard } =
+    api.application.getResidentsForKudosboard.useQuery(
+      { eventId },
+      { enabled: !!eventId },
+    );
 
   // Get projects for hyperboard
-  const { data: projectsHyperboard } = api.application.getProjectsForHyperboard.useQuery(
-    { eventId },
-    { enabled: !!eventId }
-  );
+  const { data: projectsHyperboard } =
+    api.application.getProjectsForHyperboard.useQuery(
+      { eventId },
+      { enabled: !!eventId },
+    );
 
   // Get combined hyperboard (sponsors + residents)
-  const { data: combinedHyperboard } = api.application.getCombinedHyperboard.useQuery(
-    { eventId },
-    { enabled: !!eventId }
-  );
+  const { data: combinedHyperboard } =
+    api.application.getCombinedHyperboard.useQuery(
+      { eventId },
+      { enabled: !!eventId },
+    );
 
   // Get activity timeline
   const { data: activityTimeline, isLoading: activityLoading } =
@@ -143,9 +153,10 @@ export default function ImpactPage({ params }: ImpactPageProps) {
   const totalLikes = useMemo(() => {
     if (!residentProjects) return 0;
     return residentProjects.reduce((sum: number, project) => {
-      const projectLikes = project.updates?.reduce((updateSum: number, update) => {
-        return updateSum + (update.likes?.length ?? 0);
-      }, 0) ?? 0;
+      const projectLikes =
+        project.updates?.reduce((updateSum: number, update) => {
+          return updateSum + (update.likes?.length ?? 0);
+        }, 0) ?? 0;
       return sum + projectLikes;
     }, 0);
   }, [residentProjects]);
@@ -159,50 +170,49 @@ export default function ImpactPage({ params }: ImpactPageProps) {
   const residentStats = useMemo(() => {
     if (!residentsData?.residents) return [];
 
-    return residentsData.residents.map((resident) => {
-      const userId = resident.user?.id;
-      if (!userId) return null;
+    return residentsData.residents
+      .map((resident) => {
+        const userId = resident.user?.id;
+        if (!userId) return null;
 
-      const userProjects = residentProjects?.filter(
-        (p) => p.profile?.user?.id === userId
-      ) ?? [];
+        const userProjects =
+          residentProjects?.filter((p) => p.profile?.user?.id === userId) ?? [];
 
-      const totalProjects = userProjects.length;
+        const totalProjects = userProjects.length;
 
-      const projectsWithMetrics = userProjects.filter(
-        (p) => p.metrics && p.metrics.length > 0
-      ).length;
+        const projectsWithMetrics = userProjects.filter(
+          (p) => p.metrics && p.metrics.length > 0,
+        ).length;
 
-      const updateCount = userProjects.reduce(
-        (sum: number, p) => sum + (p.updates?.length ?? 0),
-        0
-      );
+        const updateCount = userProjects.reduce(
+          (sum: number, p) => sum + (p.updates?.length ?? 0),
+          0,
+        );
 
-      const praiseSentCount = transactions?.filter(
-        (t) => t.senderId === userId
-      ).length ?? 0;
+        const praiseSentCount =
+          transactions?.filter((t) => t.senderId === userId).length ?? 0;
 
-      const praiseReceivedCount = transactions?.filter(
-        (t) => t.recipientId === userId
-      ).length ?? 0;
+        const praiseReceivedCount =
+          transactions?.filter((t) => t.recipientId === userId).length ?? 0;
 
-      const actualKudos = resident.user?.kudos ?? KUDOS_CONSTANTS.BASE_KUDOS;
+        const actualKudos = resident.user?.kudos ?? KUDOS_CONSTANTS.BASE_KUDOS;
 
-      return {
-        userId,
-        name: resident.user?.name,
-        image: resident.user?.image,
-        customAvatarUrl: resident.user?.profile?.avatarUrl,
-        firstName: resident.user?.firstName,
-        surname: resident.user?.surname,
-        projects: totalProjects,
-        projectsWithMetrics,
-        updates: updateCount,
-        praiseSent: praiseSentCount,
-        praiseReceived: praiseReceivedCount,
-        kudos: actualKudos,
-      };
-    }).filter(Boolean);
+        return {
+          userId,
+          name: resident.user?.name,
+          image: resident.user?.image,
+          customAvatarUrl: resident.user?.profile?.avatarUrl,
+          firstName: resident.user?.firstName,
+          surname: resident.user?.surname,
+          projects: totalProjects,
+          projectsWithMetrics,
+          updates: updateCount,
+          praiseSent: praiseSentCount,
+          praiseReceived: praiseReceivedCount,
+          kudos: actualKudos,
+        };
+      })
+      .filter(Boolean);
   }, [residentsData, residentProjects, transactions]);
 
   // Sort resident stats
@@ -225,7 +235,11 @@ export default function ImpactPage({ params }: ImpactPageProps) {
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return null;
-    return sortDirection === "asc" ? <IconArrowUp size={14} /> : <IconArrowDown size={14} />;
+    return sortDirection === "asc" ? (
+      <IconArrowUp size={14} />
+    ) : (
+      <IconArrowDown size={14} />
+    );
   };
 
   if (eventLoading || !eventId) {
@@ -240,7 +254,9 @@ export default function ImpactPage({ params }: ImpactPageProps) {
 
   return (
     <Container size="xl" py="xl">
-      <Title order={1} mb="xl">Residency Impact</Title>
+      <Title order={1} mb="xl">
+        Residency Impact
+      </Title>
 
       <Tabs value={activeTab} onChange={handleTabChange}>
         <Tabs.List>
@@ -253,16 +269,25 @@ export default function ImpactPage({ params }: ImpactPageProps) {
           <Tabs.Tab value="leaderboard" leftSection={<IconUsers size={16} />}>
             Residency Leaderboard
           </Tabs.Tab>
-          <Tabs.Tab value="sponsor-hyperboard" leftSection={<IconTable size={16} />}>
+          <Tabs.Tab
+            value="sponsor-hyperboard"
+            leftSection={<IconTable size={16} />}
+          >
             Sponsor Hyperboard
           </Tabs.Tab>
           <Tabs.Tab value="kudosboard" leftSection={<IconSparkles size={16} />}>
             Residents Hyperboard
           </Tabs.Tab>
-          <Tabs.Tab value="projects-hyperboard" leftSection={<IconBriefcase size={16} />}>
+          <Tabs.Tab
+            value="projects-hyperboard"
+            leftSection={<IconBriefcase size={16} />}
+          >
             Projects Hyperboard
           </Tabs.Tab>
-          <Tabs.Tab value="combined-hyperboard" leftSection={<IconLayoutGrid size={16} />}>
+          <Tabs.Tab
+            value="combined-hyperboard"
+            leftSection={<IconLayoutGrid size={16} />}
+          >
             Combined Hyperboard
           </Tabs.Tab>
         </Tabs.List>
@@ -274,7 +299,8 @@ export default function ImpactPage({ params }: ImpactPageProps) {
               p="xl"
               radius="md"
               style={{
-                background: "linear-gradient(135deg, rgba(103, 58, 183, 0.1) 0%, rgba(103, 58, 183, 0.05) 100%)",
+                background:
+                  "linear-gradient(135deg, rgba(103, 58, 183, 0.1) 0%, rgba(103, 58, 183, 0.05) 100%)",
                 border: "1px solid rgba(103, 58, 183, 0.2)",
                 transition: "all 0.3s ease",
                 cursor: "pointer",
@@ -289,7 +315,8 @@ export default function ImpactPage({ params }: ImpactPageProps) {
                     variant="light"
                     color="violet"
                     style={{
-                      background: "linear-gradient(135deg, rgba(103, 58, 183, 0.2) 0%, rgba(103, 58, 183, 0.1) 100%)",
+                      background:
+                        "linear-gradient(135deg, rgba(103, 58, 183, 0.2) 0%, rgba(103, 58, 183, 0.1) 100%)",
                     }}
                   >
                     <IconUsers size={32} />
@@ -302,7 +329,12 @@ export default function ImpactPage({ params }: ImpactPageProps) {
                   <Text size="xs" tt="uppercase" fw={700} c="dimmed" mb={4}>
                     Residents
                   </Text>
-                  <Text size="3rem" fw={900} lh={1} style={{ color: "rgba(103, 58, 183, 1)" }}>
+                  <Text
+                    size="3rem"
+                    fw={900}
+                    lh={1}
+                    style={{ color: "rgba(103, 58, 183, 1)" }}
+                  >
                     {residentsData?.visibleResidents ?? 0}
                   </Text>
                 </Box>
@@ -314,7 +346,8 @@ export default function ImpactPage({ params }: ImpactPageProps) {
               p="xl"
               radius="md"
               style={{
-                background: "linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%)",
+                background:
+                  "linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%)",
                 border: "1px solid rgba(37, 99, 235, 0.2)",
                 transition: "all 0.3s ease",
                 cursor: "pointer",
@@ -329,7 +362,8 @@ export default function ImpactPage({ params }: ImpactPageProps) {
                     variant="light"
                     color="blue"
                     style={{
-                      background: "linear-gradient(135deg, rgba(37, 99, 235, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%)",
+                      background:
+                        "linear-gradient(135deg, rgba(37, 99, 235, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%)",
                     }}
                   >
                     <IconBriefcase size={32} />
@@ -351,7 +385,12 @@ export default function ImpactPage({ params }: ImpactPageProps) {
                   <Text size="xs" tt="uppercase" fw={700} c="dimmed" mb={4}>
                     Projects
                   </Text>
-                  <Text size="3rem" fw={900} lh={1} style={{ color: "rgba(37, 99, 235, 1)" }}>
+                  <Text
+                    size="3rem"
+                    fw={900}
+                    lh={1}
+                    style={{ color: "rgba(37, 99, 235, 1)" }}
+                  >
                     {residentProjects?.length ?? 0}
                   </Text>
                 </Box>
@@ -363,7 +402,8 @@ export default function ImpactPage({ params }: ImpactPageProps) {
               p="xl"
               radius="md"
               style={{
-                background: "linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)",
+                background:
+                  "linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)",
                 border: "1px solid rgba(16, 185, 129, 0.2)",
                 transition: "all 0.3s ease",
                 cursor: "pointer",
@@ -378,7 +418,8 @@ export default function ImpactPage({ params }: ImpactPageProps) {
                     variant="light"
                     color="teal"
                     style={{
-                      background: "linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%)",
+                      background:
+                        "linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%)",
                     }}
                   >
                     <IconActivity size={32} />
@@ -391,7 +432,12 @@ export default function ImpactPage({ params }: ImpactPageProps) {
                   <Text size="xs" tt="uppercase" fw={700} c="dimmed" mb={4}>
                     Project Updates
                   </Text>
-                  <Text size="3rem" fw={900} lh={1} style={{ color: "rgba(16, 185, 129, 1)" }}>
+                  <Text
+                    size="3rem"
+                    fw={900}
+                    lh={1}
+                    style={{ color: "rgba(16, 185, 129, 1)" }}
+                  >
                     {totalUpdates}
                   </Text>
                 </Box>
@@ -403,7 +449,8 @@ export default function ImpactPage({ params }: ImpactPageProps) {
               p="xl"
               radius="md"
               style={{
-                background: "linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(236, 72, 153, 0.05) 100%)",
+                background:
+                  "linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(236, 72, 153, 0.05) 100%)",
                 border: "1px solid rgba(236, 72, 153, 0.2)",
                 transition: "all 0.3s ease",
                 cursor: "pointer",
@@ -418,7 +465,8 @@ export default function ImpactPage({ params }: ImpactPageProps) {
                     variant="light"
                     color="pink"
                     style={{
-                      background: "linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(236, 72, 153, 0.1) 100%)",
+                      background:
+                        "linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(236, 72, 153, 0.1) 100%)",
                     }}
                   >
                     <IconThumbUp size={32} />
@@ -431,7 +479,12 @@ export default function ImpactPage({ params }: ImpactPageProps) {
                   <Text size="xs" tt="uppercase" fw={700} c="dimmed" mb={4}>
                     Total Likes
                   </Text>
-                  <Text size="3rem" fw={900} lh={1} style={{ color: "rgba(236, 72, 153, 1)" }}>
+                  <Text
+                    size="3rem"
+                    fw={900}
+                    lh={1}
+                    style={{ color: "rgba(236, 72, 153, 1)" }}
+                  >
                     {totalLikes}
                   </Text>
                 </Box>
@@ -443,7 +496,8 @@ export default function ImpactPage({ params }: ImpactPageProps) {
               p="xl"
               radius="md"
               style={{
-                background: "linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(249, 115, 22, 0.05) 100%)",
+                background:
+                  "linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(249, 115, 22, 0.05) 100%)",
                 border: "1px solid rgba(249, 115, 22, 0.2)",
                 transition: "all 0.3s ease",
                 cursor: "pointer",
@@ -458,7 +512,8 @@ export default function ImpactPage({ params }: ImpactPageProps) {
                     variant="light"
                     color="orange"
                     style={{
-                      background: "linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.1) 100%)",
+                      background:
+                        "linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.1) 100%)",
                     }}
                   >
                     <IconMessage size={32} />
@@ -471,7 +526,12 @@ export default function ImpactPage({ params }: ImpactPageProps) {
                   <Text size="xs" tt="uppercase" fw={700} c="dimmed" mb={4}>
                     Total Praise
                   </Text>
-                  <Text size="3rem" fw={900} lh={1} style={{ color: "rgba(249, 115, 22, 1)" }}>
+                  <Text
+                    size="3rem"
+                    fw={900}
+                    lh={1}
+                    style={{ color: "rgba(249, 115, 22, 1)" }}
+                  >
                     {totalPraise}
                   </Text>
                 </Box>
@@ -519,12 +579,12 @@ export default function ImpactPage({ params }: ImpactPageProps) {
                 const fromName =
                   from?.firstName && from?.surname
                     ? `${from.firstName} ${from.surname}`
-                    : from?.name ?? from?.email ?? "Unknown";
+                    : (from?.name ?? from?.email ?? "Unknown");
 
                 const toName =
                   to?.firstName && to?.surname
                     ? `${to.firstName} ${to.surname}`
-                    : to?.name ?? to?.email ?? "Unknown";
+                    : (to?.name ?? to?.email ?? "Unknown");
 
                 let icon = <IconSparkles size={16} />;
                 let title = "";
@@ -534,22 +594,29 @@ export default function ImpactPage({ params }: ImpactPageProps) {
                 if (activity.type === "praise") {
                   icon = <IconMessage size={16} />;
                   title = `${fromName} praised ${toName}`;
-                  description = (activity.content as { message: string }).message;
+                  description = (activity.content as { message: string })
+                    .message;
                   color = "pink";
                 } else if (activity.type === "like_update") {
                   icon = <IconThumbUp size={16} />;
                   title = `${fromName} liked ${toName}'s update`;
-                  description = (activity.content as { updateTitle?: string | null }).updateTitle ?? "Project update";
+                  description =
+                    (activity.content as { updateTitle?: string | null })
+                      .updateTitle ?? "Project update";
                   color = "grape";
                 } else if (activity.type === "like_askoffer") {
                   icon = <IconQuestionMark size={16} />;
                   title = `${fromName} liked ${toName}'s ${(activity.content as { askOfferType: string }).askOfferType}`;
-                  description = (activity.content as { askOfferTitle?: string | null }).askOfferTitle ?? "";
+                  description =
+                    (activity.content as { askOfferTitle?: string | null })
+                      .askOfferTitle ?? "";
                   color = "cyan";
                 } else if (activity.type === "like_project") {
                   icon = <IconBriefcase size={16} />;
                   title = `${fromName} liked ${toName}'s project`;
-                  description = (activity.content as { projectTitle?: string | null }).projectTitle ?? "Project";
+                  description =
+                    (activity.content as { projectTitle?: string | null })
+                      .projectTitle ?? "Project";
                   color = "indigo";
                 }
 
@@ -685,16 +752,22 @@ export default function ImpactPage({ params }: ImpactPageProps) {
                         <Badge variant="light">{resident!.projects}</Badge>
                       </Table.Td>
                       <Table.Td>
-                        <Badge variant="light">{resident!.projectsWithMetrics}</Badge>
+                        <Badge variant="light">
+                          {resident!.projectsWithMetrics}
+                        </Badge>
                       </Table.Td>
                       <Table.Td>
                         <Badge variant="light">{resident!.updates}</Badge>
                       </Table.Td>
                       <Table.Td>
-                        <Badge variant="light" color="blue">{resident!.praiseSent}</Badge>
+                        <Badge variant="light" color="blue">
+                          {resident!.praiseSent}
+                        </Badge>
                       </Table.Td>
                       <Table.Td>
-                        <Badge variant="light" color="green">{resident!.praiseReceived}</Badge>
+                        <Badge variant="light" color="green">
+                          {resident!.praiseReceived}
+                        </Badge>
                       </Table.Td>
                       <Table.Td>
                         <Badge
@@ -731,7 +804,6 @@ export default function ImpactPage({ params }: ImpactPageProps) {
             <Text c="dimmed">No sponsors found for this event.</Text>
           )}
         </Tabs.Panel>
-
 
         <Tabs.Panel value="kudosboard" pt="xl">
           {residentsKudosboard && residentsKudosboard.length > 0 ? (

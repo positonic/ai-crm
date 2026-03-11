@@ -50,7 +50,9 @@ export default function BulkInviteModal({
           <Textarea
             label={emailsLabel ?? "Emails"}
             description="Enter one email per line or separate with commas"
-            placeholder={"user1@example.com\nuser2@example.com\nuser3@example.com"}
+            placeholder={
+              "user1@example.com\nuser2@example.com\nuser3@example.com"
+            }
             {...form.getInputProps("emails")}
             rows={6}
             required

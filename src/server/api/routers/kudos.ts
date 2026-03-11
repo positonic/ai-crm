@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 import { KUDOS_CONSTANTS } from "~/utils/kudosCalculation";
 
 /**
@@ -15,10 +19,12 @@ export const kudosRouter = createTRPCRouter({
    */
   getLeaderboard: publicProcedure
     .input(
-      z.object({
-        limit: z.number().min(1).max(100).default(50).optional(),
-        eventId: z.string().optional(),
-      }).optional(),
+      z
+        .object({
+          limit: z.number().min(1).max(100).default(50).optional(),
+          eventId: z.string().optional(),
+        })
+        .optional(),
     )
     .query(async ({ ctx, input }) => {
       const limit = input?.limit ?? 50;
@@ -47,8 +53,8 @@ export const kudosRouter = createTRPCRouter({
           profile: {
             select: {
               avatarUrl: true,
-            }
-          }
+            },
+          },
         },
         orderBy: {
           kudos: "desc",
@@ -75,34 +81,41 @@ export const kudosRouter = createTRPCRouter({
           });
 
           // Count total likes received (all types)
-          const [projectUpdateLikes, askOfferLikes, userProjectLikes, commentLikes] =
-            await Promise.all([
-              ctx.db.projectUpdateLike.count({
-                where: {
-                  projectUpdate: { userId: user.id },
+          const [
+            projectUpdateLikes,
+            askOfferLikes,
+            userProjectLikes,
+            commentLikes,
+          ] = await Promise.all([
+            ctx.db.projectUpdateLike.count({
+              where: {
+                projectUpdate: { userId: user.id },
+              },
+            }),
+            ctx.db.askOfferLike.count({
+              where: {
+                askOffer: { userId: user.id },
+              },
+            }),
+            ctx.db.userProjectLike.count({
+              where: {
+                project: {
+                  profile: { userId: user.id },
                 },
-              }),
-              ctx.db.askOfferLike.count({
-                where: {
-                  askOffer: { userId: user.id },
-                },
-              }),
-              ctx.db.userProjectLike.count({
-                where: {
-                  project: {
-                    profile: { userId: user.id },
-                  },
-                },
-              }),
-              ctx.db.projectUpdateCommentLike.count({
-                where: {
-                  comment: { userId: user.id },
-                },
-              }),
-            ]);
+              },
+            }),
+            ctx.db.projectUpdateCommentLike.count({
+              where: {
+                comment: { userId: user.id },
+              },
+            }),
+          ]);
 
           const likesReceivedCount =
-            projectUpdateLikes + askOfferLikes + userProjectLikes + commentLikes;
+            projectUpdateLikes +
+            askOfferLikes +
+            userProjectLikes +
+            commentLikes;
 
           return {
             user: {
@@ -137,11 +150,13 @@ export const kudosRouter = createTRPCRouter({
    */
   getActivityTimeline: publicProcedure
     .input(
-      z.object({
-        limit: z.number().min(1).max(100).default(50).optional(),
-        eventId: z.string().optional(),
-        userId: z.string().optional(), // Filter to specific user's activity
-      }).optional(),
+      z
+        .object({
+          limit: z.number().min(1).max(100).default(50).optional(),
+          eventId: z.string().optional(),
+          userId: z.string().optional(), // Filter to specific user's activity
+        })
+        .optional(),
     )
     .query(async ({ ctx, input }) => {
       const limit = input?.limit ?? 50;
@@ -193,10 +208,7 @@ export const kudosRouter = createTRPCRouter({
           AND: [
             userId
               ? {
-                  OR: [
-                    { userId },
-                    { projectUpdate: { userId } },
-                  ],
+                  OR: [{ userId }, { projectUpdate: { userId } }],
                 }
               : {},
             {
@@ -240,10 +252,7 @@ export const kudosRouter = createTRPCRouter({
           AND: [
             userId
               ? {
-                  OR: [
-                    { userId },
-                    { askOffer: { userId } },
-                  ],
+                  OR: [{ userId }, { askOffer: { userId } }],
                 }
               : {},
             {
@@ -291,10 +300,7 @@ export const kudosRouter = createTRPCRouter({
           AND: [
             userId
               ? {
-                  OR: [
-                    { userId },
-                    { project: { profile: { userId } } },
-                  ],
+                  OR: [{ userId }, { project: { profile: { userId } } }],
                 }
               : {},
             {
@@ -394,9 +400,7 @@ export const kudosRouter = createTRPCRouter({
       ];
 
       // Sort by most recent
-      activities.sort(
-        (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-      );
+      activities.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
       return activities.slice(0, limit);
     }),
@@ -406,9 +410,11 @@ export const kudosRouter = createTRPCRouter({
    */
   getUserStats: protectedProcedure
     .input(
-      z.object({
-        userId: z.string().optional(), // If not provided, use current user
-      }).optional(),
+      z
+        .object({
+          userId: z.string().optional(), // If not provided, use current user
+        })
+        .optional(),
     )
     .query(async ({ ctx, input }) => {
       const userId = input?.userId ?? ctx.session.user.id;
@@ -488,7 +494,10 @@ export const kudosRouter = createTRPCRouter({
         commentLikesReceived;
 
       const totalLikesGiven =
-        projectUpdateLikesGiven + askOfferLikesGiven + userProjectLikesGiven + commentLikesGiven;
+        projectUpdateLikesGiven +
+        askOfferLikesGiven +
+        userProjectLikesGiven +
+        commentLikesGiven;
 
       return {
         currentKudos: user.kudos,

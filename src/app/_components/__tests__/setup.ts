@@ -1,41 +1,59 @@
-import '@testing-library/jest-dom';
-import { vi, beforeEach, afterEach } from 'vitest';
+import "@testing-library/jest-dom";
+import { vi, beforeEach, afterEach } from "vitest";
 
 // Setup DOM globals for testing
-Object.defineProperty(global, 'Element', {
+Object.defineProperty(global, "Element", {
   value: class Element {},
-  configurable: true
+  configurable: true,
 });
 
-Object.defineProperty(global, 'HTMLElement', {
+Object.defineProperty(global, "HTMLElement", {
   value: class HTMLElement extends Element {},
-  configurable: true
+  configurable: true,
 });
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
   root = null;
-  rootMargin = '0px';
+  rootMargin = "0px";
   thresholds = [0];
-  
-  constructor() { /* Mock constructor */ }
-  disconnect() { /* Mock method */ }
-  observe() { /* Mock method */ }
-  unobserve() { /* Mock method */ }
-  takeRecords() { return []; }
+
+  constructor() {
+    /* Mock constructor */
+  }
+  disconnect() {
+    /* Mock method */
+  }
+  observe() {
+    /* Mock method */
+  }
+  unobserve() {
+    /* Mock method */
+  }
+  takeRecords() {
+    return [];
+  }
 };
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
-  constructor() { /* Mock constructor */ }
-  disconnect() { /* Mock method */ }
-  observe() { /* Mock method */ }
-  unobserve() { /* Mock method */ }
+  constructor() {
+    /* Mock constructor */
+  }
+  disconnect() {
+    /* Mock method */
+  }
+  observe() {
+    /* Mock method */
+  }
+  unobserve() {
+    /* Mock method */
+  }
 };
 
 // Mock matchMedia
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query as string,
     onchange: null,

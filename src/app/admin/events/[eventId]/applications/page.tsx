@@ -7,18 +7,20 @@ interface AdminApplicationsPageProps {
   params: Promise<{ eventId: string }>;
 }
 
-export default async function AdminApplicationsPage({ params }: AdminApplicationsPageProps) {
+export default async function AdminApplicationsPage({
+  params,
+}: AdminApplicationsPageProps) {
   // Await params in Next.js 15
   const { eventId } = await params;
-  
+
   // Check authentication and admin access
   const session = await auth();
-  
+
   // Must be authenticated
   if (!session?.user) {
     redirect(`/signin?callbackUrl=/admin/events/${eventId}/applications`);
   }
-  
+
   // Must have staff or admin role
   if (session.user.role !== "staff" && session.user.role !== "admin") {
     redirect("/unauthorized");

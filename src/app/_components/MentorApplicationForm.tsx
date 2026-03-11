@@ -23,9 +23,9 @@ import {
   Progress,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { 
-  IconCheck, 
-  IconX, 
+import {
+  IconCheck,
+  IconX,
   IconPhone,
   IconBrandTelegram,
   IconBrandDiscord,
@@ -46,16 +46,20 @@ import SkillsMultiSelect from "./SkillsMultiSelect";
 
 const mentorApplicationSchema = z.object({
   skills: z.array(z.string()).min(1, "Please add at least one skill"), // Now stores skill IDs
-  interests: z.array(z.string()).min(1, "Please add at least one area of experience"),
+  interests: z
+    .array(z.string())
+    .min(1, "Please add at least one area of experience"),
   timezone: z.string().min(1, "Timezone is required"),
-  mentorAvailableDates: z.array(z.string()).min(1, "Please select at least one availability period"),
+  mentorAvailableDates: z
+    .array(z.string())
+    .min(1, "Please select at least one availability period"),
   mentorHoursPerWeek: z.string().min(1, "Please specify your time commitment"),
   // Profile fields - Basic Information
   bio: z.string().max(1000).optional(),
   jobTitle: z.string().max(100).optional(),
   company: z.string().max(100).optional(),
   location: z.string().max(100).optional(),
-  // Profile fields - Links & Contact  
+  // Profile fields - Links & Contact
   website: z.string().url().optional().or(z.literal("")),
   githubUrl: z.string().url().optional().or(z.literal("")),
   twitterUrl: z.string().url().optional().or(z.literal("")),
@@ -66,9 +70,15 @@ const mentorApplicationSchema = z.object({
   // Profile fields - Professional Details
   languages: z.array(z.string().max(50)).max(10).optional(),
   // Mentorship fields
-  mentorshipStyle: z.string().min(1, "Please describe your mentorship approach"),
-  previousMentoringExp: z.string().min(1, "Please describe your previous mentoring experience"),
-  mentorSpecializations: z.array(z.string()).min(1, "Please add at least one specialization"),
+  mentorshipStyle: z
+    .string()
+    .min(1, "Please describe your mentorship approach"),
+  previousMentoringExp: z
+    .string()
+    .min(1, "Please describe your previous mentoring experience"),
+  mentorSpecializations: z
+    .array(z.string())
+    .min(1, "Please add at least one specialization"),
   mentorGoals: z.string().min(1, "Please describe your goals as a mentor"),
 });
 
@@ -111,8 +121,15 @@ interface MentorApplicationFormProps {
   invitationToken?: string;
 }
 
-export default function MentorApplicationForm({ eventId, eventName, invitationToken }: MentorApplicationFormProps) {
-  console.log('🎫 [MentorApplicationForm] Received invitation token:', invitationToken);
+export default function MentorApplicationForm({
+  eventId,
+  eventName,
+  invitationToken,
+}: MentorApplicationFormProps) {
+  console.log(
+    "🎫 [MentorApplicationForm] Received invitation token:",
+    invitationToken,
+  );
 
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -121,13 +138,13 @@ export default function MentorApplicationForm({ eventId, eventName, invitationTo
 
   // Fetch skills data to convert IDs to names
   const { data: skillsByCategory } = api.skills.getSkillsByCategory.useQuery();
-  
+
   // Mutation for updating user skills
   const updateUserSkills = api.skills.updateUserSkills.useMutation();
-  
+
   // Mutation for creating mentor application
   const createApplication = api.application.createApplication.useMutation();
-  
+
   const form = useForm<MentorApplicationData>({
     validate: zodResolver(mentorApplicationSchema),
     initialValues: {
@@ -163,18 +180,21 @@ export default function MentorApplicationForm({ eventId, eventName, invitationTo
     onSuccess: () => {
       notifications.show({
         title: "Mentor Application Submitted!",
-        message: "Your mentor profile has been updated successfully. You're now ready to mentor!",
+        message:
+          "Your mentor profile has been updated successfully. You're now ready to mentor!",
         color: "green",
         icon: <IconCheck size={16} />,
       });
-      
+
       // Redirect back to mentor dashboard
       router.push(`/events/${eventId}?tab=application`);
     },
     onError: (error) => {
       notifications.show({
         title: "Submission Failed",
-        message: error.message ?? "There was an error updating your mentor profile. Please try again.",
+        message:
+          error.message ??
+          "There was an error updating your mentor profile. Please try again.",
         color: "red",
         icon: <IconX size={16} />,
       });
@@ -183,14 +203,14 @@ export default function MentorApplicationForm({ eventId, eventName, invitationTo
 
   const handleSubmit = async (values: MentorApplicationData) => {
     setIsSubmitting(true);
-    
+
     try {
       // Convert skill IDs to skill names for backward compatibility with profile API
       const skillNames: string[] = [];
       if (skillsByCategory) {
         const allSkills = Object.values(skillsByCategory).flat();
-        values.skills.forEach(skillId => {
-          const skill = allSkills.find(s => s.id === skillId);
+        values.skills.forEach((skillId) => {
+          const skill = allSkills.find((s) => s.id === skillId);
           if (skill) {
             skillNames.push(skill.name);
           }
@@ -203,7 +223,7 @@ export default function MentorApplicationForm({ eventId, eventName, invitationTo
       });
 
       // Create mentor application record
-      console.log('🎫 [MentorApplicationForm] Sending to API:', {
+      console.log("🎫 [MentorApplicationForm] Sending to API:", {
         eventId,
         applicationType: "MENTOR",
         invitationToken: invitationToken,
@@ -245,7 +265,6 @@ export default function MentorApplicationForm({ eventId, eventName, invitationTo
         mentorAvailableDates: values.mentorAvailableDates,
         mentorHoursPerWeek: values.mentorHoursPerWeek,
       });
-      
     } catch {
       // Error is handled by the mutation's onError callback
     } finally {
@@ -258,7 +277,7 @@ export default function MentorApplicationForm({ eventId, eventName, invitationTo
       // Validate current step before proceeding
       const isValid = getStepValidation(currentStep);
       if (isValid) {
-        setCurrentStep(prev => prev + 1);
+        setCurrentStep((prev) => prev + 1);
       } else {
         // Trigger validation to show errors
         form.validate();
@@ -268,24 +287,29 @@ export default function MentorApplicationForm({ eventId, eventName, invitationTo
 
   const prevStep = () => {
     if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
+      setCurrentStep((prev) => prev - 1);
     }
   };
 
   const getStepValidation = (step: number) => {
     switch (step) {
       case 1:
-        return form.values.skills.length > 0 && 
-               form.values.interests.length > 0;
+        return (
+          form.values.skills.length > 0 && form.values.interests.length > 0
+        );
       case 2:
-        return form.values.mentorAvailableDates.length > 0 && 
-               form.values.mentorHoursPerWeek && 
-               form.values.timezone;
+        return (
+          form.values.mentorAvailableDates.length > 0 &&
+          form.values.mentorHoursPerWeek &&
+          form.values.timezone
+        );
       case 3:
-        return form.values.mentorshipStyle && 
-               form.values.previousMentoringExp && 
-               form.values.mentorSpecializations.length > 0 && 
-               form.values.mentorGoals;
+        return (
+          form.values.mentorshipStyle &&
+          form.values.previousMentoringExp &&
+          form.values.mentorSpecializations.length > 0 &&
+          form.values.mentorGoals
+        );
       default:
         return false;
     }
@@ -301,7 +325,9 @@ export default function MentorApplicationForm({ eventId, eventName, invitationTo
                 <IconBriefcase size={28} color="var(--mantine-color-blue-6)" />
                 <div>
                   <Title order={3}>Skills & Experience</Title>
-                  <Text size="sm" c="dimmed">Tell us about your expertise and background</Text>
+                  <Text size="sm" c="dimmed">
+                    Tell us about your expertise and background
+                  </Text>
                 </div>
               </Group>
 
@@ -312,8 +338,14 @@ export default function MentorApplicationForm({ eventId, eventName, invitationTo
                     placeholder="Select or add your technical skills (e.g., React, Solidity, Python)"
                     description="What technical skills can you mentor others on?"
                     value={form.values.skills}
-                    onChange={(skillIds) => form.setFieldValue("skills", skillIds)}
-                    error={typeof form.errors.skills === 'string' ? form.errors.skills : undefined}
+                    onChange={(skillIds) =>
+                      form.setFieldValue("skills", skillIds)
+                    }
+                    error={
+                      typeof form.errors.skills === "string"
+                        ? form.errors.skills
+                        : undefined
+                    }
                     required
                   />
                 </Grid.Col>
@@ -327,7 +359,6 @@ export default function MentorApplicationForm({ eventId, eventName, invitationTo
                     required
                   />
                 </Grid.Col>
-
               </Grid>
             </Stack>
           </Card>
@@ -488,23 +519,36 @@ export default function MentorApplicationForm({ eventId, eventName, invitationTo
                 {/* Available Periods */}
                 <div>
                   <Text size="sm" fw={500} mb="xs">
-                    Available Periods <Text component="span" c="red">*</Text>
+                    Available Periods{" "}
+                    <Text component="span" c="red">
+                      *
+                    </Text>
                   </Text>
-                  <Text size="xs" c="dimmed" mb="md">Select all periods when you&apos;ll be available to mentor</Text>
+                  <Text size="xs" c="dimmed" mb="md">
+                    Select all periods when you&apos;ll be available to mentor
+                  </Text>
                   <Stack gap="xs">
                     {availabilityOptions.map((option) => (
                       <Checkbox
                         key={option.value}
                         label={option.label}
-                        checked={form.values.mentorAvailableDates.includes(option.value)}
+                        checked={form.values.mentorAvailableDates.includes(
+                          option.value,
+                        )}
                         onChange={(event) => {
                           const checked = event.currentTarget.checked;
                           const currentDates = form.values.mentorAvailableDates;
-                          
+
                           if (checked) {
-                            form.setFieldValue('mentorAvailableDates', [...currentDates, option.value]);
+                            form.setFieldValue("mentorAvailableDates", [
+                              ...currentDates,
+                              option.value,
+                            ]);
                           } else {
-                            form.setFieldValue('mentorAvailableDates', currentDates.filter(d => d !== option.value));
+                            form.setFieldValue(
+                              "mentorAvailableDates",
+                              currentDates.filter((d) => d !== option.value),
+                            );
                           }
                         }}
                       />
@@ -533,7 +577,9 @@ export default function MentorApplicationForm({ eventId, eventName, invitationTo
                 <IconUsers size={28} color="var(--mantine-color-orange-6)" />
                 <div>
                   <Title order={3}>Mentorship Details</Title>
-                  <Text size="sm" c="dimmed">Tell us about your approach to mentoring</Text>
+                  <Text size="sm" c="dimmed">
+                    Tell us about your approach to mentoring
+                  </Text>
                 </div>
               </Group>
 
@@ -595,24 +641,45 @@ export default function MentorApplicationForm({ eventId, eventName, invitationTo
       <Stack gap="xl">
         {/* Header */}
         <div>
-          <Title order={1} mb="md">Mentor Application</Title>
+          <Title order={1} mb="md">
+            Mentor Application
+          </Title>
           <Text size="lg" c="dimmed" mb="md">
             Complete your mentor profile for {eventName}
           </Text>
-          
+
           {/* Progress Bar */}
           <Card p="md" radius="md" withBorder>
             <Stack gap="md">
               <Group justify="space-between">
-                <Text size="sm" fw={500}>Step {currentStep} of 3</Text>
-                <Text size="sm" c="dimmed">{Math.round((currentStep / 3) * 100)}% Complete</Text>
+                <Text size="sm" fw={500}>
+                  Step {currentStep} of 3
+                </Text>
+                <Text size="sm" c="dimmed">
+                  {Math.round((currentStep / 3) * 100)}% Complete
+                </Text>
               </Group>
               <Progress value={(currentStep / 3) * 100} size="lg" radius="xl" />
-              
+
               <Group justify="space-between">
-                <Badge size="sm" variant={currentStep >= 1 ? "filled" : "light"}>Skills</Badge>
-                <Badge size="sm" variant={currentStep >= 2 ? "filled" : "light"}>Availability</Badge>
-                <Badge size="sm" variant={currentStep >= 3 ? "filled" : "light"}>Details</Badge>
+                <Badge
+                  size="sm"
+                  variant={currentStep >= 1 ? "filled" : "light"}
+                >
+                  Skills
+                </Badge>
+                <Badge
+                  size="sm"
+                  variant={currentStep >= 2 ? "filled" : "light"}
+                >
+                  Availability
+                </Badge>
+                <Badge
+                  size="sm"
+                  variant={currentStep >= 3 ? "filled" : "light"}
+                >
+                  Details
+                </Badge>
               </Group>
             </Stack>
           </Card>
@@ -633,11 +700,7 @@ export default function MentorApplicationForm({ eventId, eventName, invitationTo
             </Button>
 
             {currentStep < 3 ? (
-              <Button
-                onClick={nextStep}
-              >
-                Next Step
-              </Button>
+              <Button onClick={nextStep}>Next Step</Button>
             ) : (
               <Button
                 type="submit"
@@ -654,8 +717,11 @@ export default function MentorApplicationForm({ eventId, eventName, invitationTo
         {/* Help Text */}
         <Alert color="blue" title="Need Help?">
           <Text size="sm">
-            If you have any questions about completing this form, please contact the residency organizers at{" "}
-            <Text component="span" fw={500}>{config?.adminEmail ?? ''}</Text>
+            If you have any questions about completing this form, please contact
+            the residency organizers at{" "}
+            <Text component="span" fw={500}>
+              {config?.adminEmail ?? ""}
+            </Text>
           </Text>
         </Alert>
       </Stack>

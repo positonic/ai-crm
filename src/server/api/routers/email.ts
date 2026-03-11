@@ -2,18 +2,22 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { type PrismaClient } from "@prisma/client";
 
-import {
-  createTRPCRouter,
-  protectedProcedure,
-} from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
-import { sendEmail, generateMissingInfoEmail, isEmailSendingSafe } from "~/lib/email";
+import {
+  sendEmail,
+  generateMissingInfoEmail,
+  isEmailSendingSafe,
+} from "~/lib/email";
 
 /**
  * Resolve event identifier (ID or slug) to actual event ID.
  * Tries ID first, then slug for backward compatibility.
  */
-async function resolveEventId(db: PrismaClient, identifier: string): Promise<string | null> {
+async function resolveEventId(
+  db: PrismaClient,
+  identifier: string,
+): Promise<string | null> {
   // Try by ID first
   const eventById = await db.event.findUnique({
     where: { id: identifier },
@@ -70,13 +74,16 @@ function checkAdminAccess(userRole?: string | null) {
 }
 
 // Helper function to validate application and find missing fields
-import type { db } from '~/server/db';
+import type { db } from "~/server/db";
 
 interface ValidationContext {
   db: typeof db;
 }
 
-async function validateApplicationFields(applicationId: string, ctx: ValidationContext) {
+async function validateApplicationFields(
+  applicationId: string,
+  ctx: ValidationContext,
+) {
   // Get the application with its responses and questions
   const application = await ctx.db.application.findUnique({
     where: { id: applicationId },
@@ -98,11 +105,11 @@ async function validateApplicationFields(applicationId: string, ctx: ValidationC
     });
   }
 
-  console.log('🔍 DEBUG: validateApplicationFields called for application:', {
+  console.log("🔍 DEBUG: validateApplicationFields called for application:", {
     applicationId,
     email: application.email,
     status: application.status,
-    totalResponses: application.responses.length
+    totalResponses: application.responses.length,
   });
 
   // Get all required questions for this event
@@ -114,129 +121,158 @@ async function validateApplicationFields(applicationId: string, ctx: ValidationC
     orderBy: { order: "asc" },
   });
 
-  console.log('🔍 DEBUG: allRequiredQuestions:', {
+  console.log("🔍 DEBUG: allRequiredQuestions:", {
     count: allRequiredQuestions.length,
-    questions: allRequiredQuestions.map(q => ({
+    questions: allRequiredQuestions.map((q) => ({
       id: q.id,
       questionKey: q.questionKey,
       questionType: q.questionType,
-      questionEn: q.questionEn.substring(0, 100) + '...',
+      questionEn: q.questionEn.substring(0, 100) + "...",
       required: q.required,
-      options: q.options?.slice(0, 3) // First 3 options only
-    }))
+      options: q.options?.slice(0, 3), // First 3 options only
+    })),
   });
 
   // Filter out conditional fields that shouldn't be required
-  const requiredQuestions = allRequiredQuestions.filter(question => {
+  const requiredQuestions = allRequiredQuestions.filter((question) => {
     const questionText = question.questionEn.toLowerCase();
-    const isConditionalField = questionText.includes("specify") || 
-                               questionText.includes("if you answered") ||
-                               questionText.includes("if you did not select") ||
-                               questionText.includes("in the previous question");
-    
+    const isConditionalField =
+      questionText.includes("specify") ||
+      questionText.includes("if you answered") ||
+      questionText.includes("if you did not select") ||
+      questionText.includes("in the previous question");
+
     if (!isConditionalField) {
       return true; // Always required
     }
-    
-    console.log(`🔍 DEBUG: Found conditional field "${question.questionKey}":`, {
-      questionText: question.questionEn.substring(0, 80),
-      isConditionalField,
-      questionKey: question.questionKey
-    });
-    
+
+    console.log(
+      `🔍 DEBUG: Found conditional field "${question.questionKey}":`,
+      {
+        questionText: question.questionEn.substring(0, 80),
+        isConditionalField,
+        questionKey: question.questionKey,
+      },
+    );
+
     // Special handling for technical_skills_other
     if (question.questionKey === "technical_skills_other") {
-      const techSkillsResponse = application.responses.find(r => 
-        r.question.questionKey === "technical_skills"
+      const techSkillsResponse = application.responses.find(
+        (r) => r.question.questionKey === "technical_skills",
       );
-      
+
       console.log(`🔍 DEBUG: technical_skills_other conditional analysis:`, {
         questionId: question.id,
         hasTechSkillsResponse: !!techSkillsResponse,
         techSkillsResponseId: techSkillsResponse?.id,
         techSkillsQuestionId: techSkillsResponse?.questionId,
         techSkillsAnswer: techSkillsResponse?.answer,
-        techSkillsAnswerLength: techSkillsResponse?.answer?.length
+        techSkillsAnswerLength: techSkillsResponse?.answer?.length,
       });
-      
+
       if (techSkillsResponse?.answer) {
         try {
-          const selectedSkills = JSON.parse(techSkillsResponse.answer) as unknown;
-          const includesOther = Array.isArray(selectedSkills) && (selectedSkills as string[]).includes("Other");
+          const selectedSkills = JSON.parse(
+            techSkillsResponse.answer,
+          ) as unknown;
+          const includesOther =
+            Array.isArray(selectedSkills) &&
+            (selectedSkills as string[]).includes("Other");
           console.log(`🔍 DEBUG: technical_skills JSON parsing successful:`, {
             originalAnswer: techSkillsResponse.answer,
             parsedSkills: selectedSkills,
             isArray: Array.isArray(selectedSkills),
             includesOther,
-            shouldBeRequired: includesOther
+            shouldBeRequired: includesOther,
           });
           return includesOther;
         } catch (parseError) {
           // If not JSON, check string contains "Other"
-          const includesOtherString = techSkillsResponse.answer.includes("Other");
-          console.log(`🔍 DEBUG: technical_skills JSON parsing failed, checking string:`, {
-            originalAnswer: techSkillsResponse.answer,
-            parseError: parseError instanceof Error ? parseError.message : String(parseError),
-            includesOtherString,
-            shouldBeRequired: includesOtherString
-          });
+          const includesOtherString =
+            techSkillsResponse.answer.includes("Other");
+          console.log(
+            `🔍 DEBUG: technical_skills JSON parsing failed, checking string:`,
+            {
+              originalAnswer: techSkillsResponse.answer,
+              parseError:
+                parseError instanceof Error
+                  ? parseError.message
+                  : String(parseError),
+              includesOtherString,
+              shouldBeRequired: includesOtherString,
+            },
+          );
           return includesOtherString;
         }
       }
-      
-      console.log(`🔍 DEBUG: technical_skills_other not required - no technical_skills response`);
+
+      console.log(
+        `🔍 DEBUG: technical_skills_other not required - no technical_skills response`,
+      );
       return false; // Don't require if no technical_skills response
     }
-    
+
     return false; // Other conditional fields not required
   });
 
-  console.log('🔍 DEBUG: requiredQuestions after filtering:', {
+  console.log("🔍 DEBUG: requiredQuestions after filtering:", {
     totalRequired: requiredQuestions.length,
     filtered: `${allRequiredQuestions.length - requiredQuestions.length} questions filtered out`,
-    requiredQuestions: requiredQuestions.map(q => ({
+    requiredQuestions: requiredQuestions.map((q) => ({
       id: q.id,
       questionKey: q.questionKey,
       questionType: q.questionType,
-      questionText: q.questionEn.substring(0, 60) + '...',
+      questionText: q.questionEn.substring(0, 60) + "...",
       required: q.required,
-      options: q.options?.slice(0, 3)
+      options: q.options?.slice(0, 3),
     })),
-    technicalSkillsQuestions: requiredQuestions.filter(q => 
-      q.questionKey.includes('technical') || q.questionKey.includes('skill')
-    ).map(q => ({
-      id: q.id,
-      questionKey: q.questionKey,
-      questionText: q.questionEn.substring(0, 60) + '...',
-      questionType: q.questionType,
-      options: q.options?.slice(0, 3) // Show first 3 options
-    }))
+    technicalSkillsQuestions: requiredQuestions
+      .filter(
+        (q) =>
+          q.questionKey.includes("technical") ||
+          q.questionKey.includes("skill"),
+      )
+      .map((q) => ({
+        id: q.id,
+        questionKey: q.questionKey,
+        questionText: q.questionEn.substring(0, 60) + "...",
+        questionType: q.questionType,
+        options: q.options?.slice(0, 3), // Show first 3 options
+      })),
   });
 
   // Find missing or inadequately answered required questions
   const responseMap = new Map(
-    application.responses.map(r => [r.questionId, r])
+    application.responses.map((r) => [r.questionId, r]),
   );
 
-  console.log('🔍 DEBUG: Response mapping:', {
+  console.log("🔍 DEBUG: Response mapping:", {
     responseMapSize: responseMap.size,
     technicalSkillsSpecific: {
-      techSkillsResponse: application.responses.find(r => r.question.questionKey === "technical_skills"),
-      techSkillsOtherResponse: application.responses.find(r => r.question.questionKey === "technical_skills_other")
+      techSkillsResponse: application.responses.find(
+        (r) => r.question.questionKey === "technical_skills",
+      ),
+      techSkillsOtherResponse: application.responses.find(
+        (r) => r.question.questionKey === "technical_skills_other",
+      ),
     },
-    responseEntries: Array.from(responseMap.entries()).map(([questionId, response]) => ({
-      questionId,
-      questionKey: response.question.questionKey,
-      answer: response.answer?.substring(0, 100) + (response.answer?.length > 100 ? '...' : ''),
-      answerLength: response.answer?.length,
-      questionType: response.question.questionType,
-      isRequired: response.question.required
-    }))
+    responseEntries: Array.from(responseMap.entries()).map(
+      ([questionId, response]) => ({
+        questionId,
+        questionKey: response.question.questionKey,
+        answer:
+          response.answer?.substring(0, 100) +
+          (response.answer?.length > 100 ? "..." : ""),
+        answerLength: response.answer?.length,
+        questionType: response.question.questionType,
+        isRequired: response.question.required,
+      }),
+    ),
   });
 
-  const missingQuestions = requiredQuestions.filter(question => {
+  const missingQuestions = requiredQuestions.filter((question) => {
     const response = responseMap.get(question.id);
-    
+
     console.log(`🔍 DEBUG: Checking question "${question.questionKey}":`, {
       questionId: question.id,
       questionType: question.questionType,
@@ -244,58 +280,73 @@ async function validateApplicationFields(applicationId: string, ctx: ValidationC
       responseQuestionId: response?.questionId,
       answer: response?.answer,
       answerLength: response?.answer?.length,
-      questionText: question.questionEn.substring(0, 50) + '...'
+      questionText: question.questionEn.substring(0, 50) + "...",
     });
-    
+
     // No response at all
     if (!response) {
       console.log(`❌ Missing: No response for ${question.questionKey}`);
       return true;
     }
-    
+
     // Empty or whitespace-only answer
     if (!response.answer || response.answer.trim() === "") {
       console.log(`❌ Missing: Empty answer for ${question.questionKey}`);
       return true;
     }
-    
+
     // For SELECT/MULTISELECT questions, check if answer is valid
-    if (question.questionType === "SELECT" || question.questionType === "MULTISELECT") {
+    if (
+      question.questionType === "SELECT" ||
+      question.questionType === "MULTISELECT"
+    ) {
       const answer = response.answer.trim();
-      
+
       // Common invalid select values
-      if (answer === "" || 
-          answer === "Please select" || 
-          answer === "Select an option" ||
-          answer === "Choose one" ||
-          answer === "null" ||
-          answer === "undefined") {
+      if (
+        answer === "" ||
+        answer === "Please select" ||
+        answer === "Select an option" ||
+        answer === "Choose one" ||
+        answer === "null" ||
+        answer === "undefined"
+      ) {
         return true;
       }
-      
+
       // If question has options defined, check if answer is one of them
       if (question.options && question.options.length > 0) {
-        const validOptions = question.options.map(opt => opt.toLowerCase().trim());
+        const validOptions = question.options.map((opt) =>
+          opt.toLowerCase().trim(),
+        );
         const answerLower = answer.toLowerCase().trim();
-        
+
         // For MULTISELECT, check each selected option
         if (question.questionType === "MULTISELECT") {
-          console.log(`🔍 DEBUG: MULTISELECT validation for "${question.questionKey}":`, {
-            originalAnswer: answer,
-            validOptions: validOptions,
-            startsWithBracket: answer.startsWith('['),
-            endsWithBracket: answer.endsWith(']')
-          });
-          
+          console.log(
+            `🔍 DEBUG: MULTISELECT validation for "${question.questionKey}":`,
+            {
+              originalAnswer: answer,
+              validOptions: validOptions,
+              startsWithBracket: answer.startsWith("["),
+              endsWithBracket: answer.endsWith("]"),
+            },
+          );
+
           let selectedOptions: string[] = [];
-          
+
           // Handle JSON array format (e.g., ["Project Manager", "Developer"])
-          if (answer.startsWith('[') && answer.endsWith(']')) {
+          if (answer.startsWith("[") && answer.endsWith("]")) {
             try {
               const parsed = JSON.parse(answer) as unknown;
               if (Array.isArray(parsed)) {
-                selectedOptions = (parsed as string[]).map(opt => String(opt).toLowerCase().trim());
-                console.log(`✅ JSON parsing successful:`, { parsed, selectedOptions });
+                selectedOptions = (parsed as string[]).map((opt) =>
+                  String(opt).toLowerCase().trim(),
+                );
+                console.log(`✅ JSON parsing successful:`, {
+                  parsed,
+                  selectedOptions,
+                });
               } else {
                 console.log(`❌ JSON parsing failed: not an array`, { parsed });
                 return true; // Invalid JSON array
@@ -306,24 +357,30 @@ async function validateApplicationFields(applicationId: string, ctx: ValidationC
             }
           } else {
             // Handle comma-separated format (e.g., "Project Manager, Developer")
-            selectedOptions = answer.split(',').map(opt => opt.toLowerCase().trim());
+            selectedOptions = answer
+              .split(",")
+              .map((opt) => opt.toLowerCase().trim());
             console.log(`✅ Comma-split parsing:`, { selectedOptions });
           }
-          
-          const hasInvalidOption = selectedOptions.some(opt => !validOptions.includes(opt));
+
+          const hasInvalidOption = selectedOptions.some(
+            (opt) => !validOptions.includes(opt),
+          );
           console.log(`🔍 Validation result for "${question.questionKey}":`, {
             selectedOptions,
             validOptions,
             hasInvalidOption,
             isEmpty: selectedOptions.length === 0,
-            isMissing: hasInvalidOption || selectedOptions.length === 0
+            isMissing: hasInvalidOption || selectedOptions.length === 0,
           });
-          
+
           if (hasInvalidOption || selectedOptions.length === 0) {
-            console.log(`❌ Missing: Invalid or empty MULTISELECT for ${question.questionKey}`);
+            console.log(
+              `❌ Missing: Invalid or empty MULTISELECT for ${question.questionKey}`,
+            );
             return true;
           }
-          
+
           console.log(`✅ Valid: MULTISELECT for ${question.questionKey}`);
           return false;
         } else {
@@ -334,26 +391,26 @@ async function validateApplicationFields(applicationId: string, ctx: ValidationC
         }
       }
     }
-    
+
     console.log(`✅ Valid: Question ${question.questionKey} passed all checks`);
     return false;
   });
 
-  console.log('🔍 DEBUG: Final missing questions result:', {
+  console.log("🔍 DEBUG: Final missing questions result:", {
     totalMissingQuestions: missingQuestions.length,
-    missingQuestionKeys: missingQuestions.map(q => q.questionKey),
-    missingQuestions: missingQuestions.map(q => ({
+    missingQuestionKeys: missingQuestions.map((q) => q.questionKey),
+    missingQuestions: missingQuestions.map((q) => ({
       id: q.id,
       questionKey: q.questionKey,
-      questionText: q.questionEn.substring(0, 50) + '...',
-      questionType: q.questionType
-    }))
+      questionText: q.questionEn.substring(0, 50) + "...",
+      questionType: q.questionType,
+    })),
   });
 
   return {
     application,
     missingQuestions,
-    isComplete: missingQuestions.length === 0
+    isComplete: missingQuestions.length === 0,
   };
 }
 
@@ -364,19 +421,22 @@ export const emailRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       checkAdminAccess(ctx.session.user.role);
 
-      const validation = await validateApplicationFields(input.applicationId, ctx);
+      const validation = await validateApplicationFields(
+        input.applicationId,
+        ctx,
+      );
 
       return {
         applicationId: input.applicationId,
         isComplete: validation.isComplete,
-        missingFields: validation.missingQuestions.map(q => ({
+        missingFields: validation.missingQuestions.map((q) => ({
           questionKey: q.questionKey,
           questionText: q.questionEn,
-          questionType: q.questionType
+          questionType: q.questionType,
         })),
-        message: validation.isComplete 
+        message: validation.isComplete
           ? "Application is complete - no missing fields found"
-          : `${validation.missingQuestions.length} required field(s) missing`
+          : `${validation.missingQuestions.length} required field(s) missing`,
       };
     }),
 
@@ -386,13 +446,16 @@ export const emailRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       checkAdminAccess(ctx.session.user.role);
 
-      const validation = await validateApplicationFields(input.applicationId, ctx);
-      
+      const validation = await validateApplicationFields(
+        input.applicationId,
+        ctx,
+      );
+
       if (validation.isComplete) {
         return {
           message: "Application is complete - no missing fields found",
           missingFields: [],
-          isComplete: true
+          isComplete: true,
         };
       }
 
@@ -404,7 +467,7 @@ export const emailRouter = createTRPCRouter({
         applicantName: validation.application.user?.name ?? "Applicant",
         eventName: validation.application.event.name,
         eventId: validation.application.eventId,
-        missingFields: validation.missingQuestions.map(q => q.questionKey),
+        missingFields: validation.missingQuestions.map((q) => q.questionKey),
         applicationUrl,
       });
 
@@ -425,7 +488,9 @@ export const emailRouter = createTRPCRouter({
             subject: emailContent.subject,
             htmlContent: emailContent.htmlContent,
             textContent: emailContent.textContent,
-            missingFields: validation.missingQuestions.map(q => q.questionKey),
+            missingFields: validation.missingQuestions.map(
+              (q) => q.questionKey,
+            ),
             updatedAt: new Date(),
           },
         });
@@ -444,7 +509,7 @@ export const emailRouter = createTRPCRouter({
           textContent: emailContent.textContent,
           type: "MISSING_INFO",
           status: "DRAFT",
-          missingFields: validation.missingQuestions.map(q => q.questionKey),
+          missingFields: validation.missingQuestions.map((q) => q.questionKey),
           createdBy: ctx.session.user.id,
         },
         include: {
@@ -676,10 +741,13 @@ export const emailRouter = createTRPCRouter({
         },
       });
 
-      const statsMap = stats.reduce((acc, stat) => {
-        acc[stat.status] = stat._count.id;
-        return acc;
-      }, {} as Record<string, number>);
+      const statsMap = stats.reduce(
+        (acc, stat) => {
+          acc[stat.status] = stat._count.id;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
 
       return {
         draft: statsMap.DRAFT ?? 0,
@@ -699,11 +767,15 @@ export const emailRouter = createTRPCRouter({
 
   // Get all sent emails (admin only)
   getAllSentEmails: protectedProcedure
-    .input(z.object({
-      limit: z.number().min(1).max(100).optional().default(50),
-      offset: z.number().min(0).optional().default(0),
-      searchEmail: z.string().optional(),
-    }).optional())
+    .input(
+      z
+        .object({
+          limit: z.number().min(1).max(100).optional().default(50),
+          offset: z.number().min(0).optional().default(0),
+          searchEmail: z.string().optional(),
+        })
+        .optional(),
+    )
     .query(async ({ ctx, input }) => {
       checkAdminAccess(ctx.session.user.role);
 

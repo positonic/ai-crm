@@ -1,12 +1,12 @@
 "use client";
-import { 
-  Container, 
-  Title, 
-  SimpleGrid, 
-  Card, 
-  Text, 
-  Group, 
-  Stack, 
+import {
+  Container,
+  Title,
+  SimpleGrid,
+  Card,
+  Text,
+  Group,
+  Stack,
   Button,
   Paper,
   ThemeIcon,
@@ -14,9 +14,9 @@ import {
   Progress,
   Loader,
   Box,
-  Anchor
+  Anchor,
 } from "@mantine/core";
-import { 
+import {
   IconSettings,
   IconCalendarEvent,
   IconUsersGroup,
@@ -27,7 +27,7 @@ import {
   IconChartLine,
   IconCalendar,
   IconMapPin,
-  IconClipboardList
+  IconClipboardList,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { api } from "~/trpc/react";
@@ -77,30 +77,42 @@ function getMantineGradient(eventType: string) {
 function OrganizedEventCard({ event }: { event: OrganizedEvent }) {
   const gradient = getMantineGradient(event.type);
   const isUpcoming = new Date(event.startDate) > new Date();
-  const isOngoing = new Date() >= new Date(event.startDate) && new Date() <= new Date(event.endDate);
-  
+  const isOngoing =
+    new Date() >= new Date(event.startDate) &&
+    new Date() <= new Date(event.endDate);
+
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     }).format(date);
   };
 
-  const acceptanceRate = event.applicationStats && event.applicationStats.submitted > 0 
-    ? Math.round((event.applicationStats.accepted / event.applicationStats.submitted) * 100)
-    : 0;
-  
+  const acceptanceRate =
+    event.applicationStats && event.applicationStats.submitted > 0
+      ? Math.round(
+          (event.applicationStats.accepted / event.applicationStats.submitted) *
+            100,
+        )
+      : 0;
+
   return (
-    <Card shadow="lg" padding="xl" radius="md" withBorder style={{ height: "100%" }}>
+    <Card
+      shadow="lg"
+      padding="xl"
+      radius="md"
+      withBorder
+      style={{ height: "100%" }}
+    >
       <Card.Section>
         <Box
           h={100}
           style={{
             background: `linear-gradient(135deg, var(--mantine-color-${gradient.from}-6) 0%, var(--mantine-color-${gradient.to}-6) 100%)`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           <ThemeIcon size={50} radius="xl" variant="light" color="white">
@@ -109,21 +121,21 @@ function OrganizedEventCard({ event }: { event: OrganizedEvent }) {
         </Box>
       </Card.Section>
 
-      <Stack gap="md" mt="md" style={{ height: 'calc(100% - 100px)' }}>
+      <Stack gap="md" mt="md" style={{ height: "calc(100% - 100px)" }}>
         <Stack gap="xs" style={{ flex: 1 }}>
           <Group justify="space-between" align="flex-start">
             <Title order={4} size="h3">
               {event.name}
             </Title>
-            <Badge 
-              color={isOngoing ? "green" : isUpcoming ? "blue" : "gray"} 
-              variant="light" 
+            <Badge
+              color={isOngoing ? "green" : isUpcoming ? "blue" : "gray"}
+              variant="light"
               size="sm"
             >
               {isOngoing ? "Live" : isUpcoming ? "Upcoming" : "Past"}
             </Badge>
           </Group>
-          
+
           <Text size="sm" c="dimmed" style={{ lineHeight: 1.5 }}>
             {event.description ?? "Event you&apos;re organizing"}
           </Text>
@@ -162,21 +174,24 @@ function OrganizedEventCard({ event }: { event: OrganizedEvent }) {
           {event.applicationStats && (
             <Stack gap="xs" mt="sm">
               <Group justify="space-between">
-                <Text size="xs" fw={500}>Applications</Text>
-                <Text size="xs" c="dimmed">{acceptanceRate}% accepted</Text>
+                <Text size="xs" fw={500}>
+                  Applications
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {acceptanceRate}% accepted
+                </Text>
               </Group>
-              <Progress 
-                value={acceptanceRate} 
-                color="green" 
-                size="sm"
-              />
+              <Progress value={acceptanceRate} color="green" size="sm" />
             </Stack>
           )}
         </Stack>
 
         <Group gap="xs">
-          <Link href={`/admin/events/${event.id}/applications`} style={{ textDecoration: 'none', flex: 1 }}>
-            <Button 
+          <Link
+            href={`/admin/events/${event.id}/applications`}
+            style={{ textDecoration: "none", flex: 1 }}
+          >
+            <Button
               fullWidth
               variant="filled"
               rightSection={<IconEye size={16} />}
@@ -193,8 +208,10 @@ function OrganizedEventCard({ event }: { event: OrganizedEvent }) {
 }
 
 export default function OrganizerDashboard() {
-  const { data: organizedEvents, isLoading: loadingEvents } = api.event.getOrganizerEvents.useQuery();
-  const { data: organizerStats, isLoading: loadingStats } = api.event.getOrganizerStats.useQuery();
+  const { data: organizedEvents, isLoading: loadingEvents } =
+    api.event.getOrganizerEvents.useQuery();
+  const { data: organizerStats, isLoading: loadingStats } =
+    api.event.getOrganizerStats.useQuery();
   const { data: config } = api.config.getPublicConfig.useQuery();
 
   if (loadingEvents || loadingStats) {
@@ -208,9 +225,17 @@ export default function OrganizerDashboard() {
   }
 
   const totalEvents = organizedEvents?.length ?? 0;
-  const activeEvents = organizedEvents?.filter(event => new Date(event.endDate) > new Date()).length ?? 0;
-  const totalApplications = organizedEvents?.reduce((sum, event) => sum + event._count.applications, 0) ?? 0;
-  const totalParticipants = organizedEvents?.reduce((sum, event) => sum + event._count.userRoles, 0) ?? 0;
+  const activeEvents =
+    organizedEvents?.filter((event) => new Date(event.endDate) > new Date())
+      .length ?? 0;
+  const totalApplications =
+    organizedEvents?.reduce(
+      (sum, event) => sum + event._count.applications,
+      0,
+    ) ?? 0;
+  const totalParticipants =
+    organizedEvents?.reduce((sum, event) => sum + event._count.userRoles, 0) ??
+    0;
 
   return (
     <Container size="xl" py="md">
@@ -218,7 +243,12 @@ export default function OrganizerDashboard() {
         {/* Header */}
         <Stack gap="md" ta="center">
           <Group justify="center" gap="xs">
-            <ThemeIcon size="xl" radius="xl" variant="gradient" gradient={{ from: 'indigo', to: 'blue' }}>
+            <ThemeIcon
+              size="xl"
+              radius="xl"
+              variant="gradient"
+              gradient={{ from: "indigo", to: "blue" }}
+            >
               <IconSettings size={28} />
             </ThemeIcon>
             <Title order={1} size="h1" fw={700}>
@@ -226,7 +256,8 @@ export default function OrganizerDashboard() {
             </Title>
           </Group>
           <Text size="lg" c="dimmed" maw={600} mx="auto">
-            Orchestrate amazing events that bring together builders, sponsors, and mentors to advance public goods funding.
+            Orchestrate amazing events that bring together builders, sponsors,
+            and mentors to advance public goods funding.
           </Text>
         </Stack>
 
@@ -313,7 +344,7 @@ export default function OrganizerDashboard() {
         <Stack gap="md">
           <Group justify="space-between">
             <Title order={2}>Events You Organize</Title>
-            <Link href="/admin/events" style={{ textDecoration: 'none' }}>
+            <Link href="/admin/events" style={{ textDecoration: "none" }}>
               <Button variant="light" leftSection={<IconUserPlus size={16} />}>
                 Manage All Events
               </Button>
@@ -327,12 +358,16 @@ export default function OrganizerDashboard() {
                   <IconCalendarEvent size={30} />
                 </ThemeIcon>
                 <Stack gap="xs" align="center">
-                  <Title order={3} c="dimmed">No Events Yet</Title>
+                  <Title order={3} c="dimmed">
+                    No Events Yet
+                  </Title>
                   <Text c="dimmed" ta="center" maw={400}>
-                    You haven&apos;t been assigned as an organizer for any events yet. Contact your admin to get involved in event organization.
+                    You haven&apos;t been assigned as an organizer for any
+                    events yet. Contact your admin to get involved in event
+                    organization.
                   </Text>
                 </Stack>
-                <Anchor href={`mailto:${config?.adminEmail ?? ''}`}>
+                <Anchor href={`mailto:${config?.adminEmail ?? ""}`}>
                   <Button leftSection={<IconMail size={16} />}>
                     Get Involved
                   </Button>
@@ -357,14 +392,19 @@ export default function OrganizerDashboard() {
                   <IconUserPlus size={18} />
                 </ThemeIcon>
                 <div style={{ flex: 1 }}>
-                  <Text fw={600} size="lg">Send Invitations</Text>
+                  <Text fw={600} size="lg">
+                    Send Invitations
+                  </Text>
                   <Text size="sm" c="dimmed">
                     Invite mentors, sponsors, and participants to your events
                   </Text>
                 </div>
               </Group>
-              
-              <Link href="/admin/invitations" style={{ textDecoration: 'none' }}>
+
+              <Link
+                href="/admin/invitations"
+                style={{ textDecoration: "none" }}
+              >
                 <Button rightSection={<IconArrowRight size={16} />} fullWidth>
                   Manage Invitations
                 </Button>
@@ -379,14 +419,16 @@ export default function OrganizerDashboard() {
                   <IconChartLine size={18} />
                 </ThemeIcon>
                 <div style={{ flex: 1 }}>
-                  <Text fw={600} size="lg">Event Analytics</Text>
+                  <Text fw={600} size="lg">
+                    Event Analytics
+                  </Text>
                   <Text size="sm" c="dimmed">
                     Track engagement, applications, and event success metrics
                   </Text>
                 </div>
               </Group>
-              
-              <Link href="/admin/events" style={{ textDecoration: 'none' }}>
+
+              <Link href="/admin/events" style={{ textDecoration: "none" }}>
                 <Button rightSection={<IconArrowRight size={16} />} fullWidth>
                   View Analytics
                 </Button>

@@ -1,7 +1,26 @@
 "use client";
 
-import { Paper, Stack, Title, Text, Card, Group, Badge, Loader, Alert, Button, Divider } from "@mantine/core";
-import { IconCertificate, IconAlertCircle, IconExternalLink, IconClock, IconPlus, IconCheck } from "@tabler/icons-react";
+import {
+  Paper,
+  Stack,
+  Title,
+  Text,
+  Card,
+  Group,
+  Badge,
+  Loader,
+  Alert,
+  Button,
+  Divider,
+} from "@mantine/core";
+import {
+  IconCertificate,
+  IconAlertCircle,
+  IconExternalLink,
+  IconClock,
+  IconPlus,
+  IconCheck,
+} from "@tabler/icons-react";
 import Image from "next/image";
 import { api } from "~/trpc/react";
 import { notifications } from "@mantine/notifications";
@@ -12,11 +31,21 @@ interface HypercertsTabProps {
   canEdit: boolean;
 }
 
-export default function HypercertsTab({ projectId, projectTitle, canEdit }: HypercertsTabProps) {
-  const { data: connectionStatus, isLoading: statusLoading } = api.atproto.getConnectionStatus.useQuery();
-  const { data: hypercerts, isLoading: hypercertsLoading, error, refetch } = api.hypercerts.listMyHypercerts.useQuery(
+export default function HypercertsTab({
+  projectId,
+  projectTitle,
+  canEdit,
+}: HypercertsTabProps) {
+  const { data: connectionStatus, isLoading: statusLoading } =
+    api.atproto.getConnectionStatus.useQuery();
+  const {
+    data: hypercerts,
+    isLoading: hypercertsLoading,
+    error,
+    refetch,
+  } = api.hypercerts.listMyHypercerts.useQuery(
     { limit: 50 },
-    { enabled: connectionStatus?.isConnected ?? false }
+    { enabled: connectionStatus?.isConnected ?? false },
   );
 
   // Create hypercert mutation
@@ -61,16 +90,26 @@ export default function HypercertsTab({ projectId, projectTitle, canEdit }: Hype
       <Paper p="xl" radius="md" withBorder>
         <Stack gap="lg">
           <Title order={2}>Hypercerts</Title>
-          <Alert icon={<IconAlertCircle size={16} />} title="Not Connected" color="blue" variant="light">
+          <Alert
+            icon={<IconAlertCircle size={16} />}
+            title="Not Connected"
+            color="blue"
+            variant="light"
+          >
             <Stack gap="md">
-              <Text>Connect your AT Proto account to create and view hypercerts on your custom PDS.</Text>
+              <Text>
+                Connect your AT Proto account to create and view hypercerts on
+                your custom PDS.
+              </Text>
               <Text size="sm" c="dimmed">
-                Hypercerts are verifiable impact certificates that track the work done, time frame, and scope of your projects.
-                They are stored on your Personal Data Server using the AT Protocol.
+                Hypercerts are verifiable impact certificates that track the
+                work done, time frame, and scope of your projects. They are
+                stored on your Personal Data Server using the AT Protocol.
               </Text>
               {canEdit && (
                 <Text size="sm">
-                  Go to the <strong>Overview</strong> tab and click <strong>&quot;Connect AT Proto&quot;</strong> to get started.
+                  Go to the <strong>Overview</strong> tab and click{" "}
+                  <strong>&quot;Connect AT Proto&quot;</strong> to get started.
                 </Text>
               )}
             </Stack>
@@ -88,14 +127,19 @@ export default function HypercertsTab({ projectId, projectTitle, canEdit }: Hype
           <Stack gap="xs">
             <Title order={2}>Hypercerts</Title>
             <Group gap="xs">
-              <Badge variant="light" color="green" leftSection={<IconCertificate size={12} />}>
+              <Badge
+                variant="light"
+                color="green"
+                leftSection={<IconCertificate size={12} />}
+              >
                 @{connectionStatus.handle}
               </Badge>
-              {connectionStatus.pdsUrl && connectionStatus.pdsUrl !== "https://bsky.social" && (
-                <Badge variant="outline" color="gray" size="sm">
-                  Custom PDS
-                </Badge>
-              )}
+              {connectionStatus.pdsUrl &&
+                connectionStatus.pdsUrl !== "https://bsky.social" && (
+                  <Badge variant="outline" color="gray" size="sm">
+                    Custom PDS
+                  </Badge>
+                )}
             </Group>
           </Stack>
 
@@ -114,10 +158,11 @@ export default function HypercertsTab({ projectId, projectTitle, canEdit }: Hype
         {/* What are Hypercerts */}
         <Alert title="What are Hypercerts?" color="blue" variant="light">
           <Text size="sm">
-            Hypercerts are verifiable impact certificates stored on your Personal Data Server.
-            They track <strong>what</strong> work was done, <strong>when</strong> it happened,
-            and the <strong>scope</strong> of the impact. Create a hypercert to certify the impact
-            work done on this project.
+            Hypercerts are verifiable impact certificates stored on your
+            Personal Data Server. They track <strong>what</strong> work was
+            done, <strong>when</strong> it happened, and the{" "}
+            <strong>scope</strong> of the impact. Create a hypercert to certify
+            the impact work done on this project.
           </Text>
         </Alert>
 
@@ -133,7 +178,11 @@ export default function HypercertsTab({ projectId, projectTitle, canEdit }: Hype
 
         {/* Error state */}
         {error && (
-          <Alert icon={<IconAlertCircle size={16} />} title="Error Loading Hypercerts" color="red">
+          <Alert
+            icon={<IconAlertCircle size={16} />}
+            title="Error Loading Hypercerts"
+            color="red"
+          >
             <Text>{error.message}</Text>
           </Alert>
         )}
@@ -145,8 +194,9 @@ export default function HypercertsTab({ projectId, projectTitle, canEdit }: Hype
               <Text>You haven&apos;t created any hypercerts yet.</Text>
               {canEdit && (
                 <Text size="sm" c="dimmed">
-                  Click &quot;Create Hypercert for this Project&quot; above to create an impact certificate
-                  that tracks the work done on {projectTitle}.
+                  Click &quot;Create Hypercert for this Project&quot; above to
+                  create an impact certificate that tracks the work done on{" "}
+                  {projectTitle}.
                 </Text>
               )}
             </Stack>
@@ -157,11 +207,18 @@ export default function HypercertsTab({ projectId, projectTitle, canEdit }: Hype
         {hypercerts && hypercerts.length > 0 && (
           <Stack gap="md">
             <Text size="sm" c="dimmed">
-              Showing {hypercerts.length} hypercert{hypercerts.length !== 1 ? 's' : ''} from your PDS
+              Showing {hypercerts.length} hypercert
+              {hypercerts.length !== 1 ? "s" : ""} from your PDS
             </Text>
 
             {hypercerts.map((hypercert) => (
-              <Card key={hypercert.uri} shadow="sm" padding="lg" radius="md" withBorder>
+              <Card
+                key={hypercert.uri}
+                shadow="sm"
+                padding="lg"
+                radius="md"
+                withBorder
+              >
                 <Stack gap="md">
                   {/* Header */}
                   <Group justify="space-between" align="flex-start">
@@ -173,7 +230,7 @@ export default function HypercertsTab({ projectId, projectTitle, canEdit }: Hype
                     </Group>
                     <Button
                       component="a"
-                      href={`https://bsky.app/profile/${connectionStatus.did}/post/${hypercert.uri.split('/').pop() ?? ''}`}
+                      href={`https://bsky.app/profile/${connectionStatus.did}/post/${hypercert.uri.split("/").pop() ?? ""}`}
                       target="_blank"
                       size="xs"
                       variant="subtle"
@@ -184,12 +241,19 @@ export default function HypercertsTab({ projectId, projectTitle, canEdit }: Hype
                   </Group>
 
                   {/* Description */}
-                  <Text size="sm" c="dimmed" style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
+                  <Text
+                    size="sm"
+                    c="dimmed"
+                    style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}
+                  >
                     {hypercert.value.shortDescription}
                   </Text>
 
                   {hypercert.value.description && (
-                    <Text size="sm" style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
+                    <Text
+                      size="sm"
+                      style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}
+                    >
                       {hypercert.value.description}
                     </Text>
                   )}
@@ -210,37 +274,53 @@ export default function HypercertsTab({ projectId, projectTitle, canEdit }: Hype
                       <Group gap="xs">
                         <IconClock size={14} />
                         <Text size="sm">
-                          {new Date(hypercert.value.workTimeFrameFrom).toLocaleDateString("en-US", { timeZone: "UTC" })} - {new Date(hypercert.value.workTimeFrameTo).toLocaleDateString("en-US", { timeZone: "UTC" })}
+                          {new Date(
+                            hypercert.value.workTimeFrameFrom,
+                          ).toLocaleDateString("en-US", {
+                            timeZone: "UTC",
+                          })}{" "}
+                          -{" "}
+                          {new Date(
+                            hypercert.value.workTimeFrameTo,
+                          ).toLocaleDateString("en-US", { timeZone: "UTC" })}
                         </Text>
                       </Group>
                     </Stack>
                   </Group>
 
                   {/* Image */}
-                  {hypercert.value.image && typeof hypercert.value.image === 'string' && (
-                    <div style={{ position: "relative", width: "100%", height: "300px" }}>
-                      <Image
-                        src={hypercert.value.image}
-                        alt={hypercert.value.title}
-                        fill
+                  {hypercert.value.image &&
+                    typeof hypercert.value.image === "string" && (
+                      <div
                         style={{
-                          objectFit: "cover",
-                          borderRadius: "8px",
+                          position: "relative",
+                          width: "100%",
+                          height: "300px",
                         }}
-                      />
-                    </div>
-                  )}
+                      >
+                        <Image
+                          src={hypercert.value.image}
+                          alt={hypercert.value.title}
+                          fill
+                          style={{
+                            objectFit: "cover",
+                            borderRadius: "8px",
+                          }}
+                        />
+                      </div>
+                    )}
 
                   {/* Footer */}
                   <Group gap="xs">
                     <Badge size="xs" variant="dot" color="gray">
-                      {hypercert.uri.split('/').pop()}
+                      {hypercert.uri.split("/").pop()}
                     </Badge>
                     <Badge size="xs" variant="outline" color="green">
                       org.hypercerts.claim
                     </Badge>
                     <Text size="xs" c="dimmed">
-                      Created {new Date(hypercert.value.createdAt).toLocaleString()}
+                      Created{" "}
+                      {new Date(hypercert.value.createdAt).toLocaleString()}
                     </Text>
                   </Group>
                 </Stack>
@@ -257,10 +337,14 @@ export default function HypercertsTab({ projectId, projectTitle, canEdit }: Hype
                 <strong>Server:</strong> {connectionStatus.pdsUrl}
               </Text>
               <Text size="sm">
-                <strong>DID:</strong> <Text component="span" size="xs" ff="monospace">{connectionStatus.did}</Text>
+                <strong>DID:</strong>{" "}
+                <Text component="span" size="xs" ff="monospace">
+                  {connectionStatus.did}
+                </Text>
               </Text>
               <Text size="sm" c="dimmed">
-                Hypercerts are stored on your Personal Data Server using the org.hypercerts.claim lexicon.
+                Hypercerts are stored on your Personal Data Server using the
+                org.hypercerts.claim lexicon.
               </Text>
             </Stack>
           </Alert>

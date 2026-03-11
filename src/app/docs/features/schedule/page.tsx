@@ -18,7 +18,8 @@ export default function SchedulePage() {
       <p className="docs-text">
         Every event has a Schedule tab that displays all planned sessions. You
         will see each session&apos;s title, time, venue, speakers, and a brief
-        description. Sessions are organised by day to make it easy to plan ahead.
+        description. Sessions are organised by day to make it easy to plan
+        ahead.
       </p>
 
       <h2 id="sessions" className="docs-heading-h2">
@@ -66,8 +67,8 @@ export default function SchedulePage() {
       </h2>
       <p className="docs-text">
         Only published sessions appear on the public schedule. Organisers and
-        floor leads may have draft sessions that are still being planned
-        &ndash; these will appear once they are finalised and made public.
+        floor leads may have draft sessions that are still being planned &ndash;
+        these will appear once they are finalised and made public.
       </p>
 
       <hr className="docs-divider" />

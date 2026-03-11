@@ -83,8 +83,8 @@ export default function DeliberationClient() {
           <IconTarget size={48} color="var(--mantine-color-dimmed)" />
           <Title order={3}>No Active Deliberation</Title>
           <Text c="dimmed" ta="center">
-            There is no active deliberation for this event yet.
-            Check back later or contact the event organizers.
+            There is no active deliberation for this event yet. Check back later
+            or contact the event organizers.
           </Text>
           <Button
             component={Link}

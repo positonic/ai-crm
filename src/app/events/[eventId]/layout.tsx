@@ -7,7 +7,10 @@ interface EventLayoutProps {
   params: Promise<{ eventId: string }>;
 }
 
-export default async function EventLayout({ children, params }: EventLayoutProps) {
+export default async function EventLayout({
+  children,
+  params,
+}: EventLayoutProps) {
   const { eventId } = await params;
   const session = await auth();
 
@@ -37,7 +40,8 @@ export default async function EventLayout({ children, params }: EventLayoutProps
 
   // Check floor lead status for current user
   let isFloorOwner = false;
-  const isAdmin = session?.user?.role === "admin" || session?.user?.role === "staff";
+  const isAdmin =
+    session?.user?.role === "admin" || session?.user?.role === "staff";
 
   if (session?.user?.id && event) {
     const ownership = await db.venueOwner.findFirst({

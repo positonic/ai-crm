@@ -10,17 +10,21 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 // Mock environment variables before importing the service
 vi.mock("~/env", () => ({
   env: {
-    EAS_PRIVATE_KEY: "0x0000000000000000000000000000000000000000000000000000000000000001",
+    EAS_PRIVATE_KEY:
+      "0x0000000000000000000000000000000000000000000000000000000000000001",
     EAS_USE_MAINNET: "false",
     EAS_ATTESTATIONS_ENABLED: "true",
-    EAS_SCHEMA_UID: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+    EAS_SCHEMA_UID:
+      "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
   },
 }));
 
 // Mock ethers
 vi.mock("ethers", () => {
   const mockWallet = {
-    getAddress: vi.fn().mockResolvedValue("0x1234567890123456789012345678901234567890"),
+    getAddress: vi
+      .fn()
+      .mockResolvedValue("0x1234567890123456789012345678901234567890"),
   };
 
   return {
@@ -59,7 +63,12 @@ vi.mock("@ethereum-attestation-service/eas-sdk", () => {
 });
 
 // Import after mocking
-import { EASService, createEASService, REPO_ACTIVITY_SCHEMA, type RepoActivityData } from "../eas";
+import {
+  EASService,
+  createEASService,
+  REPO_ACTIVITY_SCHEMA,
+  type RepoActivityData,
+} from "../eas";
 
 describe("EASService", () => {
   let service: EASService;
@@ -121,7 +130,7 @@ describe("EASService", () => {
 
     it("should throw error if schema UID is not set", async () => {
       await expect(service.createAttestation(testData)).rejects.toThrow(
-        "Schema UID not set"
+        "Schema UID not set",
       );
     });
 
@@ -178,13 +187,17 @@ describe("EASService", () => {
     it("should return testnet explorer URL", () => {
       const testService = new EASService(true);
       const url = testService.getExplorerUrl("0xattestation-uid");
-      expect(url).toBe("https://optimism-sepolia.easscan.org/attestation/view/0xattestation-uid");
+      expect(url).toBe(
+        "https://optimism-sepolia.easscan.org/attestation/view/0xattestation-uid",
+      );
     });
 
     it("should return mainnet explorer URL", () => {
       const mainnetService = new EASService(false);
       const url = mainnetService.getExplorerUrl("0xattestation-uid");
-      expect(url).toBe("https://optimism.easscan.org/attestation/view/0xattestation-uid");
+      expect(url).toBe(
+        "https://optimism.easscan.org/attestation/view/0xattestation-uid",
+      );
     });
   });
 
@@ -192,7 +205,9 @@ describe("EASService", () => {
     it("should return testnet schema explorer URL", () => {
       const testService = new EASService(true);
       const url = testService.getSchemaExplorerUrl("0xschema-uid");
-      expect(url).toBe("https://optimism-sepolia.easscan.org/schema/view/0xschema-uid");
+      expect(url).toBe(
+        "https://optimism-sepolia.easscan.org/schema/view/0xschema-uid",
+      );
     });
 
     it("should return mainnet schema explorer URL", () => {

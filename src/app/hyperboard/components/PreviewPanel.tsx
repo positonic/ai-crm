@@ -17,11 +17,7 @@ export function PreviewPanel({ config }: PreviewPanelProps) {
   if (config.data.length === 0) {
     return (
       <Container size="xl" py="xl">
-        <Alert
-          icon={<IconRefresh size={16} />}
-          title="No Data"
-          color="yellow"
-        >
+        <Alert icon={<IconRefresh size={16} />} title="No Data" color="yellow">
           Please select a sample preset or import custom data to see the
           hyperboard visualization.
         </Alert>

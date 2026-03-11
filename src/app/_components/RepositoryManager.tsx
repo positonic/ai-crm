@@ -42,7 +42,8 @@ export function RepositoryManager({
   initialRepositories,
   onChange,
 }: RepositoryManagerProps) {
-  const [localRepos, setLocalRepos] = useState<RepositoryInput[]>(initialRepositories);
+  const [localRepos, setLocalRepos] =
+    useState<RepositoryInput[]>(initialRepositories);
 
   // Sync with initialRepositories when they change (e.g., when editing a different project)
   useEffect(() => {
@@ -73,7 +74,11 @@ export function RepositoryManager({
     onChange(updated);
   };
 
-  const handleUpdateRepo = (index: number, field: keyof RepositoryInput, value: string | boolean) => {
+  const handleUpdateRepo = (
+    index: number,
+    field: keyof RepositoryInput,
+    value: string | boolean,
+  ) => {
     const updated = [...localRepos];
     const repo = updated[index];
     if (!repo) return;
@@ -128,7 +133,11 @@ export function RepositoryManager({
                       Repository {index + 1}
                     </Text>
                     {repo.isPrimary && (
-                      <Badge size="xs" color="blue" leftSection={<IconStarFilled size={10} />}>
+                      <Badge
+                        size="xs"
+                        color="blue"
+                        leftSection={<IconStarFilled size={10} />}
+                      >
                         Primary
                       </Badge>
                     )}
@@ -147,7 +156,9 @@ export function RepositoryManager({
                   placeholder="https://github.com/username/repo"
                   required
                   value={repo.url}
-                  onChange={(e) => handleUpdateRepo(index, "url", e.currentTarget.value)}
+                  onChange={(e) =>
+                    handleUpdateRepo(index, "url", e.currentTarget.value)
+                  }
                 />
 
                 <TextInput
@@ -155,7 +166,9 @@ export function RepositoryManager({
                   placeholder="e.g., Frontend, Backend, API"
                   description="Display name for this repository"
                   value={repo.name}
-                  onChange={(e) => handleUpdateRepo(index, "name", e.currentTarget.value)}
+                  onChange={(e) =>
+                    handleUpdateRepo(index, "name", e.currentTarget.value)
+                  }
                 />
 
                 <Textarea
@@ -163,7 +176,13 @@ export function RepositoryManager({
                   placeholder="What does this repository contain?"
                   minRows={2}
                   value={repo.description}
-                  onChange={(e) => handleUpdateRepo(index, "description", e.currentTarget.value)}
+                  onChange={(e) =>
+                    handleUpdateRepo(
+                      index,
+                      "description",
+                      e.currentTarget.value,
+                    )
+                  }
                 />
 
                 {localRepos.length > 1 && (
@@ -172,7 +191,11 @@ export function RepositoryManager({
                     description="The main repository will be shown prominently"
                     checked={repo.isPrimary}
                     onChange={(e) =>
-                      handleUpdateRepo(index, "isPrimary", e.currentTarget.checked)
+                      handleUpdateRepo(
+                        index,
+                        "isPrimary",
+                        e.currentTarget.checked,
+                      )
                     }
                   />
                 )}

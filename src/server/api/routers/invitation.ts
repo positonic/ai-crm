@@ -8,7 +8,11 @@ import {
 } from "~/server/api/trpc";
 import { sendInvitationEmail, type SendEmailResult } from "~/lib/email";
 import { acceptPendingInvitations } from "~/server/auth/acceptInvitations";
-import { assertAdminOrEventFloorOwner, isAdminOrStaff, getUserOwnedVenueIds } from "~/server/api/utils/scheduleAuth";
+import {
+  assertAdminOrEventFloorOwner,
+  isAdminOrStaff,
+  getUserOwnedVenueIds,
+} from "~/server/api/utils/scheduleAuth";
 
 // Helper function to check if user has admin/staff role
 function checkAdminAccess(userRole?: string | null) {
@@ -21,9 +25,14 @@ function checkAdminAccess(userRole?: string | null) {
 }
 
 // Helper function to get full name from user session
-function getInviterName(user: { firstName?: string | null; surname?: string | null; name?: string | null; email?: string | null }): string {
+function getInviterName(user: {
+  firstName?: string | null;
+  surname?: string | null;
+  name?: string | null;
+  email?: string | null;
+}): string {
   if (user.firstName ?? user.surname) {
-    return `${user.firstName ?? ''} ${user.surname ?? ''}`.trim();
+    return `${user.firstName ?? ""} ${user.surname ?? ""}`.trim();
   }
   return user.name ?? user.email ?? "Event Admin";
 }
@@ -38,7 +47,11 @@ async function sendInvitationEmailForType(params: {
     expiresAt: Date;
     eventId: string | null;
     globalRole: string | null;
-    event?: { name: string; description: string | null; slug: string | null } | null;
+    event?: {
+      name: string;
+      description: string | null;
+      slug: string | null;
+    } | null;
     role?: { name: string } | null;
   };
   inviterName: string;
@@ -52,7 +65,8 @@ async function sendInvitationEmailForType(params: {
       email: invitation.email,
       inviteeName,
       eventName: invitation.event?.name ?? "Event",
-      eventDescription: invitation.event?.description ?? "Join us for this exciting event!",
+      eventDescription:
+        invitation.event?.description ?? "Join us for this exciting event!",
       roleName: invitation.role?.name ?? "Participant",
       inviterName,
       invitationToken: invitation.token,
@@ -99,56 +113,75 @@ async function sendInvitationEmailForType(params: {
 }
 
 // Schema definitions
-const CreateInvitationSchema = z.object({
-  email: z.string().email().transform(v => v.toLowerCase().trim()),
-  inviteeName: z.string().optional(),
-  type: z.enum(["EVENT_ROLE", "GLOBAL_ADMIN", "GLOBAL_STAFF", "VENUE_OWNER"]).default("EVENT_ROLE"),
-  eventId: z.string().optional(),
-  roleId: z.string().optional(),
-  globalRole: z.enum(["admin", "staff"]).optional(),
-  venueId: z.string().optional(),
-  expiresAt: z.coerce.date().optional(),
-}).refine((data) => {
-  // For EVENT_ROLE type, eventId and roleId are required
-  if (data.type === "EVENT_ROLE") {
-    return data.eventId && data.roleId;
-  }
-  // For GLOBAL_ADMIN/GLOBAL_STAFF, globalRole is required
-  if (data.type === "GLOBAL_ADMIN" || data.type === "GLOBAL_STAFF") {
-    return data.globalRole;
-  }
-  // For VENUE_OWNER, eventId and venueId are required
-  if (data.type === "VENUE_OWNER") {
-    return data.eventId && data.venueId;
-  }
-  return true;
-}, {
-  message: "Missing required fields for invitation type",
-});
+const CreateInvitationSchema = z
+  .object({
+    email: z
+      .string()
+      .email()
+      .transform((v) => v.toLowerCase().trim()),
+    inviteeName: z.string().optional(),
+    type: z
+      .enum(["EVENT_ROLE", "GLOBAL_ADMIN", "GLOBAL_STAFF", "VENUE_OWNER"])
+      .default("EVENT_ROLE"),
+    eventId: z.string().optional(),
+    roleId: z.string().optional(),
+    globalRole: z.enum(["admin", "staff"]).optional(),
+    venueId: z.string().optional(),
+    expiresAt: z.coerce.date().optional(),
+  })
+  .refine(
+    (data) => {
+      // For EVENT_ROLE type, eventId and roleId are required
+      if (data.type === "EVENT_ROLE") {
+        return data.eventId && data.roleId;
+      }
+      // For GLOBAL_ADMIN/GLOBAL_STAFF, globalRole is required
+      if (data.type === "GLOBAL_ADMIN" || data.type === "GLOBAL_STAFF") {
+        return data.globalRole;
+      }
+      // For VENUE_OWNER, eventId and venueId are required
+      if (data.type === "VENUE_OWNER") {
+        return data.eventId && data.venueId;
+      }
+      return true;
+    },
+    {
+      message: "Missing required fields for invitation type",
+    },
+  );
 
-const BulkCreateInvitationSchema = z.object({
-  emails: z.array(z.string().email()).transform(arr => arr.map(e => e.toLowerCase().trim())),
-  type: z.enum(["EVENT_ROLE", "GLOBAL_ADMIN", "GLOBAL_STAFF", "VENUE_OWNER"]).default("EVENT_ROLE"),
-  eventId: z.string().optional(),
-  roleId: z.string().optional(),
-  globalRole: z.enum(["admin", "staff"]).optional(),
-  venueId: z.string().optional(),
-  expiresAt: z.coerce.date().optional(),
-}).refine((data) => {
-  // Same validation as CreateInvitationSchema
-  if (data.type === "EVENT_ROLE") {
-    return data.eventId && data.roleId;
-  }
-  if (data.type === "GLOBAL_ADMIN" || data.type === "GLOBAL_STAFF") {
-    return data.globalRole;
-  }
-  if (data.type === "VENUE_OWNER") {
-    return data.eventId && data.venueId;
-  }
-  return true;
-}, {
-  message: "Missing required fields for invitation type",
-});
+const BulkCreateInvitationSchema = z
+  .object({
+    emails: z
+      .array(z.string().email())
+      .transform((arr) => arr.map((e) => e.toLowerCase().trim())),
+    type: z
+      .enum(["EVENT_ROLE", "GLOBAL_ADMIN", "GLOBAL_STAFF", "VENUE_OWNER"])
+      .default("EVENT_ROLE"),
+    eventId: z.string().optional(),
+    roleId: z.string().optional(),
+    globalRole: z.enum(["admin", "staff"]).optional(),
+    venueId: z.string().optional(),
+    expiresAt: z.coerce.date().optional(),
+  })
+  .refine(
+    (data) => {
+      // Same validation as CreateInvitationSchema
+      if (data.type === "EVENT_ROLE") {
+        return data.eventId && data.roleId;
+      }
+      if (data.type === "GLOBAL_ADMIN" || data.type === "GLOBAL_STAFF") {
+        return data.globalRole;
+      }
+      if (data.type === "VENUE_OWNER") {
+        return data.eventId && data.venueId;
+      }
+      return true;
+    },
+    {
+      message: "Missing required fields for invitation type",
+    },
+  );
 
 const AcceptInvitationSchema = z.object({
   token: z.string(),
@@ -292,10 +325,16 @@ export const invitationRouter = createTRPCRouter({
           });
           emailSent = emailResult.success;
           if (!emailSent) {
-            console.error("Failed to send invitation email for existing invitation:", emailResult.error);
+            console.error(
+              "Failed to send invitation email for existing invitation:",
+              emailResult.error,
+            );
           }
         } catch (error) {
-          console.error("Failed to send invitation email for existing invitation:", error);
+          console.error(
+            "Failed to send invitation email for existing invitation:",
+            error,
+          );
         }
         return { ...existing, _emailSent: emailSent };
       }
@@ -393,13 +432,18 @@ export const invitationRouter = createTRPCRouter({
         select: { email: true },
       });
 
-      const existingEmailsLower = new Set(existingInvitations.map(inv => inv.email.toLowerCase()));
-      const newEmails = input.emails.filter(email => !existingEmailsLower.has(email));
+      const existingEmailsLower = new Set(
+        existingInvitations.map((inv) => inv.email.toLowerCase()),
+      );
+      const newEmails = input.emails.filter(
+        (email) => !existingEmailsLower.has(email),
+      );
 
       if (newEmails.length === 0) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "All provided emails already have pending invitations for this event and role",
+          message:
+            "All provided emails already have pending invitations for this event and role",
         });
       }
 
@@ -408,7 +452,7 @@ export const invitationRouter = createTRPCRouter({
       defaultExpiry.setDate(defaultExpiry.getDate() + 30);
 
       // Create invitations for new emails
-      const invitationsData = newEmails.map(email => ({
+      const invitationsData = newEmails.map((email) => ({
         email,
         type: input.type,
         eventId: resolvedEventId ?? undefined,
@@ -447,7 +491,10 @@ export const invitationRouter = createTRPCRouter({
           });
           return { email: invitation.email, success: emailResult.success };
         } catch (error) {
-          console.error(`Failed to send invitation email to ${invitation.email}:`, error);
+          console.error(
+            `Failed to send invitation email to ${invitation.email}:`,
+            error,
+          );
           return { email: invitation.email, success: false };
         }
       });
@@ -455,7 +502,7 @@ export const invitationRouter = createTRPCRouter({
       // Wait for all emails to be sent (but don't fail if some emails fail)
       const emailResults = await Promise.allSettled(emailPromises);
       const emailSuccesses = emailResults.filter(
-        result => result.status === 'fulfilled' && result.value.success
+        (result) => result.status === "fulfilled" && result.value.success,
       ).length;
 
       return {
@@ -468,12 +515,18 @@ export const invitationRouter = createTRPCRouter({
 
   // Get all invitations (admin or floor lead with eventId)
   getAll: protectedProcedure
-    .input(z.object({
-      eventId: z.string().optional(),
-      status: z.enum(["PENDING", "ACCEPTED", "EXPIRED", "CANCELLED"]).optional(),
-      email: z.string().optional(),
-      type: z.enum(["EVENT_ROLE", "GLOBAL_ADMIN", "GLOBAL_STAFF", "VENUE_OWNER"]).optional(),
-    }))
+    .input(
+      z.object({
+        eventId: z.string().optional(),
+        status: z
+          .enum(["PENDING", "ACCEPTED", "EXPIRED", "CANCELLED"])
+          .optional(),
+        email: z.string().optional(),
+        type: z
+          .enum(["EVENT_ROLE", "GLOBAL_ADMIN", "GLOBAL_STAFF", "VENUE_OWNER"])
+          .optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       // Resolve eventId (could be slug or ID)
       let resolvedEventId = input.eventId;
@@ -508,7 +561,11 @@ export const invitationRouter = createTRPCRouter({
       // For floor leads, scope invitations to those with matching venueId OR created by them
       let venueFilter: object | undefined;
       if (resolvedEventId && !isAdminOrStaff(ctx.session.user.role)) {
-        const ownedVenueIds = await getUserOwnedVenueIds(ctx.db, ctx.session.user.id, resolvedEventId);
+        const ownedVenueIds = await getUserOwnedVenueIds(
+          ctx.db,
+          ctx.session.user.id,
+          resolvedEventId,
+        );
         venueFilter = {
           OR: [
             { venueId: { in: ownedVenueIds } },
@@ -521,7 +578,9 @@ export const invitationRouter = createTRPCRouter({
         where: {
           ...(resolvedEventId && { eventId: resolvedEventId }),
           ...(input.status && { status: input.status }),
-          ...(input.email && { email: { contains: input.email, mode: "insensitive" } }),
+          ...(input.email && {
+            email: { contains: input.email, mode: "insensitive" },
+          }),
           ...(input.type && { type: input.type }),
           ...venueFilter,
         },
@@ -603,10 +662,12 @@ export const invitationRouter = createTRPCRouter({
   // Accept invitation (called during user registration / sign-in)
   // Note: Invitations are also accepted automatically in the NextAuth signIn callback
   accept: publicProcedure
-    .input(z.object({
-      email: z.string().email(),
-      userId: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        email: z.string().email(),
+        userId: z.string().optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const normalizedEmail = input.email.toLowerCase().trim();
       let userId = input.userId;
@@ -739,7 +800,10 @@ export const invitationRouter = createTRPCRouter({
         });
         emailSent = emailResult.success;
         if (!emailSent) {
-          console.error("Failed to resend invitation email:", emailResult.error);
+          console.error(
+            "Failed to resend invitation email:",
+            emailResult.error,
+          );
         }
       } catch (error) {
         console.error("Failed to resend invitation email:", error);
@@ -750,9 +814,11 @@ export const invitationRouter = createTRPCRouter({
 
   // Get invitation statistics
   getStats: protectedProcedure
-    .input(z.object({
-      eventId: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        eventId: z.string().optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       checkAdminAccess(ctx.session.user.role);
 

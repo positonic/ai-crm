@@ -2,7 +2,12 @@ import type { NextRequest } from "next/server";
 import { db } from "~/server/db";
 import { withTranscriptionAuth } from "~/utils/validateApiKey";
 
-const VALID_STATUSES = ["PENDING", "PROCESSING", "COMPLETED", "FAILED"] as const;
+const VALID_STATUSES = [
+  "PENDING",
+  "PROCESSING",
+  "COMPLETED",
+  "FAILED",
+] as const;
 
 type TranscriptStatus = (typeof VALID_STATUSES)[number];
 
@@ -34,10 +39,7 @@ async function handleGet(_request: NextRequest, context: RouteContext) {
     return Response.json(transcription);
   } catch (error) {
     console.error("Transcription GET error:", error);
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -59,7 +61,9 @@ async function handlePatch(request: NextRequest, context: RouteContext) {
 
     if (body.status && !VALID_STATUSES.includes(body.status)) {
       return Response.json(
-        { error: `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}` },
+        {
+          error: `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`,
+        },
         { status: 400 },
       );
     }
@@ -82,9 +86,10 @@ async function handlePatch(request: NextRequest, context: RouteContext) {
         notes: body.notes ?? existing.notes,
         title: body.title ?? existing.title,
         status,
-        processedAt: status === "COMPLETED" && existing.status !== "COMPLETED"
-          ? new Date()
-          : existing.processedAt,
+        processedAt:
+          status === "COMPLETED" && existing.status !== "COMPLETED"
+            ? new Date()
+            : existing.processedAt,
       },
     });
 
@@ -95,10 +100,7 @@ async function handlePatch(request: NextRequest, context: RouteContext) {
     });
   } catch (error) {
     console.error("Transcription PATCH error:", error);
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 

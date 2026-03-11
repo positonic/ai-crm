@@ -64,7 +64,9 @@
   background: var(--ms-drop-highlight);
   outline: 2px dashed var(--ms-drop-border);
   outline-offset: -2px;
-  transition: background 0.15s ease, outline 0.15s ease;
+  transition:
+    background 0.15s ease,
+    outline 0.15s ease;
 }
 
 .ms-dragging {

@@ -22,7 +22,7 @@ export default function AsksOffersPage({ params }: AsksOffersPageProps) {
   // Get event details
   const { data: event, isLoading } = api.event.getEvent.useQuery(
     { id: eventId },
-    { enabled: !!eventId }
+    { enabled: !!eventId },
   );
 
   if (status === "loading" || isLoading || !eventId) {
@@ -39,7 +39,9 @@ export default function AsksOffersPage({ params }: AsksOffersPageProps) {
     return (
       <Container size="lg" py="xl">
         <Title order={1}>Event Not Found</Title>
-        <Text c="dimmed">The event you&apos;re looking for doesn&apos;t exist.</Text>
+        <Text c="dimmed">
+          The event you&apos;re looking for doesn&apos;t exist.
+        </Text>
       </Container>
     );
   }
@@ -52,7 +54,8 @@ export default function AsksOffersPage({ params }: AsksOffersPageProps) {
             Asks & Offers
           </Title>
           <Text c="dimmed">
-            Browse what participants are looking for help with and what they can offer to the community.
+            Browse what participants are looking for help with and what they can
+            offer to the community.
           </Text>
         </div>
 

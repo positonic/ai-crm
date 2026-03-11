@@ -9,7 +9,9 @@ interface PageProps {
   }>;
 }
 
-export default async function CommunityAskOfferDetailPage({ params }: PageProps) {
+export default async function CommunityAskOfferDetailPage({
+  params,
+}: PageProps) {
   const { id } = await params;
   const session = await auth();
 

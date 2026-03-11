@@ -49,8 +49,8 @@ export default function AdminPanelPage() {
       <p className="docs-text">
         The applications section shows all submissions for your event. You can
         filter by status, review individual responses, and make decisions. The
-        platform supports both individual and bulk status updates &ndash; you can
-        accept, waitlist, or decline multiple applicants at once.
+        platform supports both individual and bulk status updates &ndash; you
+        can accept, waitlist, or decline multiple applicants at once.
       </p>
       <p className="docs-text">
         When you change an application&apos;s status, the applicant is
@@ -62,9 +62,9 @@ export default function AdminPanelPage() {
       </h2>
       <p className="docs-text">
         Organisers have full control over the event schedule. You can create
-        venues, add sessions, assign times and speakers, and publish the schedule
-        when it is ready. You can also delegate this work to venue partners by
-        assigning them as{" "}
+        venues, add sessions, assign times and speakers, and publish the
+        schedule when it is ready. You can also delegate this work to venue
+        partners by assigning them as{" "}
         <Link href="/docs/organizers/floor-owners" className="docs-link">
           floor leads
         </Link>
@@ -79,8 +79,8 @@ export default function AdminPanelPage() {
         <Link href="/docs/features/invitations" className="docs-link">
           invitations
         </Link>{" "}
-        to bring people into your event with specific roles. Invitations are sent
-        by email and tracked within the platform so you always know who has
+        to bring people into your event with specific roles. Invitations are
+        sent by email and tracked within the platform so you always know who has
         accepted and who is still pending.
       </p>
 

@@ -34,7 +34,7 @@ beforeAll(() => {
     if (dbUrl.includes(host)) {
       throw new Error(
         `SAFETY: DATABASE_URL contains "${host}". Refusing to run tests against a production database. ` +
-          `Set TEST_DATABASE_URL to a local or container database.`
+          `Set TEST_DATABASE_URL to a local or container database.`,
       );
     }
   }
@@ -65,12 +65,14 @@ vi.mock("@sentry/nextjs", () => ({
   captureException: vi.fn(),
   captureMessage: vi.fn(),
   startSpan: vi.fn(
-    (_opts: Record<string, unknown>, fn: (span: Record<string, unknown>) => unknown) =>
-      fn({ setAttribute: vi.fn() })
+    (
+      _opts: Record<string, unknown>,
+      fn: (span: Record<string, unknown>) => unknown,
+    ) => fn({ setAttribute: vi.fn() }),
   ),
   setUser: vi.fn(),
   withScope: vi.fn((fn: (scope: Record<string, unknown>) => unknown) =>
-    fn({ setExtra: vi.fn(), setTag: vi.fn() })
+    fn({ setExtra: vi.fn(), setTag: vi.fn() }),
   ),
   logger: {
     info: vi.fn(),
@@ -81,8 +83,9 @@ vi.mock("@sentry/nextjs", () => ({
     fatal: vi.fn(),
     fmt: (strings: TemplateStringsArray, ...values: unknown[]) =>
       strings.reduce(
-        (result, str, i) => result + str + (i < values.length ? String(values[i]) : ""),
-        ""
+        (result, str, i) =>
+          result + str + (i < values.length ? String(values[i]) : ""),
+        "",
       ),
   },
 }));

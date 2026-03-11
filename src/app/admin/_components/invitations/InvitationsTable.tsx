@@ -1,12 +1,5 @@
 import { type ReactNode } from "react";
-import {
-  Card,
-  Table,
-  Text,
-  Group,
-  ActionIcon,
-  Title,
-} from "@mantine/core";
+import { Card, Table, Text, Group, ActionIcon, Title } from "@mantine/core";
 import { IconRefresh, IconX } from "@tabler/icons-react";
 import InvitationStatusBadge from "./InvitationStatusBadge";
 

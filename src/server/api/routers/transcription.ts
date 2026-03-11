@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import {
-  createTRPCRouter,
-  protectedProcedure,
-} from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { assertDeliberationAdmin } from "~/server/api/utils/deliberationAuth";
 
 export const transcriptionRouter = createTRPCRouter({
@@ -15,7 +12,10 @@ export const transcriptionRouter = createTRPCRouter({
         select: { eventId: true },
       });
       if (!deliberation) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Deliberation not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Deliberation not found",
+        });
       }
 
       await assertDeliberationAdmin(
@@ -59,7 +59,10 @@ export const transcriptionRouter = createTRPCRouter({
       });
 
       if (!transcription) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Transcription not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Transcription not found",
+        });
       }
 
       return transcription;

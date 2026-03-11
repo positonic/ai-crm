@@ -34,7 +34,11 @@ export default function ProfilesAdminClient() {
   const { data: events } = api.event.getEvents.useQuery();
 
   // Fetch user profiles data with optional event filter
-  const { data: users, isLoading, error } = api.profile.getAllProfilesForAdmin.useQuery({
+  const {
+    data: users,
+    isLoading,
+    error,
+  } = api.profile.getAllProfilesForAdmin.useQuery({
     eventId: selectedEventId ?? undefined,
   });
 
@@ -48,8 +52,10 @@ export default function ProfilesAdminClient() {
     // Completeness filter
     const matchesCompleteness =
       !filterByCompleteness ||
-      (filterByCompleteness === "complete" && user.completeness.meetsThreshold) ||
-      (filterByCompleteness === "incomplete" && !user.completeness.meetsThreshold);
+      (filterByCompleteness === "complete" &&
+        user.completeness.meetsThreshold) ||
+      (filterByCompleteness === "incomplete" &&
+        !user.completeness.meetsThreshold);
 
     return matchesSearch && matchesCompleteness;
   });
@@ -75,11 +81,13 @@ export default function ProfilesAdminClient() {
     );
   }
 
-  const incompleteCount = users?.filter(u => !u.completeness.meetsThreshold).length ?? 0;
-  const completeCount = users?.filter(u => u.completeness.meetsThreshold).length ?? 0;
+  const incompleteCount =
+    users?.filter((u) => !u.completeness.meetsThreshold).length ?? 0;
+  const completeCount =
+    users?.filter((u) => u.completeness.meetsThreshold).length ?? 0;
 
   // Get selected event name
-  const selectedEvent = events?.find(e => e.id === selectedEventId);
+  const selectedEvent = events?.find((e) => e.id === selectedEventId);
   const eventFilterLabel = selectedEvent ? selectedEvent.name : "All Users";
 
   return (
@@ -121,13 +129,15 @@ export default function ProfilesAdminClient() {
           placeholder="Filter by event"
           data={[
             { value: "all", label: "All Users" },
-            ...(events?.map(event => ({
+            ...(events?.map((event) => ({
               value: event.id,
               label: event.name,
             })) ?? []),
           ]}
           value={selectedEventId ?? "all"}
-          onChange={(value) => setSelectedEventId(value === "all" ? null : value)}
+          onChange={(value) =>
+            setSelectedEventId(value === "all" ? null : value)
+          }
           clearable
           style={{ minWidth: 250 }}
         />
@@ -146,7 +156,9 @@ export default function ProfilesAdminClient() {
             { value: "incomplete", label: "Incomplete (<70%)" },
           ]}
           value={filterByCompleteness ?? "all"}
-          onChange={(value) => setFilterByCompleteness(value === "all" ? null : value)}
+          onChange={(value) =>
+            setFilterByCompleteness(value === "all" ? null : value)
+          }
           clearable
           style={{ minWidth: 200 }}
         />
@@ -224,14 +236,19 @@ export default function ProfilesAdminClient() {
                   {/* Project Count with Popover */}
                   <Table.Td>
                     {user.projectCount > 0 ? (
-                      <Popover width={350} position="bottom" withArrow shadow="md">
+                      <Popover
+                        width={350}
+                        position="bottom"
+                        withArrow
+                        shadow="md"
+                      >
                         <Popover.Target>
-                          <Group gap="xs" align="center" style={{ cursor: "pointer" }}>
-                            <Badge
-                              color="blue"
-                              variant="light"
-                              size="lg"
-                            >
+                          <Group
+                            gap="xs"
+                            align="center"
+                            style={{ cursor: "pointer" }}
+                          >
+                            <Badge color="blue" variant="light" size="lg">
                               {user.projectCount}
                             </Badge>
                             <Text size="xs" c="dimmed">
@@ -251,7 +268,8 @@ export default function ProfilesAdminClient() {
                                   {project.title}
                                 </Text>
                                 <Text size="xs" c="dimmed">
-                                  {project.updateCount} update{project.updateCount !== 1 ? "s" : ""}
+                                  {project.updateCount} update
+                                  {project.updateCount !== 1 ? "s" : ""}
                                 </Text>
                               </div>
                             ))}
@@ -263,7 +281,9 @@ export default function ProfilesAdminClient() {
                         <Badge color="gray" variant="light" size="lg">
                           0
                         </Badge>
-                        <Text size="xs" c="dimmed">projects</Text>
+                        <Text size="xs" c="dimmed">
+                          projects
+                        </Text>
                       </Group>
                     )}
                   </Table.Td>
@@ -271,18 +291,25 @@ export default function ProfilesAdminClient() {
                   {/* Timeline Updates Count with Popover */}
                   <Table.Td>
                     {user.projectUpdateCount > 0 ? (
-                      <Popover width={350} position="bottom" withArrow shadow="md">
+                      <Popover
+                        width={350}
+                        position="bottom"
+                        withArrow
+                        shadow="md"
+                      >
                         <Popover.Target>
-                          <Group gap="xs" align="center" style={{ cursor: "pointer" }}>
-                            <Badge
-                              color="green"
-                              variant="light"
-                              size="lg"
-                            >
+                          <Group
+                            gap="xs"
+                            align="center"
+                            style={{ cursor: "pointer" }}
+                          >
+                            <Badge color="green" variant="light" size="lg">
                               {user.projectUpdateCount}
                             </Badge>
                             <Text size="xs" c="dimmed">
-                              {user.projectUpdateCount === 1 ? "update" : "updates"}
+                              {user.projectUpdateCount === 1
+                                ? "update"
+                                : "updates"}
                             </Text>
                           </Group>
                         </Popover.Target>
@@ -300,11 +327,13 @@ export default function ProfilesAdminClient() {
                                     {project.title}
                                   </Text>
                                   <Text size="xs" c="dimmed">
-                                    {project.updateCount} update{project.updateCount !== 1 ? "s" : ""}
+                                    {project.updateCount} update
+                                    {project.updateCount !== 1 ? "s" : ""}
                                   </Text>
                                 </div>
                               ))}
-                            {user.projects?.filter((p) => p.updateCount > 0).length === 0 && (
+                            {user.projects?.filter((p) => p.updateCount > 0)
+                              .length === 0 && (
                               <Text size="sm" c="dimmed" ta="center" py="md">
                                 No updates yet
                               </Text>
@@ -317,7 +346,9 @@ export default function ProfilesAdminClient() {
                         <Badge color="gray" variant="light" size="lg">
                           0
                         </Badge>
-                        <Text size="xs" c="dimmed">updates</Text>
+                        <Text size="xs" c="dimmed">
+                          updates
+                        </Text>
                       </Group>
                     )}
                   </Table.Td>

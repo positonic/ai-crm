@@ -5,10 +5,7 @@ export type UserRole = "user" | "staff" | "admin";
 /**
  * Check if user has a specific role
  */
-export function hasRole(
-  session: Session | null,
-  roleName: UserRole
-): boolean {
+export function hasRole(session: Session | null, roleName: UserRole): boolean {
   if (!session?.user?.role) return false;
   return session.user.role === roleName;
 }
@@ -18,7 +15,7 @@ export function hasRole(
  */
 export function hasAnyRole(
   session: Session | null,
-  roles: UserRole[]
+  roles: UserRole[],
 ): boolean {
   if (!session?.user?.role) return false;
   return roles.includes(session.user.role as UserRole);

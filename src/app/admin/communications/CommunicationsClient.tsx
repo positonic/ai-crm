@@ -20,7 +20,18 @@ import {
   TextInput,
   Select,
 } from "@mantine/core";
-import { IconMail, IconEye, IconRefresh, IconSearch, IconX, IconMessage, IconPhone, IconBrandDiscord, IconBrandWhatsapp, IconBrandTelegram } from "@tabler/icons-react";
+import {
+  IconMail,
+  IconEye,
+  IconRefresh,
+  IconSearch,
+  IconX,
+  IconMessage,
+  IconPhone,
+  IconBrandDiscord,
+  IconBrandWhatsapp,
+  IconBrandTelegram,
+} from "@tabler/icons-react";
 import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "~/trpc/react";
 import { format } from "date-fns";
@@ -30,12 +41,15 @@ import { getDisplayName } from "~/utils/userDisplay";
 
 const ITEMS_PER_PAGE = 50;
 
-type Communication = RouterOutputs["communication"]["getAllSentCommunications"]["communications"][0];
+type Communication =
+  RouterOutputs["communication"]["getAllSentCommunications"]["communications"][0];
 
 export function CommunicationsClient() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedCommunication, setSelectedCommunication] = useState<Communication | null>(null);
-  const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
+  const [selectedCommunication, setSelectedCommunication] =
+    useState<Communication | null>(null);
+  const [modalOpened, { open: openModal, close: closeModal }] =
+    useDisclosure(false);
   const [searchEmail, setSearchEmail] = useState("");
   const [searchTelegram, setSearchTelegram] = useState("");
   const [channelFilter, setChannelFilter] = useState<string | null>(null);
@@ -47,30 +61,40 @@ export function CommunicationsClient() {
     setCurrentPage(1);
   }, [debouncedSearchEmail, debouncedSearchTelegram, channelFilter]);
 
-  const { data, isLoading, refetch } = api.communication.getAllSentCommunications.useQuery(
-    {
-      limit: ITEMS_PER_PAGE,
-      offset: (currentPage - 1) * ITEMS_PER_PAGE,
-      searchEmail: debouncedSearchEmail || undefined,
-      searchTelegram: debouncedSearchTelegram || undefined,
-      channel: (channelFilter as "EMAIL" | "TELEGRAM" | "SMS" | "DISCORD" | "WHATSAPP") || undefined,
-    },
-    {
-      // Only fetch when debounced value is stable
-      enabled: true,
-      // Prevent refetch on window focus during search
-      refetchOnWindowFocus: false,
-      // Use stable cache time
-      staleTime: 1000 * 60 * 5, // 5 minutes
-    }
-  );
+  const { data, isLoading, refetch } =
+    api.communication.getAllSentCommunications.useQuery(
+      {
+        limit: ITEMS_PER_PAGE,
+        offset: (currentPage - 1) * ITEMS_PER_PAGE,
+        searchEmail: debouncedSearchEmail || undefined,
+        searchTelegram: debouncedSearchTelegram || undefined,
+        channel:
+          (channelFilter as
+            | "EMAIL"
+            | "TELEGRAM"
+            | "SMS"
+            | "DISCORD"
+            | "WHATSAPP") || undefined,
+      },
+      {
+        // Only fetch when debounced value is stable
+        enabled: true,
+        // Prevent refetch on window focus during search
+        refetchOnWindowFocus: false,
+        // Use stable cache time
+        staleTime: 1000 * 60 * 5, // 5 minutes
+      },
+    );
 
   const totalPages = data ? Math.ceil(data.total / ITEMS_PER_PAGE) : 1;
 
-  const handleViewCommunication = useCallback((communication: Communication) => {
-    setSelectedCommunication(communication);
-    openModal();
-  }, [openModal]);
+  const handleViewCommunication = useCallback(
+    (communication: Communication) => {
+      setSelectedCommunication(communication);
+      openModal();
+    },
+    [openModal],
+  );
 
   // Helper function to get channel icon
   const getChannelIcon = useCallback((channel: string) => {
@@ -111,7 +135,7 @@ export function CommunicationsClient() {
   // Memoize communication rows to prevent unnecessary re-renders
   const communicationRows = useMemo(() => {
     if (!data?.communications) return [];
-    
+
     return data.communications.map((communication) => (
       <Table.Tr key={communication.id}>
         <Table.Td>
@@ -136,7 +160,8 @@ export function CommunicationsClient() {
         </Table.Td>
         <Table.Td>
           <Text size="sm" lineClamp={1}>
-            {communication.subject ?? communication.textContent.substring(0, 50) + "..."}
+            {communication.subject ??
+              communication.textContent.substring(0, 50) + "..."}
           </Text>
         </Table.Td>
         <Table.Td>
@@ -150,8 +175,8 @@ export function CommunicationsClient() {
               communication.type === "MISSING_INFO"
                 ? "yellow"
                 : communication.type === "STATUS_UPDATE"
-                ? "blue"
-                : "gray"
+                  ? "blue"
+                  : "gray"
             }
           >
             {communication.type.replace("_", " ")}
@@ -165,8 +190,8 @@ export function CommunicationsClient() {
               communication.channel === "EMAIL"
                 ? "blue"
                 : communication.channel === "TELEGRAM"
-                ? "cyan"
-                : "gray"
+                  ? "cyan"
+                  : "gray"
             }
           >
             {communication.channel}
@@ -184,7 +209,12 @@ export function CommunicationsClient() {
         </Table.Td>
       </Table.Tr>
     ));
-  }, [data?.communications, handleViewCommunication, getChannelIcon, getRecipientDisplay]);
+  }, [
+    data?.communications,
+    handleViewCommunication,
+    getChannelIcon,
+    getRecipientDisplay,
+  ]);
 
   if (isLoading) {
     return (
@@ -214,10 +244,9 @@ export function CommunicationsClient() {
           </div>
           <Group>
             <Badge size="lg" variant="light">
-              {(debouncedSearchEmail || debouncedSearchTelegram || channelFilter)
-                ? `${data?.total ?? 0} results found` 
-                : `Total: ${data?.total ?? 0} communications`
-              }
+              {debouncedSearchEmail || debouncedSearchTelegram || channelFilter
+                ? `${data?.total ?? 0} results found`
+                : `Total: ${data?.total ?? 0} communications`}
             </Badge>
             <Tooltip label="Refresh">
               <ActionIcon
@@ -251,7 +280,7 @@ export function CommunicationsClient() {
             }
             style={{ width: 250 }}
           />
-          
+
           <TextInput
             placeholder="Search by Telegram username..."
             value={searchTelegram}
@@ -306,10 +335,11 @@ export function CommunicationsClient() {
                   <Table.Tr>
                     <Table.Td colSpan={7}>
                       <Text ta="center" py="xl" c="dimmed">
-                        {(debouncedSearchEmail || debouncedSearchTelegram || channelFilter)
+                        {debouncedSearchEmail ||
+                        debouncedSearchTelegram ||
+                        channelFilter
                           ? `No communications found matching your search criteria`
-                          : "No sent communications found"
-                        }
+                          : "No sent communications found"}
                       </Text>
                     </Table.Td>
                   </Table.Tr>
@@ -337,7 +367,8 @@ export function CommunicationsClient() {
         onClose={closeModal}
         title={
           <Group>
-            {selectedCommunication && getChannelIcon(selectedCommunication.channel)}
+            {selectedCommunication &&
+              getChannelIcon(selectedCommunication.channel)}
             <Text fw={600}>Communication Details</Text>
           </Group>
         }
@@ -349,10 +380,16 @@ export function CommunicationsClient() {
               <Text size="xs" c="dimmed">
                 Channel
               </Text>
-              <Badge variant="light" color={
-                selectedCommunication.channel === "EMAIL" ? "blue" :
-                selectedCommunication.channel === "TELEGRAM" ? "cyan" : "gray"
-              }>
+              <Badge
+                variant="light"
+                color={
+                  selectedCommunication.channel === "EMAIL"
+                    ? "blue"
+                    : selectedCommunication.channel === "TELEGRAM"
+                      ? "cyan"
+                      : "gray"
+                }
+              >
                 {selectedCommunication.channel}
               </Badge>
             </div>
@@ -379,7 +416,10 @@ export function CommunicationsClient() {
               </Text>
               <Text>
                 {selectedCommunication?.sentAt
-                  ? format(new Date(selectedCommunication.sentAt), "MMM d, yyyy h:mm:ss a")
+                  ? format(
+                      new Date(selectedCommunication.sentAt),
+                      "MMM d, yyyy h:mm:ss a",
+                    )
                   : "N/A"}
               </Text>
             </div>
@@ -417,12 +457,14 @@ export function CommunicationsClient() {
 
             <div>
               <Text size="xs" c="dimmed" mb="xs">
-                {selectedCommunication.channel === "EMAIL" && selectedCommunication.htmlContent 
-                  ? "Content (HTML)" 
+                {selectedCommunication.channel === "EMAIL" &&
+                selectedCommunication.htmlContent
+                  ? "Content (HTML)"
                   : "Content (Text)"}
               </Text>
               <ScrollArea h={300} offsetScrollbars>
-                {selectedCommunication.channel === "EMAIL" && selectedCommunication.htmlContent ? (
+                {selectedCommunication.channel === "EMAIL" &&
+                selectedCommunication.htmlContent ? (
                   <div
                     dangerouslySetInnerHTML={{
                       __html: selectedCommunication.htmlContent,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Container,
   Title,
@@ -24,7 +24,7 @@ import {
   RingProgress,
   Center,
   ThemeIcon,
-} from '@mantine/core';
+} from "@mantine/core";
 import {
   IconUsers,
   IconEdit,
@@ -40,16 +40,22 @@ import {
   IconRocket,
   IconSparkles,
   IconUserPlus,
-} from '@tabler/icons-react';
-import { api } from '~/trpc/react';
-import { notifications } from '@mantine/notifications';
+} from "@tabler/icons-react";
+import { api } from "~/trpc/react";
+import { notifications } from "@mantine/notifications";
 import {
   getCompetencyColor,
   getCompetencyLabel,
   getCategoryDisplayName,
-} from '~/utils/confidenceWeighting';
+} from "~/utils/confidenceWeighting";
 
-type CriteriaCategory = 'TECHNICAL' | 'PROJECT' | 'COMMUNITY_FIT' | 'VIDEO' | 'ENTREPRENEURIAL' | 'OVERALL';
+type CriteriaCategory =
+  | "TECHNICAL"
+  | "PROJECT"
+  | "COMMUNITY_FIT"
+  | "VIDEO"
+  | "ENTREPRENEURIAL"
+  | "OVERALL";
 
 interface ReviewerCompetency {
   id: string;
@@ -77,13 +83,20 @@ interface Reviewer {
 
 function getCategoryIcon(category: string) {
   switch (category) {
-    case 'TECHNICAL': return <IconBolt size={14} />;
-    case 'PROJECT': return <IconTarget size={14} />;
-    case 'COMMUNITY_FIT': return <IconHeart size={14} />;
-    case 'VIDEO': return <IconVideo size={14} />;
-    case 'ENTREPRENEURIAL': return <IconRocket size={14} />;
-    case 'OVERALL': return <IconSparkles size={14} />;
-    default: return <IconStar size={14} />;
+    case "TECHNICAL":
+      return <IconBolt size={14} />;
+    case "PROJECT":
+      return <IconTarget size={14} />;
+    case "COMMUNITY_FIT":
+      return <IconHeart size={14} />;
+    case "VIDEO":
+      return <IconVideo size={14} />;
+    case "ENTREPRENEURIAL":
+      return <IconRocket size={14} />;
+    case "OVERALL":
+      return <IconSparkles size={14} />;
+    default:
+      return <IconStar size={14} />;
   }
 }
 
@@ -97,55 +110,70 @@ interface CompetencyModalProps {
 }
 
 const COMPETENCY_CATEGORIES = [
-  { value: 'TECHNICAL' as const, label: 'Technical' },
-  { value: 'PROJECT' as const, label: 'Project' },
-  { value: 'COMMUNITY_FIT' as const, label: 'Community Fit' },
-  { value: 'VIDEO' as const, label: 'Video Assessment' },
-  { value: 'ENTREPRENEURIAL' as const, label: 'Entrepreneurial' },
-  { value: 'OVERALL' as const, label: 'Overall' },
+  { value: "TECHNICAL" as const, label: "Technical" },
+  { value: "PROJECT" as const, label: "Project" },
+  { value: "COMMUNITY_FIT" as const, label: "Community Fit" },
+  { value: "VIDEO" as const, label: "Video Assessment" },
+  { value: "ENTREPRENEURIAL" as const, label: "Entrepreneurial" },
+  { value: "OVERALL" as const, label: "Overall" },
 ];
 
-function CompetencyModal({ opened, onClose, reviewerId, reviewerName, existingCompetencies, onSuccess }: CompetencyModalProps) {
-  const [competencies, setCompetencies] = useState<Record<string, { level: number; weight: number; notes: string }>>(() => {
-    const initial: Record<string, { level: number; weight: number; notes: string }> = {};
-    existingCompetencies.forEach(comp => {
+function CompetencyModal({
+  opened,
+  onClose,
+  reviewerId,
+  reviewerName,
+  existingCompetencies,
+  onSuccess,
+}: CompetencyModalProps) {
+  const [competencies, setCompetencies] = useState<
+    Record<string, { level: number; weight: number; notes: string }>
+  >(() => {
+    const initial: Record<
+      string,
+      { level: number; weight: number; notes: string }
+    > = {};
+    existingCompetencies.forEach((comp) => {
       initial[comp.category] = {
         level: comp.competencyLevel,
         weight: comp.baseWeight,
-        notes: comp.notes ?? '',
+        notes: comp.notes ?? "",
       };
     });
     return initial;
   });
 
-  const bulkSetMutation = api.evaluation.bulkSetReviewerCompetencies.useMutation({
-    onSuccess: () => {
-      notifications.show({
-        title: 'Success',
-        message: 'Reviewer competencies updated successfully',
-        color: 'green',
-      });
-      onSuccess();
-      onClose();
-    },
-    onError: (error) => {
-      notifications.show({
-        title: 'Error',
-        message: error.message ?? 'Failed to update competencies',
-        color: 'red',
-      });
-    },
-  });
+  const bulkSetMutation =
+    api.evaluation.bulkSetReviewerCompetencies.useMutation({
+      onSuccess: () => {
+        notifications.show({
+          title: "Success",
+          message: "Reviewer competencies updated successfully",
+          color: "green",
+        });
+        onSuccess();
+        onClose();
+      },
+      onError: (error) => {
+        notifications.show({
+          title: "Error",
+          message: error.message ?? "Failed to update competencies",
+          color: "red",
+        });
+      },
+    });
 
   const handleSave = () => {
     if (!reviewerId) return;
 
-    const competenciesToSet = Object.entries(competencies).map(([category, data]) => ({
-      category: category as CriteriaCategory,
-      competencyLevel: data.level,
-      baseWeight: data.weight,
-      notes: data.notes || undefined,
-    }));
+    const competenciesToSet = Object.entries(competencies).map(
+      ([category, data]) => ({
+        category: category as CriteriaCategory,
+        competencyLevel: data.level,
+        baseWeight: data.weight,
+        notes: data.notes || undefined,
+      }),
+    );
 
     bulkSetMutation.mutate({
       reviewerId,
@@ -153,18 +181,22 @@ function CompetencyModal({ opened, onClose, reviewerId, reviewerName, existingCo
     });
   };
 
-  const updateCompetency = (category: string, field: 'level' | 'weight' | 'notes', value: string | number) => {
-    setCompetencies(prev => ({
+  const updateCompetency = (
+    category: string,
+    field: "level" | "weight" | "notes",
+    value: string | number,
+  ) => {
+    setCompetencies((prev) => ({
       ...prev,
       [category]: {
-        ...prev[category] ?? { level: 3, weight: 1.0, notes: '' },
+        ...(prev[category] ?? { level: 3, weight: 1.0, notes: "" }),
         [field]: value,
       },
     }));
   };
 
   const removeCompetency = (category: string) => {
-    setCompetencies(prev => {
+    setCompetencies((prev) => {
       const updated = { ...prev };
       delete updated[category];
       return updated;
@@ -184,17 +216,20 @@ function CompetencyModal({ opened, onClose, reviewerId, reviewerName, existingCo
       size="xl"
     >
       <LoadingOverlay visible={bulkSetMutation.isPending} />
-      
+
       <Alert icon={<IconInfoCircle />} mb="md" color="blue">
-        <Text size="sm" fw={500}>Interactive Competency Management</Text>
+        <Text size="sm" fw={500}>
+          Interactive Competency Management
+        </Text>
         <Text size="xs" mt={4}>
-          Use sliders and dials to set competency levels. Level 3 is neutral (1.0x weight). 
-          Experts get higher influence, novices get reduced influence.
+          Use sliders and dials to set competency levels. Level 3 is neutral
+          (1.0x weight). Experts get higher influence, novices get reduced
+          influence.
         </Text>
       </Alert>
 
       <Stack gap="md">
-        {COMPETENCY_CATEGORIES.map(category => {
+        {COMPETENCY_CATEGORIES.map((category) => {
           const existing = competencies[category.value];
           const isSet = !!existing;
 
@@ -203,18 +238,27 @@ function CompetencyModal({ opened, onClose, reviewerId, reviewerName, existingCo
               <Grid align="center">
                 <Grid.Col span={{ base: 12, md: 3 }}>
                   <Group gap="xs" align="center">
-                    <ThemeIcon 
-                      color={isSet ? getCompetencyColor(existing.level) : 'gray'} 
-                      variant="light" 
+                    <ThemeIcon
+                      color={
+                        isSet ? getCompetencyColor(existing.level) : "gray"
+                      }
+                      variant="light"
                       size="sm"
                     >
                       {getCategoryIcon(category.value)}
                     </ThemeIcon>
                     <Stack gap={2}>
-                      <Text fw={500} size="sm">{category.label}</Text>
+                      <Text fw={500} size="sm">
+                        {category.label}
+                      </Text>
                       {isSet && (
-                        <Badge color={getCompetencyColor(existing.level)} size="xs" variant="light">
-                          {getCompetencyLabel(existing.level)} ({existing.weight}x)
+                        <Badge
+                          color={getCompetencyColor(existing.level)}
+                          size="xs"
+                          variant="light"
+                        >
+                          {getCompetencyLabel(existing.level)} (
+                          {existing.weight}x)
                         </Badge>
                       )}
                     </Stack>
@@ -227,19 +271,23 @@ function CompetencyModal({ opened, onClose, reviewerId, reviewerName, existingCo
                       <Grid>
                         <Grid.Col span={6}>
                           <Stack gap="xs">
-                            <Text size="sm" fw={500}>Competency Level</Text>
+                            <Text size="sm" fw={500}>
+                              Competency Level
+                            </Text>
                             <Slider
                               value={existing.level}
-                              onChange={(value) => updateCompetency(category.value, 'level', value)}
+                              onChange={(value) =>
+                                updateCompetency(category.value, "level", value)
+                              }
                               min={1}
                               max={5}
                               step={1}
                               marks={[
-                                { value: 1, label: 'Novice' },
-                                { value: 2, label: 'Dev' },
-                                { value: 3, label: 'Comp' },
-                                { value: 4, label: 'Adv' },
-                                { value: 5, label: 'Expert' }
+                                { value: 1, label: "Novice" },
+                                { value: 2, label: "Dev" },
+                                { value: 3, label: "Comp" },
+                                { value: 4, label: "Adv" },
+                                { value: 5, label: "Expert" },
                               ]}
                               size="lg"
                               color={getCompetencyColor(existing.level)}
@@ -247,7 +295,13 @@ function CompetencyModal({ opened, onClose, reviewerId, reviewerName, existingCo
                             <Group gap="xs" justify="center">
                               <Rating
                                 value={existing.level}
-                                onChange={(value) => updateCompetency(category.value, 'level', value ?? 3)}
+                                onChange={(value) =>
+                                  updateCompetency(
+                                    category.value,
+                                    "level",
+                                    value ?? 3,
+                                  )
+                                }
                                 count={5}
                                 size="sm"
                                 color={getCompetencyColor(existing.level)}
@@ -260,15 +314,22 @@ function CompetencyModal({ opened, onClose, reviewerId, reviewerName, existingCo
                         </Grid.Col>
                         <Grid.Col span={6}>
                           <Stack gap="xs" align="center">
-                            <Text size="sm" fw={500}>Weight Multiplier</Text>
+                            <Text size="sm" fw={500}>
+                              Weight Multiplier
+                            </Text>
                             <RingProgress
                               size={80}
                               thickness={8}
                               sections={[
                                 {
                                   value: (existing.weight / 2.0) * 100,
-                                  color: existing.weight > 1.0 ? 'green' : existing.weight < 1.0 ? 'orange' : 'blue'
-                                }
+                                  color:
+                                    existing.weight > 1.0
+                                      ? "green"
+                                      : existing.weight < 1.0
+                                        ? "orange"
+                                        : "blue",
+                                },
                               ]}
                               label={
                                 <Center>
@@ -280,17 +341,29 @@ function CompetencyModal({ opened, onClose, reviewerId, reviewerName, existingCo
                             />
                             <Slider
                               value={existing.weight}
-                              onChange={(value) => updateCompetency(category.value, 'weight', value)}
+                              onChange={(value) =>
+                                updateCompetency(
+                                  category.value,
+                                  "weight",
+                                  value,
+                                )
+                              }
                               min={0.5}
                               max={2.0}
                               step={0.1}
                               size="sm"
-                              color={existing.weight > 1.0 ? 'green' : existing.weight < 1.0 ? 'orange' : 'blue'}
+                              color={
+                                existing.weight > 1.0
+                                  ? "green"
+                                  : existing.weight < 1.0
+                                    ? "orange"
+                                    : "blue"
+                              }
                               marks={[
-                                { value: 0.5, label: '0.5x' },
-                                { value: 1.0, label: '1.0x' },
-                                { value: 1.5, label: '1.5x' },
-                                { value: 2.0, label: '2.0x' }
+                                { value: 0.5, label: "0.5x" },
+                                { value: 1.0, label: "1.0x" },
+                                { value: 1.5, label: "1.5x" },
+                                { value: 2.0, label: "2.0x" },
                               ]}
                             />
                           </Stack>
@@ -299,14 +372,22 @@ function CompetencyModal({ opened, onClose, reviewerId, reviewerName, existingCo
                       <Textarea
                         placeholder="Notes about this competency..."
                         value={existing.notes}
-                        onChange={(e) => updateCompetency(category.value, 'notes', e.target.value)}
+                        onChange={(e) =>
+                          updateCompetency(
+                            category.value,
+                            "notes",
+                            e.target.value,
+                          )
+                        }
                         size="sm"
                         rows={2}
                         autosize
                       />
                     </Stack>
                   ) : (
-                    <Text size="sm" c="dimmed">No competency set</Text>
+                    <Text size="sm" c="dimmed">
+                      No competency set
+                    </Text>
                   )}
                 </Grid.Col>
 
@@ -317,7 +398,9 @@ function CompetencyModal({ opened, onClose, reviewerId, reviewerName, existingCo
                         size="xs"
                         variant="light"
                         leftSection={<IconPlus size={14} />}
-                        onClick={() => updateCompetency(category.value, 'level', 3)}
+                        onClick={() =>
+                          updateCompetency(category.value, "level", 3)
+                        }
                       >
                         Add
                       </Button>
@@ -361,17 +444,21 @@ export default function ReviewerManagementPage() {
   } | null>(null);
   const [modalOpened, setModalOpened] = useState(false);
 
-  const { data: allReviewers, isLoading, refetch } = api.evaluation.getAllReviewersWithCompetencies.useQuery();
-  
+  const {
+    data: allReviewers,
+    isLoading,
+    refetch,
+  } = api.evaluation.getAllReviewersWithCompetencies.useQuery();
+
   // Filter to show only admin/staff users
-  const reviewers = allReviewers?.filter(reviewer => 
-    reviewer.role === 'admin' || reviewer.role === 'staff'
+  const reviewers = allReviewers?.filter(
+    (reviewer) => reviewer.role === "admin" || reviewer.role === "staff",
   );
 
   const handleEditCompetencies = (reviewer: Reviewer) => {
     setSelectedReviewer({
       id: reviewer.id,
-      name: reviewer.name ?? reviewer.email ?? 'Unknown',
+      name: reviewer.name ?? reviewer.email ?? "Unknown",
       competencies: reviewer.reviewerCompetencies ?? [],
     });
     setModalOpened(true);
@@ -401,17 +488,19 @@ export default function ReviewerManagementPage() {
             </Group>
           </Title>
           <Text c="dimmed">
-            Manage reviewer competency levels across different evaluation categories to ensure appropriate weighting in consensus decisions.
+            Manage reviewer competency levels across different evaluation
+            categories to ensure appropriate weighting in consensus decisions.
           </Text>
         </div>
       </Group>
 
       <Card withBorder>
         <LoadingOverlay visible={isLoading} />
-        
+
         {reviewers && reviewers.length === 0 ? (
           <Text ta="center" c="dimmed" py="xl">
-            No reviewers found. Reviewers appear here once they have assignments or completed evaluations.
+            No reviewers found. Reviewers appear here once they have assignments
+            or completed evaluations.
           </Text>
         ) : (
           <Table>
@@ -429,19 +518,28 @@ export default function ReviewerManagementPage() {
                 <Table.Tr key={reviewer.id}>
                   <Table.Td>
                     <div>
-                      <Text fw={500}>{reviewer.name ?? 'Unknown'}</Text>
-                      <Text size="xs" c="dimmed">{reviewer.email ?? 'No email'}</Text>
+                      <Text fw={500}>{reviewer.name ?? "Unknown"}</Text>
+                      <Text size="xs" c="dimmed">
+                        {reviewer.email ?? "No email"}
+                      </Text>
                     </div>
                   </Table.Td>
                   <Table.Td>
-                    <Badge variant="light" color={reviewer.role?.includes('admin') ? 'blue' : 'gray'}>
-                      {reviewer.role ?? 'reviewer'}
+                    <Badge
+                      variant="light"
+                      color={reviewer.role?.includes("admin") ? "blue" : "gray"}
+                    >
+                      {reviewer.role ?? "reviewer"}
                     </Badge>
                   </Table.Td>
                   <Table.Td>
                     <Group gap="sm">
-                      <Text size="sm">{reviewer._count.applicationEvaluations}</Text>
-                      <Text size="xs" c="dimmed">completed</Text>
+                      <Text size="sm">
+                        {reviewer._count.applicationEvaluations}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        completed
+                      </Text>
                     </Group>
                   </Table.Td>
                   <Table.Td>
@@ -466,7 +564,9 @@ export default function ReviewerManagementPage() {
                         ))}
                       </Stack>
                     ) : (
-                      <Text size="sm" c="dimmed">No competencies set</Text>
+                      <Text size="sm" c="dimmed">
+                        No competencies set
+                      </Text>
                     )}
                   </Table.Td>
                   <Table.Td>

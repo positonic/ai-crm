@@ -39,12 +39,21 @@ function formatTimeShort(date: Date): string {
   return `${hours}:${String(minutes).padStart(2, "0")}`;
 }
 
-export default function TimetableView({ sessions, venues, eventId }: TimetableViewProps) {
+export default function TimetableView({
+  sessions,
+  venues,
+  eventId,
+}: TimetableViewProps) {
   // Compute flat column list: venues with rooms expand to room-per-column
   const { columns, hasAnyRooms, venueSpans } = useMemo(() => {
     const cols: Column[] = [];
     let anyRooms = false;
-    const spans: Array<{ venueId: string; name: string; startCol: number; span: number }> = [];
+    const spans: Array<{
+      venueId: string;
+      name: string;
+      startCol: number;
+      span: number;
+    }> = [];
 
     for (const venue of venues) {
       const startCol = cols.length;
@@ -53,7 +62,12 @@ export default function TimetableView({ sessions, venues, eventId }: TimetableVi
         for (const room of venue.rooms) {
           cols.push({ venueId: venue.id, roomId: room.id, label: room.name });
         }
-        spans.push({ venueId: venue.id, name: venue.name, startCol, span: venue.rooms.length });
+        spans.push({
+          venueId: venue.id,
+          name: venue.name,
+          startCol,
+          span: venue.rooms.length,
+        });
       } else {
         cols.push({ venueId: venue.id, roomId: null, label: venue.name });
         spans.push({ venueId: venue.id, name: venue.name, startCol, span: 1 });
@@ -65,7 +79,12 @@ export default function TimetableView({ sessions, venues, eventId }: TimetableVi
     if (hasUnassigned) {
       const startCol = cols.length;
       cols.push({ venueId: "__unassigned__", roomId: null, label: "General" });
-      spans.push({ venueId: "__unassigned__", name: "General", startCol, span: 1 });
+      spans.push({
+        venueId: "__unassigned__",
+        name: "General",
+        startCol,
+        span: 1,
+      });
     }
 
     return { columns: cols, hasAnyRooms: anyRooms, venueSpans: spans };
@@ -96,8 +115,10 @@ export default function TimetableView({ sessions, venues, eventId }: TimetableVi
     const paddedEarliest = Math.min(earliest, dayStart.getTime());
     const paddedLatest = Math.max(latest, dayEnd.getTime());
 
-    const roundedEarliest = Math.floor(paddedEarliest / FIFTEEN_MIN_MS) * FIFTEEN_MIN_MS;
-    const roundedLatest = Math.ceil(paddedLatest / FIFTEEN_MIN_MS) * FIFTEEN_MIN_MS;
+    const roundedEarliest =
+      Math.floor(paddedEarliest / FIFTEEN_MIN_MS) * FIFTEEN_MIN_MS;
+    const roundedLatest =
+      Math.ceil(paddedLatest / FIFTEEN_MIN_MS) * FIFTEEN_MIN_MS;
 
     const slots: Array<{ time: Date; row: number }> = [];
     let current = roundedEarliest;
@@ -108,17 +129,19 @@ export default function TimetableView({ sessions, venues, eventId }: TimetableVi
       row++;
     }
 
-    const grid = sessions
-      .map((session) => {
-        const startMs = new Date(session.startTime).getTime();
-        const endMs = new Date(session.endTime).getTime();
-        const startRow = Math.floor((startMs - roundedEarliest) / FIFTEEN_MIN_MS) + headerRows + 1;
-        const endRow = Math.max(
-          startRow + 1,
-          Math.ceil((endMs - roundedEarliest) / FIFTEEN_MIN_MS) + headerRows + 1,
-        );
-        return { session, startRow, endRow };
-      });
+    const grid = sessions.map((session) => {
+      const startMs = new Date(session.startTime).getTime();
+      const endMs = new Date(session.endTime).getTime();
+      const startRow =
+        Math.floor((startMs - roundedEarliest) / FIFTEEN_MIN_MS) +
+        headerRows +
+        1;
+      const endRow = Math.max(
+        startRow + 1,
+        Math.ceil((endMs - roundedEarliest) / FIFTEEN_MIN_MS) + headerRows + 1,
+      );
+      return { session, startRow, endRow };
+    });
 
     return {
       timeSlots: slots,
@@ -158,7 +181,9 @@ export default function TimetableView({ sessions, venues, eventId }: TimetableVi
             style={{
               gridRow: 1,
               gridColumn: `${vs.startCol + 2} / span ${vs.span}`,
-              borderBottom: hasAnyRooms ? "1px solid var(--timetable-header-border)" : undefined,
+              borderBottom: hasAnyRooms
+                ? "1px solid var(--timetable-header-border)"
+                : undefined,
             }}
           >
             <Text fw={600} size="sm" ta="center">
@@ -225,16 +250,23 @@ export default function TimetableView({ sessions, venues, eventId }: TimetableVi
           // Find the matching column
           let colIndex: number;
           if (session.roomId) {
-            colIndex = columns.findIndex((col) => col.roomId === session.roomId);
+            colIndex = columns.findIndex(
+              (col) => col.roomId === session.roomId,
+            );
           } else if (session.venueId) {
             // No room assigned: place in the first column of the venue
-            colIndex = columns.findIndex((col) => col.venueId === session.venueId);
+            colIndex = columns.findIndex(
+              (col) => col.venueId === session.venueId,
+            );
           } else {
             // No venue assigned: place in the "General" column
-            colIndex = columns.findIndex((col) => col.venueId === "__unassigned__");
+            colIndex = columns.findIndex(
+              (col) => col.venueId === "__unassigned__",
+            );
           }
           if (colIndex === -1) return null;
-          const color = session.sessionType?.color ?? session.track?.color ?? "#94a3b8";
+          const color =
+            session.sessionType?.color ?? session.track?.color ?? "#94a3b8";
 
           return (
             <Link
@@ -250,10 +282,19 @@ export default function TimetableView({ sessions, venues, eventId }: TimetableVi
                 color: "inherit",
               }}
             >
-              <Text fw={600} size="xs" lineClamp={3} style={{ lineHeight: 1.3 }}>
+              <Text
+                fw={600}
+                size="xs"
+                lineClamp={3}
+                style={{ lineHeight: 1.3 }}
+              >
                 {session.title}
               </Text>
-              <Text size="xs" c="dimmed" style={{ fontSize: 10, lineHeight: 1.2 }}>
+              <Text
+                size="xs"
+                c="dimmed"
+                style={{ fontSize: 10, lineHeight: 1.2 }}
+              >
                 {formatTime(session.startTime)} - {formatTime(session.endTime)}
               </Text>
             </Link>

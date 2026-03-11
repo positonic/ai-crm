@@ -101,7 +101,8 @@ export default function OrganizationDetailsPage() {
   const { data: session, status } = useSession();
   const organizationId = params.id as string;
   const [activeTab, setActiveTab] = useState<string | null>("overview");
-  const [selectedMessage, setSelectedMessage] = useState<CommunicationMessage | null>(null);
+  const [selectedMessage, setSelectedMessage] =
+    useState<CommunicationMessage | null>(null);
   const [messageModalOpened, setMessageModalOpened] = useState(false);
 
   const handleOpenMessage = (message: CommunicationMessage) => {
@@ -109,25 +110,33 @@ export default function OrganizationDetailsPage() {
     setMessageModalOpened(true);
   };
 
-  const { data: organization, isLoading, error } = api.sponsor.getSponsor.useQuery(
+  const {
+    data: organization,
+    isLoading,
+    error,
+  } = api.sponsor.getSponsor.useQuery(
     { id: organizationId },
-    { enabled: !!organizationId }
+    { enabled: !!organizationId },
   );
 
-  const { data: communications } = api.sponsor.getSponsorCommunications.useQuery(
-    { sponsorId: organizationId, limit: 20 },
-    { enabled: !!organizationId }
-  );
+  const { data: communications } =
+    api.sponsor.getSponsorCommunications.useQuery(
+      { sponsorId: organizationId, limit: 20 },
+      { enabled: !!organizationId },
+    );
 
   // Fetch all organizations for prev/next navigation
   const { data: allOrganizations } = api.sponsor.getSponsors.useQuery();
 
   // Calculate prev/next organization IDs
-  const currentIndex = allOrganizations?.findIndex(org => org.id === organizationId) ?? -1;
-  const prevOrganization = currentIndex > 0 ? allOrganizations?.[currentIndex - 1] : null;
-  const nextOrganization = currentIndex >= 0 && currentIndex < (allOrganizations?.length ?? 0) - 1
-    ? allOrganizations?.[currentIndex + 1]
-    : null;
+  const currentIndex =
+    allOrganizations?.findIndex((org) => org.id === organizationId) ?? -1;
+  const prevOrganization =
+    currentIndex > 0 ? allOrganizations?.[currentIndex - 1] : null;
+  const nextOrganization =
+    currentIndex >= 0 && currentIndex < (allOrganizations?.length ?? 0) - 1
+      ? allOrganizations?.[currentIndex + 1]
+      : null;
   const totalOrganizations = allOrganizations?.length ?? 0;
 
   // Handle authentication on client side
@@ -170,7 +179,10 @@ export default function OrganizationDetailsPage() {
 
   if (error ?? !organization) {
     return (
-      <Box p="xl" style={{ background: "var(--theme-crm-bg)", minHeight: "100vh" }}>
+      <Box
+        p="xl"
+        style={{ background: "var(--theme-crm-bg)", minHeight: "100vh" }}
+      >
         <Stack gap="lg">
           <Button
             component={Link}
@@ -181,10 +193,15 @@ export default function OrganizationDetailsPage() {
             Back to Organizations
           </Button>
 
-          <Alert icon={<IconAlertCircle size={16} />} color="red" variant="light">
+          <Alert
+            icon={<IconAlertCircle size={16} />}
+            color="red"
+            variant="light"
+          >
             <Text fw={500}>Organization Not Found</Text>
             <Text size="sm">
-              The organization you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to view it.
+              The organization you&apos;re looking for doesn&apos;t exist or you
+              don&apos;t have permission to view it.
             </Text>
           </Alert>
         </Stack>
@@ -192,8 +209,10 @@ export default function OrganizationDetailsPage() {
     );
   }
 
-  const emailCount = communications?.filter(c => c.channel === "EMAIL").length ?? 0;
-  const telegramCount = communications?.filter(c => c.channel === "TELEGRAM").length ?? 0;
+  const emailCount =
+    communications?.filter((c) => c.channel === "EMAIL").length ?? 0;
+  const telegramCount =
+    communications?.filter((c) => c.channel === "TELEGRAM").length ?? 0;
   const callCount = 0; // Placeholder - could be from calls table
 
   // Build activity items from communications and events
@@ -208,21 +227,23 @@ export default function OrganizationDetailsPage() {
   }> = [];
 
   // Add communications as activity
-  communications?.forEach(comm => {
+  communications?.forEach((comm) => {
     const isTelegram = comm.channel === "TELEGRAM";
     activityItems.push({
       id: comm.id,
       type: isTelegram ? "telegram" : "email",
       description: isTelegram ? "sent a message" : "sent an email",
-      actor: comm.contact ? `${comm.contact.firstName} ${comm.contact.lastName}` : "System",
+      actor: comm.contact
+        ? `${comm.contact.firstName} ${comm.contact.lastName}`
+        : "System",
       timestamp: comm.sentAt ?? comm.createdAt,
-      subject: comm.subject ?? (comm.textContent?.slice(0, 60) ?? ""),
+      subject: comm.subject ?? comm.textContent?.slice(0, 60) ?? "",
       channel: comm.channel,
     });
   });
 
   // Add events as activity
-  organization.events.forEach(evt => {
+  organization.events.forEach((evt) => {
     activityItems.push({
       id: evt.id,
       type: "meeting",
@@ -233,7 +254,9 @@ export default function OrganizationDetailsPage() {
   });
 
   // Sort by timestamp descending
-  activityItems.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  activityItems.sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
 
   // Group activities by time period
   const groupActivitiesByPeriod = (items: typeof activityItems) => {
@@ -244,7 +267,7 @@ export default function OrganizationDetailsPage() {
 
     const groups: Record<string, typeof activityItems> = {};
 
-    items.forEach(item => {
+    items.forEach((item) => {
       const itemDate = new Date(item.timestamp);
       let period: string;
 
@@ -255,7 +278,10 @@ export default function OrganizationDetailsPage() {
       } else if (itemDate.getFullYear() === now.getFullYear()) {
         period = itemDate.toLocaleDateString("en-US", { month: "long" });
       } else {
-        period = itemDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+        period = itemDate.toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
+        });
       }
 
       const periodItems = groups[period] ?? [];
@@ -307,7 +333,13 @@ export default function OrganizationDetailsPage() {
             >
               <IconChevronLeft size={16} />
             </ActionIcon>
-            <Tooltip label={prevOrganization ? `Previous: ${prevOrganization.name}` : "No previous organization"}>
+            <Tooltip
+              label={
+                prevOrganization
+                  ? `Previous: ${prevOrganization.name}`
+                  : "No previous organization"
+              }
+            >
               {prevOrganization ? (
                 <ActionIcon
                   variant="subtle"
@@ -318,16 +350,18 @@ export default function OrganizationDetailsPage() {
                   <IconChevronLeft size={14} />
                 </ActionIcon>
               ) : (
-                <ActionIcon
-                  variant="subtle"
-                  size="sm"
-                  disabled
-                >
+                <ActionIcon variant="subtle" size="sm" disabled>
                   <IconChevronLeft size={14} />
                 </ActionIcon>
               )}
             </Tooltip>
-            <Tooltip label={nextOrganization ? `Next: ${nextOrganization.name}` : "No next organization"}>
+            <Tooltip
+              label={
+                nextOrganization
+                  ? `Next: ${nextOrganization.name}`
+                  : "No next organization"
+              }
+            >
               {nextOrganization ? (
                 <ActionIcon
                   variant="subtle"
@@ -338,17 +372,16 @@ export default function OrganizationDetailsPage() {
                   <IconChevronRight size={14} />
                 </ActionIcon>
               ) : (
-                <ActionIcon
-                  variant="subtle"
-                  size="sm"
-                  disabled
-                >
+                <ActionIcon variant="subtle" size="sm" disabled>
                   <IconChevronRight size={14} />
                 </ActionIcon>
               )}
             </Tooltip>
             <Text size="sm" c="dimmed">
-              {currentIndex >= 0 ? `${currentIndex + 1} of ${totalOrganizations} in` : "Organization in"} All Companies
+              {currentIndex >= 0
+                ? `${currentIndex + 1} of ${totalOrganizations} in`
+                : "Organization in"}{" "}
+              All Companies
             </Text>
           </Group>
           <Group gap="xs">
@@ -436,9 +469,7 @@ export default function OrganizationDetailsPage() {
             <Tabs.List px="md">
               <Tabs.Tab value="overview">Overview</Tabs.Tab>
               <Tabs.Tab value="activity">
-                <Group gap={6}>
-                  Activity
-                </Group>
+                <Group gap={6}>Activity</Group>
               </Tabs.Tab>
               <Tabs.Tab value="emails">
                 <Group gap={6}>
@@ -546,7 +577,8 @@ export default function OrganizationDetailsPage() {
                         </Group>
                         {organization.contacts[0] && (
                           <Text size="xs" c="dimmed">
-                            {organization.contacts[0].firstName} {organization.contacts[0].lastName}
+                            {organization.contacts[0].firstName}{" "}
+                            {organization.contacts[0].lastName}
                           </Text>
                         )}
                       </Stack>
@@ -580,11 +612,17 @@ export default function OrganizationDetailsPage() {
                                 {getDaysUntil(new Date())}
                               </Text>
                               <Avatar.Group spacing="xs">
-                                {organization.contacts.slice(0, 2).map(contact => (
-                                  <Avatar key={contact.id} size="xs" color="blue">
-                                    {contact.firstName[0]}
-                                  </Avatar>
-                                ))}
+                                {organization.contacts
+                                  .slice(0, 2)
+                                  .map((contact) => (
+                                    <Avatar
+                                      key={contact.id}
+                                      size="xs"
+                                      color="blue"
+                                    >
+                                      {contact.firstName[0]}
+                                    </Avatar>
+                                  ))}
                                 {organization.contacts.length > 2 && (
                                   <Avatar size="xs">
                                     +{organization.contacts.length - 2}
@@ -620,7 +658,7 @@ export default function OrganizationDetailsPage() {
                           </ActionIcon>
                         </Group>
                         <Avatar.Group spacing="sm">
-                          {organization.contacts.slice(0, 3).map(contact => (
+                          {organization.contacts.slice(0, 3).map((contact) => (
                             <Tooltip
                               key={contact.id}
                               label={`${contact.firstName} ${contact.lastName}`}
@@ -728,7 +766,7 @@ export default function OrganizationDetailsPage() {
                   </Group>
 
                   <Stack gap="xs">
-                    {activityItems.slice(0, 5).map(item => (
+                    {activityItems.slice(0, 5).map((item) => (
                       <Paper
                         key={item.id}
                         p="sm"
@@ -749,8 +787,8 @@ export default function OrganizationDetailsPage() {
                                   item.type === "email"
                                     ? "var(--mantine-color-blue-6)"
                                     : item.type === "meeting"
-                                    ? "var(--mantine-color-green-6)"
-                                    : "var(--mantine-color-gray-6)",
+                                      ? "var(--mantine-color-green-6)"
+                                      : "var(--mantine-color-gray-6)",
                                 marginTop: 6,
                               }}
                             />
@@ -763,12 +801,10 @@ export default function OrganizationDetailsPage() {
                                   {item.type === "email"
                                     ? "sent"
                                     : item.type === "meeting"
-                                    ? "scheduled"
-                                    : ""}
+                                      ? "scheduled"
+                                      : ""}
                                 </Text>
-                                <Text size="sm">
-                                  {item.description}
-                                </Text>
+                                <Text size="sm">{item.description}</Text>
                               </Group>
                             </Stack>
                           </Group>
@@ -814,9 +850,9 @@ export default function OrganizationDetailsPage() {
 
                   <Stack gap="xs">
                     {communications
-                      ?.filter(c => c.channel === "EMAIL")
+                      ?.filter((c) => c.channel === "EMAIL")
                       .slice(0, 5)
-                      .map(email => (
+                      .map((email) => (
                         <Paper
                           key={email.id}
                           p="sm"
@@ -869,7 +905,7 @@ export default function OrganizationDetailsPage() {
 
             {activeTab === "team" && (
               <Stack gap="md">
-                {organization.contacts.map(contact => (
+                {organization.contacts.map((contact) => (
                   <Paper
                     key={contact.id}
                     p="md"
@@ -912,7 +948,9 @@ export default function OrganizationDetailsPage() {
                   >
                     <Stack align="center" gap="md">
                       <IconUsers size={48} style={{ opacity: 0.5 }} />
-                      <Text c="dimmed">No contacts associated with this organization</Text>
+                      <Text c="dimmed">
+                        No contacts associated with this organization
+                      </Text>
                     </Stack>
                   </Paper>
                 )}
@@ -962,26 +1000,44 @@ export default function OrganizationDetailsPage() {
 
                     {/* Activity Items */}
                     <Stack gap="md" pl="xs">
-                      {items.map(item => (
+                      {items.map((item) => (
                         <Box key={item.id}>
                           {/* Activity Row */}
                           <Group gap="md" align="flex-start" wrap="nowrap">
-                            <Avatar size={28} radius="xl" color={
-                              item.type === "email" ? "blue" :
-                              item.type === "telegram" ? "cyan" :
-                              item.type === "meeting" ? "teal" :
-                              "gray"
-                            }>
+                            <Avatar
+                              size={28}
+                              radius="xl"
+                              color={
+                                item.type === "email"
+                                  ? "blue"
+                                  : item.type === "telegram"
+                                    ? "cyan"
+                                    : item.type === "meeting"
+                                      ? "teal"
+                                      : "gray"
+                              }
+                            >
                               {item.actor[0]?.toUpperCase() ?? "?"}
                             </Avatar>
                             <Box style={{ flex: 1, minWidth: 0 }}>
-                              <Group justify="space-between" align="flex-start" wrap="nowrap">
+                              <Group
+                                justify="space-between"
+                                align="flex-start"
+                                wrap="nowrap"
+                              >
                                 <Text size="sm" lineClamp={1}>
-                                  <Text span fw={600}>{item.actor}</Text>
-                                  {" "}
-                                  <Text span c="dimmed">{item.description}</Text>
+                                  <Text span fw={600}>
+                                    {item.actor}
+                                  </Text>{" "}
+                                  <Text span c="dimmed">
+                                    {item.description}
+                                  </Text>
                                 </Text>
-                                <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
+                                <Text
+                                  size="xs"
+                                  c="dimmed"
+                                  style={{ flexShrink: 0 }}
+                                >
                                   {getRelativeTime(item.timestamp)}
                                 </Text>
                               </Group>
@@ -993,9 +1049,11 @@ export default function OrganizationDetailsPage() {
                                   p="sm"
                                   style={{
                                     borderLeft: `3px solid ${
-                                      item.type === "email" ? "var(--mantine-color-blue-6)" :
-                                      item.type === "telegram" ? "var(--mantine-color-cyan-6)" :
-                                      "var(--mantine-color-orange-6)"
+                                      item.type === "email"
+                                        ? "var(--mantine-color-blue-6)"
+                                        : item.type === "telegram"
+                                          ? "var(--mantine-color-cyan-6)"
+                                          : "var(--mantine-color-orange-6)"
                                     }`,
                                     background: "var(--theme-crm-card)",
                                     borderRadius: "0 6px 6px 0",
@@ -1005,7 +1063,9 @@ export default function OrganizationDetailsPage() {
                                     {item.subject}
                                   </Text>
                                   <Text size="xs" c="dimmed" mt={4}>
-                                    {new Date(item.timestamp).toLocaleDateString("en-US", {
+                                    {new Date(
+                                      item.timestamp,
+                                    ).toLocaleDateString("en-US", {
                                       month: "short",
                                       day: "numeric",
                                       hour: "numeric",
@@ -1043,8 +1103,8 @@ export default function OrganizationDetailsPage() {
             {activeTab === "emails" && (
               <Stack gap={0}>
                 {communications
-                  ?.filter(c => c.channel === "EMAIL")
-                  .map(email => (
+                  ?.filter((c) => c.channel === "EMAIL")
+                  .map((email) => (
                     <Box
                       key={email.id}
                       p="md"
@@ -1060,26 +1120,46 @@ export default function OrganizationDetailsPage() {
                           {email.contact?.firstName?.[0]?.toUpperCase() ?? "?"}
                         </Avatar>
                         <Box style={{ flex: 1, minWidth: 0 }}>
-                          <Group justify="space-between" align="flex-start" wrap="nowrap" mb={4}>
-                            <Text size="sm" fw={600} lineClamp={1} style={{ flex: 1 }}>
+                          <Group
+                            justify="space-between"
+                            align="flex-start"
+                            wrap="nowrap"
+                            mb={4}
+                          >
+                            <Text
+                              size="sm"
+                              fw={600}
+                              lineClamp={1}
+                              style={{ flex: 1 }}
+                            >
                               {email.subject ?? "No subject"}
                             </Text>
-                            <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
+                            <Text
+                              size="xs"
+                              c="dimmed"
+                              style={{ flexShrink: 0 }}
+                            >
                               {email.sentAt
-                                ? new Date(email.sentAt).toLocaleDateString("en-US", {
-                                    day: "numeric",
-                                    month: "short",
-                                  })
-                                : new Date(email.createdAt).toLocaleDateString("en-US", {
-                                    day: "numeric",
-                                    month: "short",
-                                  })}
+                                ? new Date(email.sentAt).toLocaleDateString(
+                                    "en-US",
+                                    {
+                                      day: "numeric",
+                                      month: "short",
+                                    },
+                                  )
+                                : new Date(email.createdAt).toLocaleDateString(
+                                    "en-US",
+                                    {
+                                      day: "numeric",
+                                      month: "short",
+                                    },
+                                  )}
                             </Text>
                           </Group>
                           <Text size="sm" c="dimmed" lineClamp={1}>
                             {email.contact
                               ? `${email.contact.firstName} ${email.contact.lastName}`
-                              : email.fromEmail ?? "Unknown"}
+                              : (email.fromEmail ?? "Unknown")}
                           </Text>
                           <Text size="sm" c="dimmed" lineClamp={2} mt={4}>
                             {email.textContent}
@@ -1109,8 +1189,8 @@ export default function OrganizationDetailsPage() {
             {activeTab === "telegram" && (
               <Stack gap={0}>
                 {communications
-                  ?.filter(c => c.channel === "TELEGRAM")
-                  .map(message => (
+                  ?.filter((c) => c.channel === "TELEGRAM")
+                  .map((message) => (
                     <Box
                       key={message.id}
                       p="md"
@@ -1123,24 +1203,44 @@ export default function OrganizationDetailsPage() {
                     >
                       <Group gap="md" align="flex-start" wrap="nowrap">
                         <Avatar size={40} color="gray" radius="xl">
-                          {message.contact?.firstName?.[0]?.toUpperCase() ?? "?"}
+                          {message.contact?.firstName?.[0]?.toUpperCase() ??
+                            "?"}
                         </Avatar>
                         <Box style={{ flex: 1, minWidth: 0 }}>
-                          <Group justify="space-between" align="flex-start" wrap="nowrap" mb={4}>
-                            <Text size="sm" fw={600} lineClamp={1} style={{ flex: 1 }}>
+                          <Group
+                            justify="space-between"
+                            align="flex-start"
+                            wrap="nowrap"
+                            mb={4}
+                          >
+                            <Text
+                              size="sm"
+                              fw={600}
+                              lineClamp={1}
+                              style={{ flex: 1 }}
+                            >
                               {message.contact
                                 ? `${message.contact.firstName} ${message.contact.lastName}`
                                 : message.fromTelegram
-                                ? `@${message.fromTelegram}`
-                                : "Unknown"}
+                                  ? `@${message.fromTelegram}`
+                                  : "Unknown"}
                             </Text>
-                            <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
+                            <Text
+                              size="xs"
+                              c="dimmed"
+                              style={{ flexShrink: 0 }}
+                            >
                               {message.sentAt
-                                ? new Date(message.sentAt).toLocaleDateString("en-US", {
-                                    day: "numeric",
-                                    month: "short",
-                                  })
-                                : new Date(message.createdAt).toLocaleDateString("en-US", {
+                                ? new Date(message.sentAt).toLocaleDateString(
+                                    "en-US",
+                                    {
+                                      day: "numeric",
+                                      month: "short",
+                                    },
+                                  )
+                                : new Date(
+                                    message.createdAt,
+                                  ).toLocaleDateString("en-US", {
                                     day: "numeric",
                                     month: "short",
                                   })}
@@ -1301,9 +1401,7 @@ export default function OrganizationDetailsPage() {
                           </Group>
                         </Box>
                         <Box style={{ flex: 1 }}>
-                          <Text size="sm">
-                            {organization.name}
-                          </Text>
+                          <Text size="sm">{organization.name}</Text>
                         </Box>
                       </Group>
 
@@ -1336,16 +1434,18 @@ export default function OrganizationDetailsPage() {
                         </Box>
                         <Box style={{ flex: 1 }}>
                           <Group gap="xs">
-                            {organization.contacts.slice(0, 2).map(contact => (
-                              <Tooltip
-                                key={contact.id}
-                                label={`${contact.firstName} ${contact.lastName}`}
-                              >
-                                <Avatar size="sm" color="blue">
-                                  {contact.firstName[0]}
-                                </Avatar>
-                              </Tooltip>
-                            ))}
+                            {organization.contacts
+                              .slice(0, 2)
+                              .map((contact) => (
+                                <Tooltip
+                                  key={contact.id}
+                                  label={`${contact.firstName} ${contact.lastName}`}
+                                >
+                                  <Avatar size="sm" color="blue">
+                                    {contact.firstName[0]}
+                                  </Avatar>
+                                </Tooltip>
+                              ))}
                             {organization.contacts.length > 2 && (
                               <Text size="xs" c="dimmed">
                                 +{organization.contacts.length - 2}

@@ -68,7 +68,10 @@ interface UpdateCardProps {
     }>;
   };
   userId: string | undefined;
-  userMetrics?: Record<string, { kudos: number; updates: number; projects: number; praiseReceived: number }>;
+  userMetrics?: Record<
+    string,
+    { kudos: number; updates: number; projects: number; praiseReceived: number }
+  >;
   commentInput: string;
   showCommentInput: boolean;
   onNavigate: () => void;
@@ -96,13 +99,18 @@ function UpdateCardComponent({
 }: UpdateCardProps) {
   const getRelativeTime = (date: Date) => {
     const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - new Date(date).getTime()) / 1000);
+    const diffInSeconds = Math.floor(
+      (now.getTime() - new Date(date).getTime()) / 1000,
+    );
 
-    if (diffInSeconds < 60) return 'just now';
+    if (diffInSeconds < 60) return "just now";
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w ago`;
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800)
+      return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    if (diffInSeconds < 2592000)
+      return `${Math.floor(diffInSeconds / 604800)}w ago`;
     return new Date(date).toLocaleDateString();
   };
 
@@ -142,8 +150,8 @@ function UpdateCardComponent({
             />
             <div style={{ flex: 1, minWidth: 0 }}>
               <Group gap="xs">
-                <Text fw={500} size="sm" style={{ whiteSpace: 'nowrap' }}>
-                  {update.author.name ?? 'Anonymous'}
+                <Text fw={500} size="sm" style={{ whiteSpace: "nowrap" }}>
+                  {update.author.name ?? "Anonymous"}
                 </Text>
                 <Text c="dimmed" size="sm">
                   •
@@ -154,10 +162,10 @@ function UpdateCardComponent({
                   c="blue"
                   size="sm"
                   style={{
-                    textDecoration: 'none',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
+                    textDecoration: "none",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -170,7 +178,9 @@ function UpdateCardComponent({
                     kudos={userMetrics[update.author.id]!.kudos}
                     updates={userMetrics[update.author.id]!.updates}
                     projects={userMetrics[update.author.id]!.projects}
-                    praiseReceived={userMetrics[update.author.id]!.praiseReceived}
+                    praiseReceived={
+                      userMetrics[update.author.id]!.praiseReceived
+                    }
                     size="xs"
                   />
                 </Box>
@@ -258,7 +268,10 @@ function UpdateCardComponent({
             {/* Comment Count */}
             {update.comments.length > 0 && (
               <Group gap={4}>
-                <IconMessageCircle size={16} style={{ color: "var(--mantine-color-gray-6)" }} />
+                <IconMessageCircle
+                  size={16}
+                  style={{ color: "var(--mantine-color-gray-6)" }}
+                />
                 <Text size="sm" c="dimmed" fw={500}>
                   {update.comments.length}
                 </Text>
@@ -269,7 +282,11 @@ function UpdateCardComponent({
               <LikeButton
                 updateId={update.id}
                 initialLikeCount={update.likes.length}
-                initialHasLiked={userId ? update.likes.some(like => like.userId === userId) : false}
+                initialHasLiked={
+                  userId
+                    ? update.likes.some((like) => like.userId === userId)
+                    : false
+                }
                 userId={userId}
               />
             </div>
@@ -374,4 +391,4 @@ export const UpdateCard = memo(UpdateCardComponent, (prevProps, nextProps) => {
   );
 });
 
-UpdateCard.displayName = 'UpdateCard';
+UpdateCard.displayName = "UpdateCard";

@@ -105,8 +105,8 @@ export default function ResultsClient() {
           <IconTarget size={48} color="var(--mantine-color-dimmed)" />
           <Title order={3}>Results Not Available</Title>
           <Text c="dimmed" ta="center">
-            Analysis results will appear here after the deliberation is
-            analyzed and published.
+            Analysis results will appear here after the deliberation is analyzed
+            and published.
           </Text>
           <Button
             component={Link}
@@ -341,11 +341,7 @@ export default function ResultsClient() {
                     <Text size="sm" fw={500}>
                       Summary:
                     </Text>
-                    <Anchor
-                      href={results.summaryUri}
-                      target="_blank"
-                      size="sm"
-                    >
+                    <Anchor href={results.summaryUri} target="_blank" size="sm">
                       <Group gap={4}>
                         {results.summaryUri}
                         <IconExternalLink size={12} />

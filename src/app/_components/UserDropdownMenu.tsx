@@ -8,7 +8,7 @@ import {
   Stack,
   Badge,
   Divider,
-  rem
+  rem,
 } from "@mantine/core";
 import {
   IconUser,
@@ -49,10 +49,10 @@ export function UserDropdownMenu({ session }: UserDropdownMenuProps) {
   const eventId = params?.eventId;
 
   // Fetch user profile to get custom avatar
-  const { data: profile } = api.profile.getMyProfile.useQuery(
-    undefined,
-    { refetchOnWindowFocus: false, retry: false },
-  );
+  const { data: profile } = api.profile.getMyProfile.useQuery(undefined, {
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
 
   // Fetch event-specific roles when viewing an event
   const { data: eventRoles } = api.role.getMyRolesForEvent.useQuery(
@@ -112,7 +112,12 @@ export function UserDropdownMenu({ session }: UserDropdownMenuProps) {
             {roleBadges.length > 0 && (
               <Group gap={4}>
                 {roleBadges.map((role) => (
-                  <Badge key={role} size="xs" color={getRoleColor(role)} variant="light">
+                  <Badge
+                    key={role}
+                    size="xs"
+                    color={getRoleColor(role)}
+                    variant="light"
+                  >
                     {role.toUpperCase()}
                   </Badge>
                 ))}
@@ -124,16 +129,16 @@ export function UserDropdownMenu({ session }: UserDropdownMenuProps) {
 
       <Menu.Dropdown>
         <Menu.Label>Profile</Menu.Label>
-        
-        <Menu.Item 
+
+        <Menu.Item
           leftSection={<IconUser style={{ width: rem(14), height: rem(14) }} />}
           component={Link}
           href={`/profiles/${session.user.id}`}
         >
           View Profile
         </Menu.Item>
-        
-        <Menu.Item 
+
+        <Menu.Item
           leftSection={<IconEdit style={{ width: rem(14), height: rem(14) }} />}
           component={Link}
           href="/profile/edit"
@@ -144,7 +149,7 @@ export function UserDropdownMenu({ session }: UserDropdownMenuProps) {
         {/* <Divider />
 
         <Menu.Label>Community</Menu.Label> */}
-        
+
         {/* <Menu.Item 
           leftSection={<IconUsers style={{ width: rem(14), height: rem(14) }} />}
           component={Link}
@@ -158,9 +163,11 @@ export function UserDropdownMenu({ session }: UserDropdownMenuProps) {
           <>
             <Divider />
             <Menu.Label>Administration</Menu.Label>
-            
-            <Menu.Item 
-              leftSection={<IconSettings style={{ width: rem(14), height: rem(14) }} />}
+
+            <Menu.Item
+              leftSection={
+                <IconSettings style={{ width: rem(14), height: rem(14) }} />
+              }
               component={Link}
               href="/admin"
             >
@@ -171,9 +178,11 @@ export function UserDropdownMenu({ session }: UserDropdownMenuProps) {
 
         <Divider />
 
-        <Menu.Item 
+        <Menu.Item
           color="red"
-          leftSection={<IconLogout style={{ width: rem(14), height: rem(14) }} />}
+          leftSection={
+            <IconLogout style={{ width: rem(14), height: rem(14) }} />
+          }
           onClick={handleSignOut}
         >
           Sign out

@@ -83,7 +83,9 @@ export function SessionTableView({
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const [trackFilter, setTrackFilter] = useState<string | null>(null);
   const [floorFilter, setFloorFilter] = useState<string | null>(null);
-  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<FloorSession>>({
+  const [sortStatus, setSortStatus] = useState<
+    DataTableSortStatus<FloorSession>
+  >({
     columnAccessor: "startTime",
     direction: "asc",
   });
@@ -131,8 +133,7 @@ export function SessionTableView({
             new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
           break;
         case "endTime":
-          cmp =
-            new Date(a.endTime).getTime() - new Date(b.endTime).getTime();
+          cmp = new Date(a.endTime).getTime() - new Date(b.endTime).getTime();
           break;
         case "duration":
           cmp =
@@ -166,7 +167,15 @@ export function SessionTableView({
     });
 
     return result;
-  }, [sessions, search, roomFilter, typeFilter, trackFilter, floorFilter, sortStatus]);
+  }, [
+    sessions,
+    search,
+    roomFilter,
+    typeFilter,
+    trackFilter,
+    floorFilter,
+    sortStatus,
+  ]);
 
   const roomOptions = useMemo(
     () => rooms.map((r) => ({ value: r.id, label: r.name })),
@@ -261,7 +270,9 @@ export function SessionTableView({
         sortStatus={sortStatus}
         onSortStatusChange={setSortStatus}
         highlightOnHover
-        onRowClick={onViewDetail ? ({ record }) => onViewDetail(record) : undefined}
+        onRowClick={
+          onViewDetail ? ({ record }) => onViewDetail(record) : undefined
+        }
         style={onViewDetail ? { cursor: "pointer" } : undefined}
         columns={[
           {
@@ -313,18 +324,30 @@ export function SessionTableView({
                 ),
                 ...session.speakers,
               ];
-              if (names.length === 0) return <Text size="xs" c="dimmed">-</Text>;
+              if (names.length === 0)
+                return (
+                  <Text size="xs" c="dimmed">
+                    -
+                  </Text>
+                );
               return (
                 <Group gap={4} wrap="nowrap">
                   {session.sessionSpeakers.slice(0, 3).map((s) => (
-                    <Tooltip key={s.user.id} label={getDisplayName(s.user, "Unknown")}>
+                    <Tooltip
+                      key={s.user.id}
+                      label={getDisplayName(s.user, "Unknown")}
+                    >
                       <Avatar
                         src={s.user.image}
                         size={22}
                         radius="xl"
                         alt={getDisplayName(s.user, "Unknown")}
                       >
-                        {(s.user.firstName?.[0] ?? s.user.name?.[0] ?? "?").toUpperCase()}
+                        {(
+                          s.user.firstName?.[0] ??
+                          s.user.name?.[0] ??
+                          "?"
+                        ).toUpperCase()}
                       </Avatar>
                     </Tooltip>
                   ))}
@@ -459,7 +482,9 @@ export function SessionTableView({
             render: (session) => {
               const count = session._count?.comments ?? 0;
               return (
-                <Tooltip label={`${String(count)} comment${count !== 1 ? "s" : ""}`}>
+                <Tooltip
+                  label={`${String(count)} comment${count !== 1 ? "s" : ""}`}
+                >
                   <ActionIcon
                     variant="subtle"
                     color={count > 0 ? "blue" : "gray"}

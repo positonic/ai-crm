@@ -1,21 +1,21 @@
 "use client";
-import { 
-  Container, 
-  Title, 
-  SimpleGrid, 
-  Card, 
-  Text, 
-  Group, 
-  Stack, 
+import {
+  Container,
+  Title,
+  SimpleGrid,
+  Card,
+  Text,
+  Group,
+  Stack,
   Button,
   Paper,
   ThemeIcon,
   Badge,
   Loader,
   Box,
-  Anchor
+  Anchor,
 } from "@mantine/core";
-import { 
+import {
   IconBuildingBank,
   IconCalendarEvent,
   IconUsersGroup,
@@ -24,7 +24,7 @@ import {
   IconMail,
   IconHeartHandshake,
   IconMapPin,
-  IconCalendar
+  IconCalendar,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { api } from "~/trpc/react";
@@ -74,26 +74,34 @@ function getMantineGradient(eventType: string) {
 function EventCard({ event }: { event: SponsoredEvent }) {
   const gradient = getMantineGradient(event.type);
   const isUpcoming = new Date(event.startDate) > new Date();
-  const isOngoing = new Date() >= new Date(event.startDate) && new Date() <= new Date(event.endDate);
-  
+  const isOngoing =
+    new Date() >= new Date(event.startDate) &&
+    new Date() <= new Date(event.endDate);
+
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     }).format(date);
   };
-  
+
   return (
-    <Card shadow="lg" padding="xl" radius="md" withBorder style={{ height: "100%" }}>
+    <Card
+      shadow="lg"
+      padding="xl"
+      radius="md"
+      withBorder
+      style={{ height: "100%" }}
+    >
       <Card.Section>
         <Box
           h={100}
           style={{
             background: `linear-gradient(135deg, var(--mantine-color-${gradient.from}-6) 0%, var(--mantine-color-${gradient.to}-6) 100%)`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           <ThemeIcon size={50} radius="xl" variant="light" color="white">
@@ -102,21 +110,21 @@ function EventCard({ event }: { event: SponsoredEvent }) {
         </Box>
       </Card.Section>
 
-      <Stack gap="md" mt="md" style={{ height: 'calc(100% - 100px)' }}>
+      <Stack gap="md" mt="md" style={{ height: "calc(100% - 100px)" }}>
         <Stack gap="xs" style={{ flex: 1 }}>
           <Group justify="space-between" align="flex-start">
             <Title order={4} size="h3">
               {event.name}
             </Title>
-            <Badge 
-              color={isOngoing ? "green" : isUpcoming ? "blue" : "gray"} 
-              variant="light" 
+            <Badge
+              color={isOngoing ? "green" : isUpcoming ? "blue" : "gray"}
+              variant="light"
               size="sm"
             >
               {isOngoing ? "Live" : isUpcoming ? "Upcoming" : "Past"}
             </Badge>
           </Group>
-          
+
           <Text size="sm" c="dimmed" style={{ lineHeight: 1.5 }}>
             {event.description ?? "No description available"}
           </Text>
@@ -154,8 +162,11 @@ function EventCard({ event }: { event: SponsoredEvent }) {
         </Stack>
 
         <Stack gap="xs">
-          <Link href={`/admin/events/${event.id}/applications`} style={{ textDecoration: 'none' }}>
-            <Button 
+          <Link
+            href={`/admin/events/${event.id}/applications`}
+            style={{ textDecoration: "none" }}
+          >
+            <Button
               fullWidth
               variant="outline"
               rightSection={<IconArrowRight size={16} />}
@@ -164,19 +175,23 @@ function EventCard({ event }: { event: SponsoredEvent }) {
               Manage Applications
             </Button>
           </Link>
-          
-          {normalizeEventType(event.type) === 'RESIDENCY' && event.sponsorInfo && (
-            <Link href={`/sponsors/${event.sponsorInfo.sponsor.id}/residency?eventId=${event.id}`} style={{ textDecoration: 'none' }}>
-              <Button 
-                fullWidth
-                variant="filled"
-                rightSection={<IconMapPin size={16} />}
-                color="cyan"
+
+          {normalizeEventType(event.type) === "RESIDENCY" &&
+            event.sponsorInfo && (
+              <Link
+                href={`/sponsors/${event.sponsorInfo.sponsor.id}/residency?eventId=${event.id}`}
+                style={{ textDecoration: "none" }}
               >
-                Residency Dashboard
-              </Button>
-            </Link>
-          )}
+                <Button
+                  fullWidth
+                  variant="filled"
+                  rightSection={<IconMapPin size={16} />}
+                  color="cyan"
+                >
+                  Residency Dashboard
+                </Button>
+              </Link>
+            )}
         </Stack>
       </Stack>
     </Card>
@@ -184,8 +199,10 @@ function EventCard({ event }: { event: SponsoredEvent }) {
 }
 
 export default function SponsorDashboard() {
-  const { data: sponsoredEvents, isLoading: loadingEvents } = api.event.getSponsoredEvents.useQuery();
-  const { data: sponsorStats, isLoading: loadingStats } = api.sponsor.getSponsorStats.useQuery();
+  const { data: sponsoredEvents, isLoading: loadingEvents } =
+    api.event.getSponsoredEvents.useQuery();
+  const { data: sponsorStats, isLoading: loadingStats } =
+    api.sponsor.getSponsorStats.useQuery();
   const { data: config } = api.config.getPublicConfig.useQuery();
 
   if (loadingEvents || loadingStats) {
@@ -199,8 +216,14 @@ export default function SponsorDashboard() {
   }
 
   const totalEvents = sponsoredEvents?.length ?? 0;
-  const activeEvents = sponsoredEvents?.filter(event => new Date(event.endDate) > new Date()).length ?? 0;
-  const totalApplications = sponsoredEvents?.reduce((sum, event) => sum + event._count.applications, 0) ?? 0;
+  const activeEvents =
+    sponsoredEvents?.filter((event) => new Date(event.endDate) > new Date())
+      .length ?? 0;
+  const totalApplications =
+    sponsoredEvents?.reduce(
+      (sum, event) => sum + event._count.applications,
+      0,
+    ) ?? 0;
 
   return (
     <Container size="xl" py="md">
@@ -208,7 +231,12 @@ export default function SponsorDashboard() {
       <Stack gap="xl">
         <Stack gap="md" ta="center">
           <Group justify="center" gap="xs">
-            <ThemeIcon size="xl" radius="xl" variant="gradient" gradient={{ from: 'violet', to: 'purple' }}>
+            <ThemeIcon
+              size="xl"
+              radius="xl"
+              variant="gradient"
+              gradient={{ from: "violet", to: "purple" }}
+            >
               <IconBuildingBank size={28} />
             </ThemeIcon>
             <Title order={1} size="h1" fw={700}>
@@ -216,7 +244,8 @@ export default function SponsorDashboard() {
             </Title>
           </Group>
           <Text size="lg" c="dimmed" maw={600} mx="auto">
-            Manage your sponsored events, track impact, and connect with amazing builders in the public goods ecosystem.
+            Manage your sponsored events, track impact, and connect with amazing
+            builders in the public goods ecosystem.
           </Text>
         </Stack>
 
@@ -303,7 +332,7 @@ export default function SponsorDashboard() {
         <Stack gap="md">
           <Group justify="space-between">
             <Title order={2}>Your Sponsored Events</Title>
-            <Link href="/crm/contacts" style={{ textDecoration: 'none' }}>
+            <Link href="/crm/contacts" style={{ textDecoration: "none" }}>
               <Button variant="light" leftSection={<IconMail size={16} />}>
                 Manage CRM
               </Button>
@@ -317,12 +346,16 @@ export default function SponsorDashboard() {
                   <IconBuildingBank size={30} />
                 </ThemeIcon>
                 <Stack gap="xs" align="center">
-                  <Title order={3} c="dimmed">No Sponsored Events</Title>
+                  <Title order={3} c="dimmed">
+                    No Sponsored Events
+                  </Title>
                   <Text c="dimmed" ta="center" maw={400}>
-                    You don&apos;t have any sponsored events yet. Contact our team to get involved in upcoming events and support amazing builders.
+                    You don&apos;t have any sponsored events yet. Contact our
+                    team to get involved in upcoming events and support amazing
+                    builders.
                   </Text>
                 </Stack>
-                <Anchor href={`mailto:${config?.adminEmail ?? ''}`}>
+                <Anchor href={`mailto:${config?.adminEmail ?? ""}`}>
                   <Button leftSection={<IconMail size={16} />}>
                     Get In Touch
                   </Button>
@@ -347,14 +380,16 @@ export default function SponsorDashboard() {
                   <IconMail size={18} />
                 </ThemeIcon>
                 <div style={{ flex: 1 }}>
-                  <Text fw={600} size="lg">Contact Management</Text>
+                  <Text fw={600} size="lg">
+                    Contact Management
+                  </Text>
                   <Text size="sm" c="dimmed">
                     Manage your contact database and sponsor relationships
                   </Text>
                 </div>
               </Group>
-              
-              <Link href="/crm/contacts" style={{ textDecoration: 'none' }}>
+
+              <Link href="/crm/contacts" style={{ textDecoration: "none" }}>
                 <Button rightSection={<IconArrowRight size={16} />} fullWidth>
                   View CRM
                 </Button>
@@ -369,14 +404,16 @@ export default function SponsorDashboard() {
                   <IconTrendingUp size={18} />
                 </ThemeIcon>
                 <div style={{ flex: 1 }}>
-                  <Text fw={600} size="lg">Market Data</Text>
+                  <Text fw={600} size="lg">
+                    Market Data
+                  </Text>
                   <Text size="sm" c="dimmed">
                     Track crypto market data and ecosystem trends
                   </Text>
                 </div>
               </Group>
-              
-              <Link href="/coins" style={{ textDecoration: 'none' }}>
+
+              <Link href="/coins" style={{ textDecoration: "none" }}>
                 <Button rightSection={<IconArrowRight size={16} />} fullWidth>
                   View Market Data
                 </Button>

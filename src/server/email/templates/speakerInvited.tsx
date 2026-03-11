@@ -1,10 +1,6 @@
-import React from 'react';
-import {
-  Section,
-  Text,
-  Button,
-} from '@react-email/components';
-import { BaseTemplate } from './base';
+import React from "react";
+import { Section, Text, Button } from "@react-email/components";
+import { BaseTemplate } from "./base";
 
 export interface SpeakerInvitedProps {
   speakerName: string;
@@ -34,20 +30,17 @@ export const SpeakerInvitedTemplate: React.FC<SpeakerInvitedProps> = ({
       <Section style={content}>
         <Text style={heading}>You&apos;ve Been Added as a Speaker</Text>
 
-        <Text style={paragraph}>
-          Hi {speakerName},
-        </Text>
+        <Text style={paragraph}>Hi {speakerName},</Text>
 
         <Text style={paragraph}>
-          {invitedByName} has added you as a <strong>Speaker</strong> at <strong>{eventName}</strong>.
+          {invitedByName} has added you as a <strong>Speaker</strong> at{" "}
+          <strong>{eventName}</strong>.
         </Text>
 
         <Section style={detailsBox}>
           <Text style={detailsHeading}>Session Details</Text>
           <Text style={detailsText}>Talk: {talkTitle}</Text>
-          {venueName && (
-            <Text style={detailsText}>Floor: {venueName}</Text>
-          )}
+          {venueName && <Text style={detailsText}>Floor: {venueName}</Text>}
           <Text style={detailsText}>Added by: {invitedByName}</Text>
         </Section>
 
@@ -57,9 +50,11 @@ export const SpeakerInvitedTemplate: React.FC<SpeakerInvitedProps> = ({
           <li>Review and update your speaker profile and session details</li>
           {faqUrl && (
             <li>
-              Check the{' '}
-              <a href={faqUrl} style={link}>event FAQ</a>
-              {' '}for important details
+              Check the{" "}
+              <a href={faqUrl} style={link}>
+                event FAQ
+              </a>{" "}
+              for important details
             </li>
           )}
           <li>Mark your calendar for the event</li>
@@ -72,18 +67,17 @@ export const SpeakerInvitedTemplate: React.FC<SpeakerInvitedProps> = ({
         </Section>
 
         <Text style={paragraph}>
-          If you have any questions, please reach out to us at{' '}
+          If you have any questions, please reach out to us at{" "}
           <a href={`mailto:${contactEmail}`} style={link}>
             {contactEmail}
           </a>
         </Text>
 
-        <Text style={paragraph}>
-          We look forward to your session!
-        </Text>
+        <Text style={paragraph}>We look forward to your session!</Text>
 
         <Text style={signature}>
-          Best regards,<br />
+          Best regards,
+          <br />
           The {eventName} Team
         </Text>
       </Section>
@@ -93,87 +87,87 @@ export const SpeakerInvitedTemplate: React.FC<SpeakerInvitedProps> = ({
 
 // Styles
 const content = {
-  padding: '0 32px',
+  padding: "0 32px",
 };
 
 const heading = {
-  fontSize: '28px',
-  fontWeight: 'bold',
-  color: '#1a1a1a',
-  textAlign: 'center' as const,
-  margin: '32px 0 24px',
+  fontSize: "28px",
+  fontWeight: "bold",
+  color: "#1a1a1a",
+  textAlign: "center" as const,
+  margin: "32px 0 24px",
 };
 
 const subheading = {
-  fontSize: '20px',
-  fontWeight: 'bold',
-  color: '#1a1a1a',
-  margin: '32px 0 16px',
+  fontSize: "20px",
+  fontWeight: "bold",
+  color: "#1a1a1a",
+  margin: "32px 0 16px",
 };
 
 const paragraph = {
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#404040',
-  margin: '16px 0',
+  fontSize: "16px",
+  lineHeight: "24px",
+  color: "#404040",
+  margin: "16px 0",
 };
 
 const detailsBox = {
-  backgroundColor: '#f0f9ff',
-  borderRadius: '8px',
-  padding: '24px',
-  margin: '24px 0',
-  border: '1px solid #bfdbfe',
+  backgroundColor: "#f0f9ff",
+  borderRadius: "8px",
+  padding: "24px",
+  margin: "24px 0",
+  border: "1px solid #bfdbfe",
 };
 
 const detailsHeading = {
-  fontSize: '18px',
-  fontWeight: 'bold',
-  color: '#1e40af',
-  margin: '0 0 16px',
+  fontSize: "18px",
+  fontWeight: "bold",
+  color: "#1e40af",
+  margin: "0 0 16px",
 };
 
 const detailsText = {
-  fontSize: '14px',
-  color: '#334155',
-  margin: '8px 0',
+  fontSize: "14px",
+  color: "#334155",
+  margin: "8px 0",
 };
 
 const list = {
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#404040',
-  margin: '16px 0',
-  paddingLeft: '20px',
+  fontSize: "16px",
+  lineHeight: "24px",
+  color: "#404040",
+  margin: "16px 0",
+  paddingLeft: "20px",
 };
 
 const buttonContainer = {
-  textAlign: 'center' as const,
-  margin: '32px 0',
+  textAlign: "center" as const,
+  margin: "32px 0",
 };
 
 const button = {
-  backgroundColor: '#2563eb',
-  borderRadius: '8px',
-  color: '#fff',
-  fontSize: '16px',
-  fontWeight: 'bold',
-  textDecoration: 'none',
-  textAlign: 'center' as const,
-  display: 'inline-block',
-  padding: '12px 32px',
+  backgroundColor: "#2563eb",
+  borderRadius: "8px",
+  color: "#fff",
+  fontSize: "16px",
+  fontWeight: "bold",
+  textDecoration: "none",
+  textAlign: "center" as const,
+  display: "inline-block",
+  padding: "12px 32px",
 };
 
 const link = {
-  color: '#2563eb',
-  textDecoration: 'underline',
+  color: "#2563eb",
+  textDecoration: "underline",
 };
 
 const signature = {
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#404040',
-  margin: '32px 0 16px',
+  fontSize: "16px",
+  lineHeight: "24px",
+  color: "#404040",
+  margin: "32px 0 16px",
 };
 
 export default SpeakerInvitedTemplate;

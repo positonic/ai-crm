@@ -11,12 +11,12 @@ interface PageProps {
 export default async function SelectionRubricPage({ params }: PageProps) {
   // Check authentication and role
   const session = await auth();
-  
+
   // Must be authenticated
   if (!session?.user) {
     redirect("/signin?callbackUrl=/admin/events");
   }
-  
+
   if (session.user.role !== "staff" && session.user.role !== "admin") {
     redirect("/unauthorized");
   }

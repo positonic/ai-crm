@@ -17,7 +17,9 @@ export async function setup() {
   console.log(`[globalSetup] PostgreSQL running at ${connectionUri}`);
 
   // Store for teardown
-  container = pgContainer as unknown as InstanceType<typeof PostgreSqlContainer>;
+  container = pgContainer as unknown as InstanceType<
+    typeof PostgreSqlContainer
+  >;
 
   // Set DATABASE_URL for Prisma migrations
   process.env.DATABASE_URL = connectionUri;
@@ -33,7 +35,11 @@ export async function setup() {
   console.log("[globalSetup] Running seed...");
   try {
     execSync("bun run db:seed", {
-      env: { ...process.env, DATABASE_URL: connectionUri, SKIP_ENV_VALIDATION: "1" },
+      env: {
+        ...process.env,
+        DATABASE_URL: connectionUri,
+        SKIP_ENV_VALIDATION: "1",
+      },
       stdio: "pipe",
     });
     console.log("[globalSetup] Seed completed.");

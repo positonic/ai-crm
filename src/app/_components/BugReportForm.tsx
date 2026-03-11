@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 import {
   Modal,
   TextInput,
@@ -14,17 +14,17 @@ import {
   Image,
   ActionIcon,
   Box,
-} from '@mantine/core';
+} from "@mantine/core";
 import {
   IconCamera,
   IconX,
   IconCheck,
   IconChevronDown,
   IconChevronUp,
-} from '@tabler/icons-react';
-import { notifications } from '@mantine/notifications';
-import { api } from '~/trpc/react';
-import { type ConsoleEntry } from '~/hooks/useConsoleCapture';
+} from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
+import { api } from "~/trpc/react";
+import { type ConsoleEntry } from "~/hooks/useConsoleCapture";
 
 interface BugReportFormProps {
   opened: boolean;
@@ -47,8 +47,8 @@ export function BugReportForm({
   onTemporaryReopen,
   profileUrl,
 }: BugReportFormProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [screenshot, setScreenshot] = useState<string | null>(null);
   const [capturing, setCapturing] = useState(false);
   const [temporarilyHidden, setTemporarilyHidden] = useState(false);
@@ -65,9 +65,9 @@ export function BugReportForm({
     },
     onError: (error) => {
       notifications.show({
-        title: 'Failed to submit bug report',
+        title: "Failed to submit bug report",
         message: error.message,
-        color: 'red',
+        color: "red",
       });
     },
   });
@@ -81,21 +81,22 @@ export function BugReportForm({
     await new Promise((resolve) => setTimeout(resolve, 400));
 
     try {
-      const { toPng } = await import('html-to-image');
+      const { toPng } = await import("html-to-image");
       const dataUrl = await toPng(document.documentElement, {
         quality: 0.8,
         pixelRatio: 1,
         filter: (node: HTMLElement) => {
           // Exclude the FAB button from capture
-          return !node.classList?.contains?.('ai-chat-fab');
+          return !node.classList?.contains?.("ai-chat-fab");
         },
       });
       setScreenshot(dataUrl);
     } catch {
       notifications.show({
-        title: 'Screenshot failed',
-        message: 'Could not capture the page. You can still submit without a screenshot.',
-        color: 'yellow',
+        title: "Screenshot failed",
+        message:
+          "Could not capture the page. You can still submit without a screenshot.",
+        color: "yellow",
       });
     } finally {
       onTemporaryReopen();
@@ -127,8 +128,8 @@ export function BugReportForm({
 
   const handleClose = () => {
     if (!submitMutation.isPending) {
-      setTitle('');
-      setDescription('');
+      setTitle("");
+      setDescription("");
       setScreenshot(null);
       setShowLogs(false);
       setSubmitted(false);
@@ -139,17 +140,23 @@ export function BugReportForm({
 
   if (submitted) {
     return (
-      <Modal opened={opened && !temporarilyHidden} onClose={handleClose} title="Bug Reported" centered size="sm">
+      <Modal
+        opened={opened && !temporarilyHidden}
+        onClose={handleClose}
+        title="Bug Reported"
+        centered
+        size="sm"
+      >
         <Stack align="center" gap="md" py="md">
           <Box
             style={{
               width: 48,
               height: 48,
-              borderRadius: '50%',
-              background: 'var(--mantine-color-green-1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              borderRadius: "50%",
+              background: "var(--mantine-color-green-1)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             <IconCheck size={24} color="var(--mantine-color-green-6)" />
@@ -230,7 +237,9 @@ export function BugReportForm({
                 src={screenshot}
                 alt="Bug screenshot"
                 radius="sm"
-                style={{ border: '1px solid var(--mantine-color-default-border)' }}
+                style={{
+                  border: "1px solid var(--mantine-color-default-border)",
+                }}
               />
               <ActionIcon
                 variant="filled"
@@ -263,7 +272,7 @@ export function BugReportForm({
           <Group
             gap="xs"
             mb="xs"
-            style={{ cursor: consoleLogs.length > 0 ? 'pointer' : undefined }}
+            style={{ cursor: consoleLogs.length > 0 ? "pointer" : undefined }}
             onClick={() => {
               if (consoleLogs.length > 0) setShowLogs((v) => !v);
             }}
@@ -273,12 +282,12 @@ export function BugReportForm({
             </Text>
             <Badge
               size="sm"
-              color={consoleLogs.length > 0 ? 'orange' : 'gray'}
+              color={consoleLogs.length > 0 ? "orange" : "gray"}
               variant="light"
             >
               {consoleLogs.length > 0
                 ? `${String(consoleLogs.length)} captured`
-                : 'None'}
+                : "None"}
             </Badge>
             {consoleLogs.length > 0 &&
               (showLogs ? (
@@ -291,11 +300,11 @@ export function BugReportForm({
             <Box
               p="xs"
               style={{
-                background: 'var(--mantine-color-dark-9, #1a1b1e)',
-                borderRadius: 'var(--mantine-radius-sm)',
+                background: "var(--mantine-color-dark-9, #1a1b1e)",
+                borderRadius: "var(--mantine-radius-sm)",
                 maxHeight: 150,
-                overflowY: 'auto',
-                fontFamily: 'monospace',
+                overflowY: "auto",
+                fontFamily: "monospace",
                 fontSize: 11,
               }}
             >
@@ -303,8 +312,8 @@ export function BugReportForm({
                 <Text
                   key={`${entry.timestamp}-${String(i)}`}
                   size="xs"
-                  c={entry.level === 'error' ? 'red' : 'yellow'}
-                  style={{ fontFamily: 'monospace', wordBreak: 'break-all' }}
+                  c={entry.level === "error" ? "red" : "yellow"}
+                  style={{ fontFamily: "monospace", wordBreak: "break-all" }}
                 >
                   [{entry.level}] {entry.message.slice(0, 200)}
                 </Text>
@@ -315,7 +324,10 @@ export function BugReportForm({
 
         {/* Auto-captured metadata */}
         <Text size="xs" c="dimmed">
-          Page: {pathname} | Screen: {typeof window !== 'undefined' ? `${String(window.innerWidth)}x${String(window.innerHeight)}` : 'N/A'}
+          Page: {pathname} | Screen:{" "}
+          {typeof window !== "undefined"
+            ? `${String(window.innerWidth)}x${String(window.innerHeight)}`
+            : "N/A"}
         </Text>
 
         {/* Actions */}

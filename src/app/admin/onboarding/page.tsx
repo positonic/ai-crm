@@ -32,7 +32,7 @@ export default async function OnboardingAdminPage() {
       },
     },
     orderBy: {
-      submittedAt: 'desc',
+      submittedAt: "desc",
     },
   });
 

@@ -32,7 +32,8 @@ export const projectIdeaRouter = createTRPCRouter({
   getAll: publicProcedure
     .input(GetProjectsSchema)
     .query(async ({ ctx, input }) => {
-      const { limit, offset, technologies, category, difficulty, search } = input;
+      const { limit, offset, technologies, category, difficulty, search } =
+        input;
 
       // Build where clause with proper Prisma typing
       const where: Prisma.ProjectIdeaWhereInput = {
@@ -76,10 +77,7 @@ export const projectIdeaRouter = createTRPCRouter({
             createdAt: true,
             updatedAt: true,
           },
-          orderBy: [
-            { category: "asc" },
-            { title: "asc" },
-          ],
+          orderBy: [{ category: "asc" }, { title: "asc" }],
           take: limit,
           skip: offset,
         }),
@@ -87,7 +85,7 @@ export const projectIdeaRouter = createTRPCRouter({
       ]);
 
       // Transform null descriptions to undefined for API compatibility
-      const transformedProjects = projects.map(project => ({
+      const transformedProjects = projects.map((project) => ({
         ...project,
         description: project.description ?? undefined,
         category: project.category ?? undefined,
@@ -136,7 +134,9 @@ export const projectIdeaRouter = createTRPCRouter({
     }),
 
   getTechnologies: publicProcedure.query(async ({ ctx }) => {
-    const result = await ctx.db.$queryRaw<Array<{ technology: string; count: bigint }>>`
+    const result = await ctx.db.$queryRaw<
+      Array<{ technology: string; count: bigint }>
+    >`
       SELECT UNNEST(technologies) as technology, COUNT(*) as count
       FROM "ProjectIdea"
       WHERE "syncStatus" = 'SUCCESS'
@@ -144,7 +144,7 @@ export const projectIdeaRouter = createTRPCRouter({
       ORDER BY count DESC, technology ASC
     `;
 
-    return result.map(row => ({
+    return result.map((row) => ({
       name: row.technology,
       count: Number(row.count),
     }));
@@ -152,7 +152,7 @@ export const projectIdeaRouter = createTRPCRouter({
 
   getCategories: publicProcedure.query(async ({ ctx }) => {
     const result = await ctx.db.projectIdea.groupBy({
-      by: ['category'],
+      by: ["category"],
       where: {
         syncStatus: "SUCCESS",
         category: { not: null },
@@ -162,12 +162,12 @@ export const projectIdeaRouter = createTRPCRouter({
       },
       orderBy: {
         _count: {
-          category: 'desc',
+          category: "desc",
         },
       },
     });
 
-    return result.map(item => ({
+    return result.map((item) => ({
       name: item.category!,
       count: item._count.category,
     }));
@@ -175,7 +175,7 @@ export const projectIdeaRouter = createTRPCRouter({
 
   getDifficulties: publicProcedure.query(async ({ ctx }) => {
     const result = await ctx.db.projectIdea.groupBy({
-      by: ['difficulty'],
+      by: ["difficulty"],
       where: {
         syncStatus: "SUCCESS",
         difficulty: { not: null },
@@ -184,32 +184,33 @@ export const projectIdeaRouter = createTRPCRouter({
         difficulty: true,
       },
       orderBy: {
-        difficulty: 'asc',
+        difficulty: "asc",
       },
     });
 
-    return result.map(item => ({
+    return result.map((item) => ({
       name: item.difficulty!,
       count: item._count.difficulty,
     }));
   }),
 
   getStats: publicProcedure.query(async ({ ctx }) => {
-    const [totalProjects, successfulProjects, failedProjects, lastSync] = await Promise.all([
-      ctx.db.projectIdea.count(),
-      ctx.db.projectIdea.count({ where: { syncStatus: "SUCCESS" } }),
-      ctx.db.projectIdea.count({ where: { syncStatus: "FAILED" } }),
-      ctx.db.projectSync.findFirst({
-        orderBy: { startedAt: "desc" },
-        select: {
-          startedAt: true,
-          completedAt: true,
-          status: true,
-          syncedCount: true,
-          totalProjects: true,
-        },
-      }),
-    ]);
+    const [totalProjects, successfulProjects, failedProjects, lastSync] =
+      await Promise.all([
+        ctx.db.projectIdea.count(),
+        ctx.db.projectIdea.count({ where: { syncStatus: "SUCCESS" } }),
+        ctx.db.projectIdea.count({ where: { syncStatus: "FAILED" } }),
+        ctx.db.projectSync.findFirst({
+          orderBy: { startedAt: "desc" },
+          select: {
+            startedAt: true,
+            completedAt: true,
+            status: true,
+            syncedCount: true,
+            totalProjects: true,
+          },
+        }),
+      ]);
 
     return {
       totalProjects,
@@ -220,52 +221,51 @@ export const projectIdeaRouter = createTRPCRouter({
   }),
 
   // Admin-only routes
-  getSyncStatus: protectedProcedure
-    .query(async ({ ctx }) => {
-      // Check if user has admin permissions
-      if (ctx.session.user.role !== 'admin') {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Admin access required",
-        });
-      }
+  getSyncStatus: protectedProcedure.query(async ({ ctx }) => {
+    // Check if user has admin permissions
+    if (ctx.session.user.role !== "admin") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Admin access required",
+      });
+    }
 
+    const githubService = createGitHubSyncService(ctx.db);
+    return githubService.getSyncStatus();
+  }),
+
+  syncFromGitHub: protectedProcedure.mutation(async ({ ctx }) => {
+    // Check if user has admin permissions
+    if (ctx.session.user.role !== "admin") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Admin access required",
+      });
+    }
+
+    try {
       const githubService = createGitHubSyncService(ctx.db);
-      return githubService.getSyncStatus();
-    }),
+      const result = await githubService.syncAllProjects();
 
-  syncFromGitHub: protectedProcedure
-    .mutation(async ({ ctx }) => {
-      // Check if user has admin permissions
-      if (ctx.session.user.role !== 'admin') {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Admin access required",
-        });
-      }
-
-      try {
-        const githubService = createGitHubSyncService(ctx.db);
-        const result = await githubService.syncAllProjects();
-        
-        return {
-          success: true,
-          message: `Successfully synced ${result.syncedCount} out of ${result.totalProjects} projects`,
-          ...result,
-        };
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: error instanceof Error ? error.message : "Failed to sync projects",
-        });
-      }
-    }),
+      return {
+        success: true,
+        message: `Successfully synced ${result.syncedCount} out of ${result.totalProjects} projects`,
+        ...result,
+      };
+    } catch (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message:
+          error instanceof Error ? error.message : "Failed to sync projects",
+      });
+    }
+  }),
 
   forceResyncProject: protectedProcedure
     .input(ForceResyncProjectSchema)
     .mutation(async ({ ctx, input }) => {
       // Check if user has admin permissions
-      if (ctx.session.user.role !== 'admin') {
+      if (ctx.session.user.role !== "admin") {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Admin access required",
@@ -286,9 +286,9 @@ export const projectIdeaRouter = createTRPCRouter({
         }
 
         const githubService = createGitHubSyncService(ctx.db);
-        
+
         // Extract filename from github path
-        const filename = project.githubPath.split('/').pop();
+        const filename = project.githubPath.split("/").pop();
         if (!filename) {
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -298,8 +298,8 @@ export const projectIdeaRouter = createTRPCRouter({
 
         // Get project list to find the file info
         const projectFiles = await githubService.fetchProjectList();
-        const file = projectFiles.find(f => f.name === filename);
-        
+        const file = projectFiles.find((f) => f.name === filename);
+
         if (!file) {
           throw new TRPCError({
             code: "NOT_FOUND",
@@ -308,7 +308,7 @@ export const projectIdeaRouter = createTRPCRouter({
         }
 
         await githubService.syncProject(file);
-        
+
         return {
           success: true,
           message: "Project resynced successfully",
@@ -316,41 +316,38 @@ export const projectIdeaRouter = createTRPCRouter({
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: error instanceof Error ? error.message : "Failed to resync project",
+          message:
+            error instanceof Error ? error.message : "Failed to resync project",
         });
       }
     }),
 
   // Get all projects for admin (including failed ones)
-  getAllForAdmin: protectedProcedure
-    .query(async ({ ctx }) => {
-      // Check if user has admin permissions
-      if (ctx.session.user.role !== 'admin') {
-        throw new TRPCError({
-          code: "FORBIDDEN", 
-          message: "Admin access required",
-        });
-      }
-
-      return ctx.db.projectIdea.findMany({
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-          description: true,
-          githubPath: true,
-          technologies: true,
-          difficulty: true,
-          category: true,
-          syncStatus: true,
-          lastSynced: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-        orderBy: [
-          { syncStatus: "asc" },
-          { lastSynced: "desc" },
-        ],
+  getAllForAdmin: protectedProcedure.query(async ({ ctx }) => {
+    // Check if user has admin permissions
+    if (ctx.session.user.role !== "admin") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Admin access required",
       });
-    }),
+    }
+
+    return ctx.db.projectIdea.findMany({
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        description: true,
+        githubPath: true,
+        technologies: true,
+        difficulty: true,
+        category: true,
+        syncStatus: true,
+        lastSynced: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: [{ syncStatus: "asc" }, { lastSynced: "desc" }],
+    });
+  }),
 });

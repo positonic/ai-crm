@@ -84,7 +84,7 @@ export function PraiseQuantifyPanel() {
   // Calculate total allocated points
   const totalAllocated = Object.values(allocations).reduce(
     (sum, value) => sum + value,
-    0
+    0,
   );
   const isValid = totalAllocated === TOTAL_POINTS;
 
@@ -99,7 +99,7 @@ export function PraiseQuantifyPanel() {
     const otherRecipients = recipients.filter((r) => r.id !== recipientId);
     const otherTotal = otherRecipients.reduce(
       (sum, r) => sum + (allocations[r.id] ?? 0),
-      0
+      0,
     );
 
     const newAllocations: Record<string, number> = { ...allocations };
@@ -148,8 +148,8 @@ export function PraiseQuantifyPanel() {
         <Title order={3}>Quantify Your Praise</Title>
         <Text size="sm" c="dimmed" mt="xs">
           You have {TOTAL_POINTS} praise points to distribute across all the
-          people you&apos;ve praised. Adjust the sliders to allocate more points to
-          those whose contributions you value most.
+          people you&apos;ve praised. Adjust the sliders to allocate more points
+          to those whose contributions you value most.
         </Text>
       </div>
 
@@ -169,11 +169,7 @@ export function PraiseQuantifyPanel() {
           <Text size="sm" fw={500}>
             Total Points Allocated
           </Text>
-          <Badge
-            color={getProgressColor()}
-            variant="filled"
-            size="lg"
-          >
+          <Badge color={getProgressColor()} variant="filled" size="lg">
             {totalAllocated} / {TOTAL_POINTS}
           </Badge>
         </Group>
@@ -184,7 +180,11 @@ export function PraiseQuantifyPanel() {
           animated={!isValid}
         />
         {!isValid && (
-          <Text size="xs" c={totalAllocated > TOTAL_POINTS ? "red" : "orange"} mt="xs">
+          <Text
+            size="xs"
+            c={totalAllocated > TOTAL_POINTS ? "red" : "orange"}
+            mt="xs"
+          >
             {totalAllocated > TOTAL_POINTS
               ? `You've allocated ${totalAllocated - TOTAL_POINTS} too many points`
               : `You have ${TOTAL_POINTS - totalAllocated} unallocated points`}
@@ -212,7 +212,8 @@ export function PraiseQuantifyPanel() {
                     <div>
                       <Text fw={500}>{recipient.name}</Text>
                       <Text size="xs" c="dimmed">
-                        {recipient.praiseCount} praise{recipient.praiseCount !== 1 ? "s" : ""} sent
+                        {recipient.praiseCount} praise
+                        {recipient.praiseCount !== 1 ? "s" : ""} sent
                       </Text>
                     </div>
                   </Group>

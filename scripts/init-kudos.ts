@@ -61,7 +61,7 @@ const USER_DAYS_OVERRIDE: Record<string, number> = {
   "thwayf@gmail.com": 11,
   "minjae@post.harvard.edu": 10,
   "alisheryakupov@gmail.com": 12,
-  "jamespfarrell@gmail.com": 12
+  "jamespfarrell@gmail.com": 12,
 };
 
 interface UserKudosData {
@@ -82,7 +82,10 @@ interface UserKudosData {
   totalKudos: number;
 }
 
-async function calculateUserKudos(userId: string, daysOnSite: number = KUDOS_CONSTANTS.DAYS_ATTENDED): Promise<UserKudosData | null> {
+async function calculateUserKudos(
+  userId: string,
+  daysOnSite: number = KUDOS_CONSTANTS.DAYS_ATTENDED,
+): Promise<UserKudosData | null> {
   // Get user info
   const user = await db.user.findUnique({
     where: { id: userId },
@@ -91,7 +94,8 @@ async function calculateUserKudos(userId: string, daysOnSite: number = KUDOS_CON
 
   if (!user) return null;
 
-  const userName = user.name ?? `${user.firstName ?? ''} ${user.surname ?? ''}`.trim();
+  const userName =
+    user.name ?? `${user.firstName ?? ""} ${user.surname ?? ""}`.trim();
 
   // Count ProjectUpdates created by this user
   const updatesCreated = await db.projectUpdate.count({
@@ -137,7 +141,10 @@ async function calculateUserKudos(userId: string, daysOnSite: number = KUDOS_CON
     },
   });
 
-  const totalLikesReceived = projectUpdateLikesReceived + userProjectLikesReceived + askOfferLikesReceived;
+  const totalLikesReceived =
+    projectUpdateLikesReceived +
+    userProjectLikesReceived +
+    askOfferLikesReceived;
 
   // Count likes given (all types)
   const projectUpdateLikesGiven = await db.projectUpdateLike.count({
@@ -152,7 +159,8 @@ async function calculateUserKudos(userId: string, daysOnSite: number = KUDOS_CON
     where: { userId: userId },
   });
 
-  const totalLikesGiven = projectUpdateLikesGiven + userProjectLikesGiven + askOfferLikesGiven;
+  const totalLikesGiven =
+    projectUpdateLikesGiven + userProjectLikesGiven + askOfferLikesGiven;
 
   // Count praise received
   const praiseReceived = await db.praise.count({
@@ -167,14 +175,21 @@ async function calculateUserKudos(userId: string, daysOnSite: number = KUDOS_CON
   // Calculate kudos components
   const baseKudos = daysOnSite * KUDOS_CONSTANTS.KUDOS_PER_DAY;
   const updatesKudos = updatesCreated * KUDOS_CONSTANTS.UPDATE_WEIGHT;
-  const likesReceivedKudos = totalLikesReceived * KUDOS_CONSTANTS.BACKFILL_LIKE_VALUE;
+  const likesReceivedKudos =
+    totalLikesReceived * KUDOS_CONSTANTS.BACKFILL_LIKE_VALUE;
   const likesGivenKudos = totalLikesGiven * KUDOS_CONSTANTS.BACKFILL_LIKE_VALUE;
-  const praiseReceivedKudos = praiseReceived * KUDOS_CONSTANTS.BACKFILL_PRAISE_VALUE;
+  const praiseReceivedKudos =
+    praiseReceived * KUDOS_CONSTANTS.BACKFILL_PRAISE_VALUE;
   const praiseSentKudos = praiseSent * KUDOS_CONSTANTS.BACKFILL_PRAISE_VALUE;
 
   const totalKudos = Math.max(
     0,
-    baseKudos + updatesKudos + likesReceivedKudos - likesGivenKudos + praiseReceivedKudos - praiseSentKudos
+    baseKudos +
+      updatesKudos +
+      likesReceivedKudos -
+      likesGivenKudos +
+      praiseReceivedKudos -
+      praiseSentKudos,
   );
 
   return {
@@ -251,7 +266,9 @@ async function main() {
   for (const user of users) {
     try {
       // Get days on-site for this user by email (default to 13 if not overridden)
-      const daysOnSite = user.email ? (USER_DAYS_OVERRIDE[user.email] ?? KUDOS_CONSTANTS.DAYS_ATTENDED) : KUDOS_CONSTANTS.DAYS_ATTENDED;
+      const daysOnSite = user.email
+        ? (USER_DAYS_OVERRIDE[user.email] ?? KUDOS_CONSTANTS.DAYS_ATTENDED)
+        : KUDOS_CONSTANTS.DAYS_ATTENDED;
       const kudosData = await calculateUserKudos(user.id, daysOnSite);
 
       if (kudosData) {
@@ -264,7 +281,9 @@ async function main() {
         });
 
         successCount++;
-        console.log(`✅ ${kudosData.userName}: ${Math.round(kudosData.totalKudos)} kudos (${daysOnSite} days)`);
+        console.log(
+          `✅ ${kudosData.userName}: ${Math.round(kudosData.totalKudos)} kudos (${daysOnSite} days)`,
+        );
       }
     } catch (error) {
       errorCount++;
@@ -293,8 +312,12 @@ async function main() {
 
     console.log(`Total Kudos in System: ${Math.round(totalKudos)}`);
     console.log(`Average Kudos: ${Math.round(avgKudos)}`);
-    console.log(`Highest Kudos: ${Math.round(maxKudos)} (${results[0]?.userName})`);
-    console.log(`Lowest Kudos: ${Math.round(minKudos)} (${results[results.length - 1]?.userName})`);
+    console.log(
+      `Highest Kudos: ${Math.round(maxKudos)} (${results[0]?.userName})`,
+    );
+    console.log(
+      `Lowest Kudos: ${Math.round(minKudos)} (${results[results.length - 1]?.userName})`,
+    );
     console.log("");
 
     // Show top 10
@@ -303,7 +326,7 @@ async function main() {
     results.slice(0, 10).forEach((r, idx) => {
       console.log(
         `${idx + 1}. ${r.userName.padEnd(30)} ${Math.round(r.totalKudos).toString().padStart(6)} kudos ` +
-        `(${r.daysOnSite}d, updates: ${r.updatesCreated}, praise: +${r.praiseReceived}/-${r.praiseSent}, likes: +${r.likesReceived}/-${r.likesGiven})`
+          `(${r.daysOnSite}d, updates: ${r.updatesCreated}, praise: +${r.praiseReceived}/-${r.praiseSent}, likes: +${r.likesReceived}/-${r.likesGiven})`,
       );
     });
   }

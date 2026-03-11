@@ -25,11 +25,11 @@ import {
 } from "@tabler/icons-react";
 import AuthForm from "~/app/_components/AuthForm";
 
-function FeatureHighlight({ 
-  icon: Icon, 
-  title, 
-  description, 
-  color 
+function FeatureHighlight({
+  icon: Icon,
+  title,
+  description,
+  color,
 }: {
   icon: React.FC<{ size?: number }>;
   title: string;
@@ -43,7 +43,9 @@ function FeatureHighlight({
           <Icon size={20} />
         </ThemeIcon>
         <Stack gap="xs" style={{ flex: 1 }}>
-          <Text fw={600} size="sm">{title}</Text>
+          <Text fw={600} size="sm">
+            {title}
+          </Text>
           <Text size="xs" c="dimmed" style={{ lineHeight: 1.4 }}>
             {description}
           </Text>
@@ -94,7 +96,7 @@ function SignInContent() {
         <div className="absolute top-40 left-40 w-80 h-80 bg-theme-blob-3 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
       </div>
 
-      <Container size="xl" py="xl" style={{ position: 'relative', zIndex: 1 }}>
+      <Container size="xl" py="xl" style={{ position: "relative", zIndex: 1 }}>
         <div className="grid lg:grid-cols-2 gap-12 items-center min-h-screen">
           {/* Left Side - Branding & Features */}
           <div className="order-2 lg:order-1">
@@ -102,15 +104,15 @@ function SignInContent() {
               {/* Hero Section */}
               <Stack gap="lg">
                 <div>
-                  <Text 
-                    size="3rem" 
-                    fw={800} 
-                    style={{ 
-                      background: 'var(--theme-text-gradient)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                      lineHeight: 1.2
+                  <Text
+                    size="3rem"
+                    fw={800}
+                    style={{
+                      background: "var(--theme-text-gradient)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                      lineHeight: 1.2,
                     }}
                   >
                     Funding the Commons
@@ -119,10 +121,11 @@ function SignInContent() {
                     Connect with the ecosystem building public goods
                   </Text>
                 </div>
-                
+
                 <Text size="lg" c="dimmed" style={{ lineHeight: 1.6 }}>
-                  Join builders, funders, mentors, and organizers working together to advance 
-                  decentralized impact and sustainable funding mechanisms.
+                  Join builders, funders, mentors, and organizers working
+                  together to advance decentralized impact and sustainable
+                  funding mechanisms.
                 </Text>
               </Stack>
 
@@ -131,7 +134,7 @@ function SignInContent() {
                 <Text size="lg" fw={600}>
                   What You&apos;ll Get Access To
                 </Text>
-                
+
                 <SimpleGrid cols={1} spacing="sm">
                   <FeatureHighlight
                     icon={IconCalendarEvent}
@@ -161,12 +164,12 @@ function SignInContent() {
               </Stack>
 
               {/* Trust Indicators */}
-              <Paper 
-                p="lg" 
-                radius="lg" 
-                style={{ 
-                  background: 'var(--theme-mantine-gradient-bg)',
-                  border: '1px solid var(--theme-mantine-border)'
+              <Paper
+                p="lg"
+                radius="lg"
+                style={{
+                  background: "var(--theme-mantine-gradient-bg)",
+                  border: "1px solid var(--theme-mantine-border)",
                 }}
               >
                 <Group justify="center" gap="xs" mb="md">
@@ -178,8 +181,9 @@ function SignInContent() {
                   </Text>
                 </Group>
                 <Text size="sm" ta="center" c="dimmed">
-                  Over 1,000+ builders and organizations have joined our platform to advance 
-                  public goods funding and decentralized impact.
+                  Over 1,000+ builders and organizations have joined our
+                  platform to advance public goods funding and decentralized
+                  impact.
                 </Text>
               </Paper>
             </Stack>
@@ -200,8 +204,8 @@ function SignInContent() {
                   <Text size="sm">
                     You&apos;ve been invited to manage the{" "}
                     <strong>{invitationVenueName}</strong> floor at{" "}
-                    <strong>{invitationEventName}</strong>.
-                    Please create an account or sign in to get started.
+                    <strong>{invitationEventName}</strong>. Please create an
+                    account or sign in to get started.
                   </Text>
                 </Alert>
               )}
@@ -246,11 +250,13 @@ function SignInContent() {
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      }
+    >
       <SignInContent />
     </Suspense>
   );

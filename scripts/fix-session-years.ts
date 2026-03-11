@@ -5,7 +5,11 @@ const prisma = new PrismaClient();
 async function fixSessionYears() {
   const dryRun = !process.argv.includes("--apply");
 
-  console.log(dryRun ? "🔍 DRY RUN (pass --apply to commit changes)\n" : "🔧 APPLYING FIXES\n");
+  console.log(
+    dryRun
+      ? "🔍 DRY RUN (pass --apply to commit changes)\n"
+      : "🔧 APPLYING FIXES\n",
+  );
 
   // Find the event
   const event = await prisma.event.findFirst({
@@ -20,7 +24,9 @@ async function fixSessionYears() {
 
   const eventYear = event.startDate.getUTCFullYear();
   console.log(`Event: ${event.name}`);
-  console.log(`Event dates: ${event.startDate.toISOString()} – ${event.endDate.toISOString()}`);
+  console.log(
+    `Event dates: ${event.startDate.toISOString()} – ${event.endDate.toISOString()}`,
+  );
   console.log(`Expected year: ${String(eventYear)}\n`);
 
   // Get all sessions for this event
@@ -44,7 +50,9 @@ async function fixSessionYears() {
     }
   }
 
-  console.log(`Sessions with correct year (${String(eventYear)}): ${String(correctYear.length)}`);
+  console.log(
+    `Sessions with correct year (${String(eventYear)}): ${String(correctYear.length)}`,
+  );
   console.log(`Sessions with wrong year: ${String(wrongYear.length)}\n`);
 
   if (wrongYear.length === 0) {
@@ -60,25 +68,41 @@ async function fixSessionYears() {
     const oldEnd = session.endTime;
     const yearDiff = eventYear - oldStart.getUTCFullYear();
 
-    const newStart = new Date(Date.UTC(
-      oldStart.getUTCFullYear() + yearDiff,
-      oldStart.getUTCMonth(),
-      oldStart.getUTCDate(),
-      oldStart.getUTCHours(),
-      oldStart.getUTCMinutes(),
-      oldStart.getUTCSeconds(),
-    ));
-    const newEnd = new Date(Date.UTC(
-      oldEnd.getUTCFullYear() + yearDiff,
-      oldEnd.getUTCMonth(),
-      oldEnd.getUTCDate(),
-      oldEnd.getUTCHours(),
-      oldEnd.getUTCMinutes(),
-      oldEnd.getUTCSeconds(),
-    ));
+    const newStart = new Date(
+      Date.UTC(
+        oldStart.getUTCFullYear() + yearDiff,
+        oldStart.getUTCMonth(),
+        oldStart.getUTCDate(),
+        oldStart.getUTCHours(),
+        oldStart.getUTCMinutes(),
+        oldStart.getUTCSeconds(),
+      ),
+    );
+    const newEnd = new Date(
+      Date.UTC(
+        oldEnd.getUTCFullYear() + yearDiff,
+        oldEnd.getUTCMonth(),
+        oldEnd.getUTCDate(),
+        oldEnd.getUTCHours(),
+        oldEnd.getUTCMinutes(),
+        oldEnd.getUTCSeconds(),
+      ),
+    );
 
-    const oldDay = oldStart.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
-    const newDay = newStart.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
+    const oldDay = oldStart.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+    const newDay = newStart.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    });
 
     console.log(`  "${session.title}"`);
     console.log(`    ${oldDay}  →  ${newDay}`);
@@ -96,7 +120,9 @@ async function fixSessionYears() {
 
   if (dryRun) {
     console.log("─".repeat(80));
-    console.log(`\nRun with --apply to fix ${String(wrongYear.length)} session(s)`);
+    console.log(
+      `\nRun with --apply to fix ${String(wrongYear.length)} session(s)`,
+    );
   } else {
     console.log(`\n✅ Fixed ${String(wrongYear.length)} session(s)`);
   }

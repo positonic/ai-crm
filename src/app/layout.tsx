@@ -1,9 +1,9 @@
 import "~/styles/globals.css";
-import { Notifications } from '@mantine/notifications';
-import '@mantine/core/styles.css';
-import '@mantine/notifications/styles.css';
-import '@mantine/dates/styles.css';
-import 'mantine-datatable/styles.layer.css';
+import { Notifications } from "@mantine/notifications";
+import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
+import "@mantine/dates/styles.css";
+import "mantine-datatable/styles.layer.css";
 
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";

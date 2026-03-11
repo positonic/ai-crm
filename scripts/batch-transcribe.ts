@@ -66,7 +66,7 @@ for (let i = 0; i < args.length; i++) {
 
 if (!inputPath) {
   console.error(
-    "Usage: bun run scripts/batch-transcribe.ts <audio-file-or-directory> [--floor 'Floor Name']"
+    "Usage: bun run scripts/batch-transcribe.ts <audio-file-or-directory> [--floor 'Floor Name']",
   );
   process.exit(1);
 }
@@ -85,7 +85,10 @@ async function runFFmpeg(args: string[]): Promise<void> {
   }
 }
 
-async function convertToWav(inputFile: string, outputFile: string): Promise<void> {
+async function convertToWav(
+  inputFile: string,
+  outputFile: string,
+): Promise<void> {
   console.log(`  Converting to WAV: ${basename(inputFile)}`);
   await runFFmpeg([
     "-i",
@@ -102,7 +105,7 @@ async function convertToWav(inputFile: string, outputFile: string): Promise<void
 
 async function splitAudio(
   wavFile: string,
-  outputDir: string
+  outputDir: string,
 ): Promise<string[]> {
   const fileSize = statSync(wavFile).size;
   const fileSizeMB = fileSize / (1024 * 1024);
@@ -111,9 +114,7 @@ async function splitAudio(
     return [wavFile];
   }
 
-  console.log(
-    `  File is ${fileSizeMB.toFixed(1)}MB, splitting into chunks...`
-  );
+  console.log(`  File is ${fileSizeMB.toFixed(1)}MB, splitting into chunks...`);
 
   const chunkPattern = join(outputDir, "chunk_%03d.wav");
   await runFFmpeg([
@@ -150,16 +151,13 @@ async function transcribeChunk(wavFile: string): Promise<string> {
   formData.append("response_format", "text");
   formData.append("language", "en");
 
-  const res = await fetch(
-    "https://api.openai.com/v1/audio/transcriptions",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: formData,
-    }
-  );
+  const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
+    },
+    body: formData,
+  });
 
   if (!res.ok) {
     const errText = await res.text();
@@ -174,7 +172,7 @@ async function transcribeChunk(wavFile: string): Promise<string> {
 async function createManualTranscription(
   title: string,
   transcription: string,
-  meetingDate?: Date
+  meetingDate?: Date,
 ): Promise<string> {
   // Use startSession + saveTranscription (API key auth) instead of
   // createManualTranscription (which requires JWT)
@@ -193,7 +191,7 @@ async function createManualTranscription(
           title,
         },
       }),
-    }
+    },
   );
 
   if (!startRes.ok) {
@@ -221,7 +219,7 @@ async function createManualTranscription(
           transcription,
         },
       }),
-    }
+    },
   );
 
   if (!saveRes.ok) {
@@ -275,7 +273,7 @@ async function processFile(filePath: string): Promise<void> {
     }
 
     console.log(
-      `  Transcript: ${fullTranscript.length} chars, ${fullTranscript.split(/\s+/).length} words`
+      `  Transcript: ${fullTranscript.length} chars, ${fullTranscript.split(/\s+/).length} words`,
     );
 
     // Step 4: Upload to exponential
@@ -324,12 +322,8 @@ async function main(): Promise<void> {
       .map((f) => join(resolved, f));
 
     if (files.length === 0) {
-      console.error(
-        `No supported audio files found in: ${resolved}`
-      );
-      console.error(
-        `Supported: ${[...SUPPORTED_EXTENSIONS].join(", ")}`
-      );
+      console.error(`No supported audio files found in: ${resolved}`);
+      console.error(`Supported: ${[...SUPPORTED_EXTENSIONS].join(", ")}`);
       process.exit(1);
     }
 
@@ -351,7 +345,7 @@ async function main(): Promise<void> {
       succeeded++;
     } catch (err) {
       console.error(
-        `  ERROR: ${err instanceof Error ? err.message : String(err)}`
+        `  ERROR: ${err instanceof Error ? err.message : String(err)}`,
       );
       failed++;
     }

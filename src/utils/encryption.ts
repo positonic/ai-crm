@@ -21,7 +21,7 @@ function deriveKey(salt: Buffer): Buffer {
     salt,
     100000,
     KEY_LENGTH,
-    "sha512"
+    "sha512",
   );
 }
 
@@ -75,7 +75,7 @@ export function decrypt(encryptedData: string): string {
     const iv = combined.subarray(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
     const tag = combined.subarray(
       SALT_LENGTH + IV_LENGTH,
-      SALT_LENGTH + IV_LENGTH + TAG_LENGTH
+      SALT_LENGTH + IV_LENGTH + TAG_LENGTH,
     );
     const encrypted = combined.subarray(SALT_LENGTH + IV_LENGTH + TAG_LENGTH);
 
@@ -103,5 +103,7 @@ export function decrypt(encryptedData: string): string {
  * Checks if encryption is configured
  */
 export function isEncryptionConfigured(): boolean {
-  return !!env.ATPROTO_ENCRYPTION_KEY && env.ATPROTO_ENCRYPTION_KEY.length >= 32;
+  return (
+    !!env.ATPROTO_ENCRYPTION_KEY && env.ATPROTO_ENCRYPTION_KEY.length >= 32
+  );
 }

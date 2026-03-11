@@ -45,7 +45,11 @@ export default function FloorOwnersClient({ eventId }: FloorOwnersClientProps) {
     api.schedule.getEventScheduleFilters.useQuery({ eventId });
 
   const { data: pendingInvitations, isLoading: invitationsLoading } =
-    api.invitation.getAll.useQuery({ eventId, type: "VENUE_OWNER", status: "PENDING" });
+    api.invitation.getAll.useQuery({
+      eventId,
+      type: "VENUE_OWNER",
+      status: "PENDING",
+    });
 
   if (ownersLoading || filtersLoading || invitationsLoading) {
     return (
@@ -81,7 +85,8 @@ export default function FloorOwnersClient({ eventId }: FloorOwnersClientProps) {
         <div>
           <Title order={2}>Floor Leads</Title>
           <Text c="dimmed" size="sm">
-            Assign users to manage floor schedules. Floor leads can add, edit, and delete sessions on their assigned floors.
+            Assign users to manage floor schedules. Floor leads can add, edit,
+            and delete sessions on their assigned floors.
           </Text>
         </div>
 
@@ -101,7 +106,10 @@ export default function FloorOwnersClient({ eventId }: FloorOwnersClientProps) {
             <Center>
               <Stack align="center" gap="sm">
                 <IconBuilding size={32} color="var(--mantine-color-dimmed)" />
-                <Text c="dimmed">No venues created yet. Create venues first to assign floor leads.</Text>
+                <Text c="dimmed">
+                  No venues created yet. Create venues first to assign floor
+                  leads.
+                </Text>
               </Stack>
             </Center>
           </Paper>
@@ -140,7 +148,10 @@ function AssignFloorOwnerForm({ eventId, venues }: AssignFormProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch] = useDebouncedValue(searchQuery, 300);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [selectedUserOption, setSelectedUserOption] = useState<{ value: string; label: string } | null>(null);
+  const [selectedUserOption, setSelectedUserOption] = useState<{
+    value: string;
+    label: string;
+  } | null>(null);
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
 
   const utils = api.useUtils();
@@ -164,19 +175,26 @@ function AssignFloorOwnerForm({ eventId, venues }: AssignFormProps) {
       void utils.schedule.getVenueOwners.invalidate({ eventId });
     },
     onError: (err) => {
-      notifications.show({ title: "Error", message: err.message, color: "red" });
+      notifications.show({
+        title: "Error",
+        message: err.message,
+        color: "red",
+      });
     },
   });
 
   const userOptions = (searchResults ?? []).map((user) => {
-    const name = `${user.firstName ?? ""} ${user.surname ?? ""}`.trim() || (user.name ?? "Unknown");
+    const name =
+      `${user.firstName ?? ""} ${user.surname ?? ""}`.trim() ||
+      (user.name ?? "Unknown");
     const email = user.email ? ` (${user.email})` : "";
     return { value: user.id, label: `${name}${email}` };
   });
 
   // Always include the selected user in the options so the label persists when search clears
   const userOptionsWithSelected =
-    selectedUserOption && !userOptions.some((o) => o.value === selectedUserOption.value)
+    selectedUserOption &&
+    !userOptions.some((o) => o.value === selectedUserOption.value)
       ? [selectedUserOption, ...userOptions]
       : userOptions;
 
@@ -217,7 +235,11 @@ function AssignFloorOwnerForm({ eventId, venues }: AssignFormProps) {
             }}
             onSearchChange={setSearchQuery}
             searchValue={searchQuery}
-            nothingFoundMessage={debouncedSearch.length >= 2 ? "No users found" : "Type at least 2 characters"}
+            nothingFoundMessage={
+              debouncedSearch.length >= 2
+                ? "No users found"
+                : "Type at least 2 characters"
+            }
             leftSection={<IconSearch size={14} />}
           />
           <Select
@@ -342,7 +364,12 @@ interface VenueOwnerCardProps {
   eventId: string;
 }
 
-function VenueOwnerCard({ venue, owners, pendingInvitations, eventId }: VenueOwnerCardProps) {
+function VenueOwnerCard({
+  venue,
+  owners,
+  pendingInvitations,
+  eventId,
+}: VenueOwnerCardProps) {
   const utils = api.useUtils();
 
   const removeMutation = api.schedule.removeVenueOwner.useMutation({
@@ -355,7 +382,11 @@ function VenueOwnerCard({ venue, owners, pendingInvitations, eventId }: VenueOwn
       void utils.schedule.getVenueOwners.invalidate({ eventId });
     },
     onError: (err) => {
-      notifications.show({ title: "Error", message: err.message, color: "red" });
+      notifications.show({
+        title: "Error",
+        message: err.message,
+        color: "red",
+      });
     },
   });
 
@@ -390,7 +421,9 @@ function VenueOwnerCard({ venue, owners, pendingInvitations, eventId }: VenueOwn
       </Group>
 
       {isEmpty ? (
-        <Text c="dimmed" size="sm">No owners assigned</Text>
+        <Text c="dimmed" size="sm">
+          No owners assigned
+        </Text>
       ) : (
         <Stack gap="xs">
           {owners.map((owner) => {
@@ -405,9 +438,13 @@ function VenueOwnerCard({ venue, owners, pendingInvitations, eventId }: VenueOwn
                     {displayName.charAt(0).toUpperCase()}
                   </Avatar>
                   <div>
-                    <Text size="sm" fw={500}>{displayName}</Text>
+                    <Text size="sm" fw={500}>
+                      {displayName}
+                    </Text>
                     {owner.user.email && (
-                      <Text size="xs" c="dimmed">{owner.user.email}</Text>
+                      <Text size="xs" c="dimmed">
+                        {owner.user.email}
+                      </Text>
                     )}
                   </div>
                 </Group>
@@ -436,10 +473,16 @@ function VenueOwnerCard({ venue, owners, pendingInvitations, eventId }: VenueOwn
                 </Avatar>
                 <div>
                   <Group gap="xs">
-                    <Text size="sm" fw={500}>{invitation.email}</Text>
-                    <Badge size="xs" variant="light" color="yellow">Pending</Badge>
+                    <Text size="sm" fw={500}>
+                      {invitation.email}
+                    </Text>
+                    <Badge size="xs" variant="light" color="yellow">
+                      Pending
+                    </Badge>
                   </Group>
-                  <Text size="xs" c="dimmed">Invitation sent</Text>
+                  <Text size="xs" c="dimmed">
+                    Invitation sent
+                  </Text>
                 </div>
               </Group>
               <Group gap={4}>

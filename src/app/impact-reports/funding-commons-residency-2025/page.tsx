@@ -1,6 +1,9 @@
 "use client";
 
-import { ResidencyImpactReport, type ResidencyReportConfig } from "~/app/_components/ResidencyImpactReport";
+import {
+  ResidencyImpactReport,
+  type ResidencyReportConfig,
+} from "~/app/_components/ResidencyImpactReport";
 
 const config: ResidencyReportConfig = {
   // Core identifiers
@@ -18,7 +21,8 @@ const config: ResidencyReportConfig = {
   projectCount: "42",
 
   // Program details
-  description: "A three-week intensive residency program bringing together 33 builders, researchers, and funders to develop projects advancing public goods funding, web3 infrastructure, and decentralized governance. Set in Buenos Aires during October-November 2025, the program fostered collaboration, learning, and meaningful impact in the Funding the Commons ecosystem.",
+  description:
+    "A three-week intensive residency program bringing together 33 builders, researchers, and funders to develop projects advancing public goods funding, web3 infrastructure, and decentralized governance. Set in Buenos Aires during October-November 2025, the program fostered collaboration, learning, and meaningful impact in the Funding the Commons ecosystem.",
 
   programHighlights: [
     "3-week intensive residency program",
@@ -38,24 +42,40 @@ const config: ResidencyReportConfig = {
     {
       phase: "Week 1: Foundation",
       description: "Onboarding, team formation, and project scoping",
-      activities: ["Welcome sessions", "Mentor introductions", "Initial project pitches", "Workshop sessions"],
+      activities: [
+        "Welcome sessions",
+        "Mentor introductions",
+        "Initial project pitches",
+        "Workshop sessions",
+      ],
     },
     {
       phase: "Week 2: Development",
       description: "Intensive building, collaboration, and iteration",
-      activities: ["Daily standups", "Technical workshops", "One-on-one mentoring", "Mid-program check-ins"],
+      activities: [
+        "Daily standups",
+        "Technical workshops",
+        "One-on-one mentoring",
+        "Mid-program check-ins",
+      ],
     },
     {
       phase: "Week 3: Launch",
       description: "Finalization, presentations, and community showcase",
-      activities: ["Project demos", "Impact measurement", "Community presentations", "Next steps planning"],
+      activities: [
+        "Project demos",
+        "Impact measurement",
+        "Community presentations",
+        "Next steps planning",
+      ],
     },
   ],
 
   // Participant profile
   participantProfile: {
     countries: "18",
-    topCountries: "Top countries: USA (4), Ireland (2), Argentina (2), Bolivia (2)",
+    topCountries:
+      "Top countries: USA (4), Ireland (2), Argentina (2), Bolivia (2)",
     regionBreakdown: [
       { label: "LATAM", percentage: "27%", color: "green" },
       { label: "Global", percentage: "73%", color: "gray" },

@@ -1,6 +1,18 @@
 "use client";
 
-import { Button, Container, Paper, PasswordInput, Stack, Text, TextInput, Title, Alert, Center, Loader } from "@mantine/core";
+import {
+  Button,
+  Container,
+  Paper,
+  PasswordInput,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+  Alert,
+  Center,
+  Loader,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -44,11 +56,16 @@ function RegisterFormContent() {
       name: (value) => (value.trim().length < 1 ? "Name is required" : null),
       email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
       password: (value) => {
-        if (value.length < 8) return "Password must be at least 8 characters long";
-        if (!/[A-Z]/.test(value)) return "Password must contain at least one uppercase letter";
-        if (!/[a-z]/.test(value)) return "Password must contain at least one lowercase letter";
-        if (!/\d/.test(value)) return "Password must contain at least one number";
-        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>?]/.test(value)) return "Password must contain at least one special character";
+        if (value.length < 8)
+          return "Password must be at least 8 characters long";
+        if (!/[A-Z]/.test(value))
+          return "Password must contain at least one uppercase letter";
+        if (!/[a-z]/.test(value))
+          return "Password must contain at least one lowercase letter";
+        if (!/\d/.test(value))
+          return "Password must contain at least one number";
+        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>?]/.test(value))
+          return "Password must contain at least one special character";
         return null;
       },
       confirmPassword: (value, values) =>
@@ -74,7 +91,7 @@ function RegisterFormContent() {
         }),
       });
 
-      const data = await response.json() as RegisterResponse;
+      const data = (await response.json()) as RegisterResponse;
 
       if (!response.ok) {
         throw new Error(data.error ?? "Registration failed");
@@ -96,12 +113,15 @@ function RegisterFormContent() {
       });
 
       if (signInResult?.error) {
-        setError("Account created but sign in failed. Please try signing in manually.");
+        setError(
+          "Account created but sign in failed. Please try signing in manually.",
+        );
       } else if (signInResult?.url) {
         window.location.href = signInResult.url;
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Registration failed";
+      const errorMessage =
+        err instanceof Error ? err.message : "Registration failed";
       setError(errorMessage);
       notifications.show({
         title: "Registration Failed",
@@ -175,7 +195,13 @@ function RegisterFormContent() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<Center h="100vh"><Loader size="lg" /></Center>}>
+    <Suspense
+      fallback={
+        <Center h="100vh">
+          <Loader size="lg" />
+        </Center>
+      }
+    >
       <RegisterFormContent />
     </Suspense>
   );

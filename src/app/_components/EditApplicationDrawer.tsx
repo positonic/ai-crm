@@ -1,17 +1,8 @@
 "use client";
 
 import React from "react";
-import {
-  Drawer,
-  Stack,
-  Title,
-  Group,
-  Button,
-  Text,
-} from "@mantine/core";
-import {
-  IconX
-} from "@tabler/icons-react";
+import { Drawer, Stack, Title, Group, Button, Text } from "@mantine/core";
+import { IconX } from "@tabler/icons-react";
 import AdminFieldsEditor from "./AdminFieldsEditor";
 import ProjectManagementSection from "./ProjectManagementSection";
 import { getDisplayName } from "~/utils/userDisplay";
@@ -30,11 +21,11 @@ interface EditApplicationDrawerProps {
   eventId: string;
 }
 
-export default function EditApplicationDrawer({ 
-  opened, 
-  onClose, 
-  user, 
-  eventId 
+export default function EditApplicationDrawer({
+  opened,
+  onClose,
+  user,
+  eventId,
 }: EditApplicationDrawerProps) {
   const handleClose = () => {
     onClose();
@@ -60,15 +51,10 @@ export default function EditApplicationDrawer({
     >
       <Stack gap="lg">
         {/* Admin Fields Editor */}
-        <AdminFieldsEditor
-          user={user}
-          eventId={eventId}
-        />
+        <AdminFieldsEditor user={user} eventId={eventId} />
 
         {/* Project Management Section */}
-        <ProjectManagementSection 
-          userId={user.id}
-        />
+        <ProjectManagementSection userId={user.id} />
 
         {/* Action buttons */}
         <Group justify="flex-end">

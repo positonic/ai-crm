@@ -24,7 +24,11 @@ function formatTimeShort(date: Date): string {
   });
 }
 
-export default function ByFloorView({ sessions, venues, eventId }: ByFloorViewProps) {
+export default function ByFloorView({
+  sessions,
+  venues,
+  eventId,
+}: ByFloorViewProps) {
   const sessionsByVenue = useMemo(() => {
     const byVenue = new Map<string, ScheduleSession[]>();
 
@@ -56,7 +60,10 @@ export default function ByFloorView({ sessions, venues, eventId }: ByFloorViewPr
   const unassignedSessions = useMemo(() => {
     return sessions
       .filter((s) => !s.venueId)
-      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+      .sort(
+        (a, b) =>
+          new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
+      );
   }, [sessions]);
 
   if (venues.length === 0) {
@@ -76,12 +83,7 @@ export default function ByFloorView({ sessions, venues, eventId }: ByFloorViewPr
 
         return (
           <div key={venue.id} className="by-floor-venue-group">
-            <Text
-              className="by-floor-venue-label"
-              fw={600}
-              size="sm"
-              c="blue"
-            >
+            <Text className="by-floor-venue-label" fw={600} size="sm" c="blue">
               {venue.name}
             </Text>
             <Stack gap={hasRooms ? "sm" : 4}>
@@ -103,7 +105,11 @@ export default function ByFloorView({ sessions, venues, eventId }: ByFloorViewPr
                         </Text>
                         <Stack gap={4}>
                           {roomSessions.map((session) => (
-                            <SessionBar key={session.id} session={session} eventId={eventId} />
+                            <SessionBar
+                              key={session.id}
+                              session={session}
+                              eventId={eventId}
+                            />
                           ))}
                         </Stack>
                       </div>
@@ -115,14 +121,22 @@ export default function ByFloorView({ sessions, venues, eventId }: ByFloorViewPr
                       {venueSessions
                         .filter((s) => !s.roomId)
                         .map((session) => (
-                          <SessionBar key={session.id} session={session} eventId={eventId} />
+                          <SessionBar
+                            key={session.id}
+                            session={session}
+                            eventId={eventId}
+                          />
                         ))}
                     </Stack>
                   )}
                 </>
               ) : (
                 venueSessions.map((session) => (
-                  <SessionBar key={session.id} session={session} eventId={eventId} />
+                  <SessionBar
+                    key={session.id}
+                    session={session}
+                    eventId={eventId}
+                  />
                 ))
               )}
             </Stack>
@@ -131,17 +145,16 @@ export default function ByFloorView({ sessions, venues, eventId }: ByFloorViewPr
       })}
       {unassignedSessions.length > 0 && (
         <div className="by-floor-venue-group">
-          <Text
-            className="by-floor-venue-label"
-            fw={600}
-            size="sm"
-            c="dimmed"
-          >
+          <Text className="by-floor-venue-label" fw={600} size="sm" c="dimmed">
             General
           </Text>
           <Stack gap={4}>
             {unassignedSessions.map((session) => (
-              <SessionBar key={session.id} session={session} eventId={eventId} />
+              <SessionBar
+                key={session.id}
+                session={session}
+                eventId={eventId}
+              />
             ))}
           </Stack>
         </div>
@@ -150,14 +163,25 @@ export default function ByFloorView({ sessions, venues, eventId }: ByFloorViewPr
   );
 }
 
-function SessionBar({ session, eventId }: { session: ScheduleSession; eventId: string }) {
+function SessionBar({
+  session,
+  eventId,
+}: {
+  session: ScheduleSession;
+  eventId: string;
+}) {
   const color = session.sessionType?.color ?? "#94a3b8";
 
   return (
     <Link
       href={`/events/${eventId}/schedule/${session.id}`}
       className="by-floor-session-bar"
-      style={{ backgroundColor: `${color}50`, textDecoration: "none", color: "inherit", display: "block" }}
+      style={{
+        backgroundColor: `${color}50`,
+        textDecoration: "none",
+        color: "inherit",
+        display: "block",
+      }}
     >
       <Text fw={500} size="sm">
         <Text span fw={700} size="sm">

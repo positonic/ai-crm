@@ -9,7 +9,15 @@ import {
 } from "@tabler/icons-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Drawer, Burger, NavLink, Stack, Text, Divider, Group } from "@mantine/core";
+import {
+  Drawer,
+  Burger,
+  NavLink,
+  Stack,
+  Text,
+  Divider,
+  Group,
+} from "@mantine/core";
 import { NavigationContainer } from "~/app/_components/nav/NavigationContainer";
 import { NavigationTabs } from "~/app/_components/nav/NavigationTabs";
 import { NavigationTab } from "~/app/_components/nav/NavigationTab";
@@ -25,7 +33,9 @@ interface AdminNavigationProps {
   acceptedEvents?: AcceptedEvent[];
 }
 
-export default function AdminNavigation({ acceptedEvents = [] }: AdminNavigationProps) {
+export default function AdminNavigation({
+  acceptedEvents = [],
+}: AdminNavigationProps) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -33,7 +43,11 @@ export default function AdminNavigation({ acceptedEvents = [] }: AdminNavigation
   const getActiveTab = () => {
     if (pathname === "/admin" || pathname === "/admin/") return "dashboard";
     if (pathname.startsWith("/admin/events")) return "events";
-    if (pathname.startsWith("/admin/users") || pathname.startsWith("/admin/communications")) return "users";
+    if (
+      pathname.startsWith("/admin/users") ||
+      pathname.startsWith("/admin/communications")
+    )
+      return "users";
     if (pathname.startsWith("/impact-reports")) return "impact-reports";
 
     for (const event of acceptedEvents) {
@@ -59,10 +73,30 @@ export default function AdminNavigation({ acceptedEvents = [] }: AdminNavigation
   };
 
   const navItems = [
-    { value: "dashboard", href: "/admin", icon: <IconDashboard size={18} />, label: "Dashboard" },
-    { value: "events", href: "/admin/events", icon: <IconCalendarEvent size={18} />, label: "Events" },
-    { value: "users", href: "/admin/users", icon: <IconUsers size={18} />, label: "Users" },
-    { value: "impact-reports", href: "/impact-reports", icon: <IconChartBar size={18} />, label: "Impact Reports" },
+    {
+      value: "dashboard",
+      href: "/admin",
+      icon: <IconDashboard size={18} />,
+      label: "Dashboard",
+    },
+    {
+      value: "events",
+      href: "/admin/events",
+      icon: <IconCalendarEvent size={18} />,
+      label: "Events",
+    },
+    {
+      value: "users",
+      href: "/admin/users",
+      icon: <IconUsers size={18} />,
+      label: "Users",
+    },
+    {
+      value: "impact-reports",
+      href: "/impact-reports",
+      icon: <IconChartBar size={18} />,
+      label: "Impact Reports",
+    },
   ];
 
   return (
@@ -130,16 +164,32 @@ export default function AdminNavigation({ acceptedEvents = [] }: AdminNavigation
       <div className="nav-desktop-tabs">
         <NavigationContainer level="main">
           <NavigationTabs activeTab={activeTab} level="main">
-            <NavigationTab value="dashboard" href="/admin" icon={<IconDashboard size={18} />}>
+            <NavigationTab
+              value="dashboard"
+              href="/admin"
+              icon={<IconDashboard size={18} />}
+            >
               Dashboard
             </NavigationTab>
-            <NavigationTab value="events" href="/admin/events" icon={<IconCalendarEvent size={18} />}>
+            <NavigationTab
+              value="events"
+              href="/admin/events"
+              icon={<IconCalendarEvent size={18} />}
+            >
               Events
             </NavigationTab>
-            <NavigationTab value="users" href="/admin/users" icon={<IconUsers size={18} />}>
+            <NavigationTab
+              value="users"
+              href="/admin/users"
+              icon={<IconUsers size={18} />}
+            >
               Users
             </NavigationTab>
-            <NavigationTab value="impact-reports" href="/impact-reports" icon={<IconChartBar size={18} />}>
+            <NavigationTab
+              value="impact-reports"
+              href="/impact-reports"
+              icon={<IconChartBar size={18} />}
+            >
               Impact Reports
             </NavigationTab>
             {acceptedEvents.map((event) => (

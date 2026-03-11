@@ -132,8 +132,8 @@ export default function ActivityCertsPage() {
       </p>
 
       <div className="docs-callout">
-        <strong>Note:</strong> Publishing is a one-time action per event. Once an
-        activity cert is published, it cannot be re-published. Make sure all
+        <strong>Note:</strong> Publishing is a one-time action per event. Once
+        an activity cert is published, it cannot be re-published. Make sure all
         sessions and speakers are finalised before publishing.
       </div>
 
@@ -213,9 +213,7 @@ export default function ActivityCertsPage() {
           (e.g. &ldquo;Impactful Events&rdquo;), and copy the generated
           password.
         </li>
-        <li>
-          Add both values to your environment configuration.
-        </li>
+        <li>Add both values to your environment configuration.</li>
       </ol>
 
       <div className="docs-callout">

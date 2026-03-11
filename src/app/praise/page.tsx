@@ -1,7 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Container, Title, Tabs, Card, Text, Group, Avatar, Badge, Stack, Paper } from "@mantine/core";
+import {
+  Container,
+  Title,
+  Tabs,
+  Card,
+  Text,
+  Group,
+  Avatar,
+  Badge,
+  Stack,
+  Paper,
+} from "@mantine/core";
 import { api } from "~/trpc/react";
 import { formatDistanceToNow } from "date-fns";
 import { getDisplayName } from "~/utils/userDisplay";
@@ -9,26 +20,40 @@ import { getDisplayName } from "~/utils/userDisplay";
 export default function PraisePage() {
   const [activeTab, setActiveTab] = useState<string | null>("leaderboard");
 
-  const { data: receivedPraise, isLoading: loadingReceived } = api.praise.getMyReceivedPraise.useQuery();
-  const { data: sentPraise, isLoading: loadingSent } = api.praise.getMySentPraise.useQuery();
+  const { data: receivedPraise, isLoading: loadingReceived } =
+    api.praise.getMyReceivedPraise.useQuery();
+  const { data: sentPraise, isLoading: loadingSent } =
+    api.praise.getMySentPraise.useQuery();
   const { data: stats } = api.praise.getMyStats.useQuery();
-  const { data: leaderboard, isLoading: loadingLeaderboard } = api.praise.getLeaderboard.useQuery({ limit: 10 });
-  const { data: transactions, isLoading: loadingTransactions } = api.praise.getAllTransactions.useQuery({ limit: 50 });
+  const { data: leaderboard, isLoading: loadingLeaderboard } =
+    api.praise.getLeaderboard.useQuery({ limit: 10 });
+  const { data: transactions, isLoading: loadingTransactions } =
+    api.praise.getAllTransactions.useQuery({ limit: 50 });
 
   return (
     <Container size="lg" py="xl">
-      <Title order={1} mb="xl">Praise Dashboard</Title>
+      <Title order={1} mb="xl">
+        Praise Dashboard
+      </Title>
 
       {/* Stats Overview */}
       {stats && (
         <Group mb="xl" grow>
           <Paper p="md" withBorder>
-            <Text size="sm" c="dimmed">Praise Received</Text>
-            <Text size="xl" fw={700}>{stats.receivedCount}</Text>
+            <Text size="sm" c="dimmed">
+              Praise Received
+            </Text>
+            <Text size="xl" fw={700}>
+              {stats.receivedCount}
+            </Text>
           </Paper>
           <Paper p="md" withBorder>
-            <Text size="sm" c="dimmed">Praise Sent</Text>
-            <Text size="xl" fw={700}>{stats.sentCount}</Text>
+            <Text size="sm" c="dimmed">
+              Praise Sent
+            </Text>
+            <Text size="xl" fw={700}>
+              {stats.sentCount}
+            </Text>
           </Paper>
         </Group>
       )}
@@ -59,8 +84,12 @@ export default function PraisePage() {
                         radius="xl"
                       />
                       <div>
-                        <Text fw={500}>{getDisplayName(entry.user, "Unknown")}</Text>
-                        <Text size="sm" c="dimmed">{entry.user?.email}</Text>
+                        <Text fw={500}>
+                          {getDisplayName(entry.user, "Unknown")}
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                          {entry.user?.email}
+                        </Text>
                       </div>
                     </Group>
                     <Badge size="lg" color="grape" variant="filled">
@@ -93,15 +122,21 @@ export default function PraisePage() {
                         alt={getDisplayName(transaction.sender, "Unknown")}
                         radius="xl"
                       />
-                      <Text fw={500}>{getDisplayName(transaction.sender, "Unknown")}</Text>
+                      <Text fw={500}>
+                        {getDisplayName(transaction.sender, "Unknown")}
+                      </Text>
                       <Text c="dimmed">→</Text>
                       <Avatar
                         src={transaction.recipient?.image}
-                        alt={getDisplayName(transaction.recipient) ?? transaction.recipientName}
+                        alt={
+                          getDisplayName(transaction.recipient) ??
+                          transaction.recipientName
+                        }
                         radius="xl"
                       />
                       <Text fw={500}>
-                        {getDisplayName(transaction.recipient) ?? `@${transaction.recipientName}`}
+                        {getDisplayName(transaction.recipient) ??
+                          `@${transaction.recipientName}`}
                       </Text>
                     </Group>
                     {transaction.event && (
@@ -112,7 +147,9 @@ export default function PraisePage() {
                   </Group>
                   <Text>{transaction.message}</Text>
                   <Text size="sm" c="dimmed" mt="xs">
-                    {formatDistanceToNow(new Date(transaction.createdAt), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(transaction.createdAt), {
+                      addSuffix: true,
+                    })}
                   </Text>
                 </Card>
               ))}
@@ -141,9 +178,13 @@ export default function PraisePage() {
                         radius="xl"
                       />
                       <div>
-                        <Text fw={500}>{getDisplayName(praise.sender, "Unknown")}</Text>
+                        <Text fw={500}>
+                          {getDisplayName(praise.sender, "Unknown")}
+                        </Text>
                         <Text size="sm" c="dimmed">
-                          {formatDistanceToNow(new Date(praise.createdAt), { addSuffix: true })}
+                          {formatDistanceToNow(new Date(praise.createdAt), {
+                            addSuffix: true,
+                          })}
                         </Text>
                       </div>
                     </Group>
@@ -177,15 +218,21 @@ export default function PraisePage() {
                     <Group>
                       <Avatar
                         src={praise.recipient?.image}
-                        alt={getDisplayName(praise.recipient) ?? praise.recipientName}
+                        alt={
+                          getDisplayName(praise.recipient) ??
+                          praise.recipientName
+                        }
                         radius="xl"
                       />
                       <div>
                         <Text fw={500}>
-                          {getDisplayName(praise.recipient) ?? `@${praise.recipientName}`}
+                          {getDisplayName(praise.recipient) ??
+                            `@${praise.recipientName}`}
                         </Text>
                         <Text size="sm" c="dimmed">
-                          {formatDistanceToNow(new Date(praise.createdAt), { addSuffix: true })}
+                          {formatDistanceToNow(new Date(praise.createdAt), {
+                            addSuffix: true,
+                          })}
                         </Text>
                       </div>
                     </Group>
@@ -202,10 +249,12 @@ export default function PraisePage() {
           ) : (
             <Paper p="xl" withBorder>
               <Text c="dimmed" ta="center">
-                You haven&apos;t sent any praise yet. Send some appreciation via Telegram! 💝
+                You haven&apos;t sent any praise yet. Send some appreciation via
+                Telegram! 💝
               </Text>
               <Text size="sm" c="dimmed" ta="center" mt="sm">
-                Message the bot: <code>!Praise @username for being awesome</code>
+                Message the bot:{" "}
+                <code>!Praise @username for being awesome</code>
               </Text>
             </Paper>
           )}

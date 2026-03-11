@@ -37,7 +37,8 @@ export default function TopicClustersSidebar({
         <Paper p="md" radius="md" withBorder>
           <Stack gap="xs" align="center">
             <Text size="sm" c="dimmed" ta="center">
-              Topic clusters will appear here as sessions are transcribed and analyzed.
+              Topic clusters will appear here as sessions are transcribed and
+              analyzed.
             </Text>
           </Stack>
         </Paper>

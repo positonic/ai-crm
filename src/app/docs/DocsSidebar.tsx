@@ -64,8 +64,7 @@ export default function DocsSidebar() {
             label="Introduction"
             href="/docs/get-started/introduction"
             active={
-              isActive("/docs/get-started/introduction") ||
-              pathname === "/docs"
+              isActive("/docs/get-started/introduction") || pathname === "/docs"
             }
           />
           <SidebarItem

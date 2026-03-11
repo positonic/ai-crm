@@ -59,7 +59,12 @@ interface Contact {
 }
 
 // Connection strength calculation based on communication history
-type ConnectionStrength = "very_strong" | "strong" | "good" | "weak" | "very_weak";
+type ConnectionStrength =
+  | "very_strong"
+  | "strong"
+  | "good"
+  | "weak"
+  | "very_weak";
 
 function getConnectionStrength(contact: Contact): ConnectionStrength {
   // Simple heuristic based on available data
@@ -79,7 +84,11 @@ function getConnectionStrength(contact: Contact): ConnectionStrength {
   return "very_weak";
 }
 
-function ConnectionStrengthBadge({ strength }: { strength: ConnectionStrength }) {
+function ConnectionStrengthBadge({
+  strength,
+}: {
+  strength: ConnectionStrength;
+}) {
   const config = {
     very_strong: { color: "#22c55e", label: "Very strong" },
     strong: { color: "#3b82f6", label: "Strong" },
@@ -100,7 +109,9 @@ function ConnectionStrengthBadge({ strength }: { strength: ConnectionStrength })
           backgroundColor: color,
         }}
       />
-      <Text size="sm" c="dimmed">{label}</Text>
+      <Text size="sm" c="dimmed">
+        {label}
+      </Text>
     </Group>
   );
 }
@@ -112,7 +123,9 @@ export default function ContactsPage() {
   const [createListView, setCreateListView] = useState(false);
   const [listSearchQuery, setListSearchQuery] = useState("");
   const [newListName, setNewListName] = useState("");
-  const [newListObjectType, setNewListObjectType] = useState<string | null>("people");
+  const [newListObjectType, setNewListObjectType] = useState<string | null>(
+    "people",
+  );
 
   const { data: contacts, isLoading } = api.contact.getContacts.useQuery();
 
@@ -127,21 +140,30 @@ export default function ContactsPage() {
   }, [contacts]);
 
   // Checkbox handlers
-  const handleSelectContact = useCallback((contactId: string, checked: boolean) => {
-    setSelectedContactIds(prev =>
-      checked
-        ? [...prev, contactId]
-        : prev.filter(id => id !== contactId)
-    );
-  }, []);
+  const handleSelectContact = useCallback(
+    (contactId: string, checked: boolean) => {
+      setSelectedContactIds((prev) =>
+        checked ? [...prev, contactId] : prev.filter((id) => id !== contactId),
+      );
+    },
+    [],
+  );
 
-  const handleSelectAll = useCallback((checked: boolean) => {
-    setSelectedContactIds(checked ? (sortedContacts?.map(c => c.id) ?? []) : []);
-  }, [sortedContacts]);
+  const handleSelectAll = useCallback(
+    (checked: boolean) => {
+      setSelectedContactIds(
+        checked ? (sortedContacts?.map((c) => c.id) ?? []) : [],
+      );
+    },
+    [sortedContacts],
+  );
 
-  const isAllSelected = useMemo(() =>
-    sortedContacts && sortedContacts.length > 0 && selectedContactIds.length === sortedContacts.length,
-    [sortedContacts, selectedContactIds]
+  const isAllSelected = useMemo(
+    () =>
+      sortedContacts &&
+      sortedContacts.length > 0 &&
+      selectedContactIds.length === sortedContacts.length,
+    [sortedContacts, selectedContactIds],
   );
 
   // Handle authentication on client side
@@ -202,7 +224,8 @@ export default function ContactsPage() {
                         width: 16,
                         height: 16,
                         borderRadius: 4,
-                        background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                        background:
+                          "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
                       }}
                     />
                   }
@@ -293,9 +316,18 @@ export default function ContactsPage() {
       >
         <Group gap="md">
           <Group gap={6}>
-            <IconArrowsSort size={14} style={{ color: "var(--crm-sidebar-text)" }} />
-            <Text size="sm" c="dimmed">Sorted by</Text>
-            <Text size="sm" fw={500} style={{ color: "var(--crm-sidebar-text-active)" }}>
+            <IconArrowsSort
+              size={14}
+              style={{ color: "var(--crm-sidebar-text)" }}
+            />
+            <Text size="sm" c="dimmed">
+              Sorted by
+            </Text>
+            <Text
+              size="sm"
+              fw={500}
+              style={{ color: "var(--crm-sidebar-text-active)" }}
+            >
               Last email interaction
             </Text>
           </Group>
@@ -332,7 +364,9 @@ export default function ContactsPage() {
                 background: "var(--crm-sidebar-bg)",
               }}
             >
-              <th style={{ padding: "10px 16px", width: 40, textAlign: "left" }}>
+              <th
+                style={{ padding: "10px 16px", width: 40, textAlign: "left" }}
+              >
                 <Checkbox
                   checked={isAllSelected}
                   onChange={(e) => handleSelectAll(e.currentTarget.checked)}
@@ -342,7 +376,9 @@ export default function ContactsPage() {
               </th>
               <th style={{ padding: "10px 16px", textAlign: "left" }}>
                 <Group gap={4}>
-                  <Text size="sm" fw={500} c="dimmed">Person</Text>
+                  <Text size="sm" fw={500} c="dimmed">
+                    Person
+                  </Text>
                   <ActionIcon variant="subtle" size="xs" color="gray">
                     <IconPlus size={12} />
                   </ActionIcon>
@@ -359,7 +395,9 @@ export default function ContactsPage() {
                       opacity: 0.5,
                     }}
                   />
-                  <Text size="sm" fw={500} c="dimmed">Connection stren...</Text>
+                  <Text size="sm" fw={500} c="dimmed">
+                    Connection stren...
+                  </Text>
                 </Group>
               </th>
               <th style={{ padding: "10px 16px", textAlign: "left" }}>
@@ -373,7 +411,9 @@ export default function ContactsPage() {
                       opacity: 0.5,
                     }}
                   />
-                  <Text size="sm" fw={500} c="dimmed">Last email interaction</Text>
+                  <Text size="sm" fw={500} c="dimmed">
+                    Last email interaction
+                  </Text>
                 </Group>
               </th>
               <th style={{ padding: "10px 16px", textAlign: "left" }}>
@@ -387,7 +427,9 @@ export default function ContactsPage() {
                       opacity: 0.5,
                     }}
                   />
-                  <Text size="sm" fw={500} c="dimmed">Last calendar interaction</Text>
+                  <Text size="sm" fw={500} c="dimmed">
+                    Last calendar interaction
+                  </Text>
                 </Group>
               </th>
               <th style={{ padding: "10px 16px", textAlign: "left" }}>
@@ -430,7 +472,9 @@ export default function ContactsPage() {
                   >
                     <Checkbox
                       checked={selectedContactIds.includes(contact.id)}
-                      onChange={(e) => handleSelectContact(contact.id, e.currentTarget.checked)}
+                      onChange={(e) =>
+                        handleSelectContact(contact.id, e.currentTarget.checked)
+                      }
                       aria-label={`Select ${contact.firstName} ${contact.lastName}`}
                       size="sm"
                     />
@@ -440,7 +484,10 @@ export default function ContactsPage() {
                       <Avatar size="sm" color="blue" radius="xl">
                         {contact.firstName?.[0]?.toUpperCase()}
                       </Avatar>
-                      <Text size="sm" style={{ color: "var(--crm-sidebar-text-active)" }}>
+                      <Text
+                        size="sm"
+                        style={{ color: "var(--crm-sidebar-text-active)" }}
+                      >
                         {contact.firstName} {contact.lastName}
                       </Text>
                     </Group>
@@ -544,7 +591,11 @@ export default function ContactsPage() {
         >
           <Group gap="md">
             <Group gap="xs">
-              <Text size="sm" fw={500} style={{ color: "var(--crm-sidebar-text-active)" }}>
+              <Text
+                size="sm"
+                fw={500}
+                style={{ color: "var(--crm-sidebar-text-active)" }}
+              >
                 {selectedContactIds.length} selected
               </Text>
               <ActionIcon
@@ -707,7 +758,10 @@ export default function ContactsPage() {
                   marginBottom: 12,
                 }}
               >
-                <IconFolder size={24} style={{ color: "var(--crm-sidebar-text)", opacity: 0.5 }} />
+                <IconFolder
+                  size={24}
+                  style={{ color: "var(--crm-sidebar-text)", opacity: 0.5 }}
+                />
               </Box>
               <Text size="sm" c="dimmed">
                 No lists found

@@ -1,18 +1,18 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Starting to seed IATF speaker application questions...')
+  console.log("🌱 Starting to seed IATF speaker application questions...");
 
   // Get the Intelligence at the Frontier event
   const event = await prisma.event.findFirst({
-    where: { slug: 'intelligence-at-the-frontier' }
-  })
+    where: { slug: "intelligence-at-the-frontier" },
+  });
 
   if (!event) {
-    console.error('❌ Event intelligence-at-the-frontier not found.')
-    return
+    console.error("❌ Event intelligence-at-the-frontier not found.");
+    return;
   }
 
   // Speaker application questions - starting from order 2001 to avoid conflicts
@@ -38,8 +38,10 @@ async function main() {
     },
     {
       questionKey: "speaker_symbol_metaphor",
-      questionEn: "If you could choose a symbol or metaphor for public goods, what would it be?",
-      questionEs: "If you could choose a symbol or metaphor for public goods, what would it be?",
+      questionEn:
+        "If you could choose a symbol or metaphor for public goods, what would it be?",
+      questionEs:
+        "If you could choose a symbol or metaphor for public goods, what would it be?",
       questionType: "TEXT" as const,
       required: false,
       options: [],
@@ -56,8 +58,10 @@ async function main() {
     },
     {
       questionKey: "speaker_upbringing_public_goods",
-      questionEn: "How has where you grew up shaped your understanding of public goods?",
-      questionEs: "How has where you grew up shaped your understanding of public goods?",
+      questionEn:
+        "How has where you grew up shaped your understanding of public goods?",
+      questionEs:
+        "How has where you grew up shaped your understanding of public goods?",
       questionType: "TEXTAREA" as const,
       required: false,
       options: [],
@@ -65,8 +69,10 @@ async function main() {
     },
     {
       questionKey: "speaker_recent_book",
-      questionEn: "What's the most recent book you've read and would recommend?",
-      questionEs: "What's the most recent book you've read and would recommend?",
+      questionEn:
+        "What's the most recent book you've read and would recommend?",
+      questionEs:
+        "What's the most recent book you've read and would recommend?",
       questionType: "TEXT" as const,
       required: false,
       options: [],
@@ -74,16 +80,20 @@ async function main() {
     },
     {
       questionKey: "speaker_dream_collaborator",
-      questionEn: "Who's someone you'd love to collaborate with to build better systems for the commons?",
-      questionEs: "Who's someone you'd love to collaborate with to build better systems for the commons?",
+      questionEn:
+        "Who's someone you'd love to collaborate with to build better systems for the commons?",
+      questionEs:
+        "Who's someone you'd love to collaborate with to build better systems for the commons?",
       questionType: "TEXT" as const,
       required: false,
       options: [],
       order: 2007,
     },
-  ]
+  ];
 
-  console.log(`📝 Creating ${speakerQuestions.length} speaker questions for ${event.name}...`)
+  console.log(
+    `📝 Creating ${speakerQuestions.length} speaker questions for ${event.name}...`,
+  );
 
   for (const questionData of speakerQuestions) {
     const question = await prisma.applicationQuestion.upsert({
@@ -91,7 +101,7 @@ async function main() {
         eventId_questionKey: {
           eventId: event.id,
           questionKey: questionData.questionKey,
-        }
+        },
       },
       update: {
         questionEn: questionData.questionEn,
@@ -111,19 +121,19 @@ async function main() {
         options: questionData.options,
         order: questionData.order,
       },
-    })
-    console.log(`✅ Created/updated question: ${question.questionKey}`)
+    });
+    console.log(`✅ Created/updated question: ${question.questionKey}`);
   }
 
-  console.log('🎉 IATF speaker questions seeded successfully!')
+  console.log("🎉 IATF speaker questions seeded successfully!");
 }
 
 void main()
   .then(async () => {
-    await prisma.$disconnect()
+    await prisma.$disconnect();
   })
   .catch(async (e) => {
-    console.error('❌ Error seeding IATF speaker questions:', e)
-    await prisma.$disconnect()
-    process.exit(1)
-  })
+    console.error("❌ Error seeding IATF speaker questions:", e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });

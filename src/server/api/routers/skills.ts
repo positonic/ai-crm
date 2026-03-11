@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 
 export const skillsRouter = createTRPCRouter({
   /**
@@ -14,7 +18,7 @@ export const skillsRouter = createTRPCRouter({
           search: z.string().optional(),
           limit: z.number().min(1).max(100).default(50),
         })
-        .optional()
+        .optional(),
     )
     .query(async ({ ctx, input }) => {
       const { category, search, limit } = input ?? {};
@@ -32,10 +36,7 @@ export const skillsRouter = createTRPCRouter({
 
       const skills = await ctx.db.skills.findMany({
         where,
-        orderBy: [
-          { popularity: "desc" },
-          { name: "asc" },
-        ],
+        orderBy: [{ popularity: "desc" }, { name: "asc" }],
         take: limit,
         select: {
           id: true,
@@ -55,11 +56,7 @@ export const skillsRouter = createTRPCRouter({
   getSkillsByCategory: publicProcedure.query(async ({ ctx }) => {
     const skills = await ctx.db.skills.findMany({
       where: { isActive: true },
-      orderBy: [
-        { category: "asc" },
-        { popularity: "desc" },
-        { name: "asc" },
-      ],
+      orderBy: [{ category: "asc" }, { popularity: "desc" }, { name: "asc" }],
       select: {
         id: true,
         name: true,
@@ -69,12 +66,15 @@ export const skillsRouter = createTRPCRouter({
     });
 
     // Group skills by category
-    const skillsByCategory = skills.reduce((acc, skill) => {
-      const category = skill.category ?? "Other";
-      acc[category] ??= [];
-      acc[category].push(skill);
-      return acc;
-    }, {} as Record<string, typeof skills>);
+    const skillsByCategory = skills.reduce(
+      (acc, skill) => {
+        const category = skill.category ?? "Other";
+        acc[category] ??= [];
+        acc[category].push(skill);
+        return acc;
+      },
+      {} as Record<string, typeof skills>,
+    );
 
     return skillsByCategory;
   }),
@@ -120,8 +120,10 @@ export const skillsRouter = createTRPCRouter({
     .input(
       z.object({
         skillIds: z.array(z.string()),
-        experienceLevels: z.record(z.string(), z.number().min(1).max(10)).optional(),
-      })
+        experienceLevels: z
+          .record(z.string(), z.number().min(1).max(10))
+          .optional(),
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
@@ -166,7 +168,7 @@ export const skillsRouter = createTRPCRouter({
       z.object({
         name: z.string().min(1).max(50).trim(),
         category: z.string().max(50).optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Check if skill already exists (case-insensitive)
@@ -204,7 +206,7 @@ export const skillsRouter = createTRPCRouter({
       z.object({
         query: z.string().min(1),
         limit: z.number().min(1).max(20).default(10),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const skills = await ctx.db.skills.findMany({
@@ -215,10 +217,7 @@ export const skillsRouter = createTRPCRouter({
             mode: "insensitive",
           },
         },
-        orderBy: [
-          { popularity: "desc" },
-          { name: "asc" },
-        ],
+        orderBy: [{ popularity: "desc" }, { name: "asc" }],
         take: input.limit,
         select: {
           id: true,

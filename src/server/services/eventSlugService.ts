@@ -26,10 +26,7 @@ export class EventSlugService {
    * @param name - The event name to generate slug from
    * @param excludeId - Optional event ID to exclude from collision check (for updates)
    */
-  async generateUniqueSlug(
-    name: string,
-    excludeId?: string
-  ): Promise<string> {
+  async generateUniqueSlug(name: string, excludeId?: string): Promise<string> {
     const baseSlug = this.generateSlug(name);
     let slug = baseSlug;
     let counter = 1;
@@ -45,10 +42,7 @@ export class EventSlugService {
   /**
    * Check if slug already exists in database.
    */
-  private async slugExists(
-    slug: string,
-    excludeId?: string
-  ): Promise<boolean> {
+  private async slugExists(slug: string, excludeId?: string): Promise<boolean> {
     const existing = await this.db.event.findUnique({
       where: { slug },
       select: { id: true },

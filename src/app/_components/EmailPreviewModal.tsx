@@ -1,24 +1,24 @@
 "use client";
 
-import { 
-  Modal, 
-  Stack, 
-  Group, 
-  Text, 
-  Button, 
-  Paper, 
-  Badge, 
+import {
+  Modal,
+  Stack,
+  Group,
+  Text,
+  Button,
+  Paper,
+  Badge,
   Divider,
   Alert,
   Code,
-  Tabs
+  Tabs,
 } from "@mantine/core";
-import { 
-  IconSend, 
-  IconX, 
-  IconEye, 
+import {
+  IconSend,
+  IconX,
+  IconEye,
   IconAlertTriangle,
-  IconShield
+  IconShield,
 } from "@tabler/icons-react";
 
 interface EmailPreviewModalProps {
@@ -48,7 +48,7 @@ export default function EmailPreviewModal({
   email,
   emailSafety,
   onSend,
-  sending = false
+  sending = false,
 }: EmailPreviewModalProps) {
   const handleSend = async (bypassSafety = false) => {
     await onSend(email.id, bypassSafety);
@@ -69,7 +69,9 @@ export default function EmailPreviewModal({
         {/* Email Safety Alert */}
         <Alert
           icon={emailSafety.safe ? <IconShield /> : <IconAlertTriangle />}
-          color={emailSafety.safe ? "green" : isProductionMode ? "red" : "orange"}
+          color={
+            emailSafety.safe ? "green" : isProductionMode ? "red" : "orange"
+          }
           variant="light"
         >
           <Stack gap="xs">
@@ -77,19 +79,15 @@ export default function EmailPreviewModal({
               <Text fw={600}>
                 {emailSafety.safe ? "Safe Testing Mode" : "Production Mode"}
               </Text>
-              <Badge 
-                color={emailSafety.safe ? "green" : "red"} 
-                variant="light"
-              >
+              <Badge color={emailSafety.safe ? "green" : "red"} variant="light">
                 {emailSafety.mode.toUpperCase()}
               </Badge>
             </Group>
-            <Text size="sm">
-              {emailSafety.reason}
-            </Text>
+            <Text size="sm">{emailSafety.reason}</Text>
             {!emailSafety.safe && (
               <Text size="xs" c="red" fw={500}>
-                ⚠️ This email will be sent to the actual recipient: {email.toEmail}
+                ⚠️ This email will be sent to the actual recipient:{" "}
+                {email.toEmail}
               </Text>
             )}
           </Stack>
@@ -99,30 +97,42 @@ export default function EmailPreviewModal({
         <Paper p="md" withBorder radius="md" bg="gray.0">
           <Stack gap="sm">
             <Group justify="space-between">
-              <Text size="sm" fw={500}>Email Details</Text>
+              <Text size="sm" fw={500}>
+                Email Details
+              </Text>
               <Badge variant="outline" color="gray">
                 {email.type.replace("_", " ")}
               </Badge>
             </Group>
-            
+
             <Group gap="lg">
               <Stack gap={2}>
-                <Text size="xs" c="dimmed" fw={500}>To:</Text>
+                <Text size="xs" c="dimmed" fw={500}>
+                  To:
+                </Text>
                 <Code>{email.toEmail}</Code>
               </Stack>
               <Stack gap={2}>
-                <Text size="xs" c="dimmed" fw={500}>Subject:</Text>
-                <Text size="sm" fw={500}>{email.subject}</Text>
+                <Text size="xs" c="dimmed" fw={500}>
+                  Subject:
+                </Text>
+                <Text size="sm" fw={500}>
+                  {email.subject}
+                </Text>
               </Stack>
             </Group>
 
             {email.missingFields && email.missingFields.length > 0 && (
               <Stack gap={2}>
-                <Text size="xs" c="dimmed" fw={500}>Missing Fields:</Text>
+                <Text size="xs" c="dimmed" fw={500}>
+                  Missing Fields:
+                </Text>
                 <Group gap="xs">
-                  {email.missingFields.map(field => (
+                  {email.missingFields.map((field) => (
                     <Badge key={field} size="sm" variant="light" color="orange">
-                      {field.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
+                      {field
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase())}
                     </Badge>
                   ))}
                 </Group>
@@ -137,49 +147,47 @@ export default function EmailPreviewModal({
             <Tabs.Tab value="html" leftSection={<IconEye size={16} />}>
               HTML Preview
             </Tabs.Tab>
-            <Tabs.Tab value="text">
-              Text Version
-            </Tabs.Tab>
+            <Tabs.Tab value="text">Text Version</Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="html" mt="md">
-            <Paper 
-              p="md" 
-              withBorder 
-              radius="md" 
-              style={{ 
-                maxHeight: "400px", 
+            <Paper
+              p="md"
+              withBorder
+              radius="md"
+              style={{
+                maxHeight: "400px",
                 overflow: "auto",
-                backgroundColor: "white"
+                backgroundColor: "white",
               }}
             >
-              <div 
+              <div
                 dangerouslySetInnerHTML={{ __html: email.htmlContent }}
-                style={{ 
+                style={{
                   fontSize: "14px",
                   lineHeight: 1.5,
-                  fontFamily: "Arial, sans-serif"
+                  fontFamily: "Arial, sans-serif",
                 }}
               />
             </Paper>
           </Tabs.Panel>
 
           <Tabs.Panel value="text" mt="md">
-            <Paper 
-              p="md" 
-              withBorder 
-              radius="md" 
+            <Paper
+              p="md"
+              withBorder
+              radius="md"
               bg="gray.0"
-              style={{ 
-                maxHeight: "400px", 
-                overflow: "auto"
+              style={{
+                maxHeight: "400px",
+                overflow: "auto",
               }}
             >
-              <Text 
-                size="sm" 
-                style={{ 
+              <Text
+                size="sm"
+                style={{
                   whiteSpace: "pre-wrap",
-                  fontFamily: "monospace"
+                  fontFamily: "monospace",
                 }}
               >
                 {email.textContent ?? "No text version available"}
@@ -213,7 +221,7 @@ export default function EmailPreviewModal({
                 Send to Real Recipient
               </Button>
             )}
-            
+
             <Button
               color={emailSafety.safe ? "blue" : "orange"}
               variant="filled"
@@ -221,12 +229,11 @@ export default function EmailPreviewModal({
               loading={sending}
               leftSection={<IconSend size={16} />}
             >
-              {emailSafety.safe 
-                ? "Send (Safe Mode)" 
-                : requiresConfirmation 
-                  ? "Send to Test Email" 
-                  : "Send Email"
-              }
+              {emailSafety.safe
+                ? "Send (Safe Mode)"
+                : requiresConfirmation
+                  ? "Send to Test Email"
+                  : "Send Email"}
             </Button>
           </Group>
         </Group>
@@ -238,8 +245,9 @@ export default function EmailPreviewModal({
               🚨 Production Mode Warning
             </Text>
             <Text size="xs">
-              You are in production mode. This email will be sent to the actual recipient 
-              unless you click &quot;Send to Test Email&quot; or set up email redirection.
+              You are in production mode. This email will be sent to the actual
+              recipient unless you click &quot;Send to Test Email&quot; or set
+              up email redirection.
             </Text>
           </Alert>
         )}

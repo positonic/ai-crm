@@ -7,18 +7,20 @@ interface EventOnboardingPageProps {
   params: Promise<{ eventId: string }>;
 }
 
-export default async function EventOnboardingPage({ params }: EventOnboardingPageProps) {
+export default async function EventOnboardingPage({
+  params,
+}: EventOnboardingPageProps) {
   // Await params in Next.js 15
   const { eventId } = await params;
-  
+
   // Check authentication and admin access
   const session = await auth();
-  
+
   // Must be authenticated
   if (!session?.user) {
     redirect(`/signin?callbackUrl=/admin/events/${eventId}/onboarding`);
   }
-  
+
   // Must have staff or admin role
   if (session.user.role !== "staff" && session.user.role !== "admin") {
     redirect("/unauthorized");
@@ -81,9 +83,11 @@ export default async function EventOnboardingPage({ params }: EventOnboardingPag
       },
     },
     orderBy: {
-      submittedAt: 'desc',
+      submittedAt: "desc",
     },
   });
 
-  return <EventOnboardingClient event={event} onboardingData={onboardingData} />;
+  return (
+    <EventOnboardingClient event={event} onboardingData={onboardingData} />
+  );
 }

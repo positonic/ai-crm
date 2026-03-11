@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  Container, 
-  Title, 
-  Card, 
-  Text, 
-  Badge, 
-  Group, 
-  Stack, 
+import {
+  Container,
+  Title,
+  Card,
+  Text,
+  Badge,
+  Group,
+  Stack,
   Button,
   Table,
   ActionIcon,
@@ -21,7 +21,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { 
+import {
   IconCheck,
   IconX,
   IconClock,
@@ -37,7 +37,6 @@ import ApplicationDetailsDrawer from "../applications/ApplicationDetailsDrawer";
 interface Props {
   eventId: string;
 }
-
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -87,7 +86,7 @@ export default function AdminMentorApplicationsClient({ eventId }: Props) {
     if (hash && validTabs.includes(hash)) {
       setActiveTab(hash);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleTabChange = (value: string | null) => {
@@ -97,13 +96,20 @@ export default function AdminMentorApplicationsClient({ eventId }: Props) {
     }
   };
 
-  const [selectedApplications, setSelectedApplications] = useState<string[]>([]);
+  const [selectedApplications, setSelectedApplications] = useState<string[]>(
+    [],
+  );
   const [bulkStatusModalOpen, setBulkStatusModalOpen] = useState(false);
-  const [bulkStatus, setBulkStatus] = useState<"ACCEPTED" | "REJECTED" | null>(null);
-  
+  const [bulkStatus, setBulkStatus] = useState<"ACCEPTED" | "REJECTED" | null>(
+    null,
+  );
+
   // Drawer state management
-  const [viewDrawerOpened, { open: openViewDrawer, close: closeViewDrawer }] = useDisclosure(false);
-  const [viewingApplication, setViewingApplication] = useState<{ id: string } | null>(null);
+  const [viewDrawerOpened, { open: openViewDrawer, close: closeViewDrawer }] =
+    useDisclosure(false);
+  const [viewingApplication, setViewingApplication] = useState<{
+    id: string;
+  } | null>(null);
 
   // Get event details
   const { data: event, isLoading: loadingEvent } = api.event.getEvent.useQuery({
@@ -111,50 +117,56 @@ export default function AdminMentorApplicationsClient({ eventId }: Props) {
   });
 
   // Get mentor applications
-  const { data: mentorApplications, refetch: refetchApplications, isLoading: loadingApplications } = api.application.getEventApplications.useQuery({
+  const {
+    data: mentorApplications,
+    refetch: refetchApplications,
+    isLoading: loadingApplications,
+  } = api.application.getEventApplications.useQuery({
     eventId,
     applicationType: "MENTOR",
   });
 
   // API mutations
-  const updateApplicationStatus = api.application.updateApplicationStatus.useMutation({
-    onSuccess: () => {
-      notifications.show({
-        title: "Success",
-        message: "Mentor application status updated successfully",
-        color: "green",
-      });
-      void refetchApplications();
-    },
-    onError: (error) => {
-      notifications.show({
-        title: "Error",
-        message: error.message,
-        color: "red",
-      });
-    },
-  });
+  const updateApplicationStatus =
+    api.application.updateApplicationStatus.useMutation({
+      onSuccess: () => {
+        notifications.show({
+          title: "Success",
+          message: "Mentor application status updated successfully",
+          color: "green",
+        });
+        void refetchApplications();
+      },
+      onError: (error) => {
+        notifications.show({
+          title: "Error",
+          message: error.message,
+          color: "red",
+        });
+      },
+    });
 
-  const bulkUpdateApplicationStatus = api.application.bulkUpdateApplicationStatus.useMutation({
-    onSuccess: (result) => {
-      notifications.show({
-        title: "Success",
-        message: `${result.count} mentor applications updated successfully`,
-        color: "green",
-      });
-      setSelectedApplications([]);
-      setBulkStatusModalOpen(false);
-      setBulkStatus(null);
-      void refetchApplications();
-    },
-    onError: (error) => {
-      notifications.show({
-        title: "Error",
-        message: error.message,
-        color: "red",
-      });
-    },
-  });
+  const bulkUpdateApplicationStatus =
+    api.application.bulkUpdateApplicationStatus.useMutation({
+      onSuccess: (result) => {
+        notifications.show({
+          title: "Success",
+          message: `${result.count} mentor applications updated successfully`,
+          color: "green",
+        });
+        setSelectedApplications([]);
+        setBulkStatusModalOpen(false);
+        setBulkStatus(null);
+        void refetchApplications();
+      },
+      onError: (error) => {
+        notifications.show({
+          title: "Error",
+          message: error.message,
+          color: "red",
+        });
+      },
+    });
 
   if (loadingEvent || loadingApplications) {
     return (
@@ -176,15 +188,21 @@ export default function AdminMentorApplicationsClient({ eventId }: Props) {
 
   // Filter applications by status for different tabs
   const allApplications = mentorApplications;
-  const acceptedApplications = mentorApplications.filter(app => app.status === "ACCEPTED");
-  const rejectedApplications = mentorApplications.filter(app => app.status === "REJECTED");
+  const acceptedApplications = mentorApplications.filter(
+    (app) => app.status === "ACCEPTED",
+  );
+  const rejectedApplications = mentorApplications.filter(
+    (app) => app.status === "REJECTED",
+  );
 
   // Calculate stats
   const stats = {
     total: allApplications.length,
     accepted: acceptedApplications.length,
     rejected: rejectedApplications.length,
-    pending: allApplications.filter(app => !["ACCEPTED", "REJECTED"].includes(app.status)).length,
+    pending: allApplications.filter(
+      (app) => !["ACCEPTED", "REJECTED"].includes(app.status),
+    ).length,
   };
 
   // Get applications for current tab
@@ -201,7 +219,10 @@ export default function AdminMentorApplicationsClient({ eventId }: Props) {
 
   const currentApplications = getCurrentTabApplications();
 
-  const handleStatusUpdate = (applicationId: string, status: "ACCEPTED" | "REJECTED") => {
+  const handleStatusUpdate = (
+    applicationId: string,
+    status: "ACCEPTED" | "REJECTED",
+  ) => {
     updateApplicationStatus.mutate({ applicationId, status });
   };
 
@@ -212,7 +233,7 @@ export default function AdminMentorApplicationsClient({ eventId }: Props) {
 
   const handleBulkStatusUpdate = () => {
     if (!bulkStatus || selectedApplications.length === 0) return;
-    
+
     bulkUpdateApplicationStatus.mutate({
       applicationIds: selectedApplications,
       status: bulkStatus,
@@ -223,13 +244,15 @@ export default function AdminMentorApplicationsClient({ eventId }: Props) {
     if (selectedApplications.length === currentApplications.length) {
       setSelectedApplications([]);
     } else {
-      setSelectedApplications(currentApplications.map(app => app.id));
+      setSelectedApplications(currentApplications.map((app) => app.id));
     }
   };
 
   const handleSelectApplication = (applicationId: string) => {
     if (selectedApplications.includes(applicationId)) {
-      setSelectedApplications(selectedApplications.filter(id => id !== applicationId));
+      setSelectedApplications(
+        selectedApplications.filter((id) => id !== applicationId),
+      );
     } else {
       setSelectedApplications([...selectedApplications, applicationId]);
     }
@@ -241,14 +264,25 @@ export default function AdminMentorApplicationsClient({ eventId }: Props) {
       <Group justify="space-between" mb="xl">
         <div>
           <Group mb="xs">
-            <Link href={`/admin/events/${eventId}`} style={{ textDecoration: 'none' }}>
-              <Button variant="subtle" leftSection={<IconArrowLeft size={16} />} size="sm">
+            <Link
+              href={`/admin/events/${eventId}`}
+              style={{ textDecoration: "none" }}
+            >
+              <Button
+                variant="subtle"
+                leftSection={<IconArrowLeft size={16} />}
+                size="sm"
+              >
                 Back to {event?.name ?? "Event"}
               </Button>
             </Link>
           </Group>
-          <Title order={1} mb="xs">Mentor Applications</Title>
-          <Text c="dimmed" mb="xs">{event.name}</Text>
+          <Title order={1} mb="xs">
+            Mentor Applications
+          </Title>
+          <Text c="dimmed" mb="xs">
+            {event.name}
+          </Text>
           <Text size="sm" c="dimmed">
             Review and manage mentor applications for this event.
           </Text>
@@ -259,26 +293,42 @@ export default function AdminMentorApplicationsClient({ eventId }: Props) {
       <SimpleGrid cols={{ base: 2, sm: 4 }} mb="xl">
         <Paper p="md" radius="md" withBorder>
           <Group>
-            <Text size="xl" fw={700}>{stats.total}</Text>
-            <Text size="sm" c="dimmed">Total Applications</Text>
+            <Text size="xl" fw={700}>
+              {stats.total}
+            </Text>
+            <Text size="sm" c="dimmed">
+              Total Applications
+            </Text>
           </Group>
         </Paper>
         <Paper p="md" radius="md" withBorder>
           <Group>
-            <Text size="xl" fw={700} c="orange">{stats.pending}</Text>
-            <Text size="sm" c="dimmed">Pending Review</Text>
+            <Text size="xl" fw={700} c="orange">
+              {stats.pending}
+            </Text>
+            <Text size="sm" c="dimmed">
+              Pending Review
+            </Text>
           </Group>
         </Paper>
         <Paper p="md" radius="md" withBorder>
           <Group>
-            <Text size="xl" fw={700} c="green">{stats.accepted}</Text>
-            <Text size="sm" c="dimmed">Accepted</Text>
+            <Text size="xl" fw={700} c="green">
+              {stats.accepted}
+            </Text>
+            <Text size="sm" c="dimmed">
+              Accepted
+            </Text>
           </Group>
         </Paper>
         <Paper p="md" radius="md" withBorder>
           <Group>
-            <Text size="xl" fw={700} c="red">{stats.rejected}</Text>
-            <Text size="sm" c="dimmed">Rejected</Text>
+            <Text size="xl" fw={700} c="red">
+              {stats.rejected}
+            </Text>
+            <Text size="sm" c="dimmed">
+              Rejected
+            </Text>
           </Group>
         </Paper>
       </SimpleGrid>
@@ -288,7 +338,8 @@ export default function AdminMentorApplicationsClient({ eventId }: Props) {
         <Card withBorder mb="xl" p="md">
           <Group justify="space-between">
             <Text size="sm">
-              {selectedApplications.length} application{selectedApplications.length !== 1 ? 's' : ''} selected
+              {selectedApplications.length} application
+              {selectedApplications.length !== 1 ? "s" : ""} selected
             </Text>
             <Group gap="xs">
               <Button
@@ -405,14 +456,18 @@ export default function AdminMentorApplicationsClient({ eventId }: Props) {
       >
         <Stack>
           <Text size="sm" c="dimmed">
-            Are you sure you want to {bulkStatus?.toLowerCase()} {selectedApplications.length} mentor application{selectedApplications.length !== 1 ? 's' : ''}?
-            {bulkStatus === "ACCEPTED" && " This will send acceptance emails to the mentors."}
-            {bulkStatus === "REJECTED" && " This will send rejection emails to the mentors."}
+            Are you sure you want to {bulkStatus?.toLowerCase()}{" "}
+            {selectedApplications.length} mentor application
+            {selectedApplications.length !== 1 ? "s" : ""}?
+            {bulkStatus === "ACCEPTED" &&
+              " This will send acceptance emails to the mentors."}
+            {bulkStatus === "REJECTED" &&
+              " This will send rejection emails to the mentors."}
           </Text>
-          
+
           <Group justify="flex-end">
-            <Button 
-              variant="light" 
+            <Button
+              variant="light"
               onClick={() => {
                 setBulkStatusModalOpen(false);
                 setBulkStatus(null);
@@ -420,7 +475,7 @@ export default function AdminMentorApplicationsClient({ eventId }: Props) {
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               color={bulkStatus === "ACCEPTED" ? "green" : "red"}
               onClick={handleBulkStatusUpdate}
               loading={bulkUpdateApplicationStatus.isPending}
@@ -457,7 +512,10 @@ interface MentorApplicationsTableProps {
   selectedApplications: string[];
   onSelectAll: () => void;
   onSelectApplication: (applicationId: string) => void;
-  onStatusUpdate: (applicationId: string, status: "ACCEPTED" | "REJECTED") => void;
+  onStatusUpdate: (
+    applicationId: string,
+    status: "ACCEPTED" | "REJECTED",
+  ) => void;
   onViewApplication: (applicationId: string) => void;
   isUpdating: boolean;
 }
@@ -484,13 +542,17 @@ function MentorApplicationsTable({
       <Group justify="space-between" mb="md">
         <Checkbox
           checked={selectedApplications.length === applications.length}
-          indeterminate={selectedApplications.length > 0 && selectedApplications.length < applications.length}
+          indeterminate={
+            selectedApplications.length > 0 &&
+            selectedApplications.length < applications.length
+          }
           onChange={onSelectAll}
           label={`Select all (${applications.length})`}
           size="sm"
         />
         <Text size="sm" c="dimmed">
-          {applications.length} application{applications.length !== 1 ? 's' : ''}
+          {applications.length} application
+          {applications.length !== 1 ? "s" : ""}
         </Text>
       </Group>
 
@@ -524,9 +586,9 @@ function MentorApplicationsTable({
                 <Text size="sm">{application.email}</Text>
               </Table.Td>
               <Table.Td>
-                <Badge 
-                  color={getStatusColor(application.status)} 
-                  variant="light" 
+                <Badge
+                  color={getStatusColor(application.status)}
+                  variant="light"
                   size="sm"
                   leftSection={getStatusIcon(application.status)}
                 >
@@ -535,7 +597,9 @@ function MentorApplicationsTable({
               </Table.Td>
               <Table.Td>
                 <Text size="sm" c="dimmed">
-                  {application.submittedAt ? new Date(application.submittedAt).toLocaleDateString() : "Not submitted"}
+                  {application.submittedAt
+                    ? new Date(application.submittedAt).toLocaleDateString()
+                    : "Not submitted"}
                 </Text>
               </Table.Td>
               <Table.Td>

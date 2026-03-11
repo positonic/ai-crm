@@ -10,7 +10,7 @@ export interface ReviewerScore {
   reviewerImage: string | null;
   overallScore: number;
   confidence: number;
-  recommendation: 'ACCEPT' | 'REJECT' | 'WAITLIST' | 'NEEDS_MORE_INFO';
+  recommendation: "ACCEPT" | "REJECT" | "WAITLIST" | "NEEDS_MORE_INFO";
   completedAt: Date | null;
 }
 
@@ -45,7 +45,10 @@ export function calculateConfidenceWeight(confidence: number): number {
 /**
  * Apply confidence weighting to a score
  */
-export function applyConfidenceWeighting(score: number, confidence: number): number {
+export function applyConfidenceWeighting(
+  score: number,
+  confidence: number,
+): number {
   const weight = calculateConfidenceWeight(confidence);
   return score * weight;
 }
@@ -55,13 +58,16 @@ export function applyConfidenceWeighting(score: number, confidence: number): num
  * Competency 5/5 = 1.25, 4/5 = 1.1, 3/5 = 1.0, 2/5 = 0.9, 1/5 = 0.75
  * This allows experts to have slightly more weight than novices
  */
-export function calculateCompetencyWeight(competencyLevel: number, baseWeight = 1.0): number {
+export function calculateCompetencyWeight(
+  competencyLevel: number,
+  baseWeight = 1.0,
+): number {
   // Ensure competency is within valid range (1-5)
   const clampedCompetency = Math.max(1, Math.min(5, competencyLevel));
-  
+
   // Scale: 1->0.75, 2->0.9, 3->1.0, 4->1.1, 5->1.25
-  const competencyMultiplier = 0.5 + (clampedCompetency * 0.15);
-  
+  const competencyMultiplier = 0.5 + clampedCompetency * 0.15;
+
   return baseWeight * competencyMultiplier;
 }
 
@@ -71,26 +77,33 @@ export function calculateCompetencyWeight(competencyLevel: number, baseWeight = 
  */
 export function calculateCategoryCompetencyWeight(
   competencies: ReviewerCompetency[] | undefined,
-  category: string
+  category: string,
 ): number {
   if (!competencies) return 1.0;
-  
-  const categoryCompetency = competencies.find(c => c.category === category);
+
+  const categoryCompetency = competencies.find((c) => c.category === category);
   if (!categoryCompetency) return 1.0;
-  
-  return calculateCompetencyWeight(categoryCompetency.competencyLevel, categoryCompetency.baseWeight);
+
+  return calculateCompetencyWeight(
+    categoryCompetency.competencyLevel,
+    categoryCompetency.baseWeight,
+  );
 }
 
 /**
  * Calculate overall competency weight as average across all categories
  */
-export function calculateOverallCompetencyWeight(competencies: ReviewerCompetency[] | undefined): number {
+export function calculateOverallCompetencyWeight(
+  competencies: ReviewerCompetency[] | undefined,
+): number {
   if (!competencies || competencies.length === 0) return 1.0;
-  
+
   const totalWeight = competencies.reduce((sum, comp) => {
-    return sum + calculateCompetencyWeight(comp.competencyLevel, comp.baseWeight);
+    return (
+      sum + calculateCompetencyWeight(comp.competencyLevel, comp.baseWeight)
+    );
   }, 0);
-  
+
   return totalWeight / competencies.length;
 }
 
@@ -100,16 +113,16 @@ export function calculateOverallCompetencyWeight(competencies: ReviewerCompetenc
 export function calculateFinalWeight(
   confidence: number,
   competencies?: ReviewerCompetency[],
-  category?: string
+  category?: string,
 ): { confidenceWeight: number; competencyWeight: number; finalWeight: number } {
   const confidenceWeight = calculateConfidenceWeight(confidence);
-  
-  const competencyWeight = category 
+
+  const competencyWeight = category
     ? calculateCategoryCompetencyWeight(competencies, category)
     : calculateOverallCompetencyWeight(competencies);
-  
+
   const finalWeight = confidenceWeight * competencyWeight;
-  
+
   return {
     confidenceWeight,
     competencyWeight,
@@ -120,7 +133,9 @@ export function calculateFinalWeight(
 /**
  * Calculate weighted scores for all reviewers (backward compatible)
  */
-export function calculateWeightedScores(reviewerScores: ReviewerScore[]): WeightedReviewerScore[] {
+export function calculateWeightedScores(
+  reviewerScores: ReviewerScore[],
+): WeightedReviewerScore[] {
   return calculateEnhancedWeightedScores(reviewerScores);
 }
 
@@ -129,10 +144,14 @@ export function calculateWeightedScores(reviewerScores: ReviewerScore[]): Weight
  */
 export function calculateEnhancedWeightedScores(
   reviewerScores: EnhancedReviewerScore[],
-  category?: string
+  category?: string,
 ): WeightedReviewerScore[] {
-  return reviewerScores.map(reviewer => {
-    const weights = calculateFinalWeight(reviewer.confidence, reviewer.competencies, category);
+  return reviewerScores.map((reviewer) => {
+    const weights = calculateFinalWeight(
+      reviewer.confidence,
+      reviewer.competencies,
+      category,
+    );
     const weightedScore = reviewer.overallScore * weights.finalWeight;
 
     return {
@@ -149,27 +168,42 @@ export function calculateEnhancedWeightedScores(
 /**
  * Get consensus indicators based on reviewer recommendations and confidence
  */
-export function getConsensusIndicator(weightedScores: WeightedReviewerScore[]): {
-  type: 'strong_accept' | 'lean_accept' | 'mixed' | 'lean_reject' | 'strong_reject' | 'uncertain';
+export function getConsensusIndicator(
+  weightedScores: WeightedReviewerScore[],
+): {
+  type:
+    | "strong_accept"
+    | "lean_accept"
+    | "mixed"
+    | "lean_reject"
+    | "strong_reject"
+    | "uncertain";
   label: string;
   description: string;
 } {
   if (weightedScores.length === 0) {
     return {
-      type: 'uncertain',
-      label: 'No Reviews',
-      description: 'No completed reviews available'
+      type: "uncertain",
+      label: "No Reviews",
+      description: "No completed reviews available",
     };
   }
 
   // Count recommendations by type, weighted by final weight (confidence + competency)
-  const recommendationCounts = weightedScores.reduce((acc, reviewer) => {
-    const weight = reviewer.finalWeight ?? reviewer.confidenceWeight; // Fallback for backward compatibility
-    acc[reviewer.recommendation] = (acc[reviewer.recommendation] ?? 0) + weight;
-    return acc;
-  }, {} as Record<string, number>);
+  const recommendationCounts = weightedScores.reduce(
+    (acc, reviewer) => {
+      const weight = reviewer.finalWeight ?? reviewer.confidenceWeight; // Fallback for backward compatibility
+      acc[reviewer.recommendation] =
+        (acc[reviewer.recommendation] ?? 0) + weight;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
-  const totalWeight = weightedScores.reduce((sum, r) => sum + (r.finalWeight ?? r.confidenceWeight), 0);
+  const totalWeight = weightedScores.reduce(
+    (sum, r) => sum + (r.finalWeight ?? r.confidenceWeight),
+    0,
+  );
   const acceptWeight = recommendationCounts.ACCEPT ?? 0;
   const rejectWeight = recommendationCounts.REJECT ?? 0;
   const acceptPercentage = acceptWeight / totalWeight;
@@ -178,33 +212,33 @@ export function getConsensusIndicator(weightedScores: WeightedReviewerScore[]): 
   // Determine consensus type
   if (acceptPercentage >= 0.8) {
     return {
-      type: 'strong_accept',
-      label: 'Strong Accept',
-      description: `${Math.round(acceptPercentage * 100)}% weighted acceptance`
+      type: "strong_accept",
+      label: "Strong Accept",
+      description: `${Math.round(acceptPercentage * 100)}% weighted acceptance`,
     };
   } else if (acceptPercentage >= 0.6) {
     return {
-      type: 'lean_accept',
-      label: 'Lean Accept',
-      description: `${Math.round(acceptPercentage * 100)}% weighted acceptance`
+      type: "lean_accept",
+      label: "Lean Accept",
+      description: `${Math.round(acceptPercentage * 100)}% weighted acceptance`,
     };
   } else if (rejectPercentage >= 0.8) {
     return {
-      type: 'strong_reject',
-      label: 'Strong Reject',
-      description: `${Math.round(rejectPercentage * 100)}% weighted rejection`
+      type: "strong_reject",
+      label: "Strong Reject",
+      description: `${Math.round(rejectPercentage * 100)}% weighted rejection`,
     };
   } else if (rejectPercentage >= 0.6) {
     return {
-      type: 'lean_reject',
-      label: 'Lean Reject',
-      description: `${Math.round(rejectPercentage * 100)}% weighted rejection`
+      type: "lean_reject",
+      label: "Lean Reject",
+      description: `${Math.round(rejectPercentage * 100)}% weighted rejection`,
     };
   } else {
     return {
-      type: 'mixed',
-      label: 'Mixed Reviews',
-      description: 'Reviewers have conflicting recommendations'
+      type: "mixed",
+      label: "Mixed Reviews",
+      description: "Reviewers have conflicting recommendations",
     };
   }
 }
@@ -213,11 +247,11 @@ export function getConsensusIndicator(weightedScores: WeightedReviewerScore[]): 
  * Get color for confidence level (for UI display)
  */
 export function getConfidenceColor(confidence: number): string {
-  if (confidence >= 5) return 'green';
-  if (confidence >= 4) return 'blue';
-  if (confidence >= 3) return 'yellow';
-  if (confidence >= 2) return 'orange';
-  return 'red';
+  if (confidence >= 5) return "green";
+  if (confidence >= 4) return "blue";
+  if (confidence >= 3) return "yellow";
+  if (confidence >= 2) return "orange";
+  return "red";
 }
 
 /**
@@ -225,17 +259,17 @@ export function getConfidenceColor(confidence: number): string {
  */
 export function getConsensusColor(type: string): string {
   switch (type) {
-    case 'strong_accept':
-    case 'lean_accept':
-      return 'green';
-    case 'strong_reject':
-    case 'lean_reject':
-      return 'red';
-    case 'mixed':
-      return 'yellow';
-    case 'uncertain':
+    case "strong_accept":
+    case "lean_accept":
+      return "green";
+    case "strong_reject":
+    case "lean_reject":
+      return "red";
+    case "mixed":
+      return "yellow";
+    case "uncertain":
     default:
-      return 'gray';
+      return "gray";
   }
 }
 
@@ -243,11 +277,11 @@ export function getConsensusColor(type: string): string {
  * Get color for competency level (for UI display)
  */
 export function getCompetencyColor(competencyLevel: number): string {
-  if (competencyLevel >= 5) return 'green';
-  if (competencyLevel >= 4) return 'blue';
-  if (competencyLevel >= 3) return 'yellow';
-  if (competencyLevel >= 2) return 'orange';
-  return 'red';
+  if (competencyLevel >= 5) return "green";
+  if (competencyLevel >= 4) return "blue";
+  if (competencyLevel >= 3) return "yellow";
+  if (competencyLevel >= 2) return "orange";
+  return "red";
 }
 
 /**
@@ -255,12 +289,18 @@ export function getCompetencyColor(competencyLevel: number): string {
  */
 export function getCompetencyLabel(competencyLevel: number): string {
   switch (competencyLevel) {
-    case 5: return 'Expert';
-    case 4: return 'Advanced';
-    case 3: return 'Competent';
-    case 2: return 'Developing';
-    case 1: return 'Novice';
-    default: return 'Unknown';
+    case 5:
+      return "Expert";
+    case 4:
+      return "Advanced";
+    case 3:
+      return "Competent";
+    case 2:
+      return "Developing";
+    case 1:
+      return "Novice";
+    default:
+      return "Unknown";
   }
 }
 
@@ -269,12 +309,19 @@ export function getCompetencyLabel(competencyLevel: number): string {
  */
 export function getCategoryDisplayName(category: string): string {
   switch (category) {
-    case 'TECHNICAL': return 'Technical';
-    case 'PROJECT': return 'Project';
-    case 'COMMUNITY_FIT': return 'Community Fit';
-    case 'VIDEO': return 'Video Assessment';
-    case 'ENTREPRENEURIAL': return 'Entrepreneurial';
-    case 'OVERALL': return 'Overall';
-    default: return category.replace('_', ' ');
+    case "TECHNICAL":
+      return "Technical";
+    case "PROJECT":
+      return "Project";
+    case "COMMUNITY_FIT":
+      return "Community Fit";
+    case "VIDEO":
+      return "Video Assessment";
+    case "ENTREPRENEURIAL":
+      return "Entrepreneurial";
+    case "OVERALL":
+      return "Overall";
+    default:
+      return category.replace("_", " ");
   }
 }

@@ -84,7 +84,8 @@ export class ActivityCertService {
       });
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to authenticate platform AT Proto account. Check credentials.",
+        message:
+          "Failed to authenticate platform AT Proto account. Check credentials.",
       });
     }
   }
@@ -150,9 +151,8 @@ export class ActivityCertService {
         const fullName = [user.firstName, user.surname]
           .filter(Boolean)
           .join(" ");
-        const displayName = fullName.length > 0
-          ? fullName
-          : (user.name ?? "Unknown");
+        const displayName =
+          fullName.length > 0 ? fullName : (user.name ?? "Unknown");
 
         if (existing) {
           existing.sessions.push(session.title);
@@ -209,8 +209,7 @@ export class ActivityCertService {
     contributors: ActivityContributor[],
   ): Promise<CreateRecordResponse> {
     const shortDescription =
-      event.description?.slice(0, 300) ??
-      `${event.name} - ${event.type} event`;
+      event.description?.slice(0, 300) ?? `${event.name} - ${event.type} event`;
 
     const record: Record<string, unknown> = {
       $type: "org.hypercerts.claim.activity",

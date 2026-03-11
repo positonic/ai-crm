@@ -168,7 +168,9 @@ export class AIMetricSuggestionService {
           .replace(/^```json\s*/, "")
           .replace(/\s*```$/, "");
       } else if (cleanContent.startsWith("```")) {
-        cleanContent = cleanContent.replace(/^```\s*/, "").replace(/\s*```$/, "");
+        cleanContent = cleanContent
+          .replace(/^```\s*/, "")
+          .replace(/\s*```$/, "");
       }
 
       // Parse JSON response
@@ -250,11 +252,16 @@ Return ONLY a valid JSON object with no markdown formatting or additional text.`
 ${recentUpdates.length > 0 ? recentUpdates.map((u) => `### Week ${u.weekNumber ?? "N/A"}: ${u.title}\n${u.content.substring(0, 300)}${u.content.length > 300 ? "..." : ""}`).join("\n\n") : "No updates available yet"}
 
 ## Available Metrics (${suggestableMetrics.length} metrics available)
-${suggestableMetrics.slice(0, 50).map((m) => `- **${m.name}** (ID: ${m.id})
+${suggestableMetrics
+  .slice(0, 50)
+  .map(
+    (m) => `- **${m.name}** (ID: ${m.id})
   Description: ${m.description ?? "No description"}
   Type: ${m.metricType.join(", ")}
   Collection: ${m.collectionMethod}
-  Unit: ${m.unitOfMetric ?? "N/A"}`).join("\n\n")}
+  Unit: ${m.unitOfMetric ?? "N/A"}`,
+  )
+  .join("\n\n")}
 
 ${suggestableMetrics.length > 50 ? `\n... and ${suggestableMetrics.length - 50} more metrics` : ""}
 

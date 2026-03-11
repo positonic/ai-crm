@@ -1,11 +1,11 @@
 /**
  * Anonymization Utility for Analytics
- * 
+ *
  * Provides cryptographically secure methods to generate anonymous but consistent
  * identifiers for use in analytics while ensuring data cannot be de-anonymized.
  */
 
-import crypto from 'crypto';
+import crypto from "crypto";
 
 /**
  * Configuration for anonymization
@@ -24,31 +24,33 @@ interface AnonymizationConfig {
  */
 export function generateSyntheticId(
   realId: string,
-  config: AnonymizationConfig
+  config: AnonymizationConfig,
 ): string {
   if (!realId || !config.salt) {
-    throw new Error('Real ID and salt are required for synthetic ID generation');
+    throw new Error(
+      "Real ID and salt are required for synthetic ID generation",
+    );
   }
 
   // Get secret from environment
   const secret = process.env.ANONYMIZATION_SECRET;
   if (!secret) {
-    throw new Error('ANONYMIZATION_SECRET environment variable is required');
+    throw new Error("ANONYMIZATION_SECRET environment variable is required");
   }
 
   // Create hash using SHA-256
   const hash = crypto
-    .createHash('sha256')
+    .createHash("sha256")
     .update(realId + config.salt + secret)
-    .digest('hex');
+    .digest("hex");
 
   // Truncate to desired length (default 8 characters)
   const length = config.hashLength ?? 8;
   const truncatedHash = hash.substring(0, length);
 
   // Add prefix if specified
-  const prefix = config.prefix ?? 'ANON';
-  
+  const prefix = config.prefix ?? "ANON";
+
   return `${prefix}_${truncatedHash}`;
 }
 
@@ -57,15 +59,15 @@ export function generateSyntheticId(
  */
 export function generateSyntheticIdBatch(
   realIds: string[],
-  config: AnonymizationConfig
+  config: AnonymizationConfig,
 ): Map<string, string> {
   const results = new Map<string, string>();
-  
+
   for (const realId of realIds) {
     const syntheticId = generateSyntheticId(realId, config);
     results.set(realId, syntheticId);
   }
-  
+
   return results;
 }
 
@@ -74,23 +76,26 @@ export function generateSyntheticIdBatch(
  */
 export function generateEventContextId(eventId: string): string {
   return generateSyntheticId(eventId, {
-    salt: 'event_context',
+    salt: "event_context",
     hashLength: 6,
-    prefix: 'EVT'
+    prefix: "EVT",
   });
 }
 
 /**
  * Generate anonymous participant IDs for analytics
  */
-export function generateParticipantId(userId: string, eventId?: string): string {
+export function generateParticipantId(
+  userId: string,
+  eventId?: string,
+): string {
   // Include event context for additional anonymization if provided
   const baseId = eventId ? `${userId}_${eventId}` : userId;
-  
+
   return generateSyntheticId(baseId, {
-    salt: 'participant_analytics',
+    salt: "participant_analytics",
     hashLength: 8,
-    prefix: 'PART'
+    prefix: "PART",
   });
 }
 
@@ -99,9 +104,9 @@ export function generateParticipantId(userId: string, eventId?: string): string 
  */
 export function generateApplicationId(applicationId: string): string {
   return generateSyntheticId(applicationId, {
-    salt: 'application_analytics',
+    salt: "application_analytics",
     hashLength: 8,
-    prefix: 'APP'
+    prefix: "APP",
   });
 }
 
@@ -110,22 +115,22 @@ export function generateApplicationId(applicationId: string): string {
  */
 export function createAnonymousMapping<T extends { id: string }>(
   items: T[],
-  generateId: (id: string) => string
+  generateId: (id: string) => string,
 ): {
   mapping: Map<string, string>;
   anonymizedItems: Array<T & { anonymousId: string }>;
 } {
   const mapping = new Map<string, string>();
-  const anonymizedItems = items.map(item => {
+  const anonymizedItems = items.map((item) => {
     const anonymousId = generateId(item.id);
     mapping.set(item.id, anonymousId);
-    
+
     return {
       ...item,
       anonymousId,
     };
   });
-  
+
   return { mapping, anonymizedItems };
 }
 
@@ -134,14 +139,14 @@ export function createAnonymousMapping<T extends { id: string }>(
  */
 export function stripIdentifyingFields<T extends Record<string, unknown>>(
   data: T,
-  fieldsToRemove: (keyof T)[]
+  fieldsToRemove: (keyof T)[],
 ): Omit<T, keyof T> {
   const result = { ...data };
-  
+
   for (const field of fieldsToRemove) {
     delete result[field];
   }
-  
+
   return result;
 }
 
@@ -160,10 +165,10 @@ export function anonymizeUserData(user: {
   [key: string]: unknown;
 } {
   const anonymousId = generateParticipantId(user.id);
-  
+
   // Convert PII to boolean flags
-  const result = stripIdentifyingFields(user, ['id', 'name', 'email']);
-  
+  const result = stripIdentifyingFields(user, ["id", "name", "email"]);
+
   return {
     ...result,
     anonymousId,
@@ -187,12 +192,12 @@ export function anonymizeApplicationData(application: {
   [key: string]: unknown;
 } {
   const anonymousId = generateApplicationId(application.id);
-  const anonymousUserId = application.userId 
+  const anonymousUserId = application.userId
     ? generateParticipantId(application.userId)
     : undefined;
-  
-  const result = stripIdentifyingFields(application, ['id', 'userId', 'email']);
-  
+
+  const result = stripIdentifyingFields(application, ["id", "userId", "email"]);
+
   return {
     ...result,
     anonymousId,
@@ -206,9 +211,9 @@ export function anonymizeApplicationData(application: {
  */
 export function generateSessionToken(userId: string, endpoint: string): string {
   return generateSyntheticId(`${userId}_${endpoint}`, {
-    salt: 'rate_limit_session',
+    salt: "rate_limit_session",
     hashLength: 16,
-    prefix: 'SESS'
+    prefix: "SESS",
   });
 }
 
@@ -218,13 +223,13 @@ export function generateSessionToken(userId: string, endpoint: string): string {
 export function hashSensitiveData(data: string, purpose: string): string {
   const secret = process.env.ANONYMIZATION_SECRET;
   if (!secret) {
-    throw new Error('ANONYMIZATION_SECRET environment variable is required');
+    throw new Error("ANONYMIZATION_SECRET environment variable is required");
   }
 
   return crypto
-    .createHash('sha256')
+    .createHash("sha256")
     .update(data + purpose + secret)
-    .digest('hex');
+    .digest("hex");
 }
 
 /**
@@ -232,30 +237,30 @@ export function hashSensitiveData(data: string, purpose: string): string {
  */
 export function validateAnonymization(
   original: { id: string; [key: string]: unknown },
-  anonymized: { anonymousId: string; [key: string]: unknown }
+  anonymized: { anonymousId: string; [key: string]: unknown },
 ): {
   isValid: boolean;
   issues: string[];
 } {
   const issues: string[] = [];
-  
+
   // Check that original ID is not present
-  if ('id' in anonymized || anonymized.anonymousId === original.id) {
-    issues.push('Original ID is still present in anonymized data');
+  if ("id" in anonymized || anonymized.anonymousId === original.id) {
+    issues.push("Original ID is still present in anonymized data");
   }
-  
+
   // Check that anonymous ID follows expected pattern
   if (!/^[A-Z]+_[a-f0-9]+$/.exec(anonymized.anonymousId)) {
-    issues.push('Anonymous ID does not follow expected pattern');
+    issues.push("Anonymous ID does not follow expected pattern");
   }
-  
+
   // Check for potential PII leakage in string fields
   for (const [key, value] of Object.entries(anonymized)) {
-    if (typeof value === 'string' && value.includes('@')) {
+    if (typeof value === "string" && value.includes("@")) {
       issues.push(`Field '${key}' may contain email address`);
     }
   }
-  
+
   return {
     isValid: issues.length === 0,
     issues,
@@ -269,15 +274,15 @@ export function validateAnonymizationEnvironment(): {
   isValid: boolean;
   missingVariables: string[];
 } {
-  const requiredVars = ['ANONYMIZATION_SECRET'];
+  const requiredVars = ["ANONYMIZATION_SECRET"];
   const missingVariables: string[] = [];
-  
+
   for (const varName of requiredVars) {
     if (!process.env[varName]) {
       missingVariables.push(varName);
     }
   }
-  
+
   return {
     isValid: missingVariables.length === 0,
     missingVariables,

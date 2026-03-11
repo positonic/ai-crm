@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Drawer,
   Stack,
@@ -12,20 +12,20 @@ import {
   Box,
   Tooltip,
   UnstyledButton,
-} from '@mantine/core';
+} from "@mantine/core";
 import {
   IconSend,
   IconPlayerStop,
   IconTrash,
   IconBug,
-} from '@tabler/icons-react';
-import { useSession } from 'next-auth/react';
-import { MarkdownRenderer } from './MarkdownRenderer';
-import { AgentMessageFeedback } from './AgentMessageFeedback';
-import { BugReportForm } from './BugReportForm';
-import { useAIChat } from '~/hooks/useAIChat';
-import { api } from '~/trpc/react';
-import { type ConsoleEntry } from '~/hooks/useConsoleCapture';
+} from "@tabler/icons-react";
+import { useSession } from "next-auth/react";
+import { MarkdownRenderer } from "./MarkdownRenderer";
+import { AgentMessageFeedback } from "./AgentMessageFeedback";
+import { BugReportForm } from "./BugReportForm";
+import { useAIChat } from "~/hooks/useAIChat";
+import { api } from "~/trpc/react";
+import { type ConsoleEntry } from "~/hooks/useConsoleCapture";
 
 interface AIChatDrawerProps {
   opened: boolean;
@@ -38,27 +38,27 @@ interface AIChatDrawerProps {
 }
 
 const DEFAULT_PROMPTS = [
-  'What events are coming up?',
-  'How do I apply to speak?',
+  "What events are coming up?",
+  "How do I apply to speak?",
   "Show me today's schedule",
 ];
 
 const ADMIN_PROMPTS = [
-  'How many applications are pending?',
-  'Who are the speakers for this event?',
-  'Show me the event schedule',
+  "How many applications are pending?",
+  "Who are the speakers for this event?",
+  "Show me the event schedule",
 ];
 
 const FLOOR_LEAD_PROMPTS = [
   "Show me my venue's schedule",
   "Who's speaking in my room today?",
-  'How do I manage sessions?',
+  "How do I manage sessions?",
 ];
 
 const SPEAKER_PROMPTS = [
-  'When is my speaking session?',
+  "When is my speaking session?",
   "What's the schedule for today?",
-  'Where is my session located?',
+  "Where is my session located?",
 ];
 
 function getSuggestedPrompts(
@@ -66,16 +66,16 @@ function getSuggestedPrompts(
   eventRoles: string[] | undefined,
 ): string[] {
   // Admin/staff get admin prompts
-  if (globalRole === 'admin' || globalRole === 'staff') {
+  if (globalRole === "admin" || globalRole === "staff") {
     return ADMIN_PROMPTS;
   }
 
   // Event-specific roles
   if (eventRoles && eventRoles.length > 0) {
-    if (eventRoles.includes('floor lead')) {
+    if (eventRoles.includes("floor lead")) {
       return FLOOR_LEAD_PROMPTS;
     }
-    if (eventRoles.includes('speaker')) {
+    if (eventRoles.includes("speaker")) {
       return SPEAKER_PROMPTS;
     }
   }
@@ -92,13 +92,20 @@ export function AIChatDrawer({
   onTemporaryClose,
   onTemporaryReopen,
 }: AIChatDrawerProps) {
-  const { messages, isStreaming, sendMessage, stop, clearMessages, updateMessageFeedback } = useAIChat({
+  const {
+    messages,
+    isStreaming,
+    sendMessage,
+    stop,
+    clearMessages,
+    updateMessageFeedback,
+  } = useAIChat({
     pathname,
     eventId,
   });
   const { data: session } = useSession();
   const { data: eventRolesData } = api.role.getMyRolesForEvent.useQuery(
-    { eventId: eventId ?? '' },
+    { eventId: eventId ?? "" },
     { enabled: !!eventId && !!session?.user },
   );
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -106,7 +113,11 @@ export function AIChatDrawer({
   const [bugReportOpened, setBugReportOpened] = useState(false);
 
   const suggestedPrompts = useMemo(
-    () => getSuggestedPrompts(session?.user?.role ?? undefined, eventRolesData ?? undefined),
+    () =>
+      getSuggestedPrompts(
+        session?.user?.role ?? undefined,
+        eventRolesData ?? undefined,
+      ),
     [session?.user?.role, eventRolesData],
   );
 
@@ -119,16 +130,16 @@ export function AIChatDrawer({
 
   const handleSend = () => {
     const value = inputRef.current?.value.trim();
-    console.log('[AI Chat] handleSend called:', { value, isStreaming });
+    console.log("[AI Chat] handleSend called:", { value, isStreaming });
     if (!value || isStreaming) return;
     sendMessage(value).catch((err: unknown) => {
-      console.error('[AI Chat] sendMessage threw:', err);
+      console.error("[AI Chat] sendMessage threw:", err);
     });
-    if (inputRef.current) inputRef.current.value = '';
+    if (inputRef.current) inputRef.current.value = "";
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -143,7 +154,9 @@ export function AIChatDrawer({
         size="md"
         title={
           <Group gap="xs">
-            <Text fw={600} size="lg">AI Assistant</Text>
+            <Text fw={600} size="lg">
+              AI Assistant
+            </Text>
             <Tooltip label="Report a bug">
               <ActionIcon
                 variant="subtle"
@@ -171,13 +184,13 @@ export function AIChatDrawer({
         }
         styles={{
           body: {
-            display: 'flex',
-            flexDirection: 'column',
-            height: 'calc(100vh - 60px)',
+            display: "flex",
+            flexDirection: "column",
+            height: "calc(100vh - 60px)",
             padding: 0,
           },
           header: {
-            borderBottom: '1px solid var(--mantine-color-default-border)',
+            borderBottom: "1px solid var(--mantine-color-default-border)",
           },
         }}
       >
@@ -186,8 +199,8 @@ export function AIChatDrawer({
           ref={scrollRef}
           style={{
             flex: 1,
-            overflowY: 'auto',
-            padding: 'var(--mantine-spacing-md)',
+            overflowY: "auto",
+            padding: "var(--mantine-spacing-md)",
           }}
         >
           {messages.length === 0 ? (
@@ -197,28 +210,33 @@ export function AIChatDrawer({
                 How can I help you?
               </Text>
               <Text size="sm" c="dimmed" ta="center" maw={300}>
-                Ask me about events, schedules, how to use the platform, or anything else.
+                Ask me about events, schedules, how to use the platform, or
+                anything else.
               </Text>
               <Stack gap="xs" mt="md" w="100%" maw={320}>
                 {suggestedPrompts.map((prompt) => (
                   <UnstyledButton
                     key={prompt}
                     onClick={() => {
-                      console.log('[AI Chat] Suggested prompt clicked:', prompt);
+                      console.log(
+                        "[AI Chat] Suggested prompt clicked:",
+                        prompt,
+                      );
                       sendMessage(prompt).catch((err: unknown) => {
-                        console.error('[AI Chat] sendMessage threw:', err);
+                        console.error("[AI Chat] sendMessage threw:", err);
                       });
                     }}
                     style={{
-                      padding: 'var(--mantine-spacing-sm) var(--mantine-spacing-md)',
-                      borderRadius: 'var(--mantine-radius-md)',
-                      border: '1px solid var(--mantine-color-default-border)',
-                      transition: 'background-color 150ms ease',
+                      padding:
+                        "var(--mantine-spacing-sm) var(--mantine-spacing-md)",
+                      borderRadius: "var(--mantine-radius-md)",
+                      border: "1px solid var(--mantine-color-default-border)",
+                      transition: "background-color 150ms ease",
                     }}
                     styles={{
                       root: {
-                        '&:hover': {
-                          backgroundColor: 'var(--mantine-color-gray-0)',
+                        "&:hover": {
+                          backgroundColor: "var(--mantine-color-gray-0)",
                         },
                       },
                     }}
@@ -235,8 +253,9 @@ export function AIChatDrawer({
                 <Box
                   key={message.id}
                   style={{
-                    alignSelf: message.role === 'user' ? 'flex-end' : 'flex-start',
-                    maxWidth: '85%',
+                    alignSelf:
+                      message.role === "user" ? "flex-end" : "flex-start",
+                    maxWidth: "85%",
                   }}
                 >
                   <Paper
@@ -244,13 +263,13 @@ export function AIChatDrawer({
                     radius="lg"
                     style={{
                       background:
-                        message.role === 'user'
-                          ? 'var(--theme-chat-user-bg, var(--mantine-color-blue-6))'
-                          : 'var(--theme-chat-assistant-bg, var(--mantine-color-gray-0))',
-                      color: message.role === 'user' ? 'white' : undefined,
+                        message.role === "user"
+                          ? "var(--theme-chat-user-bg, var(--mantine-color-blue-6))"
+                          : "var(--theme-chat-assistant-bg, var(--mantine-color-gray-0))",
+                      color: message.role === "user" ? "white" : undefined,
                     }}
                   >
-                    {message.role === 'assistant' ? (
+                    {message.role === "assistant" ? (
                       message.content ? (
                         <MarkdownRenderer content={message.content} />
                       ) : (
@@ -259,12 +278,12 @@ export function AIChatDrawer({
                         </Text>
                       )
                     ) : (
-                      <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
+                      <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
                         {message.content}
                       </Text>
                     )}
                   </Paper>
-                  {message.role === 'assistant' &&
+                  {message.role === "assistant" &&
                     message.content &&
                     message.interactionId &&
                     !isStreaming && (
@@ -285,8 +304,8 @@ export function AIChatDrawer({
         <Box
           p="md"
           style={{
-            borderTop: '1px solid var(--mantine-color-default-border)',
-            background: 'var(--theme-chat-input-bg, var(--mantine-color-body))',
+            borderTop: "1px solid var(--mantine-color-default-border)",
+            background: "var(--theme-chat-input-bg, var(--mantine-color-body))",
           }}
         >
           <Group gap="xs" align="flex-end">
@@ -335,7 +354,11 @@ export function AIChatDrawer({
         getConsoleLogs={getConsoleLogs}
         pathname={pathname}
         eventId={eventId}
-        profileUrl={session?.user?.id ? `https://platform.fundingthecommons.io/profiles/${session.user.id}` : undefined}
+        profileUrl={
+          session?.user?.id
+            ? `https://platform.fundingthecommons.io/profiles/${session.user.id}`
+            : undefined
+        }
         onTemporaryClose={onTemporaryClose}
         onTemporaryReopen={onTemporaryReopen}
       />

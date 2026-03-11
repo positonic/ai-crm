@@ -2,8 +2,19 @@ import type { NextRequest } from "next/server";
 import { db } from "~/server/db";
 import { withTranscriptionAuth } from "~/utils/validateApiKey";
 
-const VALID_SOURCES = ["MANUAL", "WHISPER_API", "BROWSER", "WEBHOOK", "API"] as const;
-const VALID_STATUSES = ["PENDING", "PROCESSING", "COMPLETED", "FAILED"] as const;
+const VALID_SOURCES = [
+  "MANUAL",
+  "WHISPER_API",
+  "BROWSER",
+  "WEBHOOK",
+  "API",
+] as const;
+const VALID_STATUSES = [
+  "PENDING",
+  "PROCESSING",
+  "COMPLETED",
+  "FAILED",
+] as const;
 
 type TranscriptionSource = (typeof VALID_SOURCES)[number];
 type TranscriptStatus = (typeof VALID_STATUSES)[number];
@@ -27,22 +38,23 @@ async function handlePost(request: NextRequest) {
     const body = (await request.json()) as CreateTranscriptionBody;
 
     if (!body.title?.trim()) {
-      return Response.json(
-        { error: "title is required" },
-        { status: 400 },
-      );
+      return Response.json({ error: "title is required" }, { status: 400 });
     }
 
     if (body.source && !VALID_SOURCES.includes(body.source)) {
       return Response.json(
-        { error: `Invalid source. Must be one of: ${VALID_SOURCES.join(", ")}` },
+        {
+          error: `Invalid source. Must be one of: ${VALID_SOURCES.join(", ")}`,
+        },
         { status: 400 },
       );
     }
 
     if (body.status && !VALID_STATUSES.includes(body.status)) {
       return Response.json(
-        { error: `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}` },
+        {
+          error: `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`,
+        },
         { status: 400 },
       );
     }
@@ -69,7 +81,8 @@ async function handlePost(request: NextRequest) {
             deliberationId: body.deliberationId ?? existing.deliberationId,
             audioUrl: body.audioUrl ?? existing.audioUrl,
             audioFileName: body.audioFileName ?? existing.audioFileName,
-            processedAt: status === "COMPLETED" ? new Date() : existing.processedAt,
+            processedAt:
+              status === "COMPLETED" ? new Date() : existing.processedAt,
           },
         });
 
@@ -110,10 +123,7 @@ async function handlePost(request: NextRequest) {
     );
   } catch (error) {
     console.error("Transcription API error:", error);
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 

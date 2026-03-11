@@ -30,10 +30,15 @@ import Link from "next/link";
 import { api } from "~/trpc/react";
 import { notifications } from "@mantine/notifications";
 
-const STATUS_STEPS = ["COLLECTING", "CLOSED", "ANALYZING", "PUBLISHED"] as const;
+const STATUS_STEPS = [
+  "COLLECTING",
+  "CLOSED",
+  "ANALYZING",
+  "PUBLISHED",
+] as const;
 
 function getStepIndex(status: string): number {
-  const idx = STATUS_STEPS.indexOf(status as typeof STATUS_STEPS[number]);
+  const idx = STATUS_STEPS.indexOf(status as (typeof STATUS_STEPS)[number]);
   return idx >= 0 ? idx : 0;
 }
 
@@ -176,9 +181,7 @@ export default function DeliberationsAdminClient() {
                   label="Description (optional)"
                   placeholder="What should attendees focus on?"
                   value={newDescription}
-                  onChange={(e) =>
-                    setNewDescription(e.currentTarget.value)
-                  }
+                  onChange={(e) => setNewDescription(e.currentTarget.value)}
                   maxLength={2000}
                   minRows={2}
                   autosize
@@ -225,10 +228,7 @@ export default function DeliberationsAdminClient() {
             <Paper p="lg" radius="md" withBorder>
               <Stack gap="md">
                 <Title order={4}>Status</Title>
-                <Stepper
-                  active={getStepIndex(deliberation.status)}
-                  size="sm"
-                >
+                <Stepper active={getStepIndex(deliberation.status)} size="sm">
                   <Stepper.Step label="Collecting" description="Open" />
                   <Stepper.Step label="Closed" description="No submissions" />
                   <Stepper.Step label="Analyzing" description="Processing" />
@@ -361,9 +361,7 @@ export default function DeliberationsAdminClient() {
                               {t.status}
                             </Badge>
                           </Table.Td>
-                          <Table.Td>
-                            {t.uploadedBy?.name ?? "Unknown"}
-                          </Table.Td>
+                          <Table.Td>{t.uploadedBy?.name ?? "Unknown"}</Table.Td>
                           <Table.Td>
                             <Text size="xs" c="dimmed">
                               {t.audioFileName}
@@ -403,9 +401,7 @@ export default function DeliberationsAdminClient() {
                               {p.title}
                             </Text>
                           </Table.Td>
-                          <Table.Td>
-                            {p.user.name ?? "Anonymous"}
-                          </Table.Td>
+                          <Table.Td>{p.user.name ?? "Anonymous"}</Table.Td>
                           <Table.Td>{p._count.votes}</Table.Td>
                           <Table.Td>
                             <Switch

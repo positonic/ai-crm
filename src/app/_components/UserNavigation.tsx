@@ -1,7 +1,14 @@
 "use client";
 
 import { Tabs } from "@mantine/core";
-import { IconMapPin, IconHeart, IconNews, IconHandStop, IconUsers, IconBulb } from "@tabler/icons-react";
+import {
+  IconMapPin,
+  IconHeart,
+  IconNews,
+  IconHandStop,
+  IconUsers,
+  IconBulb,
+} from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ComponentPropsWithRef } from "react";
@@ -16,12 +23,22 @@ export default function UserNavigation() {
 
   // Determine active tab based on current path
   const getActiveTab = () => {
-    if (pathname.startsWith("/events/funding-commons-residency-2025/impact")) return "impact";
-    if (pathname.startsWith("/events/funding-commons-residency-2025/latest")) return "latest";
-    if (pathname.startsWith("/events/funding-commons-residency-2025/asks-offers")) return "asks-offers";
-    if (pathname.startsWith("/events/funding-commons-residency-2025/participants")) return "participants";
-    if (pathname.startsWith("/events/funding-commons-residency-2025/projects")) return "event-projects";
-    if (pathname.startsWith("/events/funding-commons-residency-2025")) return "residency";
+    if (pathname.startsWith("/events/funding-commons-residency-2025/impact"))
+      return "impact";
+    if (pathname.startsWith("/events/funding-commons-residency-2025/latest"))
+      return "latest";
+    if (
+      pathname.startsWith("/events/funding-commons-residency-2025/asks-offers")
+    )
+      return "asks-offers";
+    if (
+      pathname.startsWith("/events/funding-commons-residency-2025/participants")
+    )
+      return "participants";
+    if (pathname.startsWith("/events/funding-commons-residency-2025/projects"))
+      return "event-projects";
+    if (pathname.startsWith("/events/funding-commons-residency-2025"))
+      return "residency";
     return null;
   };
 
@@ -35,7 +52,7 @@ export default function UserNavigation() {
           leftSection={<IconNews size={16} />}
           component={Link}
           href="/events/funding-commons-residency-2025/latest"
-          style={{ textDecoration: 'none' }}
+          style={{ textDecoration: "none" }}
         >
           Latest
         </TabsTab>
@@ -45,7 +62,7 @@ export default function UserNavigation() {
           leftSection={<IconHandStop size={16} />}
           component={Link}
           href="/events/funding-commons-residency-2025/asks-offers"
-          style={{ textDecoration: 'none' }}
+          style={{ textDecoration: "none" }}
         >
           Asks & Offers
         </TabsTab>
@@ -55,7 +72,7 @@ export default function UserNavigation() {
           leftSection={<IconUsers size={16} />}
           component={Link}
           href="/events/funding-commons-residency-2025/participants"
-          style={{ textDecoration: 'none' }}
+          style={{ textDecoration: "none" }}
         >
           Participants
         </TabsTab>
@@ -65,7 +82,7 @@ export default function UserNavigation() {
           leftSection={<IconBulb size={16} />}
           component={Link}
           href="/events/funding-commons-residency-2025/projects"
-          style={{ textDecoration: 'none' }}
+          style={{ textDecoration: "none" }}
         >
           Projects
         </TabsTab>
@@ -75,7 +92,7 @@ export default function UserNavigation() {
           leftSection={<IconHeart size={16} />}
           component={Link}
           href="/events/funding-commons-residency-2025/impact"
-          style={{ textDecoration: 'none' }}
+          style={{ textDecoration: "none" }}
         >
           Impact
         </TabsTab>
@@ -85,7 +102,7 @@ export default function UserNavigation() {
           leftSection={<IconMapPin size={16} />}
           component={Link}
           href="https://platform.fundingthecommons.io/events/funding-commons-residency-2025"
-          style={{ textDecoration: 'none' }}
+          style={{ textDecoration: "none" }}
         >
           My Residency
         </TabsTab>

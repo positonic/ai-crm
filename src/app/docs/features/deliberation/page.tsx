@@ -33,13 +33,12 @@ export default function DeliberationPage() {
       <h2 id="how-it-works" className="docs-heading-h2">
         How It Works
       </h2>
-      <p className="docs-text">
-        A deliberation moves through four stages:
-      </p>
+      <p className="docs-text">A deliberation moves through four stages:</p>
       <ol className="docs-list">
         <li>
-          <strong>Collecting</strong> &ndash; The deliberation is open. Attendees
-          can submit priorities, vote, flag blockers, and suggest resources.
+          <strong>Collecting</strong> &ndash; The deliberation is open.
+          Attendees can submit priorities, vote, flag blockers, and suggest
+          resources.
         </li>
         <li>
           <strong>Closed</strong> &ndash; Submissions are locked. No new
@@ -48,8 +47,8 @@ export default function DeliberationPage() {
         </li>
         <li>
           <strong>Analysing</strong> &ndash; Submitted priorities are combined
-          with transcript data (if available) to produce ranked results, identify
-          blind spots, and surface blocker themes.
+          with transcript data (if available) to produce ranked results,
+          identify blind spots, and surface blocker themes.
         </li>
         <li>
           <strong>Published</strong> &ndash; Results are live and visible to all
@@ -66,8 +65,8 @@ export default function DeliberationPage() {
       </p>
       <ul className="docs-list">
         <li>
-          <strong>Title</strong> (required) &ndash; A short, clear description of
-          the priority. Minimum 3 characters.
+          <strong>Title</strong> (required) &ndash; A short, clear description
+          of the priority. Minimum 3 characters.
         </li>
         <li>
           <strong>Description</strong> (optional) &ndash; Additional context or
@@ -103,8 +102,8 @@ export default function DeliberationPage() {
       </p>
       <ul className="docs-list">
         <li>
-          <strong>Blockers</strong> &ndash; Obstacles or challenges that stand in
-          the way of addressing this priority. Click the blocker icon on any
+          <strong>Blockers</strong> &ndash; Obstacles or challenges that stand
+          in the way of addressing this priority. Click the blocker icon on any
           priority card to expand the section and add a description of the
           blocker.
         </li>
@@ -124,9 +123,9 @@ export default function DeliberationPage() {
         Topic Clusters
       </h2>
       <p className="docs-text">
-        When session transcripts are available, the platform identifies recurring
-        topics discussed across sessions and groups them into clusters. These
-        appear in a sidebar on the Priorities page and show:
+        When session transcripts are available, the platform identifies
+        recurring topics discussed across sessions and groups them into
+        clusters. These appear in a sidebar on the Priorities page and show:
       </p>
       <ul className="docs-list">
         <li>
@@ -160,7 +159,8 @@ export default function DeliberationPage() {
       </h2>
       <p className="docs-text">
         Once analysis is complete and the deliberation is published, the results
-        page shows a comprehensive view of community priorities. Results include:
+        page shows a comprehensive view of community priorities. Results
+        include:
       </p>
 
       <h3 id="signal-classification" className="docs-heading-h3">
@@ -244,8 +244,8 @@ export default function DeliberationPage() {
       </h3>
       <p className="docs-text">
         A narrative summary ties together the ranked priorities, blind spots,
-        blocker themes, and resource recommendations into a cohesive overview
-        of the deliberation outcomes.
+        blocker themes, and resource recommendations into a cohesive overview of
+        the deliberation outcomes.
       </p>
 
       <hr className="docs-divider" />
@@ -288,8 +288,9 @@ export default function DeliberationPage() {
       </p>
       <ol className="docs-list">
         <li>
-          <strong>Create a deliberation</strong> &ndash; Set a title and optional
-          description. Once created, the deliberation opens in Collecting status.
+          <strong>Create a deliberation</strong> &ndash; Set a title and
+          optional description. Once created, the deliberation opens in
+          Collecting status.
         </li>
         <li>
           <strong>Monitor submissions</strong> &ndash; See real-time counts of
@@ -297,8 +298,8 @@ export default function DeliberationPage() {
         </li>
         <li>
           <strong>Moderate content</strong> &ndash; Toggle the visibility of
-          individual priorities using the moderation queue. Hidden priorities are
-          not shown to attendees.
+          individual priorities using the moderation queue. Hidden priorities
+          are not shown to attendees.
         </li>
         <li>
           <strong>Close submissions</strong> &ndash; Lock the deliberation to

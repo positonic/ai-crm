@@ -92,7 +92,7 @@ async function findOrCreateUser(email: string, name: string): Promise<string> {
  */
 async function findOrCreateProfile(
   userId: string,
-  bio: string | null
+  bio: string | null,
 ): Promise<string> {
   let profile = await prisma.userProfile.findUnique({
     where: { userId },
@@ -130,7 +130,7 @@ async function findOrCreateProfile(
 async function createApplication(
   userId: string,
   email: string,
-  eventId: string
+  eventId: string,
 ): Promise<string> {
   // Check if application already exists
   const existing = await prisma.application.findFirst({
@@ -174,7 +174,7 @@ async function createProject(
   description: string | null,
   liveUrl: string | null,
   githubUrl: string | null,
-  focusAreas: string[]
+  focusAreas: string[],
 ): Promise<string> {
   // Check if project already exists (by title and profile)
   const existing = await prisma.userProject.findFirst({
@@ -212,7 +212,7 @@ async function createProject(
  */
 async function createRepository(
   projectId: string,
-  githubUrl: string
+  githubUrl: string,
 ): Promise<void> {
   // Check if repository already exists
   const existing = await prisma.repository.findFirst({
@@ -301,7 +301,7 @@ async function importProjects(csvFilePath: string): Promise<ImportStats> {
 
   if (!event) {
     throw new Error(
-      `Event not found: ${CHIANG_MAI_EVENT_SLUG}. Please create the event first.`
+      `Event not found: ${CHIANG_MAI_EVENT_SLUG}. Please create the event first.`,
     );
   }
 
@@ -316,7 +316,7 @@ async function importProjects(csvFilePath: string): Promise<ImportStats> {
 
   stats.filtered = filteredRows.length;
   console.log(
-    `🔍 Filtered to ${filteredRows.length} rows (Event = "Residency 2024", Status = "Active")\n`
+    `🔍 Filtered to ${filteredRows.length} rows (Event = "Residency 2024", Status = "Active")\n`,
   );
 
   if (filteredRows.length === 0) {
@@ -335,7 +335,9 @@ async function importProjects(csvFilePath: string): Promise<ImportStats> {
     const projectName = row[CSV_COLUMNS.name]?.trim() ?? `Project ${rowNumber}`;
     const email = row[CSV_COLUMNS.email]?.trim();
 
-    console.log(`\n[${rowNumber}/${filteredRows.length}] Processing: ${projectName}`);
+    console.log(
+      `\n[${rowNumber}/${filteredRows.length}] Processing: ${projectName}`,
+    );
 
     try {
       // Validate email
@@ -347,7 +349,8 @@ async function importProjects(csvFilePath: string): Promise<ImportStats> {
 
       // Get owner names
       const ownerNames = getOwnerNames(row);
-      const primaryOwnerName = ownerNames[0] ?? email.split("@")[0] ?? "Unknown";
+      const primaryOwnerName =
+        ownerNames[0] ?? email.split("@")[0] ?? "Unknown";
 
       // Extract project data
       const description =
@@ -375,7 +378,7 @@ async function importProjects(csvFilePath: string): Promise<ImportStats> {
         description,
         liveUrl,
         githubUrl,
-        focusAreas
+        focusAreas,
       );
 
       // Create repository if GitHub URL provided
@@ -410,8 +413,12 @@ async function main() {
   const args = process.argv.slice(2);
 
   if (args.length < 1) {
-    console.error("❌ Usage: bun scripts/import-chiang-mai-projects.ts <csv-file-path>");
-    console.error("   Example: bun scripts/import-chiang-mai-projects.ts imports/chiang-mai-projects.csv");
+    console.error(
+      "❌ Usage: bun scripts/import-chiang-mai-projects.ts <csv-file-path>",
+    );
+    console.error(
+      "   Example: bun scripts/import-chiang-mai-projects.ts imports/chiang-mai-projects.csv",
+    );
     process.exit(1);
   }
 

@@ -52,10 +52,10 @@ export default function FloorManagementPage() {
         Accessing Your Floor
       </h2>
       <p className="docs-text">
-        Once assigned, a new &ldquo;Manage Floors&rdquo; tab will appear in
-        the event navigation. Click it to see all the venues you have been
-        assigned to. If you manage more than one floor, you can switch between
-        them using the tabs at the top of the page.
+        Once assigned, a new &ldquo;Manage Floors&rdquo; tab will appear in the
+        event navigation. Click it to see all the venues you have been assigned
+        to. If you manage more than one floor, you can switch between them using
+        the tabs at the top of the page.
       </p>
 
       <div className="docs-callout">
@@ -70,9 +70,7 @@ export default function FloorManagementPage() {
       <h2 id="managing-sessions" className="docs-heading-h2">
         Managing Sessions
       </h2>
-      <p className="docs-text">
-        From your floor management page, you can:
-      </p>
+      <p className="docs-text">From your floor management page, you can:</p>
 
       <h3 id="create-a-session" className="docs-heading-h3">
         Create a Session
@@ -104,8 +102,8 @@ export default function FloorManagementPage() {
       </h3>
       <p className="docs-text">
         If a session is cancelled or no longer needed, you can remove it from
-        your floor&apos;s schedule. Deleted sessions will no longer appear on the
-        public schedule.
+        your floor&apos;s schedule. Deleted sessions will no longer appear on
+        the public schedule.
       </p>
 
       <h2 id="updating-venue-details" className="docs-heading-h2">
@@ -133,9 +131,9 @@ export default function FloorManagementPage() {
       </h2>
       <p className="docs-text">
         When you create a session, you can choose whether it is immediately
-        visible to attendees or saved as a draft. Draft sessions are only visible
-        to you and the event organisers. This lets you plan your schedule in
-        advance and publish everything at once when you are ready.
+        visible to attendees or saved as a draft. Draft sessions are only
+        visible to you and the event organisers. This lets you plan your
+        schedule in advance and publish everything at once when you are ready.
       </p>
 
       <h2 id="sharing-applications-across-floors" className="docs-heading-h2">
@@ -162,10 +160,10 @@ export default function FloorManagementPage() {
         Sharing a Single Application
       </h3>
       <p className="docs-text">
-        Open the application you want to share and click &ldquo;Share with
-        Other Floors&rdquo; from the actions menu. The application will be
-        immediately visible to all other floor leads. You can reverse this at
-        any time by clicking &ldquo;Unshare from Other Floors&rdquo;.
+        Open the application you want to share and click &ldquo;Share with Other
+        Floors&rdquo; from the actions menu. The application will be immediately
+        visible to all other floor leads. You can reverse this at any time by
+        clicking &ldquo;Unshare from Other Floors&rdquo;.
       </p>
 
       <h3 id="sharing-multiple-applications" className="docs-heading-h3">
@@ -198,8 +196,8 @@ export default function FloorManagementPage() {
         What Floor Leads Cannot Do
       </h2>
       <p className="docs-text">
-        Floor lead access is focused on managing your own space. A few things are
-        reserved for event organisers:
+        Floor lead access is focused on managing your own space. A few things
+        are reserved for event organisers:
       </p>
       <ul className="docs-list">
         <li>Creating or deleting venues (only organisers can do this)</li>

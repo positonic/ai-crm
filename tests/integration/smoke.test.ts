@@ -10,7 +10,11 @@
 
 import { describe, it, expect, afterAll } from "vitest";
 import { getTestDb, createTestCaller, disconnectTestDb } from "../helpers/trpc";
-import { createTestUser, createTestEvent, cleanupTestData } from "../helpers/fixtures";
+import {
+  createTestUser,
+  createTestEvent,
+  cleanupTestData,
+} from "../helpers/fixtures";
 
 afterAll(async () => {
   await cleanupTestData();
@@ -25,7 +29,10 @@ describe("Test Infrastructure Smoke Test", () => {
   });
 
   it("creates test fixtures in the database", async () => {
-    const user = await createTestUser({ role: "admin", email: "admin@test.com" });
+    const user = await createTestUser({
+      role: "admin",
+      email: "admin@test.com",
+    });
     expect(user.id).toBeDefined();
     expect(user.email).toBe("admin@test.com");
     expect(user.role).toBe("admin");

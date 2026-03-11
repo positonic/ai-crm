@@ -68,8 +68,12 @@ function CommunicatePageContent() {
   const [selectedRecipients, setSelectedRecipients] = useState<Contact[]>([]);
   const [messageText, setMessageText] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [selectedSmartList, setSelectedSmartList] = useState<string | null>(null);
-  const [messagingMode, setMessagingMode] = useState<"manual" | "smartlist">("manual");
+  const [selectedSmartList, setSelectedSmartList] = useState<string | null>(
+    null,
+  );
+  const [messagingMode, setMessagingMode] = useState<"manual" | "smartlist">(
+    "manual",
+  );
   const [addSalutation, setAddSalutation] = useState(false);
   const [hasInitializedFromUrl, setHasInitializedFromUrl] = useState(false);
 
@@ -101,14 +105,18 @@ function CommunicatePageContent() {
     }
     setHasInitializedFromUrl(true);
   }, [contacts, searchParams, hasInitializedFromUrl]);
-  const { data: telegramAuthStatus } = api.telegramAuth.getAuthStatus.useQuery();
-  const { data: smartLists, isLoading: smartListsLoading } = api.telegramAuth.getSmartLists.useQuery();
-  const { data: smartListContacts, isLoading: smartListContactsLoading } = api.telegramAuth.getSmartListContacts.useQuery(
-    { listId: selectedSmartList! },
-    { enabled: !!selectedSmartList }
-  );
+  const { data: telegramAuthStatus } =
+    api.telegramAuth.getAuthStatus.useQuery();
+  const { data: smartLists, isLoading: smartListsLoading } =
+    api.telegramAuth.getSmartLists.useQuery();
+  const { data: smartListContacts, isLoading: smartListContactsLoading } =
+    api.telegramAuth.getSmartListContacts.useQuery(
+      { listId: selectedSmartList! },
+      { enabled: !!selectedSmartList },
+    );
   const sendBulkMessage = api.telegramAuth.sendBulkMessage.useMutation();
-  const sendBulkMessageToList = api.telegramAuth.sendBulkMessageToList.useMutation();
+  const sendBulkMessageToList =
+    api.telegramAuth.sendBulkMessageToList.useMutation();
 
   // Handle authentication on client side
   if (status === "loading") {
@@ -130,7 +138,8 @@ function CommunicatePageContent() {
   }
 
   // Get contacts with Telegram usernames for messaging
-  const telegramContacts = contacts?.filter((contact) => contact.telegram) ?? [];
+  const telegramContacts =
+    contacts?.filter((contact) => contact.telegram) ?? [];
 
   // Contact selector data for MultiSelect
   const contactSelectData = telegramContacts.map((contact) => ({
@@ -178,7 +187,9 @@ function CommunicatePageContent() {
   // Helper to get recipient count for current mode
   const getRecipientCount = () => {
     if (messagingMode === "smartlist") {
-      const selectedList = smartLists?.find((list) => list.id === selectedSmartList);
+      const selectedList = smartLists?.find(
+        (list) => list.id === selectedSmartList,
+      );
       return selectedList?.contactCount ?? 0;
     }
     return selectedRecipients.length;
@@ -221,7 +232,11 @@ function CommunicatePageContent() {
         <Group justify="space-between">
           <Group gap="md">
             <IconBrandTelegram size={24} style={{ color: "#0088cc" }} />
-            <Text fw={500} size="lg" style={{ color: "var(--crm-sidebar-text-active)" }}>
+            <Text
+              fw={500}
+              size="lg"
+              style={{ color: "var(--crm-sidebar-text-active)" }}
+            >
               Telegram Communications
             </Text>
           </Group>
@@ -247,17 +262,26 @@ function CommunicatePageContent() {
         >
           <Stack gap="lg">
             {!telegramAuthStatus?.isAuthenticated ? (
-              <Alert icon={<IconBrandTelegram size={16} />} color="orange" variant="light">
+              <Alert
+                icon={<IconBrandTelegram size={16} />}
+                color="orange"
+                variant="light"
+              >
                 <Text fw={500}>Telegram Authentication Required</Text>
                 <Text size="sm">
-                  Please set up Telegram authentication in your profile settings to send messages.
+                  Please set up Telegram authentication in your profile settings
+                  to send messages.
                 </Text>
               </Alert>
             ) : (
               <Stack gap="md">
                 {/* Messaging Mode Selector */}
                 <Stack gap="sm">
-                  <Text fw={500} size="sm" style={{ color: "var(--crm-sidebar-text-active)" }}>
+                  <Text
+                    fw={500}
+                    size="sm"
+                    style={{ color: "var(--crm-sidebar-text-active)" }}
+                  >
                     Send to:
                   </Text>
                   <Tabs
@@ -270,10 +294,16 @@ function CommunicatePageContent() {
                     }}
                   >
                     <Tabs.List>
-                      <Tabs.Tab value="manual" leftSection={<IconUsers size={16} />}>
+                      <Tabs.Tab
+                        value="manual"
+                        leftSection={<IconUsers size={16} />}
+                      >
                         Select Contacts
                       </Tabs.Tab>
-                      <Tabs.Tab value="smartlist" leftSection={<IconUsersGroup size={16} />}>
+                      <Tabs.Tab
+                        value="smartlist"
+                        leftSection={<IconUsersGroup size={16} />}
+                      >
                         Smart Lists
                       </Tabs.Tab>
                     </Tabs.List>
@@ -290,7 +320,9 @@ function CommunicatePageContent() {
                       onChange={(values) => {
                         const newRecipients: Contact[] = [];
                         for (const value of values) {
-                          const found = telegramContacts.find((c) => c.id === value);
+                          const found = telegramContacts.find(
+                            (c) => c.id === value,
+                          );
                           if (found) {
                             newRecipients.push({
                               id: found.id,
@@ -383,7 +415,12 @@ function CommunicatePageContent() {
                           ) : (
                             <Group gap="xs">
                               {smartListContacts.slice(0, 5).map((c) => (
-                                <Avatar key={c.id} size="sm" color="blue" radius="xl">
+                                <Avatar
+                                  key={c.id}
+                                  size="sm"
+                                  color="blue"
+                                  radius="xl"
+                                >
                                   {c.firstName?.[0]?.toUpperCase()}
                                 </Avatar>
                               ))}
@@ -417,7 +454,11 @@ function CommunicatePageContent() {
 
                 {/* Message Form */}
                 <Stack gap="sm">
-                  <Text fw={500} size="sm" style={{ color: "var(--crm-sidebar-text-active)" }}>
+                  <Text
+                    fw={500}
+                    size="sm"
+                    style={{ color: "var(--crm-sidebar-text-active)" }}
+                  >
                     Message:
                   </Text>
                   <Textarea
@@ -446,14 +487,23 @@ function CommunicatePageContent() {
                 </Stack>
 
                 {/* Send Results */}
-                {(sendBulkMessage.isSuccess || sendBulkMessageToList.isSuccess) && (
-                  <Alert icon={<IconCheck size={16} />} color="green" variant="light">
+                {(sendBulkMessage.isSuccess ||
+                  sendBulkMessageToList.isSuccess) && (
+                  <Alert
+                    icon={<IconCheck size={16} />}
+                    color="green"
+                    variant="light"
+                  >
                     <Text fw={500}>Messages Sent Successfully!</Text>
                     {(sendBulkMessage.data ?? sendBulkMessageToList.data) && (
                       <Text size="sm" mt="xs">
                         Delivered to{" "}
-                        {sendBulkMessage.data?.successCount ?? sendBulkMessageToList.data?.successCount} recipient(s)
-                        {((sendBulkMessage.data?.failureCount ?? sendBulkMessageToList.data?.failureCount ?? 0) > 0) &&
+                        {sendBulkMessage.data?.successCount ??
+                          sendBulkMessageToList.data?.successCount}{" "}
+                        recipient(s)
+                        {(sendBulkMessage.data?.failureCount ??
+                          sendBulkMessageToList.data?.failureCount ??
+                          0) > 0 &&
                           `, ${sendBulkMessage.data?.failureCount ?? sendBulkMessageToList.data?.failureCount} failed`}
                       </Text>
                     )}
@@ -463,7 +513,10 @@ function CommunicatePageContent() {
                 {(sendBulkMessage.error ?? sendBulkMessageToList.error) && (
                   <Alert icon={<IconX size={16} />} color="red" variant="light">
                     <Text fw={500}>Failed to Send Messages</Text>
-                    <Text size="sm">{sendBulkMessage.error?.message ?? sendBulkMessageToList.error?.message}</Text>
+                    <Text size="sm">
+                      {sendBulkMessage.error?.message ??
+                        sendBulkMessageToList.error?.message}
+                    </Text>
                   </Alert>
                 )}
               </Stack>

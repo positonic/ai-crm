@@ -23,7 +23,7 @@ export function NavigationTab({
   children,
 }: NavigationTabProps) {
   const TabsTab = Tabs.Tab as React.ComponentType<TabWithLinkProps>;
-  
+
   return (
     <TabsTab
       value={value}

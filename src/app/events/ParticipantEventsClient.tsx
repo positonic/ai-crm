@@ -13,7 +13,7 @@ import {
   ThemeIcon,
   Box,
   Paper,
-  Loader
+  Loader,
 } from "@mantine/core";
 import {
   IconCalendar,
@@ -23,7 +23,7 @@ import {
   IconArrowRight,
   IconCheck,
   IconClock,
-  IconX
+  IconX,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { api } from "~/trpc/react";
@@ -51,7 +51,14 @@ interface EventCardProps {
   applicationStatus?: {
     hasApplication: boolean;
     application?: {
-      status: "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "ACCEPTED" | "REJECTED" | "WAITLISTED" | "CANCELLED";
+      status:
+        | "DRAFT"
+        | "SUBMITTED"
+        | "UNDER_REVIEW"
+        | "ACCEPTED"
+        | "REJECTED"
+        | "WAITLISTED"
+        | "CANCELLED";
     };
   };
 }
@@ -89,7 +96,9 @@ function getStatusIcon(status: string) {
   }
 }
 
-function getButtonLabel(applicationStatus?: EventCardProps["applicationStatus"]) {
+function getButtonLabel(
+  applicationStatus?: EventCardProps["applicationStatus"],
+) {
   if (!applicationStatus?.hasApplication) {
     return "Learn More & Apply";
   }
@@ -138,25 +147,26 @@ function EventCard({ event, applicationStatus }: EventCardProps) {
               {event.name}
             </Title>
             <Group gap="xs" wrap="nowrap">
-              {applicationStatus?.hasApplication && applicationStatus.application && (
-                <Badge
-                  color={getStatusColor(applicationStatus.application.status)}
-                  variant="light"
-                  size="sm"
-                  leftSection={(() => {
-                    const StatusIcon = getStatusIcon(applicationStatus.application?.status ?? "DRAFT");
-                    return <StatusIcon size={12} />;
-                  })()}
-                  tt="capitalize"
-                >
-                  {applicationStatus.application.status.replace("_", " ").toLowerCase()}
-                </Badge>
-              )}
-              <Badge
-                color={temporalStatus.color}
-                variant="light"
-                size="sm"
-              >
+              {applicationStatus?.hasApplication &&
+                applicationStatus.application && (
+                  <Badge
+                    color={getStatusColor(applicationStatus.application.status)}
+                    variant="light"
+                    size="sm"
+                    leftSection={(() => {
+                      const StatusIcon = getStatusIcon(
+                        applicationStatus.application?.status ?? "DRAFT",
+                      );
+                      return <StatusIcon size={12} />;
+                    })()}
+                    tt="capitalize"
+                  >
+                    {applicationStatus.application.status
+                      .replace("_", " ")
+                      .toLowerCase()}
+                  </Badge>
+                )}
+              <Badge color={temporalStatus.color} variant="light" size="sm">
                 {temporalStatus.label}
               </Badge>
             </Group>
@@ -169,7 +179,8 @@ function EventCard({ event, applicationStatus }: EventCardProps) {
           <Group gap="xs" mt="sm">
             <IconCalendar size={14} />
             <Text size="xs" c="dimmed">
-              {formatEventDate(event.startDate)} - {formatEventDate(event.endDate)}
+              {formatEventDate(event.startDate)} -{" "}
+              {formatEventDate(event.endDate)}
             </Text>
           </Group>
 
@@ -205,11 +216,12 @@ function EventCard({ event, applicationStatus }: EventCardProps) {
 
 export default function ParticipantEventsClient() {
   const { data: events, isLoading } = api.event.getAvailableEvents.useQuery();
-  const { data: userApplications } = api.application.getUserApplications.useQuery();
+  const { data: userApplications } =
+    api.application.getUserApplications.useQuery();
 
   // Create a map of event applications for quick lookup
   const applicationMap = new Map(
-    userApplications?.map(app => [app.eventId, app]) ?? []
+    userApplications?.map((app) => [app.eventId, app]) ?? [],
   );
 
   if (isLoading) {
@@ -227,8 +239,12 @@ export default function ParticipantEventsClient() {
     return (
       <Container size="xl" py="xl">
         <Stack align="center" gap="lg">
-          <Text size="xl" fw={500}>No Events Available</Text>
-          <Text c="dimmed">There are currently no events available for registration.</Text>
+          <Text size="xl" fw={500}>
+            No Events Available
+          </Text>
+          <Text c="dimmed">
+            There are currently no events available for registration.
+          </Text>
         </Stack>
       </Container>
     );
@@ -240,7 +256,12 @@ export default function ParticipantEventsClient() {
         {/* Header Section */}
         <Stack gap="md" ta="center">
           <Group justify="center" gap="xs">
-            <ThemeIcon size="xl" radius="xl" variant="gradient" gradient={{ from: "blue", to: "purple" }}>
+            <ThemeIcon
+              size="xl"
+              radius="xl"
+              variant="gradient"
+              gradient={{ from: "blue", to: "purple" }}
+            >
               <IconCalendarEvent size={28} />
             </ThemeIcon>
             <Title order={1} size="h1" fw={700}>
@@ -248,7 +269,8 @@ export default function ParticipantEventsClient() {
             </Title>
           </Group>
           <Text size="lg" c="dimmed" maw={600} mx="auto">
-            Discover and apply to events that match your interests. Track your applications and stay updated on your status.
+            Discover and apply to events that match your interests. Track your
+            applications and stay updated on your status.
           </Text>
         </Stack>
 
@@ -259,19 +281,26 @@ export default function ParticipantEventsClient() {
               <Text size="xl" fw={700} c="blue">
                 {events.length}
               </Text>
-              <Text size="sm" c="dimmed">Available Events</Text>
+              <Text size="sm" c="dimmed">
+                Available Events
+              </Text>
             </Stack>
             <Stack gap={0} ta="center">
               <Text size="xl" fw={700} c="green">
                 {userApplications?.length ?? 0}
               </Text>
-              <Text size="sm" c="dimmed">Your Applications</Text>
+              <Text size="sm" c="dimmed">
+                Your Applications
+              </Text>
             </Stack>
             <Stack gap={0} ta="center">
               <Text size="xl" fw={700} c="orange">
-                {userApplications?.filter(app => app.status === "ACCEPTED").length ?? 0}
+                {userApplications?.filter((app) => app.status === "ACCEPTED")
+                  .length ?? 0}
               </Text>
-              <Text size="sm" c="dimmed">Accepted</Text>
+              <Text size="sm" c="dimmed">
+                Accepted
+              </Text>
             </Stack>
           </SimpleGrid>
         </Paper>
@@ -282,9 +311,18 @@ export default function ParticipantEventsClient() {
             const application = applicationMap.get(event.id);
             const applicationStatus = {
               hasApplication: !!application,
-              application: application ? {
-                status: application.status as "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "ACCEPTED" | "REJECTED" | "WAITLISTED" | "CANCELLED"
-              } : undefined
+              application: application
+                ? {
+                    status: application.status as
+                      | "DRAFT"
+                      | "SUBMITTED"
+                      | "UNDER_REVIEW"
+                      | "ACCEPTED"
+                      | "REJECTED"
+                      | "WAITLISTED"
+                      | "CANCELLED",
+                  }
+                : undefined,
             };
 
             return (

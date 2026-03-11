@@ -57,10 +57,11 @@ export class GitHubService {
       const repoData = await this.octokit.repos.get({ owner, repo });
 
       // Fetch commit activity stats (last year of weekly activity)
-      const commitActivityResponse = await this.octokit.repos.getCommitActivityStats({
-        owner,
-        repo,
-      });
+      const commitActivityResponse =
+        await this.octokit.repos.getCommitActivityStats({
+          owner,
+          repo,
+        });
 
       // Process latest commit
       const latestCommit = latestCommitResponse.data[0];
@@ -84,7 +85,9 @@ export class GitHubService {
           : null;
 
       // Format commit timeline data from weekly activity
-      const commitsData = this.formatCommitActivity(commitActivityResponse.data);
+      const commitsData = this.formatCommitActivity(
+        commitActivityResponse.data,
+      );
       const totalCommits = commitsData.reduce((sum, d) => sum + d.count, 0);
 
       return {
@@ -98,7 +101,7 @@ export class GitHubService {
     } catch (error) {
       console.error(`Error fetching activity for ${repoUrl}:`, error);
       throw new Error(
-        `Failed to fetch repository activity: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to fetch repository activity: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
@@ -109,7 +112,7 @@ export class GitHubService {
   async fetchResidencyActivity(
     repoUrl: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<ResidencyActivity> {
     const { owner, repo } = this.parseRepoUrl(repoUrl);
 
@@ -124,7 +127,7 @@ export class GitHubService {
           since: startDate.toISOString(),
           until: endDate.toISOString(),
           per_page: 100,
-        }
+        },
       );
 
       // Group commits by date
@@ -149,12 +152,9 @@ export class GitHubService {
         residencyCommits: commits.length,
       };
     } catch (error) {
-      console.error(
-        `Error fetching residency activity for ${repoUrl}:`,
-        error
-      );
+      console.error(`Error fetching residency activity for ${repoUrl}:`, error);
       throw new Error(
-        `Failed to fetch residency activity: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to fetch residency activity: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
@@ -183,7 +183,7 @@ export class GitHubService {
 
     return {
       owner: match[1],
-      repo: match[2].replace(/\.git$/, "")
+      repo: match[2].replace(/\.git$/, ""),
     };
   }
 
@@ -191,7 +191,9 @@ export class GitHubService {
    * Format GitHub's commit activity stats into our timeline format
    */
   private formatCommitActivity(
-    data: Array<{ week: number; total: number; days: number[] }> | Record<string, never>
+    data:
+      | Array<{ week: number; total: number; days: number[] }>
+      | Record<string, never>,
   ): CommitDataPoint[] {
     const points: CommitDataPoint[] = [];
 

@@ -41,12 +41,18 @@ import ApplicationEvaluationForm from "./ApplicationEvaluationForm";
 import ConsensusModal from "./ConsensusModal";
 import CurationSpecDashboard from "./CurationSpecDashboard";
 import type { User } from "@prisma/client";
-import { type ProfessionalRole, type ApplicationForDemographics, calculateExtendedDemographicStats, normalizeProfessionalRole, isLatamCountry } from "~/utils/demographics";
+import {
+  type ProfessionalRole,
+  type ApplicationForDemographics,
+  calculateExtendedDemographicStats,
+  normalizeProfessionalRole,
+  isLatamCountry,
+} from "~/utils/demographics";
 import { getDisplayName } from "~/utils/userDisplay";
 
 interface PipelineApplication {
   id: string;
-  user: Pick<User, 'name' | 'email'> | null;
+  user: Pick<User, "name" | "email"> | null;
   evaluations: Array<{
     stage: string;
     status: string;
@@ -61,7 +67,7 @@ interface PipelineApplication {
     answer: string;
   }>;
   demographics?: {
-    region: 'latam' | 'global' | 'unspecified';
+    region: "latam" | "global" | "unspecified";
     role: ProfessionalRole;
   };
 }
@@ -72,7 +78,12 @@ interface PipelineStageProps {
   color: string;
   count: number;
   applications: PipelineApplication[];
-  stage: 'SCREENING' | 'DETAILED_REVIEW' | 'VIDEO_REVIEW' | 'CONSENSUS' | 'FINAL_DECISION';
+  stage:
+    | "SCREENING"
+    | "DETAILED_REVIEW"
+    | "VIDEO_REVIEW"
+    | "CONSENSUS"
+    | "FINAL_DECISION";
   onApplicationClick: (applicationId: string, stage: string) => void;
   onAssignReviewer?: (applicationId: string) => void;
 }
@@ -87,37 +98,65 @@ function PipelineStage({
   onApplicationClick,
   onAssignReviewer,
 }: PipelineStageProps) {
-  const getStatusColor = (evaluations: PipelineApplication['evaluations']) => {
-    const stageEvaluations = evaluations.filter(e => e.stage === stage);
+  const getStatusColor = (evaluations: PipelineApplication["evaluations"]) => {
+    const stageEvaluations = evaluations.filter((e) => e.stage === stage);
     if (stageEvaluations.length === 0) return "gray";
-    
-    const completed = stageEvaluations.filter(e => e.status === 'COMPLETED').length;
+
+    const completed = stageEvaluations.filter(
+      (e) => e.status === "COMPLETED",
+    ).length;
     const total = stageEvaluations.length;
-    
+
     if (completed === total) return "green";
     if (completed > 0) return "yellow";
     return "red";
   };
 
-  const getRecommendationBadge = (evaluations: PipelineApplication['evaluations']) => {
+  const getRecommendationBadge = (
+    evaluations: PipelineApplication["evaluations"],
+  ) => {
     const recommendations = evaluations
-      .filter(e => e.stage === stage && e.recommendation)
-      .map(e => e.recommendation);
-    
+      .filter((e) => e.stage === stage && e.recommendation)
+      .map((e) => e.recommendation);
+
     if (recommendations.length === 0) return null;
-    
-    const accepts = recommendations.filter(r => r === 'ACCEPT').length;
-    const rejects = recommendations.filter(r => r === 'REJECT').length;
-    const waitlists = recommendations.filter(r => r === 'WAITLIST').length;
-    
-    if (accepts > rejects + waitlists) return <Badge color="green" size="xs">Lean Accept</Badge>;
-    if (rejects > accepts + waitlists) return <Badge color="red" size="xs">Lean Reject</Badge>;
-    if (waitlists > accepts + rejects) return <Badge color="yellow" size="xs">Lean Waitlist</Badge>;
-    return <Badge color="gray" size="xs">Mixed</Badge>;
+
+    const accepts = recommendations.filter((r) => r === "ACCEPT").length;
+    const rejects = recommendations.filter((r) => r === "REJECT").length;
+    const waitlists = recommendations.filter((r) => r === "WAITLIST").length;
+
+    if (accepts > rejects + waitlists)
+      return (
+        <Badge color="green" size="xs">
+          Lean Accept
+        </Badge>
+      );
+    if (rejects > accepts + waitlists)
+      return (
+        <Badge color="red" size="xs">
+          Lean Reject
+        </Badge>
+      );
+    if (waitlists > accepts + rejects)
+      return (
+        <Badge color="yellow" size="xs">
+          Lean Waitlist
+        </Badge>
+      );
+    return (
+      <Badge color="gray" size="xs">
+        Mixed
+      </Badge>
+    );
   };
 
   return (
-    <Card withBorder p="md" h="600px" style={{ display: 'flex', flexDirection: 'column' }}>
+    <Card
+      withBorder
+      p="md"
+      h="600px"
+      style={{ display: "flex", flexDirection: "column" }}
+    >
       <Group justify="space-between" mb="md">
         <Group gap="xs">
           {icon}
@@ -128,7 +167,7 @@ function PipelineStage({
             </Badge>
           </div>
         </Group>
-        
+
         {onAssignReviewer && (
           <Menu shadow="md" width={200}>
             <Menu.Target>
@@ -144,7 +183,7 @@ function PipelineStage({
                     key={app.id}
                     onClick={() => onAssignReviewer(app.id)}
                   >
-                    {getDisplayName(app.user, 'Unknown')} ({app.user?.email})
+                    {getDisplayName(app.user, "Unknown")} ({app.user?.email})
                   </Menu.Item>
                 ))
               ) : (
@@ -161,109 +200,122 @@ function PipelineStage({
             <UnstyledButton
               key={app.id}
               onClick={() => onApplicationClick(app.id, stage)}
-              style={{ width: '100%' }}
+              style={{ width: "100%" }}
             >
               <Paper
                 p="sm"
                 withBorder
                 style={{
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                  }
+                  transition: "transform 0.2s, box-shadow 0.2s",
+                  cursor: "pointer",
+                  "&:hover": {
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  },
                 }}
               >
                 <Group justify="space-between" align="flex-start">
                   <Box style={{ flex: 1, minWidth: 0 }}>
                     <Text fw={500} size="sm" truncate>
-                      {getDisplayName(app.user, 'Unknown')}
+                      {getDisplayName(app.user, "Unknown")}
                     </Text>
                     <Text size="xs" c="dimmed" truncate>
                       {app.user?.email}
                     </Text>
-                    
+
                     {/* Demographic badges */}
                     {(app.demographics ?? app.responses) && (
                       <Group mt="xs" gap="xs">
                         {/* Regional badge */}
                         {(() => {
-                          let region: 'latam' | 'global' | 'unspecified' = 'unspecified';
+                          let region: "latam" | "global" | "unspecified" =
+                            "unspecified";
                           if (app.demographics) {
                             region = app.demographics.region;
                           } else if (app.responses) {
-                            const nationalityResponse = app.responses.find(r => 
-                              r.question.questionKey === 'nationality' || 
-                              r.question.questionKey === 'country'
+                            const nationalityResponse = app.responses.find(
+                              (r) =>
+                                r.question.questionKey === "nationality" ||
+                                r.question.questionKey === "country",
                             );
                             if (nationalityResponse?.answer) {
-                              region = isLatamCountry(nationalityResponse.answer) ? 'latam' : 'global';
+                              region = isLatamCountry(
+                                nationalityResponse.answer,
+                              )
+                                ? "latam"
+                                : "global";
                             }
                           }
-                          
-                          if (region !== 'unspecified') {
+
+                          if (region !== "unspecified") {
                             return (
-                              <Tooltip label={`${region === 'latam' ? 'Latin America' : 'Global (Non-LATAM)'}`}>
-                                <Badge 
-                                  color={region === 'latam' ? 'blue' : 'teal'} 
-                                  size="xs" 
+                              <Tooltip
+                                label={`${region === "latam" ? "Latin America" : "Global (Non-LATAM)"}`}
+                              >
+                                <Badge
+                                  color={region === "latam" ? "blue" : "teal"}
+                                  size="xs"
                                   variant="filled"
-                                  style={{ fontSize: '8px' }}
+                                  style={{ fontSize: "8px" }}
                                 >
-                                  {region === 'latam' ? 'LATAM' : 'Global'}
+                                  {region === "latam" ? "LATAM" : "Global"}
                                 </Badge>
                               </Tooltip>
                             );
                           }
                           return null;
                         })()}
-                        
+
                         {/* Role badge */}
                         {(() => {
-                          let role: ProfessionalRole = 'unspecified';
+                          let role: ProfessionalRole = "unspecified";
                           if (app.demographics) {
                             role = app.demographics.role;
                           } else if (app.responses) {
-                            const backgroundResponse = app.responses.find(r => 
-                              r.question.questionKey === 'background' || 
-                              r.question.questionKey === 'profession' ||
-                              r.question.questionKey === 'role' ||
-                              r.question.questionKey === 'occupation'
+                            const backgroundResponse = app.responses.find(
+                              (r) =>
+                                r.question.questionKey === "background" ||
+                                r.question.questionKey === "profession" ||
+                                r.question.questionKey === "role" ||
+                                r.question.questionKey === "occupation",
                             );
                             if (backgroundResponse?.answer) {
-                              role = normalizeProfessionalRole(backgroundResponse.answer);
+                              role = normalizeProfessionalRole(
+                                backgroundResponse.answer,
+                              );
                             }
                           }
-                          
-                          if (role !== 'unspecified') {
-                            const roleColors: Record<ProfessionalRole, string> = {
-                              entrepreneur: "green",
-                              developer: "purple", 
-                              academic: "orange",
-                              designer: "pink",
-                              product_manager: "yellow",
-                              solo_builder: "cyan",
-                              unspecified: "gray"
-                            };
-                            
-                            const roleLabels: Record<ProfessionalRole, string> = {
-                              entrepreneur: "Entrepreneur",
-                              developer: "Developer", 
-                              academic: "Academic",
-                              designer: "Designer",
-                              product_manager: "PM",
-                              solo_builder: "Solo Builder",
-                              unspecified: "Unknown"
-                            };
-                            
+
+                          if (role !== "unspecified") {
+                            const roleColors: Record<ProfessionalRole, string> =
+                              {
+                                entrepreneur: "green",
+                                developer: "purple",
+                                academic: "orange",
+                                designer: "pink",
+                                product_manager: "yellow",
+                                solo_builder: "cyan",
+                                unspecified: "gray",
+                              };
+
+                            const roleLabels: Record<ProfessionalRole, string> =
+                              {
+                                entrepreneur: "Entrepreneur",
+                                developer: "Developer",
+                                academic: "Academic",
+                                designer: "Designer",
+                                product_manager: "PM",
+                                solo_builder: "Solo Builder",
+                                unspecified: "Unknown",
+                              };
+
                             return (
                               <Tooltip label={roleLabels[role]}>
-                                <Badge 
-                                  color={roleColors[role]} 
-                                  size="xs" 
+                                <Badge
+                                  color={roleColors[role]}
+                                  size="xs"
                                   variant="light"
-                                  style={{ fontSize: '8px' }}
+                                  style={{ fontSize: "8px" }}
                                 >
                                   {roleLabels[role]}
                                 </Badge>
@@ -274,7 +326,7 @@ function PipelineStage({
                         })()}
                       </Group>
                     )}
-                    
+
                     {/* Evaluation progress */}
                     {app.evaluations && app.evaluations.length > 0 && (
                       <Group mt="xs" gap="xs">
@@ -283,29 +335,46 @@ function PipelineStage({
                           size="xs"
                           variant="light"
                         >
-                          {app.evaluations.filter(e => e.stage === stage && e.status === 'COMPLETED').length}/
-                          {app.evaluations.filter(e => e.stage === stage).length} Complete
+                          {
+                            app.evaluations.filter(
+                              (e) =>
+                                e.stage === stage && e.status === "COMPLETED",
+                            ).length
+                          }
+                          /
+                          {
+                            app.evaluations.filter((e) => e.stage === stage)
+                              .length
+                          }{" "}
+                          Complete
                         </Badge>
                         {getRecommendationBadge(app.evaluations)}
                       </Group>
                     )}
 
                     {/* Overall score if available */}
-                    {app.evaluations?.some(e => e.overallScore) && (
+                    {app.evaluations?.some((e) => e.overallScore) && (
                       <Group mt="xs" gap="xs">
                         <IconStar size={12} />
                         <Text size="xs" fw={600}>
-                          {(app.evaluations
-                            .filter(e => e.overallScore)
-                            .reduce((sum, e) => sum + (e.overallScore ?? 0), 0) / 
-                            app.evaluations.filter(e => e.overallScore).length
+                          {(
+                            app.evaluations
+                              .filter((e) => e.overallScore)
+                              .reduce(
+                                (sum, e) => sum + (e.overallScore ?? 0),
+                                0,
+                              ) /
+                            app.evaluations.filter((e) => e.overallScore).length
                           ).toFixed(1)}
                         </Text>
                       </Group>
                     )}
                   </Box>
-                  
-                  <IconArrowRight size={14} color="var(--mantine-color-dimmed)" />
+
+                  <IconArrowRight
+                    size={14}
+                    color="var(--mantine-color-dimmed)"
+                  />
                 </Group>
               </Paper>
             </UnstyledButton>
@@ -331,7 +400,12 @@ interface AssignReviewerModalProps {
   stage: string;
 }
 
-function AssignReviewerModal({ opened, onClose, applicationId, stage }: AssignReviewerModalProps) {
+function AssignReviewerModal({
+  opened,
+  onClose,
+  applicationId,
+  stage,
+}: AssignReviewerModalProps) {
   const [selectedReviewer, setSelectedReviewer] = useState<string>("");
   const [priority, setPriority] = useState<string>("0");
 
@@ -347,11 +421,11 @@ function AssignReviewerModal({ opened, onClose, applicationId, stage }: AssignRe
     },
     onError: () => {
       notifications.show({
-        title: "Error", 
+        title: "Error",
         message: "Failed to assign reviewer",
         color: "red",
       });
-    }
+    },
   });
 
   const handleAssign = async () => {
@@ -360,9 +434,14 @@ function AssignReviewerModal({ opened, onClose, applicationId, stage }: AssignRe
     await createAssignmentMutation.mutateAsync({
       applicationId,
       reviewerId: selectedReviewer,
-      stage: stage as 'SCREENING' | 'DETAILED_REVIEW' | 'VIDEO_REVIEW' | 'CONSENSUS' | 'FINAL_DECISION',
+      stage: stage as
+        | "SCREENING"
+        | "DETAILED_REVIEW"
+        | "VIDEO_REVIEW"
+        | "CONSENSUS"
+        | "FINAL_DECISION",
       priority: parseInt(priority),
-      notes: `Assigned for ${stage.replace('_', ' ').toLowerCase()} review`,
+      notes: `Assigned for ${stage.replace("_", " ").toLowerCase()} review`,
     });
   };
 
@@ -374,10 +453,12 @@ function AssignReviewerModal({ opened, onClose, applicationId, stage }: AssignRe
           placeholder={error ? "Error loading reviewers" : "Select a reviewer"}
           value={selectedReviewer}
           onChange={(value) => setSelectedReviewer(value ?? "")}
-          data={users?.map(user => ({
-            value: user.id,
-            label: `${getDisplayName(user)} (${user.email})`,
-          })) ?? []}
+          data={
+            users?.map((user) => ({
+              value: user.id,
+              label: `${getDisplayName(user)} (${user.email})`,
+            })) ?? []
+          }
           disabled={!!error}
         />
 
@@ -410,17 +491,21 @@ function AssignReviewerModal({ opened, onClose, applicationId, stage }: AssignRe
 }
 
 // Convert PipelineApplication to ApplicationForDemographics for shared calculation
-function convertToApplicationForDemographics(applications: PipelineApplication[]): ApplicationForDemographics[] {
-  return applications.map(app => ({
+function convertToApplicationForDemographics(
+  applications: PipelineApplication[],
+): ApplicationForDemographics[] {
+  return applications.map((app) => ({
     id: app.id,
     responses: app.responses,
-    demographics: app.demographics
+    demographics: app.demographics,
   }));
 }
 
 export default function ReviewPipelineDashboard() {
-  const [selectedApplication, setSelectedApplication] = useState<string | null>(null);
-  const [selectedStage, setSelectedStage] = useState<string>('SCREENING');
+  const [selectedApplication, setSelectedApplication] = useState<string | null>(
+    null,
+  );
+  const [selectedStage, setSelectedStage] = useState<string>("SCREENING");
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [assignApplicationId, setAssignApplicationId] = useState<string>("");
   const [assignStage, setAssignStage] = useState<string>("");
@@ -436,7 +521,9 @@ export default function ReviewPipelineDashboard() {
   // Set default filter to current user when reviewers load
   useEffect(() => {
     if (reviewers && session?.user?.id && selectedReviewer === null) {
-      const currentUserIsReviewer = reviewers.some(reviewer => reviewer.id === session.user.id);
+      const currentUserIsReviewer = reviewers.some(
+        (reviewer) => reviewer.id === session.user.id,
+      );
       if (currentUserIsReviewer) {
         setSelectedReviewer(session.user.id);
       }
@@ -444,17 +531,26 @@ export default function ReviewPipelineDashboard() {
   }, [reviewers, session?.user?.id, selectedReviewer]);
 
   // Fetch pipeline data (with optional reviewer filter)
-  const { data: pipeline, refetch: refetchPipeline } = api.evaluation.getReviewPipeline.useQuery({
-    reviewerId: selectedReviewer ?? undefined
-  });
+  const { data: pipeline, refetch: refetchPipeline } =
+    api.evaluation.getReviewPipeline.useQuery({
+      reviewerId: selectedReviewer ?? undefined,
+    });
 
   // Get current user's evaluation for the selected application and stage (for direct link)
-  const { data: currentEvaluation } = api.evaluation.getEvaluation.useQuery({
-    applicationId: selectedApplication ?? "",
-    stage: selectedStage as 'SCREENING' | 'DETAILED_REVIEW' | 'VIDEO_REVIEW' | 'CONSENSUS' | 'FINAL_DECISION',
-  }, {
-    enabled: !!selectedApplication && !!selectedStage,
-  });
+  const { data: currentEvaluation } = api.evaluation.getEvaluation.useQuery(
+    {
+      applicationId: selectedApplication ?? "",
+      stage: selectedStage as
+        | "SCREENING"
+        | "DETAILED_REVIEW"
+        | "VIDEO_REVIEW"
+        | "CONSENSUS"
+        | "FINAL_DECISION",
+    },
+    {
+      enabled: !!selectedApplication && !!selectedStage,
+    },
+  );
 
   const handleApplicationClick = (applicationId: string, stage: string) => {
     setSelectedApplication(applicationId);
@@ -478,39 +574,41 @@ export default function ReviewPipelineDashboard() {
 
   const stages = [
     {
-      key: 'applicationReview',
-      title: 'Application Review',
+      key: "applicationReview",
+      title: "Application Review",
       icon: <IconUsers size={20} />,
-      color: 'blue',
+      color: "blue",
       applications: pipeline.applicationReview,
-      stage: 'SCREENING' as const, // Keep SCREENING as the stage for evaluations
-      description: 'Comprehensive review and evaluation of applications'
+      stage: "SCREENING" as const, // Keep SCREENING as the stage for evaluations
+      description: "Comprehensive review and evaluation of applications",
     },
     {
-      key: 'consensus',
-      title: 'Consensus',
+      key: "consensus",
+      title: "Consensus",
       icon: <IconMessageCircle size={20} />,
-      color: 'purple',
+      color: "purple",
       applications: pipeline.consensus,
-      stage: 'CONSENSUS' as const,
-      description: 'Final decision making with all reviewer input'
+      stage: "CONSENSUS" as const,
+      description: "Final decision making with all reviewer input",
     },
     {
-      key: 'finalDecision',
-      title: 'Final Decision',
+      key: "finalDecision",
+      title: "Final Decision",
       icon: <IconCheck size={20} />,
-      color: 'teal',
+      color: "teal",
       applications: pipeline.finalDecision,
-      stage: 'FINAL_DECISION' as const,
-      description: 'Applications with final acceptance/rejection decisions'
+      stage: "FINAL_DECISION" as const,
+      description: "Applications with final acceptance/rejection decisions",
     },
   ];
 
   const totalApplications = Object.values(pipeline).flat().length;
-  
+
   // Calculate demographic statistics for curation tracking
   const allApplications = Object.values(pipeline).flat();
-  const demographicStats = calculateExtendedDemographicStats(convertToApplicationForDemographics(allApplications));
+  const demographicStats = calculateExtendedDemographicStats(
+    convertToApplicationForDemographics(allApplications),
+  );
 
   return (
     <>
@@ -521,7 +619,8 @@ export default function ReviewPipelineDashboard() {
             <div>
               <Title order={2}>Review Pipeline</Title>
               <Text c="dimmed">
-                Manage application reviews through each stage of the evaluation process
+                Manage application reviews through each stage of the evaluation
+                process
               </Text>
             </div>
             <Group>
@@ -531,11 +630,14 @@ export default function ReviewPipelineDashboard() {
                 value={selectedReviewer}
                 onChange={setSelectedReviewer}
                 data={[
-                  { value: '', label: 'All Reviewers' },
-                  ...(reviewers?.map(reviewer => ({
+                  { value: "", label: "All Reviewers" },
+                  ...(reviewers?.map((reviewer) => ({
                     value: reviewer.id,
-                    label: reviewer.id === session?.user?.id ? 'Assigned to me' : `${reviewer.name ?? 'Unknown'} (${reviewer.email})`,
-                  })) ?? [])
+                    label:
+                      reviewer.id === session?.user?.id
+                        ? "Assigned to me"
+                        : `${reviewer.name ?? "Unknown"} (${reviewer.email})`,
+                  })) ?? []),
                 ]}
                 clearable
                 style={{ minWidth: 200 }}
@@ -543,14 +645,21 @@ export default function ReviewPipelineDashboard() {
               <Badge size="lg" variant="light">
                 {totalApplications} Applications
               </Badge>
-              <Button leftSection={<IconSettings size={16} />} variant="outline" size="sm">
+              <Button
+                leftSection={<IconSettings size={16} />}
+                variant="outline"
+                size="sm"
+              >
                 Settings
               </Button>
             </Group>
           </Group>
         </Paper>
 
-        <Tabs value={activeTab} onChange={(value) => setActiveTab(value ?? "pipeline")}>
+        <Tabs
+          value={activeTab}
+          onChange={(value) => setActiveTab(value ?? "pipeline")}
+        >
           <Tabs.List>
             <Tabs.Tab value="pipeline">Pipeline Overview</Tabs.Tab>
             <Tabs.Tab value="curation">Curation Balance</Tabs.Tab>
@@ -559,7 +668,7 @@ export default function ReviewPipelineDashboard() {
           </Tabs.List>
 
           <Tabs.Panel value="curation" pt="lg">
-            <CurationSpecDashboard 
+            <CurationSpecDashboard
               demographicStats={demographicStats}
               isLoading={!pipeline}
             />
@@ -578,7 +687,9 @@ export default function ReviewPipelineDashboard() {
                     applications={stage.applications}
                     stage={stage.stage}
                     onApplicationClick={handleApplicationClick}
-                    onAssignReviewer={(appId) => handleAssignReviewer(appId, stage.stage)}
+                    onAssignReviewer={(appId) =>
+                      handleAssignReviewer(appId, stage.stage)
+                    }
                   />
                 </Grid.Col>
               ))}
@@ -586,7 +697,9 @@ export default function ReviewPipelineDashboard() {
 
             {/* Stage descriptions */}
             <Paper p="md" withBorder mt="xl">
-              <Title order={4} mb="md">Review Process</Title>
+              <Title order={4} mb="md">
+                Review Process
+              </Title>
               <Grid>
                 {stages.map((stage, index) => (
                   <Grid.Col key={stage.key} span={{ base: 12, md: 6, lg: 4 }}>
@@ -595,8 +708,12 @@ export default function ReviewPipelineDashboard() {
                         {index + 1}
                       </Badge>
                       <div>
-                        <Text fw={600} size="sm">{stage.title}</Text>
-                        <Text size="xs" c="dimmed">{stage.description}</Text>
+                        <Text fw={600} size="sm">
+                          {stage.title}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {stage.description}
+                        </Text>
                       </div>
                     </Group>
                   </Grid.Col>
@@ -606,21 +723,28 @@ export default function ReviewPipelineDashboard() {
           </Tabs.Panel>
 
           <Tabs.Panel value="assignments" pt="lg">
-            <Alert icon={<IconAlertTriangle size={16} />} title="Feature Coming Soon">
+            <Alert
+              icon={<IconAlertTriangle size={16} />}
+              title="Feature Coming Soon"
+            >
               Reviewer assignment management interface is being developed.
             </Alert>
           </Tabs.Panel>
 
           <Tabs.Panel value="analytics" pt="lg">
-            <Alert icon={<IconAlertTriangle size={16} />} title="Feature Coming Soon">
-              Analytics dashboard with evaluation metrics and insights is being developed.
+            <Alert
+              icon={<IconAlertTriangle size={16} />}
+              title="Feature Coming Soon"
+            >
+              Analytics dashboard with evaluation metrics and insights is being
+              developed.
             </Alert>
           </Tabs.Panel>
         </Tabs>
       </Stack>
 
       {/* Evaluation/Consensus Modal */}
-      {selectedStage === 'CONSENSUS' || selectedStage === 'FINAL_DECISION' ? (
+      {selectedStage === "CONSENSUS" || selectedStage === "FINAL_DECISION" ? (
         <ConsensusModal
           opened={!!selectedApplication}
           onClose={() => setSelectedApplication(null)}
@@ -632,7 +756,7 @@ export default function ReviewPipelineDashboard() {
           opened={!!selectedApplication}
           onClose={() => setSelectedApplication(null)}
           title={
-            <Group justify="space-between" style={{ width: '100%' }}>
+            <Group justify="space-between" style={{ width: "100%" }}>
               <Text fw={600}>Application Evaluation</Text>
               {selectedApplication && currentEvaluation && (
                 <Button
@@ -653,14 +777,21 @@ export default function ReviewPipelineDashboard() {
           scrollAreaComponent={ScrollArea.Autosize}
           styles={{
             body: { padding: 0 },
-            content: { height: '90vh' },
+            content: { height: "90vh" },
           }}
         >
           {selectedApplication && (
             <Box p="md">
               <ApplicationEvaluationForm
                 applicationId={selectedApplication}
-                stage={selectedStage as 'SCREENING' | 'DETAILED_REVIEW' | 'VIDEO_REVIEW' | 'CONSENSUS' | 'FINAL_DECISION'}
+                stage={
+                  selectedStage as
+                    | "SCREENING"
+                    | "DETAILED_REVIEW"
+                    | "VIDEO_REVIEW"
+                    | "CONSENSUS"
+                    | "FINAL_DECISION"
+                }
                 onEvaluationComplete={handleEvaluationComplete}
               />
             </Box>

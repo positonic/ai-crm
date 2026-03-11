@@ -49,16 +49,16 @@ export default function QuickstartPage() {
       </h2>
       <p className="docs-text">
         Most events require a short application. Click the &ldquo;Apply&rdquo;
-        button on the event page to open the application form. The form varies by
-        event but typically asks for basic information about you and your
+        button on the event page to open the application form. The form varies
+        by event but typically asks for basic information about you and your
         interest in attending.
       </p>
 
       <div className="docs-callout">
         <p className="docs-callout-text">
           <strong>Your work is always saved.</strong> The platform automatically
-          saves your progress as you fill in the form. You can close the page and
-          come back later to finish &ndash; nothing will be lost.
+          saves your progress as you fill in the form. You can close the page
+          and come back later to finish &ndash; nothing will be lost.
         </p>
       </div>
 
@@ -78,9 +78,9 @@ export default function QuickstartPage() {
       </p>
       <ul className="docs-list">
         <li>
-          <strong>Accepted</strong> &ndash; Congratulations! You are in. You will
-          gain full access to the event, including the schedule, projects, and
-          any participant-only features.
+          <strong>Accepted</strong> &ndash; Congratulations! You are in. You
+          will gain full access to the event, including the schedule, projects,
+          and any participant-only features.
         </li>
         <li>
           <strong>Waitlisted</strong> &ndash; You are on the waiting list. If a
@@ -148,8 +148,8 @@ export default function QuickstartPage() {
       <ol className="docs-list">
         <li>
           <strong>Access your floor</strong> &ndash; Look for the &ldquo;Manage
-          Schedule&rdquo; tab in the event navigation. This appears automatically
-          once an organiser assigns you to a venue.
+          Schedule&rdquo; tab in the event navigation. This appears
+          automatically once an organiser assigns you to a venue.
         </li>
         <li>
           <strong>Manage sessions</strong> &ndash; Create, edit, and remove

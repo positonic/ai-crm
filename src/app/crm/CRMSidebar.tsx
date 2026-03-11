@@ -53,7 +53,9 @@ function SidebarItem({
     <>
       <span className="crm-sidebar-item-icon">{icon}</span>
       <span className="crm-sidebar-item-label">{label}</span>
-      {badge !== undefined && <span className="crm-sidebar-item-badge">{badge}</span>}
+      {badge !== undefined && (
+        <span className="crm-sidebar-item-badge">{badge}</span>
+      )}
       {hasChevron && (
         <span className="crm-sidebar-item-chevron">
           <IconChevronRight size={14} />
@@ -88,8 +90,13 @@ export default function CRMSidebar() {
       <div className="crm-sidebar-header">
         <div className="crm-sidebar-workspace">
           <div className="crm-sidebar-workspace-avatar">F</div>
-          <span className="crm-sidebar-workspace-name">Funding the Comm...</span>
-          <IconChevronDown size={14} className="crm-sidebar-workspace-chevron" />
+          <span className="crm-sidebar-workspace-name">
+            Funding the Comm...
+          </span>
+          <IconChevronDown
+            size={14}
+            className="crm-sidebar-workspace-chevron"
+          />
         </div>
         <div className="crm-sidebar-toggle">
           <IconLayoutSidebar size={18} />
@@ -111,8 +118,17 @@ export default function CRMSidebar() {
       {/* Navigation */}
       <nav className="crm-sidebar-nav">
         {/* Main Items */}
-        <SidebarItem icon={<IconBell size={18} />} label="Notifications" disabled />
-        <SidebarItem icon={<IconCheckbox size={18} />} label="Tasks" badge={3} disabled />
+        <SidebarItem
+          icon={<IconBell size={18} />}
+          label="Notifications"
+          disabled
+        />
+        <SidebarItem
+          icon={<IconCheckbox size={18} />}
+          label="Tasks"
+          badge={3}
+          disabled
+        />
         <SidebarItem icon={<IconNote size={18} />} label="Notes" disabled />
         <SidebarItem icon={<IconMail size={18} />} label="Emails" disabled />
         <SidebarItem
@@ -122,13 +138,25 @@ export default function CRMSidebar() {
           active={isActive("/crm/communicate")}
         />
         <SidebarItem icon={<IconPhone size={18} />} label="Calls" disabled />
-        <SidebarItem icon={<IconChartBar size={18} />} label="Reports" disabled />
-        <SidebarItem icon={<IconPlayerPlay size={18} />} label="Automations" hasChevron disabled />
+        <SidebarItem
+          icon={<IconChartBar size={18} />}
+          label="Reports"
+          disabled
+        />
+        <SidebarItem
+          icon={<IconPlayerPlay size={18} />}
+          label="Automations"
+          hasChevron
+          disabled
+        />
 
         {/* Favorites Section */}
         <div className="crm-sidebar-section">
           <div className="crm-sidebar-section-header">
-            <IconChevronDown size={12} className="crm-sidebar-section-chevron" />
+            <IconChevronDown
+              size={12}
+              className="crm-sidebar-section-chevron"
+            />
             <span>Favorites</span>
           </div>
           <div className="crm-sidebar-section-content">
@@ -139,7 +167,10 @@ export default function CRMSidebar() {
         {/* Records Section */}
         <div className="crm-sidebar-section">
           <div className="crm-sidebar-section-header">
-            <IconChevronDown size={12} className="crm-sidebar-section-chevron" />
+            <IconChevronDown
+              size={12}
+              className="crm-sidebar-section-chevron"
+            />
             <span>Records</span>
           </div>
           <div className="crm-sidebar-section-content">
@@ -181,7 +212,10 @@ export default function CRMSidebar() {
         {/* Lists Section */}
         <div className="crm-sidebar-section">
           <div className="crm-sidebar-section-header">
-            <IconChevronDown size={12} className="crm-sidebar-section-chevron" />
+            <IconChevronDown
+              size={12}
+              className="crm-sidebar-section-chevron"
+            />
             <span>Lists</span>
           </div>
           <div className="crm-sidebar-section-content">

@@ -13,12 +13,13 @@ export const configRouter = createTRPCRouter({
    * Returns counts of members, projects, and updates across all events
    */
   getCommunityStats: publicProcedure.query(async ({ ctx }) => {
-    const [memberCount, projectCount, updateCount, eventCount] = await Promise.all([
-      ctx.db.user.count(),
-      ctx.db.userProject.count(),
-      ctx.db.projectUpdate.count(),
-      ctx.db.event.count(),
-    ]);
+    const [memberCount, projectCount, updateCount, eventCount] =
+      await Promise.all([
+        ctx.db.user.count(),
+        ctx.db.userProject.count(),
+        ctx.db.projectUpdate.count(),
+        ctx.db.event.count(),
+      ]);
 
     return {
       members: memberCount,

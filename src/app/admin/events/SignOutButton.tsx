@@ -10,7 +10,7 @@ export default function SignOutButton() {
       variant="light"
       size="sm"
       leftSection={<IconLogout size={16} />}
-      onClick={() => signOut({ callbackUrl: '/' })}
+      onClick={() => signOut({ callbackUrl: "/" })}
     >
       Sign Out
     </Button>

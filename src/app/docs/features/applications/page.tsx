@@ -33,9 +33,9 @@ export default function ApplicationsPage() {
 
       <div className="docs-callout">
         <p className="docs-callout-text">
-          <strong>Take your time.</strong> You can start your application, leave,
-          and come back later to finish it. Your draft will be waiting for you
-          exactly where you left off.
+          <strong>Take your time.</strong> You can start your application,
+          leave, and come back later to finish it. Your draft will be waiting
+          for you exactly where you left off.
         </p>
       </div>
 
@@ -58,8 +58,8 @@ export default function ApplicationsPage() {
       </p>
       <ul className="docs-list">
         <li>
-          <strong>Draft</strong> &ndash; You have started the application but not
-          yet submitted it.
+          <strong>Draft</strong> &ndash; You have started the application but
+          not yet submitted it.
         </li>
         <li>
           <strong>Submitted</strong> &ndash; Your application is with the

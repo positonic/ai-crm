@@ -55,14 +55,21 @@ const speakerApplicationSchema = z.object({
     .string()
     .min(50, "Please provide at least 50 characters for your description")
     .max(2000),
-  talkFormat: z.array(z.string()).min(1, "Please select at least one session type"),
-  talkDuration: z.array(z.string()).min(1, "Please select at least one session length"),
+  talkFormat: z
+    .array(z.string())
+    .min(1, "Please select at least one session type"),
+  talkDuration: z
+    .array(z.string())
+    .min(1, "Please select at least one session length"),
   talkTopic: z.string().min(1, "Please specify the topic or track"),
   coHostInfo: z.string().max(2000).optional().or(z.literal("")),
   entityName: z.string().max(200).optional().or(z.literal("")),
   otherFloorsTopicTheme: z.string().max(2000).optional().or(z.literal("")),
   // Speaker info
-  bio: z.string().min(20, "Please provide at least 20 characters for your bio").max(1000),
+  bio: z
+    .string()
+    .min(20, "Please provide at least 20 characters for your bio")
+    .max(1000),
   previousSpeakingExperience: z.string().max(2000).optional().or(z.literal("")),
   // Profile fields
   preferredName: z.string().min(1, "Preferred name is required").max(100),
@@ -104,11 +111,26 @@ export const talkDurationOptions = [
 ];
 
 export const ftcTopicOptions = [
-  { value: "AI Governance and Coordination", label: "AI Governance and Coordination" },
-  { value: "Economic Futures: Public Goods in the Age of AI", label: "Economic Futures: Public Goods in the Age of AI" },
-  { value: "AI-Assisted Funding and Resource Allocation", label: "AI-Assisted Funding and Resource Allocation" },
-  { value: "Open Infrastructure for Collective Intelligence", label: "Open Infrastructure for Collective Intelligence" },
-  { value: "Applied Human-AI Collaboration", label: "Applied Human-AI Collaboration" },
+  {
+    value: "AI Governance and Coordination",
+    label: "AI Governance and Coordination",
+  },
+  {
+    value: "Economic Futures: Public Goods in the Age of AI",
+    label: "Economic Futures: Public Goods in the Age of AI",
+  },
+  {
+    value: "AI-Assisted Funding and Resource Allocation",
+    label: "AI-Assisted Funding and Resource Allocation",
+  },
+  {
+    value: "Open Infrastructure for Collective Intelligence",
+    label: "Open Infrastructure for Collective Intelligence",
+  },
+  {
+    value: "Applied Human-AI Collaboration",
+    label: "Applied Human-AI Collaboration",
+  },
   { value: "Other", label: "Other" },
 ];
 
@@ -158,7 +180,8 @@ export default function SpeakerApplicationForm({
 }: SpeakerApplicationFormProps) {
   const router = useRouter();
   const isEIR = eventType === "EIR";
-  const isOnBehalfUpdate = !!existingApplicationStatus && existingApplicationStatus !== "DRAFT";
+  const isOnBehalfUpdate =
+    !!existingApplicationStatus && existingApplicationStatus !== "DRAFT";
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedVenueIds, setSelectedVenueIds] = useState<string[]>([]);
@@ -172,7 +195,9 @@ export default function SpeakerApplicationForm({
   const [sessionTypeOtherText, setSessionTypeOtherText] = useState("");
   const [preferredDates, setPreferredDates] = useState<string[]>([]);
   const [preferredTimes, setPreferredTimes] = useState("");
-  const [questionResponses, setQuestionResponses] = useState<Record<string, string>>({});
+  const [questionResponses, setQuestionResponses] = useState<
+    Record<string, string>
+  >({});
   const [hasInitializedResponses, setHasInitializedResponses] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -181,11 +206,12 @@ export default function SpeakerApplicationForm({
   const [fileInputKey, setFileInputKey] = useState(0);
   const [floorsModalOpen, setFloorsModalOpen] = useState(false);
   const [profileImageError, setProfileImageError] = useState(false);
-  const [questionErrors, setQuestionErrors] = useState<Record<string, string>>({});
-  const { data: config } = api.config.getPublicConfig.useQuery(
-    undefined,
-    { refetchOnWindowFocus: false },
+  const [questionErrors, setQuestionErrors] = useState<Record<string, string>>(
+    {},
   );
+  const { data: config } = api.config.getPublicConfig.useQuery(undefined, {
+    refetchOnWindowFocus: false,
+  });
 
   // Fetch available venues/floors for this event
   const { data: scheduleFilters, isLoading: isLoadingFilters } =
@@ -195,12 +221,16 @@ export default function SpeakerApplicationForm({
     );
 
   // Stabilize useMemo deps with stringified ID keys to prevent cascading re-renders on refetch
-  const venueIdKey = scheduleFilters?.venues?.map(v => v.id).join(',') ?? '';
-  const fmIdKey = scheduleFilters?.floorManagers?.map(fm => fm.id).join(',') ?? '';
+  const venueIdKey = scheduleFilters?.venues?.map((v) => v.id).join(",") ?? "";
+  const fmIdKey =
+    scheduleFilters?.floorManagers?.map((fm) => fm.id).join(",") ?? "";
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const venues = useMemo(() => scheduleFilters?.venues ?? [], [venueIdKey]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const floorManagers = useMemo(() => scheduleFilters?.floorManagers ?? [], [fmIdKey]);
+  const floorManagers = useMemo(
+    () => scheduleFilters?.floorManagers ?? [],
+    [fmIdKey],
+  );
 
   // If invited, fetch inviter's venues for pre-selection
   const { data: inviterVenues } = api.application.getInviterVenues.useQuery(
@@ -237,7 +267,7 @@ export default function SpeakerApplicationForm({
     for (const fm of floorManagers) {
       const displayName = fm.firstName
         ? `${fm.firstName}${fm.surname ? ` ${fm.surname}` : ""}`
-        : fm.name ?? "Unknown";
+        : (fm.name ?? "Unknown");
 
       const managerVenueNames = venues
         .filter((v) => fm.venueIds.includes(v.id))
@@ -316,7 +346,8 @@ export default function SpeakerApplicationForm({
   const createApplication = api.application.createApplication.useMutation();
   const submitApplication = api.application.submitApplication.useMutation();
   const updateProfile = api.profile.updateProfile.useMutation();
-  const bulkUpdateResponses = api.application.bulkUpdateApplicationResponses.useMutation();
+  const bulkUpdateResponses =
+    api.application.bulkUpdateApplicationResponses.useMutation();
 
   // Fetch existing profile for pre-populating form (one-time initialization only)
   const { data: existingProfile } = api.profile.getMyProfile.useQuery(
@@ -330,7 +361,7 @@ export default function SpeakerApplicationForm({
   );
 
   // Dynamic step count: show Step 4 only if event has questions
-  const totalSteps = (eventQuestions && eventQuestions.length > 0) ? 4 : 3;
+  const totalSteps = eventQuestions && eventQuestions.length > 0 ? 4 : 3;
 
   const form = useForm<SpeakerApplicationData>({
     validate: zodResolver(speakerApplicationSchema),
@@ -362,44 +393,72 @@ export default function SpeakerApplicationForm({
     if (!hasInitializedProfile && existingProfile) {
       setHasInitializedProfile(true);
       const p = existingProfile;
-      if (!form.values.talkTitle && p.speakerTalkTitle) form.setFieldValue("talkTitle", p.speakerTalkTitle);
-      if (!form.values.talkAbstract && p.speakerTalkAbstract) form.setFieldValue("talkAbstract", p.speakerTalkAbstract);
+      if (!form.values.talkTitle && p.speakerTalkTitle)
+        form.setFieldValue("talkTitle", p.speakerTalkTitle);
+      if (!form.values.talkAbstract && p.speakerTalkAbstract)
+        form.setFieldValue("talkAbstract", p.speakerTalkAbstract);
       if (form.values.talkFormat.length === 0 && p.speakerTalkFormat) {
         const formats = p.speakerTalkFormat.split(", ").filter(Boolean);
-        const otherFormat = formats.find(f => f.startsWith("Other: "));
+        const otherFormat = formats.find((f) => f.startsWith("Other: "));
         if (otherFormat) {
           setSessionTypeOtherText(otherFormat.replace("Other: ", ""));
-          form.setFieldValue("talkFormat", formats.map(f => f.startsWith("Other: ") ? "Other" : f));
+          form.setFieldValue(
+            "talkFormat",
+            formats.map((f) => (f.startsWith("Other: ") ? "Other" : f)),
+          );
         } else {
           form.setFieldValue("talkFormat", formats);
         }
       }
       if (form.values.talkDuration.length === 0 && p.speakerTalkDuration) {
         const durations = p.speakerTalkDuration.split(", ").filter(Boolean);
-        const knownValues = talkDurationOptions.map(o => o.value);
-        const known = durations.filter(d => knownValues.includes(d));
-        const unknown = durations.filter(d => !knownValues.includes(d));
+        const knownValues = talkDurationOptions.map((o) => o.value);
+        const known = durations.filter((d) => knownValues.includes(d));
+        const unknown = durations.filter((d) => !knownValues.includes(d));
         if (unknown.length > 0) {
           known.push("other");
           setDurationOtherText(unknown.join(", "));
         }
         form.setFieldValue("talkDuration", known);
       }
-      if (!form.values.talkTopic && p.speakerTalkTopic) form.setFieldValue("talkTopic", p.speakerTalkTopic);
+      if (!form.values.talkTopic && p.speakerTalkTopic)
+        form.setFieldValue("talkTopic", p.speakerTalkTopic);
       if (!form.values.bio && p.bio) form.setFieldValue("bio", p.bio);
-      if (!form.values.previousSpeakingExperience && p.speakerPreviousExperience) form.setFieldValue("previousSpeakingExperience", p.speakerPreviousExperience);
-      if (!form.values.preferredName && p.user?.name) form.setFieldValue("preferredName", p.user.name);
-      if (!form.values.jobTitle && p.jobTitle) form.setFieldValue("jobTitle", p.jobTitle);
-      if (!form.values.company && p.company) form.setFieldValue("company", p.company);
-      if (!form.values.website && p.website) form.setFieldValue("website", p.website);
-      if (!form.values.linkedinUrl && p.linkedinUrl) form.setFieldValue("linkedinUrl", p.linkedinUrl);
-      if (!form.values.twitterUrl && p.twitterUrl) form.setFieldValue("twitterUrl", p.twitterUrl);
-      if (!form.values.blueskyUrl && p.blueskyUrl) form.setFieldValue("blueskyUrl", p.blueskyUrl);
-      if (!form.values.pastTalkUrl && p.speakerPastTalkUrl) form.setFieldValue("pastTalkUrl", p.speakerPastTalkUrl);
-      if (!form.values.entityName && p.speakerEntityName) form.setFieldValue("entityName", p.speakerEntityName);
-      if (!form.values.displayPreference && p.speakerDisplayPreference) form.setFieldValue("displayPreference", p.speakerDisplayPreference);
-      if (!form.values.otherFloorsTopicTheme && p.speakerOtherFloorsTopicTheme) form.setFieldValue("otherFloorsTopicTheme", p.speakerOtherFloorsTopicTheme);
-      if (!form.values.coHostInfo && p.speakerCoHostInfo) form.setFieldValue("coHostInfo", p.speakerCoHostInfo);
+      if (
+        !form.values.previousSpeakingExperience &&
+        p.speakerPreviousExperience
+      )
+        form.setFieldValue(
+          "previousSpeakingExperience",
+          p.speakerPreviousExperience,
+        );
+      if (!form.values.preferredName && p.user?.name)
+        form.setFieldValue("preferredName", p.user.name);
+      if (!form.values.jobTitle && p.jobTitle)
+        form.setFieldValue("jobTitle", p.jobTitle);
+      if (!form.values.company && p.company)
+        form.setFieldValue("company", p.company);
+      if (!form.values.website && p.website)
+        form.setFieldValue("website", p.website);
+      if (!form.values.linkedinUrl && p.linkedinUrl)
+        form.setFieldValue("linkedinUrl", p.linkedinUrl);
+      if (!form.values.twitterUrl && p.twitterUrl)
+        form.setFieldValue("twitterUrl", p.twitterUrl);
+      if (!form.values.blueskyUrl && p.blueskyUrl)
+        form.setFieldValue("blueskyUrl", p.blueskyUrl);
+      if (!form.values.pastTalkUrl && p.speakerPastTalkUrl)
+        form.setFieldValue("pastTalkUrl", p.speakerPastTalkUrl);
+      if (!form.values.entityName && p.speakerEntityName)
+        form.setFieldValue("entityName", p.speakerEntityName);
+      if (!form.values.displayPreference && p.speakerDisplayPreference)
+        form.setFieldValue("displayPreference", p.speakerDisplayPreference);
+      if (!form.values.otherFloorsTopicTheme && p.speakerOtherFloorsTopicTheme)
+        form.setFieldValue(
+          "otherFloorsTopicTheme",
+          p.speakerOtherFloorsTopicTheme,
+        );
+      if (!form.values.coHostInfo && p.speakerCoHostInfo)
+        form.setFieldValue("coHostInfo", p.speakerCoHostInfo);
       // Pre-populate avatar URL from profile
       if (!avatarUrl) {
         const profileAvatarUrl = p.avatarUrl ?? p.user?.image ?? null;
@@ -411,7 +470,12 @@ export default function SpeakerApplicationForm({
 
   // Pre-populate dynamic question responses from existing application
   useEffect(() => {
-    if (!hasInitializedResponses && existingResponses && existingResponses.length > 0 && eventQuestions) {
+    if (
+      !hasInitializedResponses &&
+      existingResponses &&
+      existingResponses.length > 0 &&
+      eventQuestions
+    ) {
       setHasInitializedResponses(true);
       const initialResponses: Record<string, string> = {};
       for (const response of existingResponses) {
@@ -448,7 +512,7 @@ export default function SpeakerApplicationForm({
       formData.append("avatar", file);
 
       const progressInterval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 10, 90));
+        setUploadProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
       const response = await fetch("/api/upload/avatar", {
@@ -460,15 +524,15 @@ export default function SpeakerApplicationForm({
       setUploadProgress(100);
 
       if (!response.ok) {
-        const error = await response.json() as { error?: string };
+        const error = (await response.json()) as { error?: string };
         throw new Error(error.error ?? "Upload failed");
       }
 
-      const result = await response.json() as { avatarUrl: string };
+      const result = (await response.json()) as { avatarUrl: string };
       setAvatarUrl(result.avatarUrl);
 
       // Reset FileInput so user can select a different file
-      setFileInputKey(prev => prev + 1);
+      setFileInputKey((prev) => prev + 1);
 
       notifications.show({
         title: "Photo Uploaded",
@@ -479,7 +543,10 @@ export default function SpeakerApplicationForm({
     } catch (error) {
       notifications.show({
         title: "Upload Failed",
-        message: error instanceof Error ? error.message : "Failed to upload photo. Please try again.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to upload photo. Please try again.",
         color: "red",
         icon: <IconX size={16} />,
         autoClose: 8000,
@@ -515,10 +582,14 @@ export default function SpeakerApplicationForm({
         speakerTalkTitle: values.talkTitle,
         speakerTalkAbstract: values.talkAbstract,
         speakerTalkFormat: values.talkFormat
-          .map(f => f === "Other" && sessionTypeOtherText.trim() ? `Other: ${sessionTypeOtherText.trim()}` : f)
+          .map((f) =>
+            f === "Other" && sessionTypeOtherText.trim()
+              ? `Other: ${sessionTypeOtherText.trim()}`
+              : f,
+          )
           .join(", "),
         speakerTalkDuration: values.talkDuration
-          .map(d => d === "other" ? durationOtherText : d)
+          .map((d) => (d === "other" ? durationOtherText : d))
           .join(", "),
         speakerTalkTopic: values.talkTopic,
         speakerPreviousExperience: values.previousSpeakingExperience,
@@ -532,11 +603,11 @@ export default function SpeakerApplicationForm({
       // Step 3: Save dynamic question responses (if any)
       if (eventQuestions && eventQuestions.length > 0) {
         const responsesToSave = eventQuestions
-          .filter(q => {
+          .filter((q) => {
             const answer = questionResponses[q.questionKey];
             return answer && answer.trim().length > 0;
           })
-          .map(q => ({
+          .map((q) => ({
             questionId: q.id,
             answer: questionResponses[q.questionKey]!.trim(),
           }));
@@ -551,22 +622,26 @@ export default function SpeakerApplicationForm({
 
       // Step 4: Submit the application (DRAFT → SUBMITTED) with venue selections
       // Build invited-by fields from multi-select
-      const nonOtherInviters = invitedByValue.filter(v => v !== "other");
+      const nonOtherInviters = invitedByValue.filter((v) => v !== "other");
       const primaryInviterId = nonOtherInviters[0];
-      const additionalInviterNames = nonOtherInviters.slice(1).map(id => {
-        const opt = inviterOptions.find(o => o.value === id);
+      const additionalInviterNames = nonOtherInviters.slice(1).map((id) => {
+        const opt = inviterOptions.find((o) => o.value === id);
         return opt?.label ?? id;
       });
       const otherParts: string[] = [];
-      if (additionalInviterNames.length > 0) otherParts.push(additionalInviterNames.join(", "));
-      if (invitedByValue.includes("other") && invitedByOtherText.trim()) otherParts.push(invitedByOtherText.trim());
+      if (additionalInviterNames.length > 0)
+        otherParts.push(additionalInviterNames.join(", "));
+      if (invitedByValue.includes("other") && invitedByOtherText.trim())
+        otherParts.push(invitedByOtherText.trim());
 
       await submitApplication.mutateAsync({
         applicationId: application.id,
         venueIds: selectedVenueIds.length > 0 ? selectedVenueIds : undefined,
         speakerInvitedByUserId: primaryInviterId ?? undefined,
-        speakerInvitedByOther: otherParts.length > 0 ? otherParts.join("; ") : undefined,
-        speakerPreferredDates: preferredDates.length > 0 ? preferredDates.join(",") : undefined,
+        speakerInvitedByOther:
+          otherParts.length > 0 ? otherParts.join("; ") : undefined,
+        speakerPreferredDates:
+          preferredDates.length > 0 ? preferredDates.join(",") : undefined,
         speakerPreferredTimes: preferredTimes.trim() || undefined,
       });
 
@@ -603,17 +678,37 @@ export default function SpeakerApplicationForm({
 
   const getStepFields = (step: number): (keyof SpeakerApplicationData)[] => {
     switch (step) {
-      case 1: return ['preferredName', 'bio', 'jobTitle', 'company']; // Speaker Profile
-      case 2: return ['website', 'linkedinUrl', 'twitterUrl', 'blueskyUrl', 'pastTalkUrl']; // Links (optional but validate URL format)
+      case 1:
+        return ["preferredName", "bio", "jobTitle", "company"]; // Speaker Profile
+      case 2:
+        return [
+          "website",
+          "linkedinUrl",
+          "twitterUrl",
+          "blueskyUrl",
+          "pastTalkUrl",
+        ]; // Links (optional but validate URL format)
       default:
         // About You is always the last step (when it exists)
         if (step === totalSteps && totalSteps === 4) return []; // About You (dynamic questions)
         // Session Details / EIR Questions is step 3
         if (step === 3) {
-          if (isEIR) return ['talkAbstract', 'talkTopic'];
-          return ['talkTitle', 'talkAbstract', 'talkFormat', 'talkDuration', 'talkTopic'];
+          if (isEIR) return ["talkAbstract", "talkTopic"];
+          return [
+            "talkTitle",
+            "talkAbstract",
+            "talkFormat",
+            "talkDuration",
+            "talkTopic",
+          ];
         }
-        return ['talkTitle', 'talkAbstract', 'talkFormat', 'talkDuration', 'talkTopic']; // Session Details (last step when no questions)
+        return [
+          "talkTitle",
+          "talkAbstract",
+          "talkFormat",
+          "talkDuration",
+          "talkTopic",
+        ]; // Session Details (last step when no questions)
     }
   };
 
@@ -652,7 +747,8 @@ export default function SpeakerApplicationForm({
           form.values.company.trim().length > 0 &&
           !!(avatarUrl ?? previewUrl)
         );
-      case 2: { // Links - all optional, but must be valid URLs if provided
+      case 2: {
+        // Links - all optional, but must be valid URLs if provided
         const urlFields = [
           form.values.website,
           form.values.linkedinUrl,
@@ -660,9 +756,14 @@ export default function SpeakerApplicationForm({
           form.values.blueskyUrl,
           form.values.pastTalkUrl,
         ];
-        return urlFields.every(val => {
+        return urlFields.every((val) => {
           if (!val || val.trim() === "") return true;
-          try { new URL(val); return true; } catch { return false; }
+          try {
+            new URL(val);
+            return true;
+          } catch {
+            return false;
+          }
         });
       }
       default: {
@@ -671,7 +772,8 @@ export default function SpeakerApplicationForm({
           if (isEIR) {
             return (
               form.values.talkAbstract.length >= 50 &&
-              (form.values.previousSpeakingExperience?.trim().length ?? 0) > 0 &&
+              (form.values.previousSpeakingExperience?.trim().length ?? 0) >
+                0 &&
               form.values.talkTopic.trim().length > 0 &&
               (form.values.coHostInfo?.trim().length ?? 0) > 0
             );
@@ -683,16 +785,19 @@ export default function SpeakerApplicationForm({
             form.values.talkDuration.length > 0 &&
             form.values.talkTopic.length > 0 &&
             // If "Other" session type selected, require the fill-in text
-            (!form.values.talkFormat.includes("Other") || sessionTypeOtherText.trim().length > 0) &&
+            (!form.values.talkFormat.includes("Other") ||
+              sessionTypeOtherText.trim().length > 0) &&
             // If FtC venue with "Other" selected, require the fill-in text
-            (!isFtcVenue || !ftcTopicValues.includes("Other") || ftcTopicOtherText.trim().length > 0)
+            (!isFtcVenue ||
+              !ftcTopicValues.includes("Other") ||
+              ftcTopicOtherText.trim().length > 0)
           );
         }
         // About You (step 4 when totalSteps === 4)
         if (!eventQuestions) return true;
         return eventQuestions
-          .filter(q => q.required)
-          .every(q => questionResponses[q.questionKey]?.trim());
+          .filter((q) => q.required)
+          .every((q) => questionResponses[q.questionKey]?.trim());
       }
     }
   };
@@ -714,10 +819,7 @@ export default function SpeakerApplicationForm({
       <Card shadow="sm" padding="xl" radius="md" withBorder>
         <Stack gap="lg">
           <Group gap="md" align="center">
-            <IconMessageCircle
-              size={28}
-              color="var(--mantine-color-teal-6)"
-            />
+            <IconMessageCircle size={28} color="var(--mantine-color-teal-6)" />
             <div>
               <Title order={3}>EIR Questions</Title>
               <Text size="sm" c="dimmed">
@@ -783,7 +885,9 @@ export default function SpeakerApplicationForm({
           <Center h={200}>
             <Stack align="center" gap="md">
               <Loader size="md" />
-              <Text c="dimmed" size="sm">Loading form data...</Text>
+              <Text c="dimmed" size="sm">
+                Loading form data...
+              </Text>
             </Stack>
           </Center>
         </Card>
@@ -793,10 +897,7 @@ export default function SpeakerApplicationForm({
       <Card shadow="sm" padding="xl" radius="md" withBorder>
         <Stack gap="lg">
           <Group gap="md" align="center">
-            <IconMicrophone
-              size={28}
-              color="var(--mantine-color-teal-6)"
-            />
+            <IconMicrophone size={28} color="var(--mantine-color-teal-6)" />
             <div>
               <Title order={3}>Session Details</Title>
               <Text size="sm" c="dimmed">
@@ -860,10 +961,14 @@ export default function SpeakerApplicationForm({
               {form.values.talkFormat.includes("Other") && (
                 <TextInput
                   label="Other Session Type"
-                  description={'If you selected "Other" for Session Type or Duration, please clarify below'}
+                  description={
+                    'If you selected "Other" for Session Type or Duration, please clarify below'
+                  }
                   placeholder="Describe your session type..."
                   value={sessionTypeOtherText}
-                  onChange={(e) => setSessionTypeOtherText(e.currentTarget.value)}
+                  onChange={(e) =>
+                    setSessionTypeOtherText(e.currentTarget.value)
+                  }
                   mt="sm"
                   required
                 />
@@ -898,14 +1003,23 @@ export default function SpeakerApplicationForm({
                   placeholder="Select floors"
                   description={
                     <>
-                      If you were invited to speak, please select the floor you were invited to speak on. For more information about the floors at IatF,{" "}
+                      If you were invited to speak, please select the floor you
+                      were invited to speak on. For more information about the
+                      floors at IatF,{" "}
                       <a
                         href="#"
-                        onClick={(e) => { e.preventDefault(); setFloorsModalOpen(true); }}
-                        style={{ color: "var(--mantine-color-teal-6)", cursor: "pointer" }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFloorsModalOpen(true);
+                        }}
+                        style={{
+                          color: "var(--mantine-color-teal-6)",
+                          cursor: "pointer",
+                        }}
                       >
                         click here
-                      </a>.
+                      </a>
+                      .
                     </>
                   }
                   data={venueSelectData}
@@ -919,7 +1033,12 @@ export default function SpeakerApplicationForm({
                   }}
                   clearable
                   searchable
-                  leftSection={<IconBuilding size={16} color="var(--mantine-color-teal-6)" />}
+                  leftSection={
+                    <IconBuilding
+                      size={16}
+                      color="var(--mantine-color-teal-6)"
+                    />
+                  }
                 />
               </Grid.Col>
             )}
@@ -934,39 +1053,79 @@ export default function SpeakerApplicationForm({
                 <List spacing="lg" listStyleType="none">
                   <List.Item>
                     <Text fw={600}>Spaceship (Floor 2)</Text>
-                    <Text size="sm" c="dimmed">The main stage. AI-assisted funding, public AI infrastructure, and the coordination systems humanity needs to ensure intelligence serves everyone.</Text>
+                    <Text size="sm" c="dimmed">
+                      The main stage. AI-assisted funding, public AI
+                      infrastructure, and the coordination systems humanity
+                      needs to ensure intelligence serves everyone.
+                    </Text>
                   </List.Item>
                   <List.Item>
                     <Text fw={600}>Robotics &amp; Hard Tech (Floor 4)</Text>
-                    <Text size="sm" c="dimmed">36-hour overnight hackathon with Protocol Labs. Open-source robotics, physical AI, and the question of who funds hardware for human flourishing.</Text>
+                    <Text size="sm" c="dimmed">
+                      36-hour overnight hackathon with Protocol Labs.
+                      Open-source robotics, physical AI, and the question of who
+                      funds hardware for human flourishing.
+                    </Text>
                   </List.Item>
                   <List.Item>
                     <Text fw={600}>Arts &amp; Music (Floor 6)</Text>
-                    <Text size="sm" c="dimmed">Creativity can&apos;t be automated. Curated gallery, talks on technology and the arts, live music performances into the evening.</Text>
+                    <Text size="sm" c="dimmed">
+                      Creativity can&apos;t be automated. Curated gallery, talks
+                      on technology and the arts, live music performances into
+                      the evening.
+                    </Text>
                   </List.Item>
                   <List.Item>
                     <Text fw={600}>Maker Space (Floor 7)</Text>
-                    <Text size="sm" c="dimmed">4,000 sq ft prototyping lab with laser cutters, 3D printers, and CNCs. Turn ideas into prototypes in minutes.</Text>
+                    <Text size="sm" c="dimmed">
+                      4,000 sq ft prototyping lab with laser cutters, 3D
+                      printers, and CNCs. Turn ideas into prototypes in minutes.
+                    </Text>
                   </List.Item>
                   <List.Item>
                     <Text fw={600}>Neuro &amp; Biotech (Floor 8)</Text>
-                    <Text size="sm" c="dimmed">Tools to heal people and the planet. Community biolab with hands-on workshops: test your own genetics, test your local water supply, hear how founders cured their own diseases.</Text>
+                    <Text size="sm" c="dimmed">
+                      Tools to heal people and the planet. Community biolab with
+                      hands-on workshops: test your own genetics, test your
+                      local water supply, hear how founders cured their own
+                      diseases.
+                    </Text>
                   </List.Item>
                   <List.Item>
                     <Text fw={600}>AI &amp; Autonomous Systems (Floor 9)</Text>
-                    <Text size="sm" c="dimmed">Can we build intelligence that amplifies human agency instead of replacing it? Hands-on workshops, motion capture demos, GPU compute, and salons exploring post-labor economics.</Text>
+                    <Text size="sm" c="dimmed">
+                      Can we build intelligence that amplifies human agency
+                      instead of replacing it? Hands-on workshops, motion
+                      capture demos, GPU compute, and salons exploring
+                      post-labor economics.
+                    </Text>
                   </List.Item>
                   <List.Item>
                     <Text fw={600}>Health &amp; Longevity (Floor 11)</Text>
-                    <Text size="sm" c="dimmed">Live long enough to see the far future. Biotech demos, longevity research talks, and the community building Viva City.</Text>
+                    <Text size="sm" c="dimmed">
+                      Live long enough to see the far future. Biotech demos,
+                      longevity research talks, and the community building Viva
+                      City.
+                    </Text>
                   </List.Item>
                   <List.Item>
                     <Text fw={600}>Ethereum House (Floor 12)</Text>
-                    <Text size="sm" c="dimmed">Live funding experiments in action. Quadratic funding rounds, open agent economy demos (ERC-8004), and working sessions where researchers and builders leave with grants.</Text>
+                    <Text size="sm" c="dimmed">
+                      Live funding experiments in action. Quadratic funding
+                      rounds, open agent economy demos (ERC-8004), and working
+                      sessions where researchers and builders leave with grants.
+                    </Text>
                   </List.Item>
                   <List.Item>
                     <Text fw={600}>Flourishing (Floor 14)</Text>
-                    <Text size="sm" c="dimmed">Inner, relational and cultural commons on March 14th; Earth Commons on March 15th. Explore climate finance, bioregionalism, alternative capital systems design, embodied and relational practices, and cross-disciplinary dialogue on whether AI can serve life instead of just optimizing it.</Text>
+                    <Text size="sm" c="dimmed">
+                      Inner, relational and cultural commons on March 14th;
+                      Earth Commons on March 15th. Explore climate finance,
+                      bioregionalism, alternative capital systems design,
+                      embodied and relational practices, and cross-disciplinary
+                      dialogue on whether AI can serve life instead of just
+                      optimizing it.
+                    </Text>
                   </List.Item>
                 </List>
               </Stack>
@@ -1029,7 +1188,9 @@ export default function SpeakerApplicationForm({
                       label="Other topic (please specify)"
                       placeholder="Describe your topic"
                       value={ftcTopicOtherText}
-                      onChange={(e) => setFtcTopicOtherText(e.currentTarget.value)}
+                      onChange={(e) =>
+                        setFtcTopicOtherText(e.currentTarget.value)
+                      }
                       mt="sm"
                       required
                     />
@@ -1098,10 +1259,7 @@ export default function SpeakerApplicationForm({
             <Card shadow="sm" padding="xl" radius="md" withBorder>
               <Stack gap="lg">
                 <Group gap="md" align="center">
-                  <IconUser
-                    size={28}
-                    color="var(--mantine-color-blue-6)"
-                  />
+                  <IconUser size={28} color="var(--mantine-color-blue-6)" />
                   <div>
                     <Title order={3}>Speaker Profile</Title>
                     <Text size="sm" c="dimmed">
@@ -1121,15 +1279,23 @@ export default function SpeakerApplicationForm({
                     />
                   </Grid.Col>
                   <Grid.Col span={12}>
-                    <Text size="sm" fw={500} mb="xs">Profile Picture <Text component="span" c="red" size="sm">*</Text></Text>
+                    <Text size="sm" fw={500} mb="xs">
+                      Profile Picture{" "}
+                      <Text component="span" c="red" size="sm">
+                        *
+                      </Text>
+                    </Text>
                     <Group gap="md" align="flex-start">
                       <Avatar
-                        src={previewUrl ?? getAvatarUrl({
-                          customAvatarUrl: avatarUrl,
-                          oauthImageUrl: existingProfile?.user?.image,
-                          name: existingProfile?.user?.name,
-                          email: existingProfile?.user?.email,
-                        })}
+                        src={
+                          previewUrl ??
+                          getAvatarUrl({
+                            customAvatarUrl: avatarUrl,
+                            oauthImageUrl: existingProfile?.user?.image,
+                            name: existingProfile?.user?.name,
+                            email: existingProfile?.user?.email,
+                          })
+                        }
                         size="xl"
                         radius="md"
                       >
@@ -1150,12 +1316,18 @@ export default function SpeakerApplicationForm({
                             void handleAvatarUpload(file);
                           }}
                           disabled={isUploading}
-                          error={profileImageError ? "Profile picture is required" : undefined}
+                          error={
+                            profileImageError
+                              ? "Profile picture is required"
+                              : undefined
+                          }
                           required
                         />
                         {isUploading && (
                           <Box>
-                            <Text size="sm" mb="xs">Uploading...</Text>
+                            <Text size="sm" mb="xs">
+                              Uploading...
+                            </Text>
                             <Progress value={uploadProgress} size="sm" />
                           </Box>
                         )}
@@ -1220,10 +1392,7 @@ export default function SpeakerApplicationForm({
           <Card shadow="sm" padding="xl" radius="md" withBorder>
             <Stack gap="lg">
               <Group gap="md" align="center">
-                <IconLink
-                  size={28}
-                  color="var(--mantine-color-purple-6)"
-                />
+                <IconLink size={28} color="var(--mantine-color-purple-6)" />
                 <div>
                   <Title order={3}>Links</Title>
                   <Text size="sm" c="dimmed">
@@ -1305,16 +1474,17 @@ export default function SpeakerApplicationForm({
                 </Group>
 
                 <Text size="sm" c="dimmed">
-                  We&apos;d love to ask you a few short questions to help us create meaningful
-                  resources for our community. If you have a reason not to answer, you can
-                  leave optional questions blank.
+                  We&apos;d love to ask you a few short questions to help us
+                  create meaningful resources for our community. If you have a
+                  reason not to answer, you can leave optional questions blank.
                 </Text>
 
                 <Grid>
                   {[...eventQuestions]
                     .sort((a, b) => a.order - b.order)
                     .map((question) => {
-                      const value = questionResponses[question.questionKey] ?? "";
+                      const value =
+                        questionResponses[question.questionKey] ?? "";
 
                       if (question.questionType === "SELECT") {
                         return (
@@ -1325,12 +1495,12 @@ export default function SpeakerApplicationForm({
                               data={question.options}
                               value={value || null}
                               onChange={(val) => {
-                                setQuestionResponses(prev => ({
+                                setQuestionResponses((prev) => ({
                                   ...prev,
                                   [question.questionKey]: val ?? "",
                                 }));
                                 if (questionErrors[question.questionKey]) {
-                                  setQuestionErrors(prev => {
+                                  setQuestionErrors((prev) => {
                                     const next = { ...prev };
                                     delete next[question.questionKey];
                                     return next;
@@ -1353,12 +1523,12 @@ export default function SpeakerApplicationForm({
                               value={value}
                               onChange={(e) => {
                                 const val = e.currentTarget.value;
-                                setQuestionResponses(prev => ({
+                                setQuestionResponses((prev) => ({
                                   ...prev,
                                   [question.questionKey]: val,
                                 }));
                                 if (questionErrors[question.questionKey]) {
-                                  setQuestionErrors(prev => {
+                                  setQuestionErrors((prev) => {
                                     const next = { ...prev };
                                     delete next[question.questionKey];
                                     return next;
@@ -1382,12 +1552,12 @@ export default function SpeakerApplicationForm({
                             value={value}
                             onChange={(e) => {
                               const val = e.currentTarget.value;
-                              setQuestionResponses(prev => ({
+                              setQuestionResponses((prev) => ({
                                 ...prev,
                                 [question.questionKey]: val,
                               }));
                               if (questionErrors[question.questionKey]) {
-                                setQuestionErrors(prev => {
+                                setQuestionErrors((prev) => {
                                   const next = { ...prev };
                                   delete next[question.questionKey];
                                   return next;
@@ -1428,10 +1598,15 @@ export default function SpeakerApplicationForm({
           </Text>
 
           {isOnBehalfUpdate && (
-            <Alert color="blue" title="Your session has been pre-registered" mb="md">
+            <Alert
+              color="blue"
+              title="Your session has been pre-registered"
+              mb="md"
+            >
               <Text size="sm">
-                A floor lead has pre-registered your speaker session. Please review the
-                information below, make any updates, and confirm your details.
+                A floor lead has pre-registered your speaker session. Please
+                review the information below, make any updates, and confirm your
+                details.
               </Text>
             </Alert>
           )}
@@ -1491,45 +1666,84 @@ export default function SpeakerApplicationForm({
         </div>
 
         {/* Form Content */}
-        <form onSubmit={(e) => {
-          if (currentStep !== totalSteps) {
-            e.preventDefault();
-            return;
-          }
-          if (!validateAboutYouQuestions()) {
-            e.preventDefault();
-            return;
-          }
-          // Run Zod validation explicitly to catch errors on hidden steps
-          const validationResult = form.validate();
-          if (validationResult.hasErrors) {
-            e.preventDefault();
-            // Find which step has the first error and navigate there
-            const errorFields = Object.keys(validationResult.errors);
-            const step1Fields = ['preferredName', 'bio', 'jobTitle', 'company', 'displayPreference'];
-            const step2Fields = ['website', 'linkedinUrl', 'twitterUrl', 'blueskyUrl', 'pastTalkUrl'];
-            const step3Fields = ['talkTitle', 'talkAbstract', 'talkFormat', 'talkDuration', 'talkTopic', 'coHostInfo', 'entityName', 'otherFloorsTopicTheme', 'previousSpeakingExperience'];
-
-            let errorStep = currentStep;
-            for (const field of errorFields) {
-              if (step1Fields.includes(field)) { errorStep = 1; break; }
-              if (step2Fields.includes(field)) { errorStep = Math.min(errorStep, 2); }
-              if (step3Fields.includes(field)) { errorStep = Math.min(errorStep, 3); }
+        <form
+          onSubmit={(e) => {
+            if (currentStep !== totalSteps) {
+              e.preventDefault();
+              return;
             }
+            if (!validateAboutYouQuestions()) {
+              e.preventDefault();
+              return;
+            }
+            // Run Zod validation explicitly to catch errors on hidden steps
+            const validationResult = form.validate();
+            if (validationResult.hasErrors) {
+              e.preventDefault();
+              // Find which step has the first error and navigate there
+              const errorFields = Object.keys(validationResult.errors);
+              const step1Fields = [
+                "preferredName",
+                "bio",
+                "jobTitle",
+                "company",
+                "displayPreference",
+              ];
+              const step2Fields = [
+                "website",
+                "linkedinUrl",
+                "twitterUrl",
+                "blueskyUrl",
+                "pastTalkUrl",
+              ];
+              const step3Fields = [
+                "talkTitle",
+                "talkAbstract",
+                "talkFormat",
+                "talkDuration",
+                "talkTopic",
+                "coHostInfo",
+                "entityName",
+                "otherFloorsTopicTheme",
+                "previousSpeakingExperience",
+              ];
 
-            const stepName = errorStep === 1 ? "Speaker Profile" : errorStep === 2 ? "Links" : "Session Details";
-            const firstError = Object.values(validationResult.errors)[0];
-            notifications.show({
-              title: `Please fix errors in ${stepName}`,
-              message: typeof firstError === 'string' ? firstError : "Some fields need your attention. We'll take you there.",
-              color: "orange",
-              icon: <IconX size={16} />,
-            });
-            setCurrentStep(errorStep);
-            return;
-          }
-          form.onSubmit(handleSubmit)(e);
-        }}>
+              let errorStep = currentStep;
+              for (const field of errorFields) {
+                if (step1Fields.includes(field)) {
+                  errorStep = 1;
+                  break;
+                }
+                if (step2Fields.includes(field)) {
+                  errorStep = Math.min(errorStep, 2);
+                }
+                if (step3Fields.includes(field)) {
+                  errorStep = Math.min(errorStep, 3);
+                }
+              }
+
+              const stepName =
+                errorStep === 1
+                  ? "Speaker Profile"
+                  : errorStep === 2
+                    ? "Links"
+                    : "Session Details";
+              const firstError = Object.values(validationResult.errors)[0];
+              notifications.show({
+                title: `Please fix errors in ${stepName}`,
+                message:
+                  typeof firstError === "string"
+                    ? firstError
+                    : "Some fields need your attention. We'll take you there.",
+                color: "orange",
+                icon: <IconX size={16} />,
+              });
+              setCurrentStep(errorStep);
+              return;
+            }
+            form.onSubmit(handleSubmit)(e);
+          }}
+        >
           {renderStep()}
 
           {/* Navigation Buttons */}
@@ -1544,7 +1758,12 @@ export default function SpeakerApplicationForm({
             </Button>
 
             {currentStep < totalSteps ? (
-              <Button key="next-step" type="button" color="teal" onClick={nextStep}>
+              <Button
+                key="next-step"
+                type="button"
+                color="teal"
+                onClick={nextStep}
+              >
                 Next Step
               </Button>
             ) : (
@@ -1555,7 +1774,9 @@ export default function SpeakerApplicationForm({
                 loading={isSubmitting}
                 leftSection={<IconCheck size={16} />}
               >
-                {isOnBehalfUpdate ? "Confirm & Update Application" : "Submit Application"}
+                {isOnBehalfUpdate
+                  ? "Confirm & Update Application"
+                  : "Submit Application"}
               </Button>
             )}
           </Group>
@@ -1564,10 +1785,11 @@ export default function SpeakerApplicationForm({
         {/* Help Text */}
         <Alert color="teal" title="Need Help?">
           <Text size="sm">
-            If you have any questions about the {isEIR ? "EIR" : "speaker"} application, please contact the event organizers at  <Text component="span" fw={500}>
+            If you have any questions about the {isEIR ? "EIR" : "speaker"}{" "}
+            application, please contact the event organizers at{" "}
+            <Text component="span" fw={500}>
               {config?.adminEmail ?? ""}.
             </Text>
-           
           </Text>
         </Alert>
       </Stack>

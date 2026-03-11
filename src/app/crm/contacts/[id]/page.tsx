@@ -97,11 +97,14 @@ export default function ContactDetailsPage() {
   const { data: session, status } = useSession();
   const contactId = params.id as string;
   const [activeTab, setActiveTab] = useState<string | null>("overview");
-  const [selectedMessage, setSelectedMessage] = useState<CommunicationMessage | null>(null);
+  const [selectedMessage, setSelectedMessage] =
+    useState<CommunicationMessage | null>(null);
   const [messageModalOpened, setMessageModalOpened] = useState(false);
-  const [importTelegramModalOpened, setImportTelegramModalOpened] = useState(false);
+  const [importTelegramModalOpened, setImportTelegramModalOpened] =
+    useState(false);
   const [importGmailModalOpened, setImportGmailModalOpened] = useState(false);
-  const [selectedTelegramEventId, setSelectedTelegramEventId] = useState<string>("");
+  const [selectedTelegramEventId, setSelectedTelegramEventId] =
+    useState<string>("");
   const [selectedGmailEventId, setSelectedGmailEventId] = useState<string>("");
   const [maxGmailMessages, setMaxGmailMessages] = useState<number>(100);
   const [maxTelegramMessages, setMaxTelegramMessages] = useState<number>(100);
@@ -112,15 +115,20 @@ export default function ContactDetailsPage() {
     setMessageModalOpened(true);
   };
 
-  const { data: contact, isLoading, error } = api.contact.getContact.useQuery(
+  const {
+    data: contact,
+    isLoading,
+    error,
+  } = api.contact.getContact.useQuery(
     { id: contactId },
-    { enabled: !!contactId }
+    { enabled: !!contactId },
   );
 
-  const { data: communications, refetch: refetchCommunications } = api.contact.getContactCommunications.useQuery(
-    { contactId, limit: 100 },
-    { enabled: !!contactId }
-  );
+  const { data: communications, refetch: refetchCommunications } =
+    api.contact.getContactCommunications.useQuery(
+      { contactId, limit: 100 },
+      { enabled: !!contactId },
+    );
 
   const { data: events } = api.event.getEvents.useQuery();
 
@@ -135,52 +143,57 @@ export default function ContactDetailsPage() {
         return nameA.localeCompare(nameB);
       })
     : [];
-  const currentIndex = sortedContacts.findIndex(c => c.id === contactId);
-  const prevContact = currentIndex > 0 ? sortedContacts[currentIndex - 1] : null;
-  const nextContact = currentIndex >= 0 && currentIndex < sortedContacts.length - 1
-    ? sortedContacts[currentIndex + 1]
-    : null;
+  const currentIndex = sortedContacts.findIndex((c) => c.id === contactId);
+  const prevContact =
+    currentIndex > 0 ? sortedContacts[currentIndex - 1] : null;
+  const nextContact =
+    currentIndex >= 0 && currentIndex < sortedContacts.length - 1
+      ? sortedContacts[currentIndex + 1]
+      : null;
   const totalContacts = sortedContacts.length;
 
-  const importTelegramMessages = api.contact.importTelegramMessagesForContact.useMutation({
-    onSuccess: (result) => {
-      notifications.show({
-        title: "Import Complete",
-        message: `Successfully imported ${result.imported} Telegram messages`,
-        color: "green",
-      });
-      setImportTelegramModalOpened(false);
-      void refetchCommunications();
-    },
-    onError: (error) => {
-      notifications.show({
-        title: "Import Failed",
-        message: error.message,
-        color: "red",
-      });
-    },
-  });
+  const importTelegramMessages =
+    api.contact.importTelegramMessagesForContact.useMutation({
+      onSuccess: (result) => {
+        notifications.show({
+          title: "Import Complete",
+          message: `Successfully imported ${result.imported} Telegram messages`,
+          color: "green",
+        });
+        setImportTelegramModalOpened(false);
+        void refetchCommunications();
+      },
+      onError: (error) => {
+        notifications.show({
+          title: "Import Failed",
+          message: error.message,
+          color: "red",
+        });
+      },
+    });
 
-  const disconnectGoogleAccount = api.contact.disconnectGoogleAccount.useMutation();
+  const disconnectGoogleAccount =
+    api.contact.disconnectGoogleAccount.useMutation();
 
-  const importGmailMessages = api.contact.importGmailMessagesForContact.useMutation({
-    onSuccess: (result) => {
-      notifications.show({
-        title: "Import Complete",
-        message: `Successfully imported ${result.imported} Gmail messages`,
-        color: "green",
-      });
-      setImportGmailModalOpened(false);
-      void refetchCommunications();
-    },
-    onError: (error) => {
-      notifications.show({
-        title: "Import Failed",
-        message: error.message,
-        color: "red",
-      });
-    },
-  });
+  const importGmailMessages =
+    api.contact.importGmailMessagesForContact.useMutation({
+      onSuccess: (result) => {
+        notifications.show({
+          title: "Import Complete",
+          message: `Successfully imported ${result.imported} Gmail messages`,
+          color: "green",
+        });
+        setImportGmailModalOpened(false);
+        void refetchCommunications();
+      },
+      onError: (error) => {
+        notifications.show({
+          title: "Import Failed",
+          message: error.message,
+          color: "red",
+        });
+      },
+    });
 
   const handleImportTelegram = () => {
     importTelegramMessages.mutate({
@@ -256,7 +269,10 @@ export default function ContactDetailsPage() {
 
   if (error ?? !contact) {
     return (
-      <Box p="xl" style={{ background: "var(--theme-crm-bg)", minHeight: "100vh" }}>
+      <Box
+        p="xl"
+        style={{ background: "var(--theme-crm-bg)", minHeight: "100vh" }}
+      >
         <Stack gap="lg">
           <Button
             component={Link}
@@ -267,10 +283,15 @@ export default function ContactDetailsPage() {
             Back to Contacts
           </Button>
 
-          <Alert icon={<IconAlertCircle size={16} />} color="red" variant="light">
+          <Alert
+            icon={<IconAlertCircle size={16} />}
+            color="red"
+            variant="light"
+          >
             <Text fw={500}>Contact Not Found</Text>
             <Text size="sm">
-              The contact you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to view it.
+              The contact you&apos;re looking for doesn&apos;t exist or you
+              don&apos;t have permission to view it.
             </Text>
           </Alert>
         </Stack>
@@ -278,8 +299,10 @@ export default function ContactDetailsPage() {
     );
   }
 
-  const emailCount = communications?.filter(c => c.channel === "EMAIL").length ?? 0;
-  const telegramCount = communications?.filter(c => c.channel === "TELEGRAM").length ?? 0;
+  const emailCount =
+    communications?.filter((c) => c.channel === "EMAIL").length ?? 0;
+  const telegramCount =
+    communications?.filter((c) => c.channel === "TELEGRAM").length ?? 0;
   const callCount = 0;
 
   // Build activity items
@@ -293,7 +316,7 @@ export default function ContactDetailsPage() {
   }> = [];
 
   // Add communications as activity
-  communications?.forEach(comm => {
+  communications?.forEach((comm) => {
     const isTelegram = comm.channel === "TELEGRAM";
     activityItems.push({
       id: comm.id,
@@ -301,14 +324,19 @@ export default function ContactDetailsPage() {
       description: isTelegram ? "sent a message" : "sent an email",
       actor: `${contact.firstName} ${contact.lastName}`,
       timestamp: comm.sentAt ?? comm.createdAt,
-      subject: comm.subject ?? (comm.textContent?.slice(0, 60) ?? ""),
+      subject: comm.subject ?? comm.textContent?.slice(0, 60) ?? "",
     });
   });
 
   // Add creation activity (use earliest communication or a default date)
-  const earliestDate = communications && communications.length > 0
-    ? new Date(Math.min(...communications.map(c => new Date(c.createdAt).getTime())))
-    : new Date();
+  const earliestDate =
+    communications && communications.length > 0
+      ? new Date(
+          Math.min(
+            ...communications.map((c) => new Date(c.createdAt).getTime()),
+          ),
+        )
+      : new Date();
 
   activityItems.push({
     id: "created",
@@ -319,7 +347,9 @@ export default function ContactDetailsPage() {
   });
 
   // Sort by timestamp descending
-  activityItems.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  activityItems.sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
 
   // Group activities by time period
   const groupActivitiesByPeriod = (items: typeof activityItems) => {
@@ -330,7 +360,7 @@ export default function ContactDetailsPage() {
 
     const groups: Record<string, typeof activityItems> = {};
 
-    items.forEach(item => {
+    items.forEach((item) => {
       const itemDate = new Date(item.timestamp);
       let period: string;
 
@@ -341,7 +371,10 @@ export default function ContactDetailsPage() {
       } else if (itemDate.getFullYear() === now.getFullYear()) {
         period = itemDate.toLocaleDateString("en-US", { month: "long" });
       } else {
-        period = itemDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+        period = itemDate.toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
+        });
       }
 
       const periodItems = groups[period] ?? [];
@@ -380,7 +413,13 @@ export default function ContactDetailsPage() {
             >
               <IconChevronLeft size={16} />
             </ActionIcon>
-            <Tooltip label={prevContact ? `Previous: ${prevContact.firstName} ${prevContact.lastName}` : "No previous contact"}>
+            <Tooltip
+              label={
+                prevContact
+                  ? `Previous: ${prevContact.firstName} ${prevContact.lastName}`
+                  : "No previous contact"
+              }
+            >
               {prevContact ? (
                 <ActionIcon
                   variant="subtle"
@@ -391,16 +430,18 @@ export default function ContactDetailsPage() {
                   <IconChevronLeft size={14} />
                 </ActionIcon>
               ) : (
-                <ActionIcon
-                  variant="subtle"
-                  size="sm"
-                  disabled
-                >
+                <ActionIcon variant="subtle" size="sm" disabled>
                   <IconChevronLeft size={14} />
                 </ActionIcon>
               )}
             </Tooltip>
-            <Tooltip label={nextContact ? `Next: ${nextContact.firstName} ${nextContact.lastName}` : "No next contact"}>
+            <Tooltip
+              label={
+                nextContact
+                  ? `Next: ${nextContact.firstName} ${nextContact.lastName}`
+                  : "No next contact"
+              }
+            >
               {nextContact ? (
                 <ActionIcon
                   variant="subtle"
@@ -411,17 +452,16 @@ export default function ContactDetailsPage() {
                   <IconChevronRight size={14} />
                 </ActionIcon>
               ) : (
-                <ActionIcon
-                  variant="subtle"
-                  size="sm"
-                  disabled
-                >
+                <ActionIcon variant="subtle" size="sm" disabled>
                   <IconChevronRight size={14} />
                 </ActionIcon>
               )}
             </Tooltip>
             <Text size="sm" c="dimmed">
-              {currentIndex >= 0 ? `${currentIndex + 1} of ${totalContacts} in` : "Contact in"} All People
+              {currentIndex >= 0
+                ? `${currentIndex + 1} of ${totalContacts} in`
+                : "Contact in"}{" "}
+              All People
             </Text>
           </Group>
           <Group gap="xs">
@@ -600,19 +640,20 @@ export default function ContactDetailsPage() {
                               width: 8,
                               height: 8,
                               borderRadius: "50%",
-                              background: communications && communications.length > 5
-                                ? "var(--mantine-color-green-6)"
-                                : communications && communications.length > 0
-                                ? "var(--mantine-color-yellow-6)"
-                                : "var(--mantine-color-red-6)",
+                              background:
+                                communications && communications.length > 5
+                                  ? "var(--mantine-color-green-6)"
+                                  : communications && communications.length > 0
+                                    ? "var(--mantine-color-yellow-6)"
+                                    : "var(--mantine-color-red-6)",
                             }}
                           />
                           <Text size="sm" fw={500}>
                             {communications && communications.length > 5
                               ? "Strong"
                               : communications && communications.length > 0
-                              ? "Moderate"
-                              : "Very weak"}
+                                ? "Moderate"
+                                : "Very weak"}
                           </Text>
                         </Group>
                       </Stack>
@@ -771,13 +812,17 @@ export default function ContactDetailsPage() {
                         Activity
                       </Text>
                     </Group>
-                    <Anchor size="xs" c="dimmed" onClick={() => setActiveTab("activity")}>
+                    <Anchor
+                      size="xs"
+                      c="dimmed"
+                      onClick={() => setActiveTab("activity")}
+                    >
                       View all &gt;
                     </Anchor>
                   </Group>
 
                   <Stack gap="xs">
-                    {activityItems.slice(0, 3).map(item => (
+                    {activityItems.slice(0, 3).map((item) => (
                       <Box
                         key={item.id}
                         py="sm"
@@ -787,20 +832,35 @@ export default function ContactDetailsPage() {
                       >
                         <Group justify="space-between" align="flex-start">
                           <Group gap="sm" align="flex-start">
-                            <Avatar size={24} radius="xl" color={
-                              item.type === "email" ? "blue" :
-                              item.type === "telegram" ? "cyan" :
-                              item.type === "system" ? "gray" :
-                              "violet"
-                            }>
-                              {item.type === "system" ? "S" : item.actor[0]?.toUpperCase()}
+                            <Avatar
+                              size={24}
+                              radius="xl"
+                              color={
+                                item.type === "email"
+                                  ? "blue"
+                                  : item.type === "telegram"
+                                    ? "cyan"
+                                    : item.type === "system"
+                                      ? "gray"
+                                      : "violet"
+                              }
+                            >
+                              {item.type === "system"
+                                ? "S"
+                                : item.actor[0]?.toUpperCase()}
                             </Avatar>
                             <Text size="sm">
-                              <Text span fw={600}>{item.actor}</Text>
-                              {" "}
-                              <Text span c="dimmed">{item.description}</Text>
+                              <Text span fw={600}>
+                                {item.actor}
+                              </Text>{" "}
+                              <Text span c="dimmed">
+                                {item.description}
+                              </Text>
                               {item.type === "created" && (
-                                <Text span c="dimmed"> System</Text>
+                                <Text span c="dimmed">
+                                  {" "}
+                                  System
+                                </Text>
                               )}
                             </Text>
                           </Group>
@@ -829,7 +889,11 @@ export default function ContactDetailsPage() {
                       <Badge size="xs" variant="light">
                         {emailCount}
                       </Badge>
-                      <Anchor size="xs" c="dimmed" onClick={() => setActiveTab("emails")}>
+                      <Anchor
+                        size="xs"
+                        c="dimmed"
+                        onClick={() => setActiveTab("emails")}
+                      >
                         &gt;
                       </Anchor>
                     </Group>
@@ -840,9 +904,9 @@ export default function ContactDetailsPage() {
 
                   <Stack gap="xs">
                     {communications
-                      ?.filter(c => c.channel === "EMAIL")
+                      ?.filter((c) => c.channel === "EMAIL")
                       .slice(0, 3)
-                      .map(email => (
+                      .map((email) => (
                         <Box
                           key={email.id}
                           py="sm"
@@ -858,8 +922,15 @@ export default function ContactDetailsPage() {
                               {contact.firstName[0]?.toUpperCase()}
                             </Avatar>
                             <Box style={{ flex: 1, minWidth: 0 }}>
-                              <Group justify="space-between" align="flex-start" wrap="nowrap">
-                                <Group gap="sm" style={{ flex: 1, minWidth: 0 }}>
+                              <Group
+                                justify="space-between"
+                                align="flex-start"
+                                wrap="nowrap"
+                              >
+                                <Group
+                                  gap="sm"
+                                  style={{ flex: 1, minWidth: 0 }}
+                                >
                                   <Text size="sm" fw={600}>
                                     {contact.firstName} {contact.lastName}
                                   </Text>
@@ -867,11 +938,19 @@ export default function ContactDetailsPage() {
                                     {email.subject ?? "No subject"}
                                   </Text>
                                   <Text size="sm" c="dimmed" lineClamp={1}>
-                                    {email.textContent ? email.textContent.slice(0, 40) : "No content"}
+                                    {email.textContent
+                                      ? email.textContent.slice(0, 40)
+                                      : "No content"}
                                   </Text>
                                 </Group>
-                                <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
-                                  {getRelativeTime(email.sentAt ?? email.createdAt)}
+                                <Text
+                                  size="xs"
+                                  c="dimmed"
+                                  style={{ flexShrink: 0 }}
+                                >
+                                  {getRelativeTime(
+                                    email.sentAt ?? email.createdAt,
+                                  )}
                                 </Text>
                               </Group>
                             </Box>
@@ -887,7 +966,9 @@ export default function ContactDetailsPage() {
                 </Box>
 
                 {/* Import Buttons (if applicable) */}
-                {(contact.telegram ?? (contact.email && !contact.email.endsWith("telegram.placeholder"))) && (
+                {(contact.telegram ??
+                  (contact.email &&
+                    !contact.email.endsWith("telegram.placeholder"))) && (
                   <Box>
                     <Group gap="xs" mb="sm">
                       <IconDownload size={16} />
@@ -908,33 +989,49 @@ export default function ContactDetailsPage() {
                           Import Telegram
                         </Button>
                       )}
-                      {contact.email && !contact.email.endsWith("telegram.placeholder") && (
-                        <Button
-                          leftSection={<IconMail size={16} />}
-                          variant="light"
-                          color="green"
-                          size="xs"
-                          onClick={() => setImportGmailModalOpened(true)}
-                          loading={importGmailMessages.isPending}
-                        >
-                          Import Gmail
-                        </Button>
-                      )}
+                      {contact.email &&
+                        !contact.email.endsWith("telegram.placeholder") && (
+                          <Button
+                            leftSection={<IconMail size={16} />}
+                            variant="light"
+                            color="green"
+                            size="xs"
+                            onClick={() => setImportGmailModalOpened(true)}
+                            loading={importGmailMessages.isPending}
+                          >
+                            Import Gmail
+                          </Button>
+                        )}
                     </Group>
                     {importGmailMessages.error && (
-                      <Alert icon={<IconAlertCircle size={16} />} color="red" variant="light" mt="sm">
+                      <Alert
+                        icon={<IconAlertCircle size={16} />}
+                        color="red"
+                        variant="light"
+                        mt="sm"
+                      >
                         <Text size="sm" mb="sm">
-                          {importGmailMessages.error.message === "GOOGLE_GMAIL_PERMISSIONS_INSUFFICIENT"
+                          {importGmailMessages.error.message ===
+                          "GOOGLE_GMAIL_PERMISSIONS_INSUFFICIENT"
                             ? "Gmail access permission is missing. Please reconnect your Google account."
                             : importGmailMessages.error.message}
                         </Text>
-                        {importGmailMessages.error.message === "GOOGLE_GMAIL_PERMISSIONS_INSUFFICIENT" && (
+                        {importGmailMessages.error.message ===
+                          "GOOGLE_GMAIL_PERMISSIONS_INSUFFICIENT" && (
                           <Button
                             size="xs"
                             variant="outline"
-                            leftSection={reconnecting ? <Loader size={14} /> : <IconRefresh size={14} />}
+                            leftSection={
+                              reconnecting ? (
+                                <Loader size={14} />
+                              ) : (
+                                <IconRefresh size={14} />
+                              )
+                            }
                             onClick={handleReconnectGoogle}
-                            disabled={reconnecting || disconnectGoogleAccount.isPending}
+                            disabled={
+                              reconnecting || disconnectGoogleAccount.isPending
+                            }
                           >
                             Reconnect Google
                           </Button>
@@ -989,28 +1086,49 @@ export default function ContactDetailsPage() {
 
                     {/* Activity Items */}
                     <Stack gap="md" pl="xs">
-                      {items.map(item => (
+                      {items.map((item) => (
                         <Box key={item.id}>
                           <Group gap="md" align="flex-start" wrap="nowrap">
-                            <Avatar size={28} radius="xl" color={
-                              item.type === "email" ? "blue" :
-                              item.type === "telegram" ? "cyan" :
-                              item.type === "system" ? "gray" :
-                              "violet"
-                            }>
+                            <Avatar
+                              size={28}
+                              radius="xl"
+                              color={
+                                item.type === "email"
+                                  ? "blue"
+                                  : item.type === "telegram"
+                                    ? "cyan"
+                                    : item.type === "system"
+                                      ? "gray"
+                                      : "violet"
+                              }
+                            >
                               {item.actor[0]?.toUpperCase() ?? "?"}
                             </Avatar>
                             <Box style={{ flex: 1, minWidth: 0 }}>
-                              <Group justify="space-between" align="flex-start" wrap="nowrap">
+                              <Group
+                                justify="space-between"
+                                align="flex-start"
+                                wrap="nowrap"
+                              >
                                 <Text size="sm" lineClamp={1}>
-                                  <Text span fw={600}>{item.actor}</Text>
-                                  {" "}
-                                  <Text span c="dimmed">{item.description}</Text>
+                                  <Text span fw={600}>
+                                    {item.actor}
+                                  </Text>{" "}
+                                  <Text span c="dimmed">
+                                    {item.description}
+                                  </Text>
                                   {item.type === "created" && (
-                                    <Text span fw={600}> System</Text>
+                                    <Text span fw={600}>
+                                      {" "}
+                                      System
+                                    </Text>
                                   )}
                                 </Text>
-                                <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
+                                <Text
+                                  size="xs"
+                                  c="dimmed"
+                                  style={{ flexShrink: 0 }}
+                                >
                                   {getRelativeTime(item.timestamp)}
                                 </Text>
                               </Group>
@@ -1021,9 +1139,11 @@ export default function ContactDetailsPage() {
                                   p="sm"
                                   style={{
                                     borderLeft: `3px solid ${
-                                      item.type === "email" ? "var(--mantine-color-blue-6)" :
-                                      item.type === "telegram" ? "var(--mantine-color-cyan-6)" :
-                                      "var(--mantine-color-gray-6)"
+                                      item.type === "email"
+                                        ? "var(--mantine-color-blue-6)"
+                                        : item.type === "telegram"
+                                          ? "var(--mantine-color-cyan-6)"
+                                          : "var(--mantine-color-gray-6)"
                                     }`,
                                     background: "var(--theme-crm-card)",
                                     borderRadius: "0 6px 6px 0",
@@ -1063,8 +1183,8 @@ export default function ContactDetailsPage() {
             {activeTab === "emails" && (
               <Stack gap={0}>
                 {communications
-                  ?.filter(c => c.channel === "EMAIL")
-                  .map(email => (
+                  ?.filter((c) => c.channel === "EMAIL")
+                  .map((email) => (
                     <Box
                       key={email.id}
                       p="md"
@@ -1080,20 +1200,40 @@ export default function ContactDetailsPage() {
                           {contact.firstName[0]?.toUpperCase() ?? "?"}
                         </Avatar>
                         <Box style={{ flex: 1, minWidth: 0 }}>
-                          <Group justify="space-between" align="flex-start" wrap="nowrap" mb={4}>
-                            <Text size="sm" fw={600} lineClamp={1} style={{ flex: 1 }}>
+                          <Group
+                            justify="space-between"
+                            align="flex-start"
+                            wrap="nowrap"
+                            mb={4}
+                          >
+                            <Text
+                              size="sm"
+                              fw={600}
+                              lineClamp={1}
+                              style={{ flex: 1 }}
+                            >
                               {email.subject ?? "No subject"}
                             </Text>
-                            <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
+                            <Text
+                              size="xs"
+                              c="dimmed"
+                              style={{ flexShrink: 0 }}
+                            >
                               {email.sentAt
-                                ? new Date(email.sentAt).toLocaleDateString("en-US", {
-                                    day: "numeric",
-                                    month: "short",
-                                  })
-                                : new Date(email.createdAt).toLocaleDateString("en-US", {
-                                    day: "numeric",
-                                    month: "short",
-                                  })}
+                                ? new Date(email.sentAt).toLocaleDateString(
+                                    "en-US",
+                                    {
+                                      day: "numeric",
+                                      month: "short",
+                                    },
+                                  )
+                                : new Date(email.createdAt).toLocaleDateString(
+                                    "en-US",
+                                    {
+                                      day: "numeric",
+                                      month: "short",
+                                    },
+                                  )}
                             </Text>
                           </Group>
                           <Text size="sm" c="dimmed" lineClamp={1}>
@@ -1127,8 +1267,8 @@ export default function ContactDetailsPage() {
             {activeTab === "telegram" && (
               <Stack gap={0}>
                 {communications
-                  ?.filter(c => c.channel === "TELEGRAM")
-                  .map(message => (
+                  ?.filter((c) => c.channel === "TELEGRAM")
+                  .map((message) => (
                     <Box
                       key={message.id}
                       p="md"
@@ -1144,17 +1284,36 @@ export default function ContactDetailsPage() {
                           {contact.firstName[0]?.toUpperCase() ?? "?"}
                         </Avatar>
                         <Box style={{ flex: 1, minWidth: 0 }}>
-                          <Group justify="space-between" align="flex-start" wrap="nowrap" mb={4}>
-                            <Text size="sm" fw={600} lineClamp={1} style={{ flex: 1 }}>
+                          <Group
+                            justify="space-between"
+                            align="flex-start"
+                            wrap="nowrap"
+                            mb={4}
+                          >
+                            <Text
+                              size="sm"
+                              fw={600}
+                              lineClamp={1}
+                              style={{ flex: 1 }}
+                            >
                               {contact.firstName} {contact.lastName}
                             </Text>
-                            <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
+                            <Text
+                              size="xs"
+                              c="dimmed"
+                              style={{ flexShrink: 0 }}
+                            >
                               {message.sentAt
-                                ? new Date(message.sentAt).toLocaleDateString("en-US", {
-                                    day: "numeric",
-                                    month: "short",
-                                  })
-                                : new Date(message.createdAt).toLocaleDateString("en-US", {
+                                ? new Date(message.sentAt).toLocaleDateString(
+                                    "en-US",
+                                    {
+                                      day: "numeric",
+                                      month: "short",
+                                    },
+                                  )
+                                : new Date(
+                                    message.createdAt,
+                                  ).toLocaleDateString("en-US", {
                                     day: "numeric",
                                     month: "short",
                                   })}
@@ -1209,7 +1368,11 @@ export default function ContactDetailsPage() {
                   >
                     <Group gap="md">
                       {contact.sponsor.logoUrl ? (
-                        <Avatar src={contact.sponsor.logoUrl} size="lg" radius="sm">
+                        <Avatar
+                          src={contact.sponsor.logoUrl}
+                          size="lg"
+                          radius="sm"
+                        >
                           {contact.sponsor.name[0]?.toUpperCase()}
                         </Avatar>
                       ) : (
@@ -1223,7 +1386,9 @@ export default function ContactDetailsPage() {
                         </Text>
                         {contact.sponsor.websiteUrl && (
                           <Text size="sm" c="dimmed">
-                            {new URL(contact.sponsor.websiteUrl).hostname.replace("www.", "")}
+                            {new URL(
+                              contact.sponsor.websiteUrl,
+                            ).hostname.replace("www.", "")}
                           </Text>
                         )}
                       </Stack>
@@ -1443,7 +1608,10 @@ export default function ContactDetailsPage() {
                         <Group gap="md" align="flex-start">
                           <Box style={{ width: 100 }}>
                             <Group gap={6}>
-                              <IconBrandTelegram size={14} style={{ opacity: 0.5 }} />
+                              <IconBrandTelegram
+                                size={14}
+                                style={{ opacity: 0.5 }}
+                              />
                               <Text size="xs" c="dimmed">
                                 Telegram
                               </Text>
@@ -1521,17 +1689,20 @@ export default function ContactDetailsPage() {
       >
         <Stack gap="md">
           <Text size="sm" c="dimmed">
-            Import chat history with <strong>@{contact.telegram}</strong> into the Communication table.
+            Import chat history with <strong>@{contact.telegram}</strong> into
+            the Communication table.
           </Text>
 
           <Select
             label="Event (Optional)"
             placeholder="Select an event (optional)"
             description="Leave empty if messages aren't specific to an event"
-            data={events?.map((event) => ({
-              value: event.id,
-              label: event.name,
-            })) ?? []}
+            data={
+              events?.map((event) => ({
+                value: event.id,
+                label: event.name,
+              })) ?? []
+            }
             value={selectedTelegramEventId}
             onChange={(value) => setSelectedTelegramEventId(value ?? "")}
             clearable
@@ -1543,11 +1714,14 @@ export default function ContactDetailsPage() {
             min={1}
             max={10000}
             value={maxTelegramMessages}
-            onChange={(value) => setMaxTelegramMessages(typeof value === 'number' ? value : 100)}
+            onChange={(value) =>
+              setMaxTelegramMessages(typeof value === "number" ? value : 100)
+            }
           />
 
           <Text size="sm" c="dimmed">
-            This will import up to {maxTelegramMessages} recent messages from your Telegram conversation.
+            This will import up to {maxTelegramMessages} recent messages from
+            your Telegram conversation.
           </Text>
 
           <Group justify="flex-end" gap="sm">
@@ -1578,17 +1752,20 @@ export default function ContactDetailsPage() {
       >
         <Stack gap="md">
           <Text size="sm" c="dimmed">
-            Import email history with <strong>{contact.email}</strong> into the Communication table.
+            Import email history with <strong>{contact.email}</strong> into the
+            Communication table.
           </Text>
 
           <Select
             label="Event (Optional)"
             placeholder="Select an event (optional)"
             description="Leave empty if messages aren't specific to an event"
-            data={events?.map((event) => ({
-              value: event.id,
-              label: event.name,
-            })) ?? []}
+            data={
+              events?.map((event) => ({
+                value: event.id,
+                label: event.name,
+              })) ?? []
+            }
             value={selectedGmailEventId}
             onChange={(value) => setSelectedGmailEventId(value ?? "")}
             clearable
@@ -1600,11 +1777,14 @@ export default function ContactDetailsPage() {
             min={1}
             max={10000}
             value={maxGmailMessages}
-            onChange={(value) => setMaxGmailMessages(typeof value === 'number' ? value : 100)}
+            onChange={(value) =>
+              setMaxGmailMessages(typeof value === "number" ? value : 100)
+            }
           />
 
           <Text size="sm" c="dimmed">
-            This will import up to {maxGmailMessages} recent emails from or to this contact.
+            This will import up to {maxGmailMessages} recent emails from or to
+            this contact.
           </Text>
 
           <Group justify="flex-end" gap="sm">

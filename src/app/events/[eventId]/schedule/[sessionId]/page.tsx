@@ -19,14 +19,29 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconArrowLeft, IconClock, IconMapPin, IconLink, IconUserPlus, IconEdit, IconFile, IconUpload, IconTrash } from "@tabler/icons-react";
+import {
+  IconArrowLeft,
+  IconClock,
+  IconMapPin,
+  IconLink,
+  IconUserPlus,
+  IconEdit,
+  IconFile,
+  IconUpload,
+  IconTrash,
+} from "@tabler/icons-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { api } from "~/trpc/react";
 import { getDisplayName } from "~/utils/userDisplay";
-import { QuickAddSpeakerModal, type QuickAddSpeakerResult } from "~/app/_components/QuickAddSpeakerModal";
-import EditSessionModal, { type FloorSession } from "~/app/_components/EditSessionModal";
+import {
+  QuickAddSpeakerModal,
+  type QuickAddSpeakerResult,
+} from "~/app/_components/QuickAddSpeakerModal";
+import EditSessionModal, {
+  type FloorSession,
+} from "~/app/_components/EditSessionModal";
 
 function formatDateTime(date: Date): string {
   return new Date(date).toLocaleDateString("en-US", {
@@ -63,10 +78,12 @@ export default function SessionDetailPage() {
   );
   const canManage = permissions?.canManage ?? false;
   const isSpeakerOnly = permissions?.isSpeakerOnly ?? false;
-  const isAdmin = userSession?.user?.role === "admin" || userSession?.user?.role === "staff";
+  const isAdmin =
+    userSession?.user?.role === "admin" || userSession?.user?.role === "staff";
 
   // Edit modal state
-  const [editOpened, { open: openEdit, close: closeEdit }] = useDisclosure(false);
+  const [editOpened, { open: openEdit, close: closeEdit }] =
+    useDisclosure(false);
 
   // Fetch filter data for edit modal (rooms, session types, tracks)
   const { data: filters } = api.schedule.getEventScheduleFilters.useQuery(
@@ -75,8 +92,11 @@ export default function SessionDetailPage() {
   );
 
   // Quick-add modal state
-  const [quickAddOpened, { open: openQuickAdd, close: closeQuickAdd }] = useDisclosure(false);
-  const [linkingTextSpeaker, setLinkingTextSpeaker] = useState<string | null>(null);
+  const [quickAddOpened, { open: openQuickAdd, close: closeQuickAdd }] =
+    useDisclosure(false);
+  const [linkingTextSpeaker, setLinkingTextSpeaker] = useState<string | null>(
+    null,
+  );
 
   // Link speaker to session mutation
   const linkMutation = api.schedule.linkSpeakerToSession.useMutation({
@@ -86,7 +106,9 @@ export default function SessionDetailPage() {
         message: "Speaker has been connected to this session",
         color: "green",
       });
-      void utils.schedule.getSession.invalidate({ sessionId: params.sessionId });
+      void utils.schedule.getSession.invalidate({
+        sessionId: params.sessionId,
+      });
     },
     onError: (error) => {
       notifications.show({
@@ -125,7 +147,9 @@ export default function SessionDetailPage() {
     return { first: parts.join(" "), last };
   };
 
-  const prefillParts = linkingTextSpeaker ? splitName(linkingTextSpeaker) : null;
+  const prefillParts = linkingTextSpeaker
+    ? splitName(linkingTextSpeaker)
+    : null;
 
   // Slides upload state
   const [uploadingSlides, setUploadingSlides] = useState(false);
@@ -137,7 +161,9 @@ export default function SessionDetailPage() {
         message: "Slides have been removed from this session.",
         color: "green",
       });
-      void utils.schedule.getSession.invalidate({ sessionId: params.sessionId });
+      void utils.schedule.getSession.invalidate({
+        sessionId: params.sessionId,
+      });
     },
     onError: (error) => {
       notifications.show({
@@ -172,7 +198,7 @@ export default function SessionDetailPage() {
       });
 
       if (!response.ok) {
-        const result = await response.json() as { error?: string };
+        const result = (await response.json()) as { error?: string };
         throw new Error(result.error ?? "Upload failed");
       }
 
@@ -181,7 +207,9 @@ export default function SessionDetailPage() {
         message: "Your slides have been uploaded successfully.",
         color: "green",
       });
-      void utils.schedule.getSession.invalidate({ sessionId: params.sessionId });
+      void utils.schedule.getSession.invalidate({
+        sessionId: params.sessionId,
+      });
     } catch (error) {
       notifications.show({
         title: "Upload failed",
@@ -210,7 +238,8 @@ export default function SessionDetailPage() {
   }
 
   const color = session.sessionType?.color ?? "#94a3b8";
-  const hasSpeakers = session.sessionSpeakers.length > 0 || session.speakers.length > 0;
+  const hasSpeakers =
+    session.sessionSpeakers.length > 0 || session.speakers.length > 0;
   const isCurrentUserSpeaker = session.sessionSpeakers.some(
     (s) => s.user.id === userSession?.user?.id,
   );
@@ -275,7 +304,10 @@ export default function SessionDetailPage() {
         {/* Location */}
         {session.venue && (
           <Group gap="xs">
-            <IconMapPin size={18} style={{ color: "var(--mantine-color-dimmed)" }} />
+            <IconMapPin
+              size={18}
+              style={{ color: "var(--mantine-color-dimmed)" }}
+            />
             <Text size="md" c="dimmed">
               {session.venue.name}
               {session.room ? ` - ${session.room.name}` : ""}
@@ -285,10 +317,13 @@ export default function SessionDetailPage() {
 
         {/* Date and time */}
         <Group gap="xs">
-          <IconClock size={18} style={{ color: "var(--mantine-color-dimmed)" }} />
+          <IconClock
+            size={18}
+            style={{ color: "var(--mantine-color-dimmed)" }}
+          />
           <Text size="md" c="dimmed">
-            {formatDateTime(session.startTime)}{" "}
-            {formatTime(session.startTime)} - {formatTime(session.endTime)}
+            {formatDateTime(session.startTime)} {formatTime(session.startTime)}{" "}
+            - {formatTime(session.endTime)}
           </Text>
         </Group>
 
@@ -326,7 +361,10 @@ export default function SessionDetailPage() {
               <Paper p="md" withBorder radius="md">
                 <Group justify="space-between" align="center">
                   <Group gap="md">
-                    <IconFile size={24} style={{ color: "var(--mantine-color-dimmed)" }} />
+                    <IconFile
+                      size={24}
+                      style={{ color: "var(--mantine-color-dimmed)" }}
+                    />
                     <Stack gap={2}>
                       <Anchor
                         href={session.slidesUrl}
@@ -339,7 +377,9 @@ export default function SessionDetailPage() {
                       {session.slidesUploadedAt && (
                         <Text size="xs" c="dimmed">
                           Uploaded{" "}
-                          {new Date(session.slidesUploadedAt).toLocaleDateString("en-US", {
+                          {new Date(
+                            session.slidesUploadedAt,
+                          ).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
@@ -354,7 +394,11 @@ export default function SessionDetailPage() {
                       color="red"
                       size="xs"
                       leftSection={<IconTrash size={14} />}
-                      onClick={() => removeSlideMutation.mutate({ sessionId: params.sessionId })}
+                      onClick={() =>
+                        removeSlideMutation.mutate({
+                          sessionId: params.sessionId,
+                        })
+                      }
                       loading={removeSlideMutation.isPending}
                     >
                       Remove
@@ -429,7 +473,8 @@ export default function SessionDetailPage() {
                 speaker.user.profile?.jobTitle,
                 speaker.user.profile?.company,
               ].filter(Boolean);
-              const titleLine = titleParts.length > 0 ? titleParts.join(", ") : null;
+              const titleLine =
+                titleParts.length > 0 ? titleParts.join(", ") : null;
 
               return (
                 <Paper
@@ -471,7 +516,10 @@ export default function SessionDetailPage() {
                         </Text>
                       )}
                       {speaker.user.profile?.bio && (
-                        <Text size="sm" style={{ lineHeight: 1.6, marginTop: 4 }}>
+                        <Text
+                          size="sm"
+                          style={{ lineHeight: 1.6, marginTop: 4 }}
+                        >
                           {speaker.user.profile.bio}
                         </Text>
                       )}
@@ -532,49 +580,53 @@ export default function SessionDetailPage() {
         <EditSessionModal
           opened={editOpened}
           onClose={closeEdit}
-          session={{
-            id: session.id,
-            title: session.title,
-            description: session.description,
-            startTime: session.startTime,
-            endTime: session.endTime,
-            speakers: session.speakers,
-            venueId: session.venueId,
-            roomId: session.roomId,
-            sessionTypeId: session.sessionTypeId,
-            trackId: session.trackId,
-            order: session.order,
-            isPublished: session.isPublished,
-            venue: session.venue,
-            room: session.room,
-            sessionType: session.sessionType,
-            track: session.track,
-            sessionSpeakers: session.sessionSpeakers.map((s) => ({
-              role: s.role,
-              user: {
-                id: s.user.id,
-                firstName: s.user.firstName,
-                surname: s.user.surname,
-                name: s.user.name,
-                email: s.user.email,
-                image: s.user.image,
-              },
-            })),
-          } satisfies FloorSession}
+          session={
+            {
+              id: session.id,
+              title: session.title,
+              description: session.description,
+              startTime: session.startTime,
+              endTime: session.endTime,
+              speakers: session.speakers,
+              venueId: session.venueId,
+              roomId: session.roomId,
+              sessionTypeId: session.sessionTypeId,
+              trackId: session.trackId,
+              order: session.order,
+              isPublished: session.isPublished,
+              venue: session.venue,
+              room: session.room,
+              sessionType: session.sessionType,
+              track: session.track,
+              sessionSpeakers: session.sessionSpeakers.map((s) => ({
+                role: s.role,
+                user: {
+                  id: s.user.id,
+                  firstName: s.user.firstName,
+                  surname: s.user.surname,
+                  name: s.user.name,
+                  email: s.user.email,
+                  image: s.user.image,
+                },
+              })),
+            } satisfies FloorSession
+          }
           eventId={params.eventId}
           venueId={session.venueId ?? undefined}
           rooms={
-            filters.venues
-              .find((v) => v.id === session.venueId)
-              ?.rooms ?? []
+            filters.venues.find((v) => v.id === session.venueId)?.rooms ?? []
           }
           sessionTypes={filters.sessionTypes}
           tracks={filters.tracks}
           isAdmin={isAdmin}
           isSpeakerOnly={isSpeakerOnly}
           onSuccess={() => {
-            void utils.schedule.getSession.invalidate({ sessionId: params.sessionId });
-            void utils.schedule.getEventSchedule.invalidate({ eventId: params.eventId });
+            void utils.schedule.getSession.invalidate({
+              sessionId: params.sessionId,
+            });
+            void utils.schedule.getEventSchedule.invalidate({
+              eventId: params.eventId,
+            });
           }}
         />
       )}

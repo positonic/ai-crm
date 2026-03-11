@@ -1,9 +1,9 @@
 import { type EventType, type EventContent } from "~/types/event";
-import { 
+import {
   IconHome,
   IconTrophy,
   IconMicrophone,
-  type Icon
+  type Icon,
 } from "@tabler/icons-react";
 
 export const EVENT_CONTENT_MAP: Record<EventType, EventContent> = {
@@ -12,52 +12,58 @@ export const EVENT_CONTENT_MAP: Record<EventType, EventContent> = {
     shortDescription: "Buenos Aires 2025",
     applicationClosedMessage: {
       title: "Applications are Currently Closed",
-      description: "Thank you for your interest in the Funding the Commons RealFi Residency. The application period has ended and we are no longer accepting new applications.",
-      infoMessage: "Stay tuned for announcements about future residency programs and opportunities."
+      description:
+        "Thank you for your interest in the Funding the Commons RealFi Residency. The application period has ended and we are no longer accepting new applications.",
+      infoMessage:
+        "Stay tuned for announcements about future residency programs and opportunities.",
     },
     branding: {
       colors: {
         primary: "blue",
-        secondary: "purple", 
-        gradient: "from-blue-600 to-purple-600"
+        secondary: "purple",
+        gradient: "from-blue-600 to-purple-600",
       },
-      icon: "home"
-    }
+      icon: "home",
+    },
   },
   HACKATHON: {
     name: "FtC RealFi Hackathon",
     shortDescription: "Buenos Aires 2025",
     applicationClosedMessage: {
       title: "Hackathon Applications are Currently Closed",
-      description: "Thank you for your interest in the Funding the Commons RealFi Hackathon. The registration period has ended and we are no longer accepting new participants.",
-      infoMessage: "Follow us for updates on hackathon results and future events."
+      description:
+        "Thank you for your interest in the Funding the Commons RealFi Hackathon. The registration period has ended and we are no longer accepting new participants.",
+      infoMessage:
+        "Follow us for updates on hackathon results and future events.",
     },
     branding: {
       colors: {
         primary: "orange",
         secondary: "red",
-        gradient: "from-orange-600 to-red-600"
+        gradient: "from-orange-600 to-red-600",
       },
-      icon: "trophy"
-    }
+      icon: "trophy",
+    },
   },
   CONFERENCE: {
     name: "FtC Conference",
     shortDescription: "Conference Event",
     applicationClosedMessage: {
       title: "Speaker Applications are Currently Closed",
-      description: "Thank you for your interest in speaking at this Funding the Commons conference. The speaker application period has ended.",
-      infoMessage: "Stay tuned for announcements about the conference schedule and future speaking opportunities."
+      description:
+        "Thank you for your interest in speaking at this Funding the Commons conference. The speaker application period has ended.",
+      infoMessage:
+        "Stay tuned for announcements about the conference schedule and future speaking opportunities.",
     },
     branding: {
       colors: {
         primary: "teal",
         secondary: "cyan",
-        gradient: "from-teal-600 to-cyan-600"
+        gradient: "from-teal-600 to-cyan-600",
       },
-      icon: "microphone"
-    }
-  }
+      icon: "microphone",
+    },
+  },
 };
 
 export function getEventContent(eventType: EventType): EventContent {

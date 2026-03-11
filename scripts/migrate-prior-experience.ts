@@ -20,16 +20,18 @@
  *   bun run scripts/migrate-prior-experience.ts --event-id <id>  # Specific event only
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 // Command line options
 const args = process.argv.slice(2);
-const DRY_RUN = !args.includes('--execute');
-const OVERWRITE = args.includes('--overwrite');
-const APPEND = args.includes('--append');
-const EVENT_ID = args.includes('--event-id') ? args[args.indexOf('--event-id') + 1] : undefined;
+const DRY_RUN = !args.includes("--execute");
+const OVERWRITE = args.includes("--overwrite");
+const APPEND = args.includes("--append");
+const EVENT_ID = args.includes("--event-id")
+  ? args[args.indexOf("--event-id") + 1]
+  : undefined;
 
 interface MigrationStats {
   usersProcessed: number;
@@ -51,45 +53,45 @@ interface UserExperience {
 }
 
 async function collectData(): Promise<UserExperience[]> {
-  console.log('📊 Collecting prior experience from applications...\n');
+  console.log("📊 Collecting prior experience from applications...\n");
 
   // Find all prior_experience responses
   const experienceResponses = await prisma.applicationResponse.findMany({
     where: {
       question: {
-        questionKey: 'prior_experience'
+        questionKey: "prior_experience",
       },
       answer: {
-        not: ''
+        not: "",
       },
       ...(EVENT_ID && {
         application: {
-          eventId: EVENT_ID
-        }
-      })
+          eventId: EVENT_ID,
+        },
+      }),
     },
     include: {
       application: {
         include: {
           event: {
             select: {
-              name: true
-            }
+              name: true,
+            },
           },
           user: {
             select: {
               id: true,
-              name: true
-            }
-          }
-        }
-      }
+              name: true,
+            },
+          },
+        },
+      },
     },
     orderBy: {
       application: {
-        createdAt: 'desc'
-      }
-    }
+        createdAt: "desc",
+      },
+    },
   });
 
   const userExperiences: UserExperience[] = [];
@@ -122,27 +124,34 @@ async function collectData(): Promise<UserExperience[]> {
       applicationId: application.id,
       eventName: application.event.name,
       applicationDate: application.createdAt,
-      status: application.status
+      status: application.status,
     });
   }
 
   return userExperiences;
 }
 
-async function migrateUserExperience(userExp: UserExperience, stats: MigrationStats): Promise<void> {
+async function migrateUserExperience(
+  userExp: UserExperience,
+  stats: MigrationStats,
+): Promise<void> {
   const { userId, userName, experienceText } = userExp;
 
   console.log(`\n👤 User: ${userName ?? userId}`);
-  console.log(`   Application: ${userExp.applicationDate.toISOString().split('T')[0]}`);
+  console.log(
+    `   Application: ${userExp.applicationDate.toISOString().split("T")[0]}`,
+  );
   console.log(`   Status: ${userExp.status}`);
   console.log(`   Experience Length: ${experienceText.length} characters`);
-  console.log(`   Preview: "${experienceText.substring(0, 100)}${experienceText.length > 100 ? '...' : ''}"`);
+  console.log(
+    `   Preview: "${experienceText.substring(0, 100)}${experienceText.length > 100 ? "..." : ""}"`,
+  );
   console.log(`   Actions:`);
 
   try {
     // Check if user has a profile
     let profile = await prisma.userProfile.findUnique({
-      where: { userId: userId }
+      where: { userId: userId },
     });
 
     if (!profile) {
@@ -150,8 +159,8 @@ async function migrateUserExperience(userExp: UserExperience, stats: MigrationSt
       if (!DRY_RUN) {
         profile = await prisma.userProfile.create({
           data: {
-            userId: userId
-          }
+            userId: userId,
+          },
         });
       }
       console.log(`   ✓ Created new profile`);
@@ -164,7 +173,9 @@ async function migrateUserExperience(userExp: UserExperience, stats: MigrationSt
     const existingExp = profile?.priorExperience?.trim();
 
     if (existingExp) {
-      console.log(`   ⚠️  Already has priorExperience (${existingExp.length} chars)`);
+      console.log(
+        `   ⚠️  Already has priorExperience (${existingExp.length} chars)`,
+      );
 
       // Check if it's the same content
       if (existingExp === experienceText) {
@@ -180,9 +191,9 @@ async function migrateUserExperience(userExp: UserExperience, stats: MigrationSt
             where: { userId: userId },
             data: {
               priorExperience: experienceText,
-              skillsSource: 'application',
-              skillsSyncedAt: new Date()
-            }
+              skillsSource: "application",
+              skillsSyncedAt: new Date(),
+            },
           });
         }
         console.log(`   ✓ OVERWROTE existing experience`);
@@ -194,9 +205,9 @@ async function migrateUserExperience(userExp: UserExperience, stats: MigrationSt
             where: { userId: userId },
             data: {
               priorExperience: combined,
-              skillsSource: 'application',
-              skillsSyncedAt: new Date()
-            }
+              skillsSource: "application",
+              skillsSyncedAt: new Date(),
+            },
           });
         }
         console.log(`   ✓ APPENDED to existing experience`);
@@ -212,9 +223,9 @@ async function migrateUserExperience(userExp: UserExperience, stats: MigrationSt
           where: { userId: userId },
           data: {
             priorExperience: experienceText,
-            skillsSource: 'application',
-            skillsSyncedAt: new Date()
-          }
+            skillsSource: "application",
+            skillsSyncedAt: new Date(),
+          },
         });
       }
       console.log(`   ✓ Set priorExperience (${experienceText.length} chars)`);
@@ -224,9 +235,10 @@ async function migrateUserExperience(userExp: UserExperience, stats: MigrationSt
     }
 
     stats.usersProcessed++;
-
   } catch (error) {
-    console.log(`   ❌ Error: ${error instanceof Error ? error.message : String(error)}`);
+    console.log(
+      `   ❌ Error: ${error instanceof Error ? error.message : String(error)}`,
+    );
     stats.errors++;
   }
 }
@@ -238,25 +250,31 @@ async function main() {
     profilesUpdated: 0,
     skippedExisting: 0,
     skippedEmpty: 0,
-    errors: 0
+    errors: 0,
   };
 
-  console.log('🔄 Prior Experience Migration');
-  console.log('═══════════════════════════════════════\n');
+  console.log("🔄 Prior Experience Migration");
+  console.log("═══════════════════════════════════════\n");
 
   if (DRY_RUN) {
-    console.log('⚠️  DRY RUN MODE - No changes will be made');
-    console.log('   Use --execute flag to actually migrate data\n');
+    console.log("⚠️  DRY RUN MODE - No changes will be made");
+    console.log("   Use --execute flag to actually migrate data\n");
   } else {
-    console.log('🚀 EXECUTE MODE - Changes will be saved to database\n');
+    console.log("🚀 EXECUTE MODE - Changes will be saved to database\n");
   }
 
   if (OVERWRITE) {
-    console.log('⚠️  OVERWRITE MODE - Will replace existing priorExperience data\n');
+    console.log(
+      "⚠️  OVERWRITE MODE - Will replace existing priorExperience data\n",
+    );
   } else if (APPEND) {
-    console.log('📝 APPEND MODE - Will append to existing priorExperience data\n');
+    console.log(
+      "📝 APPEND MODE - Will append to existing priorExperience data\n",
+    );
   } else {
-    console.log('🛡️  SAFE MODE - Will skip users with existing priorExperience\n');
+    console.log(
+      "🛡️  SAFE MODE - Will skip users with existing priorExperience\n",
+    );
   }
 
   if (EVENT_ID) {
@@ -267,11 +285,13 @@ async function main() {
     // Collect all data first
     const userExperiences = await collectData();
 
-    console.log(`\nFound ${userExperiences.length} users with prior experience\n`);
-    console.log('─────────────────────────────────────────\n');
+    console.log(
+      `\nFound ${userExperiences.length} users with prior experience\n`,
+    );
+    console.log("─────────────────────────────────────────\n");
 
     if (userExperiences.length === 0) {
-      console.log('✅ No experience data to migrate\n');
+      console.log("✅ No experience data to migrate\n");
       return;
     }
 
@@ -281,33 +301,34 @@ async function main() {
     }
 
     // Print summary
-    console.log('\n');
-    console.log('═══════════════════════════════════════');
-    console.log('📊 MIGRATION SUMMARY');
-    console.log('═══════════════════════════════════════\n');
+    console.log("\n");
+    console.log("═══════════════════════════════════════");
+    console.log("📊 MIGRATION SUMMARY");
+    console.log("═══════════════════════════════════════\n");
     console.log(`Users processed:        ${stats.usersProcessed}`);
     console.log(`Profiles created:       ${stats.profilesCreated}`);
     console.log(`Profiles updated:       ${stats.profilesUpdated}`);
     console.log(`Skipped (existing):     ${stats.skippedExisting}`);
     console.log(`Skipped (empty):        ${stats.skippedEmpty}`);
     console.log(`Errors:                 ${stats.errors}`);
-    console.log('');
+    console.log("");
 
     if (DRY_RUN) {
-      console.log('⚠️  This was a DRY RUN - no changes were made');
-      console.log('   Run with --execute flag to apply changes\n');
+      console.log("⚠️  This was a DRY RUN - no changes were made");
+      console.log("   Run with --execute flag to apply changes\n");
     } else {
-      console.log('✅ Migration completed successfully!\n');
+      console.log("✅ Migration completed successfully!\n");
 
       // Run verification query
       const totalWithExp = await prisma.userProfile.count({
-        where: { priorExperience: { not: null } }
+        where: { priorExperience: { not: null } },
       });
-      console.log(`✓ Verified: ${totalWithExp} profiles now have prior experience\n`);
+      console.log(
+        `✓ Verified: ${totalWithExp} profiles now have prior experience\n`,
+      );
     }
-
   } catch (error) {
-    console.error('\n❌ Migration failed:', error);
+    console.error("\n❌ Migration failed:", error);
     process.exit(1);
   } finally {
     await prisma.$disconnect();

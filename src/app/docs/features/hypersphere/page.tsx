@@ -105,9 +105,9 @@ export default function HyperspherePage() {
           Hypersphere network.
         </li>
         <li>
-          <strong>Personal profile</strong> &ndash; If you have connected your AT
-          Protocol account, the AI also has access to your personal Hypersphere
-          activity.
+          <strong>Personal profile</strong> &ndash; If you have connected your
+          AT Protocol account, the AI also has access to your personal
+          Hypersphere activity.
         </li>
       </ul>
       <p className="docs-text">

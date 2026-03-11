@@ -28,10 +28,14 @@ async function checkRecentPraise() {
     console.log("❌ No praise found in database");
   } else {
     praises.forEach((praise, index) => {
-      console.log(`${index + 1}. ${praise.sender?.name ?? "Unknown"} → ${praise.recipient?.name ?? `@${praise.recipientName}`}`);
+      console.log(
+        `${index + 1}. ${praise.sender?.name ?? "Unknown"} → ${praise.recipient?.name ?? `@${praise.recipientName}`}`,
+      );
       console.log(`   Message: "${praise.message}"`);
       console.log(`   Created: ${praise.createdAt.toISOString()}`);
-      console.log(`   Channel posted: ${praise.channelMessageId ? "Yes" : "No"}`);
+      console.log(
+        `   Channel posted: ${praise.channelMessageId ? "Yes" : "No"}`,
+      );
       console.log("");
     });
   }

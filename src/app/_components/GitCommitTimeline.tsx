@@ -1,6 +1,14 @@
 "use client";
 
-import { Timeline, Badge, Text, Stack, Loader, Center, Alert } from "@mantine/core";
+import {
+  Timeline,
+  Badge,
+  Text,
+  Stack,
+  Loader,
+  Center,
+  Alert,
+} from "@mantine/core";
 import {
   IconGitCommit,
   IconBug,
@@ -29,7 +37,10 @@ interface CommitResponse {
 }
 
 // Parse git commit messages to extract type and description
-function parseCommitMessage(message: string): { type: Commit["type"]; description: string } {
+function parseCommitMessage(message: string): {
+  type: Commit["type"];
+  description: string;
+} {
   const regex = /^(feat|fix|chore|refactor|docs|style|test|perf):(.+)$/;
   const match = regex.exec(message);
 
@@ -48,13 +59,13 @@ function parseCommits(data: CommitResponse): Commit[] {
   }
 
   return data.commits.map((commit) => {
-    const [date, time] = commit.datetime.split(' ');
+    const [date, time] = commit.datetime.split(" ");
     const parsed = parseCommitMessage(commit.message);
 
     return {
       hash: commit.hash,
-      date: date ?? '',
-      time: time ?? '',
+      date: date ?? "",
+      time: time ?? "",
       message: commit.message,
       type: parsed.type,
     };
@@ -125,7 +136,7 @@ export function GitCommitTimeline({ githubUrl }: GitCommitTimelineProps) {
         url.searchParams.set("repo", githubUrl);
 
         const response = await fetch(url.toString());
-        const data = await response.json() as CommitResponse;
+        const data = (await response.json()) as CommitResponse;
 
         if (data.success) {
           setCommits(parseCommits(data));
@@ -133,7 +144,9 @@ export function GitCommitTimeline({ githubUrl }: GitCommitTimelineProps) {
           setError(data.error ?? "Failed to fetch commits");
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch commits");
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch commits",
+        );
       } finally {
         setLoading(false);
       }
@@ -152,19 +165,27 @@ export function GitCommitTimeline({ githubUrl }: GitCommitTimelineProps) {
 
   if (error) {
     return (
-      <Alert icon={<IconAlertCircle size={16} />} title="Git History Unavailable" color="blue">
+      <Alert
+        icon={<IconAlertCircle size={16} />}
+        title="Git History Unavailable"
+        color="blue"
+      >
         {error === "No GitHub repository URL provided"
           ? "Add a GitHub repository URL to this project to see the development timeline."
           : error === "Repository not found or not accessible"
-          ? "The GitHub repository is not accessible. Please check the repository URL and ensure it's public."
-          : "Unable to load development timeline at this time."}
+            ? "The GitHub repository is not accessible. Please check the repository URL and ensure it's public."
+            : "Unable to load development timeline at this time."}
       </Alert>
     );
   }
 
   if (commits.length === 0) {
     return (
-      <Alert icon={<IconAlertCircle size={16} />} title="No commits" color="blue">
+      <Alert
+        icon={<IconAlertCircle size={16} />}
+        title="No commits"
+        color="blue"
+      >
         No recent commits found in the last 7 days.
       </Alert>
     );

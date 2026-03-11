@@ -6,7 +6,12 @@
  */
 
 import { faker } from "@faker-js/faker";
-import type { PrismaClient, QuestionType, ApplicationStatus, ApplicationType } from "@prisma/client";
+import type {
+  PrismaClient,
+  QuestionType,
+  ApplicationStatus,
+  ApplicationType,
+} from "@prisma/client";
 import { getTestDb } from "./trpc";
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -53,7 +58,10 @@ interface CreateTestApplicationOpts {
 /**
  * Create a test user in the database.
  */
-export async function createTestUser(opts?: CreateTestUserOpts, db?: PrismaClient) {
+export async function createTestUser(
+  opts?: CreateTestUserOpts,
+  db?: PrismaClient,
+) {
   const prisma = db ?? getTestDb();
   return prisma.user.create({
     data: {
@@ -67,12 +75,16 @@ export async function createTestUser(opts?: CreateTestUserOpts, db?: PrismaClien
 /**
  * Create a test event in the database.
  */
-export async function createTestEvent(opts?: CreateTestEventOpts, db?: PrismaClient) {
+export async function createTestEvent(
+  opts?: CreateTestEventOpts,
+  db?: PrismaClient,
+) {
   const prisma = db ?? getTestDb();
   const name = opts?.name ?? `Test Event ${faker.string.alphanumeric(6)}`;
   const slug = opts?.slug ?? faker.helpers.slugify(name).toLowerCase();
   const startDate = opts?.startDate ?? faker.date.future();
-  const endDate = opts?.endDate ?? new Date(startDate.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const endDate =
+    opts?.endDate ?? new Date(startDate.getTime() + 3 * 24 * 60 * 60 * 1000);
 
   return prisma.event.create({
     data: {
@@ -91,7 +103,10 @@ export async function createTestEvent(opts?: CreateTestEventOpts, db?: PrismaCli
  * Create a test venue (ScheduleVenue) in the database.
  * Optionally assign an owner.
  */
-export async function createTestVenue(opts: CreateTestVenueOpts, db?: PrismaClient) {
+export async function createTestVenue(
+  opts: CreateTestVenueOpts,
+  db?: PrismaClient,
+) {
   const prisma = db ?? getTestDb();
   const venue = await prisma.scheduleVenue.create({
     data: {
@@ -117,7 +132,10 @@ export async function createTestVenue(opts: CreateTestVenueOpts, db?: PrismaClie
 /**
  * Create an application question for an event.
  */
-export async function createTestQuestion(opts: CreateTestQuestionOpts, db?: PrismaClient) {
+export async function createTestQuestion(
+  opts: CreateTestQuestionOpts,
+  db?: PrismaClient,
+) {
   const prisma = db ?? getTestDb();
   return prisma.applicationQuestion.create({
     data: {

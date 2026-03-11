@@ -15,7 +15,12 @@ import {
   Progress,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { IconArrowLeft, IconCheck, IconAlertCircle, IconLock } from "@tabler/icons-react";
+import {
+  IconArrowLeft,
+  IconCheck,
+  IconAlertCircle,
+  IconLock,
+} from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 
 interface ResetPasswordFormData {
@@ -49,7 +54,7 @@ function getPasswordStrengthLabel(strength: number): string {
 export default function ResetPasswordPage() {
   const params = useParams();
   const token = params.token as string;
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +89,7 @@ export default function ResetPasswordPage() {
       enabled: !!token,
       retry: false,
       refetchOnWindowFocus: false,
-    }
+    },
   );
 
   const resetPasswordMutation = api.passwordReset.resetPassword.useMutation();
@@ -166,22 +171,21 @@ export default function ResetPasswordPage() {
               <Text size="xl" fw={600} mb="xs">
                 Invalid Reset Link
               </Text>
-              <Text c="dimmed">
-                {error}
-              </Text>
+              <Text c="dimmed">{error}</Text>
             </div>
             <Text size="sm" c="dimmed">
-              This link may have expired or already been used. 
-              You can request a new password reset link.
+              This link may have expired or already been used. You can request a
+              new password reset link.
             </Text>
             <Group justify="center" gap="sm">
               <Link href="/auth/forgot-password">
-                <Button variant="filled">
-                  Request New Reset Link
-                </Button>
+                <Button variant="filled">Request New Reset Link</Button>
               </Link>
               <Link href="/signin">
-                <Button variant="light" leftSection={<IconArrowLeft size={16} />}>
+                <Button
+                  variant="light"
+                  leftSection={<IconArrowLeft size={16} />}
+                >
                   Back to Sign In
                 </Button>
               </Link>
@@ -206,13 +210,12 @@ export default function ResetPasswordPage() {
                 Password Reset Successfully
               </Text>
               <Text c="dimmed">
-                Your password has been reset successfully. You can now sign in with your new password.
+                Your password has been reset successfully. You can now sign in
+                with your new password.
               </Text>
             </div>
             <Link href="/signin">
-              <Button fullWidth>
-                Sign In Now
-              </Button>
+              <Button fullWidth>Sign In Now</Button>
             </Link>
           </Stack>
         </Paper>
@@ -264,12 +267,16 @@ export default function ResetPasswordPage() {
                         Password strength
                       </Text>
                       <Text size="xs" c="dimmed">
-                        {getPasswordStrengthLabel(getPasswordStrength(form.values.newPassword))}
+                        {getPasswordStrengthLabel(
+                          getPasswordStrength(form.values.newPassword),
+                        )}
                       </Text>
                     </Group>
                     <Progress
                       value={getPasswordStrength(form.values.newPassword)}
-                      color={getPasswordStrengthColor(getPasswordStrength(form.values.newPassword))}
+                      color={getPasswordStrengthColor(
+                        getPasswordStrength(form.values.newPassword),
+                      )}
                       size="sm"
                       mt="xs"
                     />
@@ -285,11 +292,9 @@ export default function ResetPasswordPage() {
               />
 
               <Text size="xs" c="dimmed">
-                Password requirements:
-                • At least 8 characters long
-                • Mix of uppercase and lowercase letters
-                • At least one number
-                • Special characters recommended
+                Password requirements: • At least 8 characters long • Mix of
+                uppercase and lowercase letters • At least one number • Special
+                characters recommended
               </Text>
 
               <Button type="submit" loading={isLoading} fullWidth>
@@ -304,7 +309,12 @@ export default function ResetPasswordPage() {
               Remember your password?
             </Text>
             <Link href="/signin">
-              <Text size="sm" component="span" c="blue" style={{ textDecoration: 'underline' }}>
+              <Text
+                size="sm"
+                component="span"
+                c="blue"
+                style={{ textDecoration: "underline" }}
+              >
                 Sign in
               </Text>
             </Link>

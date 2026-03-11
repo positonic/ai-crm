@@ -1,4 +1,12 @@
-import { Container, Title, Text, Button, Stack, ThemeIcon, Paper } from "@mantine/core";
+import {
+  Container,
+  Title,
+  Text,
+  Button,
+  Stack,
+  ThemeIcon,
+  Paper,
+} from "@mantine/core";
 import { IconLock, IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
 import { auth } from "~/server/auth";
@@ -10,10 +18,16 @@ export default async function UnauthorizedPage() {
     <Container size="sm" py="xl">
       <Paper shadow="md" p="xl" radius="md" ta="center">
         <Stack gap="lg">
-          <ThemeIcon size={80} radius="xl" color="red" variant="light" mx="auto">
+          <ThemeIcon
+            size={80}
+            radius="xl"
+            color="red"
+            variant="light"
+            mx="auto"
+          >
             <IconLock size={40} />
           </ThemeIcon>
-          
+
           <Stack gap="sm">
             <Title order={1} c="red">
               Access Denied
@@ -22,12 +36,13 @@ export default async function UnauthorizedPage() {
               You don&apos;t have permission to access this page
             </Text>
           </Stack>
-          
+
           <Text size="sm">
-            This page is restricted to Funding the Commons staff members only. 
-            If you believe you should have access, please contact an administrator.
+            This page is restricted to Funding the Commons staff members only.
+            If you believe you should have access, please contact an
+            administrator.
           </Text>
-          
+
           {session?.user ? (
             <Stack gap="xs">
               <Text size="sm" fw={500}>
@@ -38,14 +53,12 @@ export default async function UnauthorizedPage() {
               </Text>
             </Stack>
           ) : (
-            <Text size="sm">
-              Please sign in to continue.
-            </Text>
+            <Text size="sm">Please sign in to continue.</Text>
           )}
-          
+
           <Stack gap="sm">
-            <Link href="/" style={{ textDecoration: 'none' }}>
-              <Button 
+            <Link href="/" style={{ textDecoration: "none" }}>
+              <Button
                 leftSection={<IconArrowLeft size={16} />}
                 variant="filled"
                 size="md"

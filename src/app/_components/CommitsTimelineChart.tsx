@@ -51,7 +51,8 @@ export function CommitsTimelineChart({
 
   // Get appropriate commits data based on filter
   const residencyMetrics = data.residencyMetrics?.[0];
-  const hasResidencyData = residencyMetrics && Array.isArray(residencyMetrics.commitsData);
+  const hasResidencyData =
+    residencyMetrics && Array.isArray(residencyMetrics.commitsData);
   const hasLifetimeData = data.commitsData && Array.isArray(data.commitsData);
 
   let commitsData: Array<{ date: string; count: number }> = [];
@@ -59,7 +60,10 @@ export function CommitsTimelineChart({
   let dataLabel = "All Time";
 
   if (showResidencyOnly && hasResidencyData) {
-    commitsData = residencyMetrics.commitsData as Array<{ date: string; count: number }>;
+    commitsData = residencyMetrics.commitsData as Array<{
+      date: string;
+      count: number;
+    }>;
     totalCommits = residencyMetrics.residencyCommits ?? 0;
     dataLabel = "During Residency";
   } else if (hasLifetimeData) {

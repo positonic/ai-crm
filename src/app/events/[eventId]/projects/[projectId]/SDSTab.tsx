@@ -1,7 +1,23 @@
 "use client";
 
-import { Paper, Stack, Title, Text, Card, Group, Badge, Loader, Alert, Button } from "@mantine/core";
-import { IconBrandTwitter, IconAlertCircle, IconExternalLink, IconClock } from "@tabler/icons-react";
+import {
+  Paper,
+  Stack,
+  Title,
+  Text,
+  Card,
+  Group,
+  Badge,
+  Loader,
+  Alert,
+  Button,
+} from "@mantine/core";
+import {
+  IconBrandTwitter,
+  IconAlertCircle,
+  IconExternalLink,
+  IconClock,
+} from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 
 interface SDSTabProps {
@@ -9,11 +25,19 @@ interface SDSTabProps {
   canEdit: boolean;
 }
 
-export default function SDSTab({ projectId: _projectId, canEdit }: SDSTabProps) {
-  const { data: connectionStatus, isLoading: statusLoading } = api.atproto.getConnectionStatus.useQuery();
-  const { data: posts, isLoading: postsLoading, error } = api.atproto.getMyPosts.useQuery(
+export default function SDSTab({
+  projectId: _projectId,
+  canEdit,
+}: SDSTabProps) {
+  const { data: connectionStatus, isLoading: statusLoading } =
+    api.atproto.getConnectionStatus.useQuery();
+  const {
+    data: posts,
+    isLoading: postsLoading,
+    error,
+  } = api.atproto.getMyPosts.useQuery(
     { limit: 50 },
-    { enabled: connectionStatus?.isConnected ?? false }
+    { enabled: connectionStatus?.isConnected ?? false },
   );
 
   if (statusLoading) {
@@ -32,15 +56,25 @@ export default function SDSTab({ projectId: _projectId, canEdit }: SDSTabProps) 
       <Paper p="xl" radius="md" withBorder>
         <Stack gap="lg">
           <Title order={2}>AT Proto / SDS Posts</Title>
-          <Alert icon={<IconAlertCircle size={16} />} title="Not Connected" color="blue" variant="light">
+          <Alert
+            icon={<IconAlertCircle size={16} />}
+            title="Not Connected"
+            color="blue"
+            variant="light"
+          >
             <Stack gap="md">
-              <Text>Connect your AT Proto account to view and share posts on your custom SDS (Shared Data Server).</Text>
+              <Text>
+                Connect your AT Proto account to view and share posts on your
+                custom SDS (Shared Data Server).
+              </Text>
               <Text size="sm" c="dimmed">
-                AT Proto is the protocol powering Bluesky and custom Personal Data Servers. Your posts will be stored on your own server.
+                AT Proto is the protocol powering Bluesky and custom Personal
+                Data Servers. Your posts will be stored on your own server.
               </Text>
               {canEdit && (
                 <Text size="sm">
-                  Go to the <strong>Overview</strong> tab and click <strong>&quot;Connect AT Proto&quot;</strong> to get started.
+                  Go to the <strong>Overview</strong> tab and click{" "}
+                  <strong>&quot;Connect AT Proto&quot;</strong> to get started.
                 </Text>
               )}
             </Stack>
@@ -57,14 +91,19 @@ export default function SDSTab({ projectId: _projectId, canEdit }: SDSTabProps) 
           <Stack gap="xs">
             <Title order={2}>AT Proto / SDS Posts</Title>
             <Group gap="xs">
-              <Badge variant="light" color="blue" leftSection={<IconBrandTwitter size={12} />}>
+              <Badge
+                variant="light"
+                color="blue"
+                leftSection={<IconBrandTwitter size={12} />}
+              >
                 @{connectionStatus.handle}
               </Badge>
-              {connectionStatus.pdsUrl && connectionStatus.pdsUrl !== "https://bsky.social" && (
-                <Badge variant="outline" color="gray" size="sm">
-                  Custom PDS
-                </Badge>
-              )}
+              {connectionStatus.pdsUrl &&
+                connectionStatus.pdsUrl !== "https://bsky.social" && (
+                  <Badge variant="outline" color="gray" size="sm">
+                    Custom PDS
+                  </Badge>
+                )}
             </Group>
           </Stack>
         </Group>
@@ -77,7 +116,11 @@ export default function SDSTab({ projectId: _projectId, canEdit }: SDSTabProps) 
         )}
 
         {error && (
-          <Alert icon={<IconAlertCircle size={16} />} title="Error Loading Posts" color="red">
+          <Alert
+            icon={<IconAlertCircle size={16} />}
+            title="Error Loading Posts"
+            color="red"
+          >
             <Text>{error.message}</Text>
           </Alert>
         )}
@@ -87,7 +130,8 @@ export default function SDSTab({ projectId: _projectId, canEdit }: SDSTabProps) 
             <Stack gap="sm">
               <Text>You haven&apos;t created any posts yet.</Text>
               <Text size="sm" c="dimmed">
-                Use the &quot;Share on AT Proto&quot; button in the Overview tab to create your first post!
+                Use the &quot;Share on AT Proto&quot; button in the Overview tab
+                to create your first post!
               </Text>
             </Stack>
           </Alert>
@@ -96,28 +140,35 @@ export default function SDSTab({ projectId: _projectId, canEdit }: SDSTabProps) 
         {posts && posts.length > 0 && (
           <Stack gap="md">
             <Text size="sm" c="dimmed">
-              Showing {posts.length} post{posts.length !== 1 ? 's' : ''} from your SDS
+              Showing {posts.length} post{posts.length !== 1 ? "s" : ""} from
+              your SDS
             </Text>
 
             {posts.map((post) => (
-              <Card key={post.uri} shadow="sm" padding="lg" radius="md" withBorder>
+              <Card
+                key={post.uri}
+                shadow="sm"
+                padding="lg"
+                radius="md"
+                withBorder
+              >
                 <Stack gap="md">
                   <Group justify="space-between" align="flex-start">
                     <Group gap="xs">
                       <IconClock size={14} />
                       <Text size="xs" c="dimmed">
-                        {new Date(post.createdAt).toLocaleString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
+                        {new Date(post.createdAt).toLocaleString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })}
                       </Text>
                     </Group>
                     <Button
                       component="a"
-                      href={`https://bsky.app/profile/${connectionStatus.did}/post/${post.uri.split('/').pop() ?? ''}`}
+                      href={`https://bsky.app/profile/${connectionStatus.did}/post/${post.uri.split("/").pop() ?? ""}`}
                       target="_blank"
                       size="xs"
                       variant="subtle"
@@ -133,7 +184,7 @@ export default function SDSTab({ projectId: _projectId, canEdit }: SDSTabProps) 
 
                   <Group gap="xs">
                     <Badge size="xs" variant="dot" color="gray">
-                      {post.uri.split('/').pop()}
+                      {post.uri.split("/").pop()}
                     </Badge>
                   </Group>
                 </Stack>
@@ -149,10 +200,14 @@ export default function SDSTab({ projectId: _projectId, canEdit }: SDSTabProps) 
                 <strong>Server:</strong> {connectionStatus.pdsUrl}
               </Text>
               <Text size="sm">
-                <strong>DID:</strong> <Text component="span" size="xs" ff="monospace">{connectionStatus.did}</Text>
+                <strong>DID:</strong>{" "}
+                <Text component="span" size="xs" ff="monospace">
+                  {connectionStatus.did}
+                </Text>
               </Text>
               <Text size="sm" c="dimmed">
-                All posts are stored on your Personal Data Server and federated via the AT Protocol.
+                All posts are stored on your Personal Data Server and federated
+                via the AT Protocol.
               </Text>
             </Stack>
           </Alert>

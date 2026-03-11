@@ -1,17 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
-  Container, 
-  Text, 
-  Paper, 
-  Loader, 
+import {
+  Container,
+  Text,
+  Paper,
+  Loader,
   Alert,
   Button,
   Group,
   Stack,
   Badge,
-  Tabs
+  Tabs,
 } from "@mantine/core";
 import { IconAlertCircle, IconArrowLeft } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
@@ -26,7 +26,12 @@ interface EvaluationPageClientProps {
 type EvaluationData = {
   id: string;
   applicationId: string;
-  stage: 'SCREENING' | 'DETAILED_REVIEW' | 'VIDEO_REVIEW' | 'CONSENSUS' | 'FINAL_DECISION';
+  stage:
+    | "SCREENING"
+    | "DETAILED_REVIEW"
+    | "VIDEO_REVIEW"
+    | "CONSENSUS"
+    | "FINAL_DECISION";
   status: string;
   consensusData?: {
     id: string;
@@ -86,23 +91,27 @@ type EvaluationData = {
   };
 };
 
-export default function EvaluationPageClient({ evaluationId }: EvaluationPageClientProps) {
+export default function EvaluationPageClient({
+  evaluationId,
+}: EvaluationPageClientProps) {
   const router = useRouter();
-  const [viewMode, setViewMode] = useState<'individual' | 'consensus'>('individual');
+  const [viewMode, setViewMode] = useState<"individual" | "consensus">(
+    "individual",
+  );
 
   // URL hash-based tab linking
   const validTabs = ["individual", "consensus"];
   useEffect(() => {
     const hash = window.location.hash.slice(1);
     if (hash && validTabs.includes(hash)) {
-      setViewMode(hash as 'individual' | 'consensus');
+      setViewMode(hash as "individual" | "consensus");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleViewModeChange = (value: string | null) => {
     if (value) {
-      setViewMode(value as 'individual' | 'consensus');
+      setViewMode(value as "individual" | "consensus");
       window.history.replaceState(null, "", `#${value}`);
     }
   };
@@ -114,12 +123,12 @@ export default function EvaluationPageClient({ evaluationId }: EvaluationPageCli
 
   // Fetch consensus data for the application (to enable consensus view)
   const { data: consensusData } = api.evaluation.getConsensusData.useQuery(
-    { 
-      applicationId: evaluationQuery.data?.applicationId ?? "" 
+    {
+      applicationId: evaluationQuery.data?.applicationId ?? "",
     },
-    { 
-      enabled: !!evaluationQuery.data?.applicationId 
-    }
+    {
+      enabled: !!evaluationQuery.data?.applicationId,
+    },
   );
 
   const handleEvaluationComplete = () => {
@@ -141,16 +150,18 @@ export default function EvaluationPageClient({ evaluationId }: EvaluationPageCli
   if (evaluationQuery.error) {
     return (
       <Container size="xl" py="md">
-        <Alert 
-          icon={<IconAlertCircle size="1rem" />} 
-          title="Error Loading Evaluation" 
+        <Alert
+          icon={<IconAlertCircle size="1rem" />}
+          title="Error Loading Evaluation"
           color="red"
         >
           <Stack gap="md">
-            <Text>{String(evaluationQuery.error.message ?? 'An error occurred')}</Text>
+            <Text>
+              {String(evaluationQuery.error.message ?? "An error occurred")}
+            </Text>
             <Group>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 leftSection={<IconArrowLeft size="1rem" />}
                 onClick={() => router.back()}
               >
@@ -168,16 +179,19 @@ export default function EvaluationPageClient({ evaluationId }: EvaluationPageCli
   if (!evaluationData) {
     return (
       <Container size="xl" py="md">
-        <Alert 
-          icon={<IconAlertCircle size="1rem" />} 
-          title="Evaluation Not Found" 
+        <Alert
+          icon={<IconAlertCircle size="1rem" />}
+          title="Evaluation Not Found"
           color="yellow"
         >
           <Stack gap="md">
-            <Text>The evaluation you&rsquo;re looking for doesn&rsquo;t exist or you don&rsquo;t have permission to view it.</Text>
+            <Text>
+              The evaluation you&rsquo;re looking for doesn&rsquo;t exist or you
+              don&rsquo;t have permission to view it.
+            </Text>
             <Group>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 leftSection={<IconArrowLeft size="1rem" />}
                 onClick={() => router.back()}
               >
@@ -191,7 +205,8 @@ export default function EvaluationPageClient({ evaluationId }: EvaluationPageCli
   }
 
   // Determine if consensus view is available
-  const hasConsensusData = consensusData?.evaluations && consensusData.evaluations.length > 0;
+  const hasConsensusData =
+    consensusData?.evaluations && consensusData.evaluations.length > 0;
 
   // Create consensus evaluation data structure with type-safe transformation
   const consensusEvaluationData = {
@@ -199,20 +214,24 @@ export default function EvaluationPageClient({ evaluationId }: EvaluationPageCli
     applicationId: evaluationData.applicationId,
     stage: evaluationData.stage,
     status: evaluationData.status,
-    consensusData: consensusData ? {
-      ...consensusData,
-      user: consensusData.user ? {
-        name: consensusData.user.name,
-        email: consensusData.user.email ?? '', // Transform null to empty string
-      } : null,
-      evaluations: consensusData.evaluations.map(evaluation => ({
-        ...evaluation,
-        reviewer: {
-          ...evaluation.reviewer,
-          email: evaluation.reviewer.email ?? '', // Transform null to empty string
-        },
-      })),
-    } : undefined,
+    consensusData: consensusData
+      ? {
+          ...consensusData,
+          user: consensusData.user
+            ? {
+                name: consensusData.user.name,
+                email: consensusData.user.email ?? "", // Transform null to empty string
+              }
+            : null,
+          evaluations: consensusData.evaluations.map((evaluation) => ({
+            ...evaluation,
+            reviewer: {
+              ...evaluation.reviewer,
+              email: evaluation.reviewer.email ?? "", // Transform null to empty string
+            },
+          })),
+        }
+      : undefined,
   };
 
   return (
@@ -220,16 +239,20 @@ export default function EvaluationPageClient({ evaluationId }: EvaluationPageCli
       <Stack gap="lg">
         {/* Header with navigation */}
         <Group justify="space-between">
-          <Button 
-            variant="subtle" 
+          <Button
+            variant="subtle"
             leftSection={<IconArrowLeft size="1rem" />}
-            onClick={() => router.push("/admin/events/funding-commons-residency-2025/applications")}
+            onClick={() =>
+              router.push(
+                "/admin/events/funding-commons-residency-2025/applications",
+              )
+            }
           >
             Back to Applications
           </Button>
-          
+
           <Badge color="gray" variant="light">
-            {evaluationData.stage.replace('_', ' ')}
+            {evaluationData.stage.replace("_", " ")}
           </Badge>
         </Group>
 
@@ -252,7 +275,9 @@ export default function EvaluationPageClient({ evaluationId }: EvaluationPageCli
 
           <Tabs.Panel value="consensus" pt="md">
             {hasConsensusData ? (
-              <ConsensusEvaluationView evaluationData={consensusEvaluationData} />
+              <ConsensusEvaluationView
+                evaluationData={consensusEvaluationData}
+              />
             ) : (
               <Alert color="yellow" title="No Data Available">
                 Consensus data is not available for this evaluation.

@@ -1,6 +1,14 @@
 "use client";
 
-import { Group, Avatar, Text, Badge, ActionIcon, Stack, Paper } from "@mantine/core";
+import {
+  Group,
+  Avatar,
+  Text,
+  Badge,
+  ActionIcon,
+  Stack,
+  Paper,
+} from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 import { getDisplayName } from "~/utils/userDisplay";
 

@@ -37,8 +37,13 @@ type Context = {
   };
 };
 
-async function getGoogleAuthClient(ctx: Context, requiredScope?: 'contacts' | 'gmail') {
-  console.log(`[DEBUG] Getting Google auth client for user: ${ctx.session.user.id}`);
+async function getGoogleAuthClient(
+  ctx: Context,
+  requiredScope?: "contacts" | "gmail",
+) {
+  console.log(
+    `[DEBUG] Getting Google auth client for user: ${ctx.session.user.id}`,
+  );
 
   // 1. Get user's Google access token from session
   const account = await ctx.db.account.findFirst({
@@ -49,7 +54,9 @@ async function getGoogleAuthClient(ctx: Context, requiredScope?: 'contacts' | 'g
   });
 
   if (!account?.access_token || !account.refresh_token) {
-    console.log(`[DEBUG] No Google account found or missing tokens for user: ${ctx.session.user.id}`);
+    console.log(
+      `[DEBUG] No Google account found or missing tokens for user: ${ctx.session.user.id}`,
+    );
     throw new Error("GOOGLE_NOT_CONNECTED");
   }
 
@@ -59,30 +66,39 @@ async function getGoogleAuthClient(ctx: Context, requiredScope?: 'contacts' | 'g
   const hasContactsScope = account.scope?.includes(contactsScope) ?? false;
   const hasGmailScope = account.scope?.includes(gmailScope) ?? false;
 
-  console.log(`[DEBUG] Google account details for user ${ctx.session.user.id}:`, {
-    hasAccessToken: !!account.access_token,
-    accessTokenLength: account.access_token?.length,
-    hasRefreshToken: !!account.refresh_token,
-    refreshTokenLength: account.refresh_token?.length,
-    scope: account.scope,
-    hasContactsScope,
-    hasGmailScope,
-    requiredScope,
-    expiresAt: account.expires_at,
-    currentTime: Math.floor(Date.now() / 1000),
-    isExpired: account.expires_at ? account.expires_at < Math.floor(Date.now() / 1000) : 'unknown',
-    accountId: account.id,
-    providerAccountId: account.providerAccountId
-  });
+  console.log(
+    `[DEBUG] Google account details for user ${ctx.session.user.id}:`,
+    {
+      hasAccessToken: !!account.access_token,
+      accessTokenLength: account.access_token?.length,
+      hasRefreshToken: !!account.refresh_token,
+      refreshTokenLength: account.refresh_token?.length,
+      scope: account.scope,
+      hasContactsScope,
+      hasGmailScope,
+      requiredScope,
+      expiresAt: account.expires_at,
+      currentTime: Math.floor(Date.now() / 1000),
+      isExpired: account.expires_at
+        ? account.expires_at < Math.floor(Date.now() / 1000)
+        : "unknown",
+      accountId: account.id,
+      providerAccountId: account.providerAccountId,
+    },
+  );
 
   // Check if account has required scope
-  if (requiredScope === 'contacts' && !hasContactsScope) {
-    console.log(`[DEBUG] Account missing contacts scope for user: ${ctx.session.user.id}. Current scope: ${account.scope}`);
+  if (requiredScope === "contacts" && !hasContactsScope) {
+    console.log(
+      `[DEBUG] Account missing contacts scope for user: ${ctx.session.user.id}. Current scope: ${account.scope}`,
+    );
     throw new Error("GOOGLE_PERMISSIONS_INSUFFICIENT");
   }
 
-  if (requiredScope === 'gmail' && !hasGmailScope) {
-    console.log(`[DEBUG] Account missing Gmail scope for user: ${ctx.session.user.id}. Current scope: ${account.scope}`);
+  if (requiredScope === "gmail" && !hasGmailScope) {
+    console.log(
+      `[DEBUG] Account missing Gmail scope for user: ${ctx.session.user.id}. Current scope: ${account.scope}`,
+    );
     throw new Error("GOOGLE_GMAIL_PERMISSIONS_INSUFFICIENT");
   }
 
@@ -92,24 +108,33 @@ async function getGoogleAuthClient(ctx: Context, requiredScope?: 'contacts' | 'g
     process.env.GOOGLE_CLIENT_SECRET,
   );
 
-  console.log(`[DEBUG] Setting OAuth2 credentials for user: ${ctx.session.user.id}`);
+  console.log(
+    `[DEBUG] Setting OAuth2 credentials for user: ${ctx.session.user.id}`,
+  );
   oauth2Client.setCredentials({
     access_token: account.access_token,
     refresh_token: account.refresh_token,
   });
 
   // Listen for token refresh events and update the database
-  oauth2Client.on('tokens', (tokens) => {
+  oauth2Client.on("tokens", (tokens) => {
     void (async () => {
-      console.log(`[DEBUG] Google token refresh event triggered for user: ${ctx.session.user.id}`, {
-        hasNewAccessToken: !!tokens.access_token,
-        hasNewRefreshToken: !!tokens.refresh_token,
-        newExpiryDate: tokens.expiry_date,
-        tokenType: tokens.token_type,
-        scope: tokens.scope
-      });
-      
-      const updateData: { access_token?: string, expires_at?: number, refresh_token?: string } = {};
+      console.log(
+        `[DEBUG] Google token refresh event triggered for user: ${ctx.session.user.id}`,
+        {
+          hasNewAccessToken: !!tokens.access_token,
+          hasNewRefreshToken: !!tokens.refresh_token,
+          newExpiryDate: tokens.expiry_date,
+          tokenType: tokens.token_type,
+          scope: tokens.scope,
+        },
+      );
+
+      const updateData: {
+        access_token?: string;
+        expires_at?: number;
+        refresh_token?: string;
+      } = {};
 
       if (tokens.access_token) {
         updateData.access_token = tokens.access_token;
@@ -127,15 +152,20 @@ async function getGoogleAuthClient(ctx: Context, requiredScope?: 'contacts' | 'g
         await ctx.db.account.update({
           where: {
             provider_providerAccountId: {
-              provider: 'google',
+              provider: "google",
               providerAccountId: account.providerAccountId,
-            }
+            },
           },
           data: updateData,
         });
-        console.log(`[DEBUG] Successfully updated tokens in database for user: ${ctx.session.user.id}`);
+        console.log(
+          `[DEBUG] Successfully updated tokens in database for user: ${ctx.session.user.id}`,
+        );
       } catch (error) {
-        console.error(`[DEBUG] Failed to update tokens in database for user: ${ctx.session.user.id}`, error);
+        console.error(
+          `[DEBUG] Failed to update tokens in database for user: ${ctx.session.user.id}`,
+          error,
+        );
       }
     })();
   });
@@ -144,7 +174,10 @@ async function getGoogleAuthClient(ctx: Context, requiredScope?: 'contacts' | 'g
 }
 
 // Gmail message parser helpers
-function parseEmailAddress(emailString: string): { email: string; name?: string } {
+function parseEmailAddress(emailString: string): {
+  email: string;
+  name?: string;
+} {
   // Parse email from formats like: "John Doe <john@example.com>" or "john@example.com"
   const withBracketsRegex = /(.*?)<(.+?)>/;
   const simpleEmailRegex = /^(.+)$/;
@@ -162,7 +195,7 @@ function parseEmailAddress(emailString: string): { email: string; name?: string 
     } else {
       // Just email
       return {
-        email: simpleMatch[1]?.trim().toLowerCase() ?? '',
+        email: simpleMatch[1]?.trim().toLowerCase() ?? "",
       };
     }
   }
@@ -172,11 +205,14 @@ function parseEmailAddress(emailString: string): { email: string; name?: string 
 
 function decodeBase64(data: string): string {
   // Gmail API returns base64url encoded strings (- instead of +, _ instead of /)
-  const base64 = data.replace(/-/g, '+').replace(/_/g, '/');
-  return Buffer.from(base64, 'base64').toString('utf-8');
+  const base64 = data.replace(/-/g, "+").replace(/_/g, "/");
+  return Buffer.from(base64, "base64").toString("utf-8");
 }
 
-function extractMessageBody(payload: gmail_v1.Schema$MessagePart): { text?: string; html?: string } {
+function extractMessageBody(payload: gmail_v1.Schema$MessagePart): {
+  text?: string;
+  html?: string;
+} {
   const result: { text?: string; html?: string } = {};
 
   // If message has parts, it's multipart
@@ -184,9 +220,9 @@ function extractMessageBody(payload: gmail_v1.Schema$MessagePart): { text?: stri
     for (const part of payload.parts) {
       const mimeType = part.mimeType;
 
-      if (mimeType === 'text/plain' && part.body?.data) {
+      if (mimeType === "text/plain" && part.body?.data) {
         result.text = decodeBase64(part.body.data);
-      } else if (mimeType === 'text/html' && part.body?.data) {
+      } else if (mimeType === "text/html" && part.body?.data) {
         result.html = decodeBase64(part.body.data);
       } else if (part.parts) {
         // Recursively check nested parts
@@ -200,9 +236,9 @@ function extractMessageBody(payload: gmail_v1.Schema$MessagePart): { text?: stri
     const mimeType = payload.mimeType;
     const decoded = decodeBase64(payload.body.data);
 
-    if (mimeType === 'text/plain') {
+    if (mimeType === "text/plain") {
       result.text = decoded;
-    } else if (mimeType === 'text/html') {
+    } else if (mimeType === "text/html") {
       result.html = decoded;
     } else {
       // Default to text
@@ -213,29 +249,38 @@ function extractMessageBody(payload: gmail_v1.Schema$MessagePart): { text?: stri
   return result;
 }
 
-function getHeaderValue(headers: gmail_v1.Schema$MessagePartHeader[] | undefined, name: string): string | undefined {
-  return headers?.find(h => h.name?.toLowerCase() === name.toLowerCase())?.value ?? undefined;
+function getHeaderValue(
+  headers: gmail_v1.Schema$MessagePartHeader[] | undefined,
+  name: string,
+): string | undefined {
+  return (
+    headers?.find((h) => h.name?.toLowerCase() === name.toLowerCase())?.value ??
+    undefined
+  );
 }
 
 // Extract contact data from application responses
-async function extractContactFromApplication(db: PrismaClient, application: {
-  id: string;
-  email: string;
-  responses: Array<{
-    questionId: string;
-    answer: string;
-    question: {
-      id: string;
-    };
-  }>;
-}) {
+async function extractContactFromApplication(
+  db: PrismaClient,
+  application: {
+    id: string;
+    email: string;
+    responses: Array<{
+      questionId: string;
+      answer: string;
+      question: {
+        id: string;
+      };
+    }>;
+  },
+) {
   // Mapping of ApplicationQuestion IDs to contact fields
   const questionMapping = {
-    'cmeh86ipf000guo436knsqluc': 'full_name',
-    'cmeh86isu000muo43h8ju1wit': 'twitter',
-    'cmeh86itn000ouo43ycs8sygw': 'github',
-    'cmeh86iuj000quo43em4nevxd': 'linkedin',
-    'cmeh86ive000suo43k2edx15q': 'telegram',
+    cmeh86ipf000guo436knsqluc: "full_name",
+    cmeh86isu000muo43h8ju1wit: "twitter",
+    cmeh86itn000ouo43ycs8sygw: "github",
+    cmeh86iuj000quo43em4nevxd: "linkedin",
+    cmeh86ive000suo43k2edx15q: "telegram",
   } as const;
 
   const contactData: {
@@ -252,58 +297,59 @@ async function extractContactFromApplication(db: PrismaClient, application: {
 
   // Process each response
   for (const response of application.responses) {
-    const fieldType = questionMapping[response.questionId as keyof typeof questionMapping];
+    const fieldType =
+      questionMapping[response.questionId as keyof typeof questionMapping];
     if (!fieldType || !response.answer?.trim()) continue;
 
     switch (fieldType) {
-      case 'full_name': {
+      case "full_name": {
         // Split full name into firstName and lastName
         const nameParts = response.answer.trim().split(/\s+/);
-        contactData.firstName = nameParts[0] ?? '';
-        contactData.lastName = nameParts.slice(1).join(' ') || '';
+        contactData.firstName = nameParts[0] ?? "";
+        contactData.lastName = nameParts.slice(1).join(" ") || "";
         break;
       }
-      case 'twitter': {
+      case "twitter": {
         // Clean Twitter handle (remove @ and URLs)
         let twitter = response.answer.trim();
-        twitter = twitter.replace(/^@/, ''); // Remove leading @
-        twitter = twitter.replace(/^https?:\/\/(www\.)?twitter\.com\//, ''); // Remove Twitter URL
-        twitter = twitter.replace(/^https?:\/\/(www\.)?x\.com\//, ''); // Remove X.com URL
-        twitter = twitter.replace(/\?.*$/, ''); // Remove query parameters
-        if (twitter && !twitter.includes('/') && !twitter.includes(' ')) {
+        twitter = twitter.replace(/^@/, ""); // Remove leading @
+        twitter = twitter.replace(/^https?:\/\/(www\.)?twitter\.com\//, ""); // Remove Twitter URL
+        twitter = twitter.replace(/^https?:\/\/(www\.)?x\.com\//, ""); // Remove X.com URL
+        twitter = twitter.replace(/\?.*$/, ""); // Remove query parameters
+        if (twitter && !twitter.includes("/") && !twitter.includes(" ")) {
           contactData.twitter = twitter;
         }
         break;
       }
-      case 'github': {
+      case "github": {
         // Clean GitHub handle (remove URLs)
         let github = response.answer.trim();
-        github = github.replace(/^@/, ''); // Remove leading @
-        github = github.replace(/^https?:\/\/(www\.)?github\.com\//, ''); // Remove GitHub URL
-        github = github.replace(/\?.*$/, ''); // Remove query parameters
-        if (github && !github.includes('/') && !github.includes(' ')) {
+        github = github.replace(/^@/, ""); // Remove leading @
+        github = github.replace(/^https?:\/\/(www\.)?github\.com\//, ""); // Remove GitHub URL
+        github = github.replace(/\?.*$/, ""); // Remove query parameters
+        if (github && !github.includes("/") && !github.includes(" ")) {
           contactData.github = github;
         }
         break;
       }
-      case 'linkedin': {
+      case "linkedin": {
         // Clean LinkedIn URL or handle
         const linkedin = response.answer.trim();
-        if (linkedin.includes('linkedin.com')) {
+        if (linkedin.includes("linkedin.com")) {
           // Keep full LinkedIn URL
           contactData.linkedIn = linkedin;
-        } else if (linkedin && !linkedin.includes(' ')) {
+        } else if (linkedin && !linkedin.includes(" ")) {
           // Convert handle to full URL
-          contactData.linkedIn = `https://linkedin.com/in/${linkedin.replace(/^@/, '')}`;
+          contactData.linkedIn = `https://linkedin.com/in/${linkedin.replace(/^@/, "")}`;
         }
         break;
       }
-      case 'telegram': {
+      case "telegram": {
         // Clean Telegram handle
         let telegram = response.answer.trim();
-        telegram = telegram.replace(/^@/, ''); // Remove leading @
-        telegram = telegram.replace(/^https?:\/\/(www\.)?t\.me\//, ''); // Remove Telegram URL
-        if (telegram && !telegram.includes('/') && !telegram.includes(' ')) {
+        telegram = telegram.replace(/^@/, ""); // Remove leading @
+        telegram = telegram.replace(/^https?:\/\/(www\.)?t\.me\//, ""); // Remove Telegram URL
+        if (telegram && !telegram.includes("/") && !telegram.includes(" ")) {
           contactData.telegram = telegram;
         }
         break;
@@ -315,23 +361,34 @@ async function extractContactFromApplication(db: PrismaClient, application: {
 }
 
 // Enhanced contact upserting for application data with social media fields
-async function upsertContactFromApplication(db: PrismaClient, contactData: {
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  twitter?: string;
-  github?: string;
-  linkedIn?: string;
-  telegram?: string;
-}) {
-  const { email, firstName = "", lastName = "", twitter, github, linkedIn, telegram } = contactData;
+async function upsertContactFromApplication(
+  db: PrismaClient,
+  contactData: {
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    twitter?: string;
+    github?: string;
+    linkedIn?: string;
+    telegram?: string;
+  },
+) {
+  const {
+    email,
+    firstName = "",
+    lastName = "",
+    twitter,
+    github,
+    linkedIn,
+    telegram,
+  } = contactData;
 
   // Find existing contact by email first, then by telegram
   let existingContact = await db.contact.findFirst({
     where: { email },
   });
 
-  // If no email match and we have telegram, check by telegram  
+  // If no email match and we have telegram, check by telegram
   if (!existingContact && telegram) {
     existingContact = await db.contact.findFirst({
       where: { telegram },
@@ -340,7 +397,7 @@ async function upsertContactFromApplication(db: PrismaClient, contactData: {
 
   // Determine sponsor from email (skip placeholder emails)
   let sponsor = null;
-  if (email && !email.endsWith('@telegram.placeholder')) {
+  if (email && !email.endsWith("@telegram.placeholder")) {
     const domain = email.substring(email.lastIndexOf("@") + 1);
     sponsor = await db.sponsor.upsert({
       where: { name: domain },
@@ -365,15 +422,18 @@ async function upsertContactFromApplication(db: PrismaClient, contactData: {
     // Only update names if we have better data (non-empty values)
     if (firstName?.trim()) updateData.firstName = firstName;
     if (lastName?.trim()) updateData.lastName = lastName;
-    
+
     // Update social media fields if provided
     if (twitter?.trim()) updateData.twitter = twitter;
     if (github?.trim()) updateData.github = github;
     if (linkedIn?.trim()) updateData.linkedIn = linkedIn;
     if (telegram?.trim()) updateData.telegram = telegram;
-    
+
     // Special case: if found by telegram, update email with application email
-    if (existingContact.telegram === telegram && email !== existingContact.email) {
+    if (
+      existingContact.telegram === telegram &&
+      email !== existingContact.email
+    ) {
       updateData.email = email;
       updateData.sponsorId = sponsor?.id ?? null;
     }
@@ -387,15 +447,15 @@ async function upsertContactFromApplication(db: PrismaClient, contactData: {
   } else {
     // Create new contact
     const newContact = await db.contact.create({
-      data: { 
-        email, 
-        firstName, 
-        lastName, 
+      data: {
+        email,
+        firstName,
+        lastName,
         twitter,
         github,
         linkedIn,
         telegram,
-        sponsorId: sponsor?.id ?? null
+        sponsorId: sponsor?.id ?? null,
       },
     });
 
@@ -403,15 +463,18 @@ async function upsertContactFromApplication(db: PrismaClient, contactData: {
   }
 }
 
-async function upsertContact(db: PrismaClient, contact: { 
-  email?: string; 
-  firstName?: string; 
-  lastName?: string; 
-  phone?: string;
-  telegram?: string;
-}) {
+async function upsertContact(
+  db: PrismaClient,
+  contact: {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    telegram?: string;
+  },
+) {
   const { email, firstName = "", lastName = "", phone, telegram } = contact;
-  
+
   // Need at least email or phone to create a contact
   const identifier = email ?? phone;
   if (!identifier) {
@@ -427,7 +490,7 @@ async function upsertContact(db: PrismaClient, contact: {
   }
 
   // If no phone match and we have email, check by email
-  if (!existingContact && email && !email.endsWith('@telegram.placeholder')) {
+  if (!existingContact && email && !email.endsWith("@telegram.placeholder")) {
     existingContact = await db.contact.findFirst({
       where: { email },
     });
@@ -435,7 +498,7 @@ async function upsertContact(db: PrismaClient, contact: {
 
   // Set up sponsor if we have a real email
   let sponsor = null;
-  if (email && !email.endsWith('@telegram.placeholder')) {
+  if (email && !email.endsWith("@telegram.placeholder")) {
     const domain = email.substring(email.lastIndexOf("@") + 1);
     sponsor = await db.sponsor.upsert({
       where: { name: domain },
@@ -458,14 +521,17 @@ async function upsertContact(db: PrismaClient, contact: {
     // Only update names if we have better data (non-empty values)
     if (firstName?.trim()) updateData.firstName = firstName;
     if (lastName?.trim()) updateData.lastName = lastName;
-    
+
     // Always update phone and telegram if provided
     if (phone) updateData.phone = phone;
     if (telegram) updateData.telegram = telegram;
-    
+
     // Update email if we have a real email and existing is placeholder
-    if (email && !email.endsWith('@telegram.placeholder') && 
-        existingContact.email?.endsWith('@telegram.placeholder')) {
+    if (
+      email &&
+      !email.endsWith("@telegram.placeholder") &&
+      existingContact.email?.endsWith("@telegram.placeholder")
+    ) {
       updateData.email = email;
       updateData.sponsorId = sponsor?.id ?? null;
     }
@@ -476,16 +542,17 @@ async function upsertContact(db: PrismaClient, contact: {
     });
   } else {
     // Create new contact
-    const finalEmail = email ?? `${phone?.replace(/\D/g, '')}@telegram.placeholder`;
-    
+    const finalEmail =
+      email ?? `${phone?.replace(/\D/g, "")}@telegram.placeholder`;
+
     await db.contact.create({
-      data: { 
-        email: finalEmail, 
-        firstName, 
-        lastName, 
-        phone, 
+      data: {
+        email: finalEmail,
+        firstName,
+        lastName,
+        phone,
         telegram,
-        sponsorId: sponsor?.id ?? null
+        sponsorId: sponsor?.id ?? null,
       },
     });
   }
@@ -511,7 +578,7 @@ export const contactRouter = createTRPCRouter({
         include: {
           sponsor: true,
           interactions: {
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: "desc" },
             take: 10,
           },
         },
@@ -520,10 +587,12 @@ export const contactRouter = createTRPCRouter({
     }),
 
   getContactCommunications: publicProcedure
-    .input(z.object({
-      contactId: z.string(),
-      limit: z.number().optional().default(20),
-    }))
+    .input(
+      z.object({
+        contactId: z.string(),
+        limit: z.number().optional().default(20),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       // Get the contact to find their email and telegram
       const contact = await ctx.db.contact.findUnique({
@@ -557,7 +626,7 @@ export const contactRouter = createTRPCRouter({
         where: {
           OR: whereConditions,
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: input.limit,
         select: {
           id: true,
@@ -587,10 +656,12 @@ export const contactRouter = createTRPCRouter({
     }),
 
   assignContactToSponsor: publicProcedure
-    .input(z.object({ 
-      contactId: z.string(),
-      sponsorId: z.string(),
-    }))
+    .input(
+      z.object({
+        contactId: z.string(),
+        sponsorId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const contact = await ctx.db.contact.update({
         where: { id: input.contactId },
@@ -603,9 +674,11 @@ export const contactRouter = createTRPCRouter({
     }),
 
   removeContactFromSponsor: publicProcedure
-    .input(z.object({ 
-      contactId: z.string(),
-    }))
+    .input(
+      z.object({
+        contactId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const contact = await ctx.db.contact.update({
         where: { id: input.contactId },
@@ -618,30 +691,44 @@ export const contactRouter = createTRPCRouter({
     }),
 
   importGoogleContacts: protectedProcedure.mutation(async ({ ctx }) => {
-    console.log(`[DEBUG] Starting Google Contacts import for user: ${ctx.session.user.id}`);
+    console.log(
+      `[DEBUG] Starting Google Contacts import for user: ${ctx.session.user.id}`,
+    );
 
     try {
-      const oauth2Client = await getGoogleAuthClient(ctx, 'contacts');
-      console.log(`[DEBUG] OAuth client obtained successfully for user: ${ctx.session.user.id}`);
-      
-      const people = google.people({ version: "v1", auth: oauth2Client });
-      console.log(`[DEBUG] Google People API client created for user: ${ctx.session.user.id}`);
+      const oauth2Client = await getGoogleAuthClient(ctx, "contacts");
+      console.log(
+        `[DEBUG] OAuth client obtained successfully for user: ${ctx.session.user.id}`,
+      );
 
-      console.log(`[DEBUG] Making API request to Google People API for user: ${ctx.session.user.id}`);
+      const people = google.people({ version: "v1", auth: oauth2Client });
+      console.log(
+        `[DEBUG] Google People API client created for user: ${ctx.session.user.id}`,
+      );
+
+      console.log(
+        `[DEBUG] Making API request to Google People API for user: ${ctx.session.user.id}`,
+      );
       const requestStart = Date.now();
-      
+
       const res = await people.people.connections.list({
         resourceName: "people/me",
         personFields: "names,emailAddresses,phoneNumbers",
         pageSize: 1000,
       });
-      
+
       const requestDuration = Date.now() - requestStart;
-      console.log(`[DEBUG] Google API request completed in ${requestDuration}ms for user: ${ctx.session.user.id}`);
-      console.log(`[DEBUG] API response status: ${res.status}, data keys: ${Object.keys(res.data ?? {}).join(', ')}`);
+      console.log(
+        `[DEBUG] Google API request completed in ${requestDuration}ms for user: ${ctx.session.user.id}`,
+      );
+      console.log(
+        `[DEBUG] API response status: ${res.status}, data keys: ${Object.keys(res.data ?? {}).join(", ")}`,
+      );
 
       const connections = res.data.connections ?? [];
-      console.log(`[DEBUG] Found ${connections.length} connections for user: ${ctx.session.user.id}`);
+      console.log(
+        `[DEBUG] Found ${connections.length} connections for user: ${ctx.session.user.id}`,
+      );
 
       for (const person of connections) {
         const email = person.emailAddresses?.[0]?.value;
@@ -656,39 +743,61 @@ export const contactRouter = createTRPCRouter({
         }
       }
 
-      console.log(`[DEBUG] Successfully imported ${connections.length} contacts for user: ${ctx.session.user.id}`);
+      console.log(
+        `[DEBUG] Successfully imported ${connections.length} contacts for user: ${ctx.session.user.id}`,
+      );
       return { count: connections.length };
     } catch (error) {
-      console.error(`[DEBUG] Google Contacts import failed for user: ${ctx.session.user.id}:`, error);
-      
+      console.error(
+        `[DEBUG] Google Contacts import failed for user: ${ctx.session.user.id}:`,
+        error,
+      );
+
       // Log detailed error information
-      if (error && typeof error === 'object') {
+      if (error && typeof error === "object") {
         console.error(`[DEBUG] Error details:`, {
           message: (error as Error).message,
           name: (error as Error).name,
-          stack: (error as Error).stack?.split('\n').slice(0, 3), // First 3 lines of stack
+          stack: (error as Error).stack?.split("\n").slice(0, 3), // First 3 lines of stack
           code: (error as unknown as { code?: string }).code,
           status: (error as unknown as { status?: number }).status,
-          response: (error as unknown as { response?: { status?: number; statusText?: string; data?: unknown } }).response ? {
-            status: (error as unknown as { response: { status?: number } }).response.status,
-            statusText: (error as unknown as { response: { statusText?: string } }).response.statusText,
-            data: (error as unknown as { response: { data?: unknown } }).response.data
-          } : undefined
+          response: (
+            error as unknown as {
+              response?: {
+                status?: number;
+                statusText?: string;
+                data?: unknown;
+              };
+            }
+          ).response
+            ? {
+                status: (error as unknown as { response: { status?: number } })
+                  .response.status,
+                statusText: (
+                  error as unknown as { response: { statusText?: string } }
+                ).response.statusText,
+                data: (error as unknown as { response: { data?: unknown } })
+                  .response.data,
+              }
+            : undefined,
         });
       }
-      
+
       // Handle specific OAuth errors
       if (error instanceof Error) {
         const errorMessage = error.message.toLowerCase();
-        
+
         // Check for token expiry/invalidity
-        if (errorMessage.includes("invalid_grant") || 
-            errorMessage.includes("invalid_token") ||
-            errorMessage.includes("token has been expired") ||
-            errorMessage.includes("token_expired")) {
-          
+        if (
+          errorMessage.includes("invalid_grant") ||
+          errorMessage.includes("invalid_token") ||
+          errorMessage.includes("token has been expired") ||
+          errorMessage.includes("token_expired")
+        ) {
           // Automatically clean up invalid tokens to prevent repeated failures
-          console.log(`[DEBUG] Cleaning up invalid Google tokens for user: ${ctx.session.user.id}`);
+          console.log(
+            `[DEBUG] Cleaning up invalid Google tokens for user: ${ctx.session.user.id}`,
+          );
           try {
             const deletedAccount = await ctx.db.account.deleteMany({
               where: {
@@ -696,28 +805,35 @@ export const contactRouter = createTRPCRouter({
                 provider: "google",
               },
             });
-            console.log(`[DEBUG] Auto-cleanup: Deleted ${deletedAccount.count} invalid Google account(s) for user: ${ctx.session.user.id}`);
+            console.log(
+              `[DEBUG] Auto-cleanup: Deleted ${deletedAccount.count} invalid Google account(s) for user: ${ctx.session.user.id}`,
+            );
           } catch (cleanupError) {
-            console.error(`[DEBUG] Failed to auto-cleanup invalid tokens for user: ${ctx.session.user.id}`, cleanupError);
+            console.error(
+              `[DEBUG] Failed to auto-cleanup invalid tokens for user: ${ctx.session.user.id}`,
+              cleanupError,
+            );
           }
-          
+
           throw new Error("GOOGLE_AUTH_EXPIRED");
         }
-        
+
         // Check for permission/scope issues
-        if (errorMessage.includes("insufficient permissions") ||
-            errorMessage.includes("access_denied") ||
-            errorMessage.includes("contacts") ||
-            errorMessage.includes("scope") ||
-            errorMessage.includes("403") ||
-            errorMessage.includes("forbidden") ||
-            errorMessage.includes("permission denied")) {
+        if (
+          errorMessage.includes("insufficient permissions") ||
+          errorMessage.includes("access_denied") ||
+          errorMessage.includes("contacts") ||
+          errorMessage.includes("scope") ||
+          errorMessage.includes("403") ||
+          errorMessage.includes("forbidden") ||
+          errorMessage.includes("permission denied")
+        ) {
           throw new Error("GOOGLE_PERMISSIONS_INSUFFICIENT");
         }
       }
-      
+
       // Check for Google API error object structure
-      if (typeof error === 'object' && error !== null && 'code' in error) {
+      if (typeof error === "object" && error !== null && "code" in error) {
         const apiError = error as { code?: number; status?: number };
         if (apiError.code === 403 || apiError.status === 403) {
           throw new Error("GOOGLE_PERMISSIONS_INSUFFICIENT");
@@ -726,66 +842,68 @@ export const contactRouter = createTRPCRouter({
           throw new Error("GOOGLE_AUTH_EXPIRED");
         }
       }
-      
+
       // Re-throw other errors as-is
       throw error;
     }
   }),
 
-  importGoogleContactsFromEmails: protectedProcedure.mutation(async ({ ctx }) => {
-    const oauth2Client = await getGoogleAuthClient(ctx, 'gmail');
-    const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+  importGoogleContactsFromEmails: protectedProcedure.mutation(
+    async ({ ctx }) => {
+      const oauth2Client = await getGoogleAuthClient(ctx, "gmail");
+      const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
-    const emails = new Set<string>();
-    let nextPageToken: string | undefined | null = undefined;
-    const emailRegex = /[\w._%+-]+@[\w.-]+\.[\w]{2,}/gi;
+      const emails = new Set<string>();
+      let nextPageToken: string | undefined | null = undefined;
+      const emailRegex = /[\w._%+-]+@[\w.-]+\.[\w]{2,}/gi;
 
-    do {
-      const res: { data: gmail_v1.Schema$ListMessagesResponse } =
-        await gmail.users.messages.list({
-          userId: "me",
-          pageToken: nextPageToken ?? undefined,
-          maxResults: 500, // 500 is the max
-        });
-
-      const messages = res.data.messages ?? [];
-
-      for (const message of messages) {
-        if (message.id) {
-          const msg = await gmail.users.messages.get({
-            userId: 'me',
-            id: message.id,
-            format: 'METADATA',
-            metadataHeaders: ['To', 'From', 'Cc', 'Bcc'],
+      do {
+        const res: { data: gmail_v1.Schema$ListMessagesResponse } =
+          await gmail.users.messages.list({
+            userId: "me",
+            pageToken: nextPageToken ?? undefined,
+            maxResults: 500, // 500 is the max
           });
 
-          const headers = msg.data.payload?.headers;
-          if (headers) {
-            const emailHeaders = headers.filter(h =>
-              ['To', 'From', 'Cc', 'Bcc'].includes(h.name ?? '')
-            );
+        const messages = res.data.messages ?? [];
 
-            for (const header of emailHeaders) {
-              if (header.value) {
-                const foundEmails = header.value.match(emailRegex);
-                if (foundEmails) {
-                  foundEmails.forEach(e => emails.add(e.toLowerCase()));
+        for (const message of messages) {
+          if (message.id) {
+            const msg = await gmail.users.messages.get({
+              userId: "me",
+              id: message.id,
+              format: "METADATA",
+              metadataHeaders: ["To", "From", "Cc", "Bcc"],
+            });
+
+            const headers = msg.data.payload?.headers;
+            if (headers) {
+              const emailHeaders = headers.filter((h) =>
+                ["To", "From", "Cc", "Bcc"].includes(h.name ?? ""),
+              );
+
+              for (const header of emailHeaders) {
+                if (header.value) {
+                  const foundEmails = header.value.match(emailRegex);
+                  if (foundEmails) {
+                    foundEmails.forEach((e) => emails.add(e.toLowerCase()));
+                  }
                 }
               }
             }
           }
         }
+
+        nextPageToken = res.data.nextPageToken;
+      } while (nextPageToken);
+
+      for (const email of emails) {
+        await upsertContact(ctx.db, { email });
       }
 
-      nextPageToken = res.data.nextPageToken;
-    } while (nextPageToken);
-
-    for (const email of emails) {
-      await upsertContact(ctx.db, { email });
-    }
-
-    return { count: emails.size };
-  }),
+      return { count: emails.size };
+    },
+  ),
 
   importGmailMessages: protectedProcedure
     .input(
@@ -798,10 +916,10 @@ export const contactRouter = createTRPCRouter({
             before: z.string().optional(), // Format: YYYY/MM/DD
           })
           .optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
-      const oauth2Client = await getGoogleAuthClient(ctx, 'gmail');
+      const oauth2Client = await getGoogleAuthClient(ctx, "gmail");
       const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
       let imported = 0;
@@ -810,7 +928,7 @@ export const contactRouter = createTRPCRouter({
 
       try {
         // Build Gmail query string
-        let query = '';
+        let query = "";
         if (input.dateFilter?.after) {
           query += `after:${input.dateFilter.after} `;
         }
@@ -834,9 +952,9 @@ export const contactRouter = createTRPCRouter({
           try {
             // Fetch full message content
             const fullMessage = await gmail.users.messages.get({
-              userId: 'me',
+              userId: "me",
               id: message.id,
-              format: 'full',
+              format: "full",
             });
 
             const payload = fullMessage.data.payload;
@@ -845,10 +963,10 @@ export const contactRouter = createTRPCRouter({
             const headers = payload.headers;
 
             // Extract metadata from headers
-            const fromHeader = getHeaderValue(headers, 'From');
-            const toHeader = getHeaderValue(headers, 'To');
-            const subjectHeader = getHeaderValue(headers, 'Subject');
-            const dateHeader = getHeaderValue(headers, 'Date');
+            const fromHeader = getHeaderValue(headers, "From");
+            const toHeader = getHeaderValue(headers, "To");
+            const subjectHeader = getHeaderValue(headers, "Subject");
+            const dateHeader = getHeaderValue(headers, "Date");
 
             if (!fromHeader || !toHeader) {
               errors++;
@@ -862,7 +980,8 @@ export const contactRouter = createTRPCRouter({
             // Extract message body
             const body = extractMessageBody(payload);
             // Convert HTML to text if plain text is not available
-            const textContent = body.text ?? (body.html ? convertHtmlToText(body.html) : '');
+            const textContent =
+              body.text ?? (body.html ? convertHtmlToText(body.html) : "");
 
             if (!textContent) {
               errors++;
@@ -886,9 +1005,9 @@ export const contactRouter = createTRPCRouter({
             // Save to Communication table
             await ctx.db.communication.create({
               data: {
-                channel: 'EMAIL',
-                type: 'GENERAL',
-                status: 'SENT',
+                channel: "EMAIL",
+                type: "GENERAL",
+                status: "SENT",
                 fromEmail,
                 toEmail,
                 subject: subjectHeader ?? undefined,
@@ -903,7 +1022,8 @@ export const contactRouter = createTRPCRouter({
             imported++;
           } catch (error) {
             errors++;
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            const errorMessage =
+              error instanceof Error ? error.message : "Unknown error";
             errorMessages.push(`Message ${message.id}: ${errorMessage}`);
             console.error(`Failed to import message ${message.id}:`, error);
           }
@@ -916,8 +1036,10 @@ export const contactRouter = createTRPCRouter({
           errorMessages: errorMessages.slice(0, 10), // Return first 10 errors
         };
       } catch (error) {
-        console.error('Gmail import error:', error);
-        throw new Error(`Failed to import Gmail messages: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        console.error("Gmail import error:", error);
+        throw new Error(
+          `Failed to import Gmail messages: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
       }
     }),
 
@@ -925,7 +1047,9 @@ export const contactRouter = createTRPCRouter({
     const notionToken = process.env.NOTION_TOKEN;
     const databaseId = process.env.NOTION_CONTACTS_DATABASE_ID;
     if (!notionToken || !databaseId) {
-      throw new Error("Notion integration token or database ID not set in environment variables.");
+      throw new Error(
+        "Notion integration token or database ID not set in environment variables.",
+      );
     }
     const notion = new NotionClient({ auth: notionToken });
     // Query the Notion database for contacts
@@ -936,10 +1060,38 @@ export const contactRouter = createTRPCRouter({
     for (const page of response.results) {
       // Extract fields from the Notion page properties
       // Adjust these property names to match your Notion database
-      const properties = (page as { properties?: Record<string, unknown> }).properties;
-      const email = (properties?.Email as { email?: string; rich_text?: Array<{ plain_text?: string }> })?.email ?? (properties?.Email as { rich_text?: Array<{ plain_text?: string }> })?.rich_text?.[0]?.plain_text;
-      const firstName = (properties?.FirstName as { title?: Array<{ plain_text?: string }>; rich_text?: Array<{ plain_text?: string }> })?.title?.[0]?.plain_text ?? (properties?.FirstName as { rich_text?: Array<{ plain_text?: string }> })?.rich_text?.[0]?.plain_text;
-      const lastName = (properties?.LastName as { rich_text?: Array<{ plain_text?: string }>; title?: Array<{ plain_text?: string }> })?.rich_text?.[0]?.plain_text ?? (properties?.LastName as { title?: Array<{ plain_text?: string }> })?.title?.[1]?.plain_text;
+      const properties = (page as { properties?: Record<string, unknown> })
+        .properties;
+      const email =
+        (
+          properties?.Email as {
+            email?: string;
+            rich_text?: Array<{ plain_text?: string }>;
+          }
+        )?.email ??
+        (properties?.Email as { rich_text?: Array<{ plain_text?: string }> })
+          ?.rich_text?.[0]?.plain_text;
+      const firstName =
+        (
+          properties?.FirstName as {
+            title?: Array<{ plain_text?: string }>;
+            rich_text?: Array<{ plain_text?: string }>;
+          }
+        )?.title?.[0]?.plain_text ??
+        (
+          properties?.FirstName as {
+            rich_text?: Array<{ plain_text?: string }>;
+          }
+        )?.rich_text?.[0]?.plain_text;
+      const lastName =
+        (
+          properties?.LastName as {
+            rich_text?: Array<{ plain_text?: string }>;
+            title?: Array<{ plain_text?: string }>;
+          }
+        )?.rich_text?.[0]?.plain_text ??
+        (properties?.LastName as { title?: Array<{ plain_text?: string }> })
+          ?.title?.[1]?.plain_text;
       if (email) {
         await upsertContact(ctx.db, { email, firstName, lastName });
         count++;
@@ -955,7 +1107,9 @@ export const contactRouter = createTRPCRouter({
     });
 
     if (!userAuth?.isActive) {
-      throw new Error("Please set up Telegram authentication first. Go to the Telegram section and click 'Set Up Telegram'.");
+      throw new Error(
+        "Please set up Telegram authentication first. Go to the Telegram section and click 'Set Up Telegram'.",
+      );
     }
 
     // Check if session is expired
@@ -964,47 +1118,62 @@ export const contactRouter = createTRPCRouter({
         where: { userId: ctx.session.user.id },
         data: { isActive: false },
       });
-      throw new Error("Your Telegram authentication has expired. Please set up Telegram authentication again.");
+      throw new Error(
+        "Your Telegram authentication has expired. Please set up Telegram authentication again.",
+      );
     }
 
     try {
       // Import decryption functions
-      const { decryptTelegramCredentials } = await import("~/server/utils/encryption");
-      
+      const { decryptTelegramCredentials } = await import(
+        "~/server/utils/encryption"
+      );
+
       // Decrypt user's credentials - contains everything we need
-      const credentials = decryptTelegramCredentials({
-        encryptedSession: userAuth.encryptedSession,
-        encryptedApiId: userAuth.encryptedApiId,
-        encryptedApiHash: userAuth.encryptedApiHash,
-        salt: userAuth.salt,
-        iv: userAuth.iv,
-      }, ctx.session.user.id);
+      const credentials = decryptTelegramCredentials(
+        {
+          encryptedSession: userAuth.encryptedSession,
+          encryptedApiId: userAuth.encryptedApiId,
+          encryptedApiHash: userAuth.encryptedApiHash,
+          salt: userAuth.salt,
+          iv: userAuth.iv,
+        },
+        ctx.session.user.id,
+      );
 
       const client = new TelegramClient(
         new sessions.StringSession(credentials.sessionString),
         parseInt(credentials.apiId),
         credentials.apiHash,
-        {}
+        {},
       );
 
       // Start client with existing session
       await client.start({
         phoneNumber: async () => {
-          throw new Error("Session expired. Please set up Telegram authentication again.");
+          throw new Error(
+            "Session expired. Please set up Telegram authentication again.",
+          );
         },
         password: async () => {
-          throw new Error("Session expired. Please set up Telegram authentication again.");
+          throw new Error(
+            "Session expired. Please set up Telegram authentication again.",
+          );
         },
         phoneCode: async () => {
-          throw new Error("Session expired. Please set up Telegram authentication again.");
+          throw new Error(
+            "Session expired. Please set up Telegram authentication again.",
+          );
         },
         onError: (err) => console.log(err),
       });
 
       // Get all contacts from Telegram
-      const result = await client.invoke(new Api.contacts.GetContacts({
-        hash: bigInt(0),
-      })) as TelegramContactsResult;
+      const result = (await client.invoke(
+        new Api.contacts.GetContacts({
+          hash: bigInt(0),
+        }),
+      )) as TelegramContactsResult;
 
       let count = 0;
       if (result.users && Array.isArray(result.users)) {
@@ -1018,7 +1187,12 @@ export const contactRouter = createTRPCRouter({
             const telegram = user.username ?? `user_${user.id}`;
 
             // Fallback naming strategy: use Telegram username when names are missing
-            if (!firstName.trim() && !lastName.trim() && telegram && !telegram.startsWith('user_')) {
+            if (
+              !firstName.trim() &&
+              !lastName.trim() &&
+              telegram &&
+              !telegram.startsWith("user_")
+            ) {
               // Use username as first name for better display
               firstName = telegram;
             }
@@ -1037,28 +1211,36 @@ export const contactRouter = createTRPCRouter({
       }
 
       await client.disconnect();
-      
+
       // Log successful import (with hashed user ID for privacy)
       const { hashForAudit } = await import("~/server/utils/encryption");
-      console.log(`Successfully imported ${count} Telegram contacts for user ${hashForAudit(ctx.session.user.id)}`);
-      
+      console.log(
+        `Successfully imported ${count} Telegram contacts for user ${hashForAudit(ctx.session.user.id)}`,
+      );
+
       return { count };
     } catch (error) {
       console.error("Telegram import failed:", error);
-      
+
       // If session is invalid, mark as inactive
-      if (error instanceof Error && 
-          (error.message.includes("SESSION_REVOKED") || 
-           error.message.includes("AUTH_KEY_INVALID") ||
-           error.message.includes("SESSION_EXPIRED"))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes("SESSION_REVOKED") ||
+          error.message.includes("AUTH_KEY_INVALID") ||
+          error.message.includes("SESSION_EXPIRED"))
+      ) {
         await ctx.db.telegramAuth.update({
           where: { userId: ctx.session.user.id },
           data: { isActive: false },
         });
-        throw new Error("Your Telegram session has expired or been revoked. Please set up Telegram authentication again.");
+        throw new Error(
+          "Your Telegram session has expired or been revoked. Please set up Telegram authentication again.",
+        );
       }
-      
-      throw new Error(`Failed to import Telegram contacts: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+      throw new Error(
+        `Failed to import Telegram contacts: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }),
 
@@ -1068,7 +1250,7 @@ export const contactRouter = createTRPCRouter({
         contactId: z.string().min(1, "Contact ID is required"),
         eventId: z.string().optional(), // Optional: communications can be event-agnostic
         maxMessages: z.number().min(1).max(500).default(100),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Get the contact to verify they have a Telegram username
@@ -1101,7 +1283,9 @@ export const contactRouter = createTRPCRouter({
 
       try {
         // Import decryption functions
-        const { decryptTelegramCredentials } = await import("~/server/utils/encryption");
+        const { decryptTelegramCredentials } = await import(
+          "~/server/utils/encryption"
+        );
 
         // Decrypt user's credentials
         const credentials = decryptTelegramCredentials(
@@ -1112,26 +1296,32 @@ export const contactRouter = createTRPCRouter({
             salt: userAuth.salt,
             iv: userAuth.iv,
           },
-          ctx.session.user.id
+          ctx.session.user.id,
         );
 
         const client = new TelegramClient(
           new sessions.StringSession(credentials.sessionString),
           parseInt(credentials.apiId),
           credentials.apiHash,
-          {}
+          {},
         );
 
         // Start client with existing session
         await client.start({
           phoneNumber: async () => {
-            throw new Error("Session expired. Please set up Telegram authentication again.");
+            throw new Error(
+              "Session expired. Please set up Telegram authentication again.",
+            );
           },
           password: async () => {
-            throw new Error("Session expired. Please set up Telegram authentication again.");
+            throw new Error(
+              "Session expired. Please set up Telegram authentication again.",
+            );
           },
           phoneCode: async () => {
-            throw new Error("Session expired. Please set up Telegram authentication again.");
+            throw new Error(
+              "Session expired. Please set up Telegram authentication again.",
+            );
           },
           onError: (err) => console.log(err),
         });
@@ -1144,12 +1334,14 @@ export const contactRouter = createTRPCRouter({
           // Resolve the username to get the user entity
           const result = await client.invoke(
             new Api.contacts.ResolveUsername({
-              username: contact.telegram.replace('@', ''),
-            })
+              username: contact.telegram.replace("@", ""),
+            }),
           );
 
           if (!result.users?.[0]) {
-            throw new Error(`Could not find Telegram user: @${contact.telegram}`);
+            throw new Error(
+              `Could not find Telegram user: @${contact.telegram}`,
+            );
           }
 
           const telegramUser = result.users[0];
@@ -1165,30 +1357,38 @@ export const contactRouter = createTRPCRouter({
               maxId: 0,
               minId: 0,
               hash: bigInt(0),
-            })
+            }),
           );
 
-          if ('messages' in messagesResult && Array.isArray(messagesResult.messages)) {
+          if (
+            "messages" in messagesResult &&
+            Array.isArray(messagesResult.messages)
+          ) {
             for (const msg of messagesResult.messages) {
               try {
                 // Only process text messages
-                if (!('message' in msg) || !msg.message) continue;
+                if (!("message" in msg) || !msg.message) continue;
 
                 const messageText = String(msg.message);
-                const messageDate = 'date' in msg ? new Date(Number(msg.date) * 1000) : new Date();
+                const messageDate =
+                  "date" in msg
+                    ? new Date(Number(msg.date) * 1000)
+                    : new Date();
 
                 // Determine if message is from us or from them
-                const isOutgoing = 'out' in msg ? Boolean(msg.out) : false;
+                const isOutgoing = "out" in msg ? Boolean(msg.out) : false;
 
                 // Save to Communication table
                 // Note: toTelegram is the contact, direction indicated by message prefix
                 await ctx.db.communication.create({
                   data: {
-                    channel: 'TELEGRAM',
-                    type: 'GENERAL',
-                    status: 'SENT',
+                    channel: "TELEGRAM",
+                    type: "GENERAL",
+                    status: "SENT",
                     toTelegram: contact.telegram,
-                    textContent: isOutgoing ? `[SENT] ${messageText}` : `[RECEIVED] ${messageText}`,
+                    textContent: isOutgoing
+                      ? `[SENT] ${messageText}`
+                      : `[RECEIVED] ${messageText}`,
                     sentAt: messageDate,
                     ...(input.eventId && { eventId: input.eventId }),
                     createdBy: ctx.session.user.id,
@@ -1198,7 +1398,8 @@ export const contactRouter = createTRPCRouter({
                 imported++;
               } catch (error) {
                 errors++;
-                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                const errorMessage =
+                  error instanceof Error ? error.message : "Unknown error";
                 errorMessages.push(errorMessage);
                 console.error(`Failed to import message:`, error);
               }
@@ -1214,24 +1415,24 @@ export const contactRouter = createTRPCRouter({
           errorMessages: errorMessages.slice(0, 10),
         };
       } catch (error) {
-        console.error('Telegram message import failed:', error);
+        console.error("Telegram message import failed:", error);
 
         // If session is invalid, mark as inactive
         if (
           error instanceof Error &&
-          (error.message.includes('SESSION_REVOKED') ||
-            error.message.includes('AUTH_KEY_INVALID') ||
-            error.message.includes('SESSION_EXPIRED'))
+          (error.message.includes("SESSION_REVOKED") ||
+            error.message.includes("AUTH_KEY_INVALID") ||
+            error.message.includes("SESSION_EXPIRED"))
         ) {
           await ctx.db.telegramAuth.update({
             where: { userId: ctx.session.user.id },
             data: { isActive: false },
           });
-          throw new Error('Your Telegram session has expired or been revoked');
+          throw new Error("Your Telegram session has expired or been revoked");
         }
 
         throw new Error(
-          `Failed to import Telegram messages: ${error instanceof Error ? error.message : 'Unknown error'}`
+          `Failed to import Telegram messages: ${error instanceof Error ? error.message : "Unknown error"}`,
         );
       }
     }),
@@ -1255,12 +1456,18 @@ export const contactRouter = createTRPCRouter({
     for (const application of applications) {
       try {
         // Extract contact data from application
-        const contactData = await extractContactFromApplication(ctx.db, application);
-        
+        const contactData = await extractContactFromApplication(
+          ctx.db,
+          application,
+        );
+
         if (contactData) {
           // Try to match and upsert the contact
-          const result = await upsertContactFromApplication(ctx.db, contactData);
-          
+          const result = await upsertContactFromApplication(
+            ctx.db,
+            contactData,
+          );
+
           if (result.created) {
             contactsCreated++;
           } else if (result.updated) {
@@ -1273,7 +1480,9 @@ export const contactRouter = createTRPCRouter({
       }
     }
 
-    console.log(`Match event applicants completed: ${contactsCreated} created, ${contactsUpdated} updated, ${errors} errors from ${applications.length} applications`);
+    console.log(
+      `Match event applicants completed: ${contactsCreated} created, ${contactsUpdated} updated, ${errors} errors from ${applications.length} applications`,
+    );
 
     return {
       applicationsProcessed: applications.length,
@@ -1284,19 +1493,24 @@ export const contactRouter = createTRPCRouter({
   }),
 
   createContact: protectedProcedure
-    .input(z.object({
-      firstName: z.string().min(1, "First name is required"),
-      lastName: z.string().min(1, "Last name is required"), 
-      email: z.string().email("Please enter a valid email address").optional(),
-      phone: z.string().optional(),
-      telegram: z.string().optional(),
-      twitter: z.string().optional(),
-      github: z.string().optional(),
-      linkedIn: z.string().optional(),
-      sponsorId: z.string().optional(),
-      about: z.string().optional(),
-      skills: z.array(z.string()).optional(),
-    }))
+    .input(
+      z.object({
+        firstName: z.string().min(1, "First name is required"),
+        lastName: z.string().min(1, "Last name is required"),
+        email: z
+          .string()
+          .email("Please enter a valid email address")
+          .optional(),
+        phone: z.string().optional(),
+        telegram: z.string().optional(),
+        twitter: z.string().optional(),
+        github: z.string().optional(),
+        linkedIn: z.string().optional(),
+        sponsorId: z.string().optional(),
+        about: z.string().optional(),
+        skills: z.array(z.string()).optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // Check if email already exists (only if email is provided)
       if (input.email) {
@@ -1312,12 +1526,12 @@ export const contactRouter = createTRPCRouter({
       // Clean up social media handles and URLs
       const cleanedInput = {
         ...input,
-        telegram: input.telegram?.replace(/^@/, ''), // Remove @ if present
-        twitter: input.twitter?.replace(/^@/, ''), // Remove @ if present
-        github: input.github?.replace(/^@/, ''), // Remove @ if present
-        linkedIn: input.linkedIn?.startsWith('http') 
-          ? input.linkedIn 
-          : input.linkedIn?.replace(/^@/, ''), // Keep full URLs, remove @ if present
+        telegram: input.telegram?.replace(/^@/, ""), // Remove @ if present
+        twitter: input.twitter?.replace(/^@/, ""), // Remove @ if present
+        github: input.github?.replace(/^@/, ""), // Remove @ if present
+        linkedIn: input.linkedIn?.startsWith("http")
+          ? input.linkedIn
+          : input.linkedIn?.replace(/^@/, ""), // Keep full URLs, remove @ if present
         skills: input.skills ?? [], // Default to empty array
       };
 
@@ -1333,20 +1547,25 @@ export const contactRouter = createTRPCRouter({
     }),
 
   updateContact: protectedProcedure
-    .input(z.object({
-      id: z.string().min(1, "Contact ID is required"),
-      firstName: z.string().min(1, "First name is required"),
-      lastName: z.string().min(1, "Last name is required"),
-      email: z.string().email("Please enter a valid email address").optional(),
-      phone: z.string().optional(),
-      telegram: z.string().optional(),
-      twitter: z.string().optional(),
-      github: z.string().optional(),
-      linkedIn: z.string().optional(),
-      sponsorId: z.string().optional(),
-      about: z.string().optional(),
-      skills: z.array(z.string()).optional(),
-    }))
+    .input(
+      z.object({
+        id: z.string().min(1, "Contact ID is required"),
+        firstName: z.string().min(1, "First name is required"),
+        lastName: z.string().min(1, "Last name is required"),
+        email: z
+          .string()
+          .email("Please enter a valid email address")
+          .optional(),
+        phone: z.string().optional(),
+        telegram: z.string().optional(),
+        twitter: z.string().optional(),
+        github: z.string().optional(),
+        linkedIn: z.string().optional(),
+        sponsorId: z.string().optional(),
+        about: z.string().optional(),
+        skills: z.array(z.string()).optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // Check if contact exists
       const existingContact = await ctx.db.contact.findUnique({
@@ -1377,12 +1596,14 @@ export const contactRouter = createTRPCRouter({
         lastName: input.lastName,
         email: input.email ?? null,
         phone: input.phone ?? null,
-        telegram: input.telegram ? input.telegram.replace(/^@/, '') : null,
-        twitter: input.twitter ? input.twitter.replace(/^@/, '') : null,
-        github: input.github ? input.github.replace(/^@/, '') : null,
-        linkedIn: input.linkedIn?.startsWith('http')
+        telegram: input.telegram ? input.telegram.replace(/^@/, "") : null,
+        twitter: input.twitter ? input.twitter.replace(/^@/, "") : null,
+        github: input.github ? input.github.replace(/^@/, "") : null,
+        linkedIn: input.linkedIn?.startsWith("http")
           ? input.linkedIn
-          : input.linkedIn ? input.linkedIn.replace(/^@/, '') : null,
+          : input.linkedIn
+            ? input.linkedIn.replace(/^@/, "")
+            : null,
         sponsorId: input.sponsorId ?? null,
         about: input.about ?? null,
         skills: input.skills ?? [],
@@ -1402,8 +1623,10 @@ export const contactRouter = createTRPCRouter({
 
   // Disconnect Google account to force fresh authentication
   disconnectGoogleAccount: protectedProcedure.mutation(async ({ ctx }) => {
-    console.log(`[DEBUG] Disconnecting Google account for user: ${ctx.session.user.id}`);
-    
+    console.log(
+      `[DEBUG] Disconnecting Google account for user: ${ctx.session.user.id}`,
+    );
+
     try {
       // Find and delete the user's Google account connection
       const deletedAccount = await ctx.db.account.deleteMany({
@@ -1412,16 +1635,23 @@ export const contactRouter = createTRPCRouter({
           provider: "google",
         },
       });
-      
-      console.log(`[DEBUG] Deleted ${deletedAccount.count} Google account(s) for user: ${ctx.session.user.id}`);
-      
-      return { 
-        success: true, 
-        message: `Disconnected ${deletedAccount.count} Google account(s)` 
+
+      console.log(
+        `[DEBUG] Deleted ${deletedAccount.count} Google account(s) for user: ${ctx.session.user.id}`,
+      );
+
+      return {
+        success: true,
+        message: `Disconnected ${deletedAccount.count} Google account(s)`,
       };
     } catch (error) {
-      console.error(`[DEBUG] Failed to disconnect Google account for user: ${ctx.session.user.id}`, error);
-      throw new Error(`Failed to disconnect Google account: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(
+        `[DEBUG] Failed to disconnect Google account for user: ${ctx.session.user.id}`,
+        error,
+      );
+      throw new Error(
+        `Failed to disconnect Google account: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }),
 
@@ -1431,7 +1661,7 @@ export const contactRouter = createTRPCRouter({
         contactId: z.string().min(1, "Contact ID is required"),
         eventId: z.string().optional(), // Optional: communications can be event-agnostic
         maxMessages: z.number().min(1).max(10000).default(100),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Fetch the contact to get their email
@@ -1445,11 +1675,13 @@ export const contactRouter = createTRPCRouter({
       }
 
       if (contact.email.endsWith("telegram.placeholder")) {
-        throw new Error("Cannot import Gmail messages for a Telegram placeholder email");
+        throw new Error(
+          "Cannot import Gmail messages for a Telegram placeholder email",
+        );
       }
 
       // Get Google OAuth client with Gmail scope
-      const oauth2Client = await getGoogleAuthClient(ctx, 'gmail');
+      const oauth2Client = await getGoogleAuthClient(ctx, "gmail");
       const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
       // Build query to search for emails from or to this contact
@@ -1474,16 +1706,16 @@ export const contactRouter = createTRPCRouter({
           try {
             // Fetch full message content
             const fullMessage = await gmail.users.messages.get({
-              userId: 'me',
+              userId: "me",
               id: message.id,
-              format: 'full',
+              format: "full",
             });
 
             const headers = fullMessage.data.payload?.headers;
-            const fromHeader = getHeaderValue(headers, 'From');
-            const toHeader = getHeaderValue(headers, 'To');
-            const subject = getHeaderValue(headers, 'Subject');
-            const dateHeader = getHeaderValue(headers, 'Date');
+            const fromHeader = getHeaderValue(headers, "From");
+            const toHeader = getHeaderValue(headers, "To");
+            const subject = getHeaderValue(headers, "Subject");
+            const dateHeader = getHeaderValue(headers, "Date");
 
             if (!fromHeader || !toHeader) {
               errors++;
@@ -1510,14 +1742,15 @@ export const contactRouter = createTRPCRouter({
             // Save to Communication table
             await ctx.db.communication.create({
               data: {
-                channel: 'EMAIL',
-                type: 'GENERAL',
-                status: 'SENT',
+                channel: "EMAIL",
+                type: "GENERAL",
+                status: "SENT",
                 fromEmail,
                 toEmail,
                 subject: subject ?? undefined,
                 // Convert HTML to text if plain text is not available
-                textContent: body.text ?? (body.html ? convertHtmlToText(body.html) : ''),
+                textContent:
+                  body.text ?? (body.html ? convertHtmlToText(body.html) : ""),
                 htmlContent: body.html ?? undefined,
                 sentAt,
                 ...(input.eventId && { eventId: input.eventId }),
@@ -1529,7 +1762,7 @@ export const contactRouter = createTRPCRouter({
           } catch (error) {
             errors++;
             errorMessages.push(
-              `Message ${message.id}: ${error instanceof Error ? error.message : 'Unknown error'}`
+              `Message ${message.id}: ${error instanceof Error ? error.message : "Unknown error"}`,
             );
           }
         }
@@ -1542,7 +1775,7 @@ export const contactRouter = createTRPCRouter({
         };
       } catch (error) {
         throw new Error(
-          `Failed to import Gmail messages: ${error instanceof Error ? error.message : 'Unknown error'}`
+          `Failed to import Gmail messages: ${error instanceof Error ? error.message : "Unknown error"}`,
         );
       }
     }),
@@ -1550,8 +1783,10 @@ export const contactRouter = createTRPCRouter({
   mergeContacts: protectedProcedure
     .input(
       z.object({
-        contactIds: z.array(z.string()).min(2, "Must select at least 2 contacts to merge"),
-      })
+        contactIds: z
+          .array(z.string())
+          .min(2, "Must select at least 2 contacts to merge"),
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Fetch all contacts to be merged
@@ -1566,8 +1801,12 @@ export const contactRouter = createTRPCRouter({
       }
 
       // Determine which contact is from Telegram (email ends in "telegram.placeholder")
-      const telegramContact = contacts.find(c => c.email?.endsWith("telegram.placeholder"));
-      const nonTelegramContact = contacts.find(c => !c.email?.endsWith("telegram.placeholder"));
+      const telegramContact = contacts.find((c) =>
+        c.email?.endsWith("telegram.placeholder"),
+      );
+      const nonTelegramContact = contacts.find(
+        (c) => !c.email?.endsWith("telegram.placeholder"),
+      );
 
       // Determine the primary contact to keep
       // If there's a non-telegram contact, prefer it (so we can use its email)
@@ -1595,7 +1834,10 @@ export const contactRouter = createTRPCRouter({
       } = {};
 
       // Email: Use non-telegram email if available, otherwise use telegram email
-      if (nonTelegramContact?.email && !nonTelegramContact.email.endsWith("telegram.placeholder")) {
+      if (
+        nonTelegramContact?.email &&
+        !nonTelegramContact.email.endsWith("telegram.placeholder")
+      ) {
         mergedData.email = nonTelegramContact.email;
       } else if (telegramContact?.email) {
         mergedData.email = telegramContact.email;
@@ -1609,34 +1851,39 @@ export const contactRouter = createTRPCRouter({
         mergedData.telegram = telegramContact.telegram;
       } else {
         // Merge phone numbers from all contacts
-        const phones = contacts.map(c => c.phone).filter(Boolean);
-        mergedData.phone = phones.length > 0 ? phones.join(' - ') : null;
+        const phones = contacts.map((c) => c.phone).filter(Boolean);
+        mergedData.phone = phones.length > 0 ? phones.join(" - ") : null;
 
         // Merge telegram usernames from all contacts
-        const telegrams = contacts.map(c => c.telegram).filter(Boolean);
-        mergedData.telegram = telegrams.length > 0 ? telegrams.join(' - ') : null;
+        const telegrams = contacts.map((c) => c.telegram).filter(Boolean);
+        mergedData.telegram =
+          telegrams.length > 0 ? telegrams.join(" - ") : null;
       }
 
       // First/Last names: Concatenate if different
-      const firstNames = [...new Set(contacts.map(c => c.firstName))];
-      const lastNames = [...new Set(contacts.map(c => c.lastName))];
-      mergedData.firstName = firstNames.join(' - ');
-      mergedData.lastName = lastNames.join(' - ');
+      const firstNames = [...new Set(contacts.map((c) => c.firstName))];
+      const lastNames = [...new Set(contacts.map((c) => c.lastName))];
+      mergedData.firstName = firstNames.join(" - ");
+      mergedData.lastName = lastNames.join(" - ");
 
       // Other text fields: Concatenate unique values
-      const mergeTextField = (field: 'twitter' | 'github' | 'linkedIn' | 'about') => {
-        const values = contacts.map(c => c[field]).filter(Boolean) as string[];
+      const mergeTextField = (
+        field: "twitter" | "github" | "linkedIn" | "about",
+      ) => {
+        const values = contacts
+          .map((c) => c[field])
+          .filter(Boolean) as string[];
         const uniqueValues = [...new Set(values)];
-        return uniqueValues.length > 0 ? uniqueValues.join(' - ') : null;
+        return uniqueValues.length > 0 ? uniqueValues.join(" - ") : null;
       };
 
-      mergedData.twitter = mergeTextField('twitter');
-      mergedData.github = mergeTextField('github');
-      mergedData.linkedIn = mergeTextField('linkedIn');
-      mergedData.about = mergeTextField('about');
+      mergedData.twitter = mergeTextField("twitter");
+      mergedData.github = mergeTextField("github");
+      mergedData.linkedIn = mergeTextField("linkedIn");
+      mergedData.about = mergeTextField("about");
 
       // Skills: Merge all unique skills
-      const allSkills = contacts.flatMap(c => c.skills ?? []);
+      const allSkills = contacts.flatMap((c) => c.skills ?? []);
       mergedData.skills = [...new Set(allSkills)];
 
       // Update the primary contact with merged data
@@ -1646,17 +1893,19 @@ export const contactRouter = createTRPCRouter({
       });
 
       // Delete all other contacts
-      const contactsToDelete = contacts.filter(c => c.id !== primaryContact.id);
+      const contactsToDelete = contacts.filter(
+        (c) => c.id !== primaryContact.id,
+      );
       await ctx.db.contact.deleteMany({
         where: {
-          id: { in: contactsToDelete.map(c => c.id) },
+          id: { in: contactsToDelete.map((c) => c.id) },
         },
       });
 
       return {
         success: true,
         mergedContactId: primaryContact.id,
-        deletedContactIds: contactsToDelete.map(c => c.id),
+        deletedContactIds: contactsToDelete.map((c) => c.id),
         mergedCount: contacts.length,
       };
     }),

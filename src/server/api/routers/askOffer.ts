@@ -52,15 +52,21 @@ async function sendTelegramNotification(message: string) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(requestBody),
-      }
+      },
     );
 
     if (!response.ok) {
-      const errorData = await response.json() as { description?: string };
-      console.error("Failed to send Telegram notification:", errorData.description ?? "Unknown error");
+      const errorData = (await response.json()) as { description?: string };
+      console.error(
+        "Failed to send Telegram notification:",
+        errorData.description ?? "Unknown error",
+      );
     }
   } catch (error) {
-    console.error("Error sending Telegram notification:", error instanceof Error ? error.message : "Unknown error");
+    console.error(
+      "Error sending Telegram notification:",
+      error instanceof Error ? error.message : "Unknown error",
+    );
   }
 }
 
@@ -124,15 +130,21 @@ export const askOfferRouter = createTRPCRouter({
 
   // Get all asks and offers for an event
   getEventAsksOffers: publicProcedure
-    .input(z.object({
-      eventId: z.string(),
-      type: z.enum(["ASK", "OFFER", "ALL"]).default("ALL"),
-      onlyActive: z.boolean().default(true),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(),
+        type: z.enum(["ASK", "OFFER", "ALL"]).default("ALL"),
+        onlyActive: z.boolean().default(true),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const { eventId, type, onlyActive } = input;
 
-      const where: { eventId: string; type?: "ASK" | "OFFER"; isActive?: boolean } = {
+      const where: {
+        eventId: string;
+        type?: "ASK" | "OFFER";
+        isActive?: boolean;
+      } = {
         eventId,
       };
 
@@ -178,15 +190,22 @@ export const askOfferRouter = createTRPCRouter({
 
   // Get user's asks and offers for an event
   getUserAsksOffers: protectedProcedure
-    .input(z.object({
-      eventId: z.string(),
-      type: z.enum(["ASK", "OFFER", "ALL"]).optional(),
-      onlyActive: z.boolean().optional(),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(),
+        type: z.enum(["ASK", "OFFER", "ALL"]).optional(),
+        onlyActive: z.boolean().optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const { eventId, type, onlyActive } = input;
 
-      const where: { eventId: string; userId: string; type?: "ASK" | "OFFER"; isActive?: boolean } = {
+      const where: {
+        eventId: string;
+        userId: string;
+        type?: "ASK" | "OFFER";
+        isActive?: boolean;
+      } = {
         eventId,
         userId: ctx.session.user.id,
       };
@@ -250,7 +269,8 @@ export const askOfferRouter = createTRPCRouter({
         if (!application) {
           throw new TRPCError({
             code: "FORBIDDEN",
-            message: "You must be an accepted participant to create asks/offers for this event",
+            message:
+              "You must be an accepted participant to create asks/offers for this event",
           });
         }
       }
@@ -522,10 +542,12 @@ ${tags.length > 0 ? `🏷️ Tags: ${tags.join(", ")}` : ""}
 
   // Protected: Get all asks/offers across all events (for /latest page)
   getAllAsksOffers: protectedProcedure
-    .input(z.object({
-      type: z.enum(["ASK", "OFFER", "ALL"]).default("ALL"),
-      onlyActive: z.boolean().default(true),
-    }))
+    .input(
+      z.object({
+        type: z.enum(["ASK", "OFFER", "ALL"]).default("ALL"),
+        onlyActive: z.boolean().default(true),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const { type, onlyActive } = input;
 
@@ -585,7 +607,7 @@ ${tags.length > 0 ? `🏷️ Tags: ${tags.join(", ")}` : ""}
     .input(
       z.object({
         askOfferId: z.string(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const comments = await ctx.db.askOfferComment.findMany({
@@ -654,7 +676,7 @@ ${tags.length > 0 ? `🏷️ Tags: ${tags.join(", ")}` : ""}
           .min(1, "Comment cannot be empty")
           .max(5000, "Comment is too long"),
         parentId: z.string().optional(), // For nested replies
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Verify ask/offer exists and get author info
@@ -809,12 +831,12 @@ ${tags.length > 0 ? `🏷️ Tags: ${tags.join(", ")}` : ""}
           }
 
           console.log(
-            `Ask/Offer comment notifications sent for comment ${comment.id}`
+            `Ask/Offer comment notifications sent for comment ${comment.id}`,
           );
         } catch (error) {
           console.error(
             "Failed to send ask/offer comment notifications:",
-            error
+            error,
           );
         }
       })();
@@ -828,7 +850,7 @@ ${tags.length > 0 ? `🏷️ Tags: ${tags.join(", ")}` : ""}
       z.object({
         commentId: z.string(),
         content: z.string().min(1).max(5000),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const comment = await ctx.db.askOfferComment.findUnique({

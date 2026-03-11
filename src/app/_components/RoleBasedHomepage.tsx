@@ -16,14 +16,12 @@ export default function RoleBasedHomepage() {
   const { data: session, status } = useSession();
 
   // Always call hooks - use enabled flag to control when they run
-  const { data: userRoles, isLoading: rolesLoading } = api.role.getUserRoles.useQuery(
-    undefined,
-    { enabled: !!session?.user }
-  );
-  const { data: userApplications, isLoading: applicationsLoading } = api.application.getUserApplications.useQuery(
-    undefined,
-    { enabled: !!session?.user }
-  );
+  const { data: userRoles, isLoading: rolesLoading } =
+    api.role.getUserRoles.useQuery(undefined, { enabled: !!session?.user });
+  const { data: userApplications, isLoading: applicationsLoading } =
+    api.application.getUserApplications.useQuery(undefined, {
+      enabled: !!session?.user,
+    });
 
   // Show loading while session is being determined
   if (status === "loading") {
@@ -56,8 +54,8 @@ export default function RoleBasedHomepage() {
   console.log("🔍 Dashboard routing debug:", {
     userRole,
     eventRoleCount: eventRoles.length,
-    roleNames: eventRoles.map(role => role.role.name),
-    applicationsCount: userApplications?.length ?? 0
+    roleNames: eventRoles.map((role) => role.role.name),
+    applicationsCount: userApplications?.length ?? 0,
   });
 
   // Admin/Staff get admin dashboard
@@ -67,14 +65,14 @@ export default function RoleBasedHomepage() {
   }
 
   // Check for event-specific roles (prioritized by importance)
-  const roleNames = eventRoles.map(role => role.role.name);
-  
+  const roleNames = eventRoles.map((role) => role.role.name);
+
   // Organizers get organizer dashboard
   if (roleNames.includes("organizer")) {
     console.log("✅ Routing to: OrganizerDashboard");
     return <OrganizerDashboard />;
   }
-  
+
   // Sponsors get sponsor dashboard
   if (roleNames.includes("sponsor")) {
     console.log("✅ Routing to: SponsorDashboard");

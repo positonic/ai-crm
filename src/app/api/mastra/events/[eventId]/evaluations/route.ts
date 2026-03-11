@@ -2,15 +2,18 @@ import type { NextRequest } from "next/server";
 import { db } from "~/server/db";
 import { withMastraAuth } from "~/utils/validateApiKey";
 
-async function GET(request: NextRequest, context: { params: Promise<{ eventId: string }> }) {
+async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ eventId: string }> },
+) {
   const { eventId } = await context.params;
-  
+
   try {
     const data = await db.applicationEvaluation.findMany({
       where: {
         application: {
-          eventId: eventId
-        }
+          eventId: eventId,
+        },
       },
       include: {
         application: {
@@ -19,14 +22,14 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
             userId: true,
             status: true,
             submittedAt: true,
-          }
+          },
         },
         reviewer: {
           select: {
             id: true,
             name: true,
             email: true,
-          }
+          },
         },
         scores: {
           include: {
@@ -36,31 +39,31 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
                 name: true,
                 category: true,
                 weight: true,
-              }
-            }
-          }
+              },
+            },
+          },
         },
-        comments: true
+        comments: true,
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: "desc",
+      },
     });
-    
+
     return Response.json({
       success: true,
-      data
+      data,
     });
   } catch (error) {
     console.error("[MASTRA API] Error fetching evaluations:", error);
-    
+
     return Response.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "Failed to fetch evaluations",
-        details: error instanceof Error ? error.message : "Unknown error"
-      }, 
-      { status: 500 }
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
     );
   }
 }

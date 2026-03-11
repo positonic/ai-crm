@@ -60,15 +60,15 @@ export default function EventsPage() {
       <h2 id="what-you-get" className="docs-heading-h2">
         What You Get as a Participant
       </h2>
-      <p className="docs-text">
-        Once you are part of an event, you can:
-      </p>
+      <p className="docs-text">Once you are part of an event, you can:</p>
       <ul className="docs-list">
         <li>View the full schedule of sessions and workshops</li>
         <li>Create and manage projects</li>
         <li>See other participants and speakers</li>
         <li>Post updates and share your progress</li>
-        <li>Access any participant-only features the organisers have enabled</li>
+        <li>
+          Access any participant-only features the organisers have enabled
+        </li>
       </ul>
 
       <hr className="docs-divider" />

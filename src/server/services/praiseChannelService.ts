@@ -54,9 +54,7 @@ export async function crossPostPraiseToChannel(
 
   // Check if channel posting is configured
   if (!channelId) {
-    console.log(
-      "TELEGRAM_CHANNEL_ID not configured, skipping channel post",
-    );
+    console.log("TELEGRAM_CHANNEL_ID not configured, skipping channel post");
     return { success: false, error: "Channel not configured" };
   }
 
