@@ -149,33 +149,6 @@ export const deliberationRouter = createTRPCRouter({
       });
     }),
 
-  getTranscripts: protectedProcedure
-    .input(z.object({ deliberationId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const deliberation = await ctx.db.deliberation.findUnique({
-        where: { id: input.deliberationId },
-        select: { eventId: true },
-      });
-      if (!deliberation) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Deliberation not found" });
-      }
-
-      await assertDeliberationAdmin(
-        ctx.db,
-        ctx.session.user.id,
-        ctx.session.user.role,
-        deliberation.eventId,
-      );
-
-      return ctx.db.floorTranscript.findMany({
-        where: { deliberationId: input.deliberationId },
-        include: {
-          uploadedBy: { select: { id: true, name: true } },
-        },
-        orderBy: { createdAt: "desc" },
-      });
-    }),
-
   getAnalysisResults: publicProcedure
     .input(z.object({ deliberationId: z.string() }))
     .query(async ({ ctx, input }) => {

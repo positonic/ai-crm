@@ -1,7 +1,7 @@
-> **Note**: Architecture has changed to multi-repo. See GitHub issue #26 for current issue breakdown.
+> **Note**: See GitHub issue #26 for current issue breakdown.
 > Local specs retained for offline reference but GitHub issues are the source of truth.
-> Key change: AI services (transcription, clustering, analysis) move to `conference-intel-worker` repo.
-> DDS publication moves to `dds-publisher` repo. Browser-side Whisper to `whisper-browser` repo.
+> Architecture: **Single repo** (`impactful-events`) for all features (clustering, analysis, DDS publication, UI).
+> **Transcriptions are ingested as text only** via external pipeline and inserted through the REST API (`/api/transcription`). No audio upload or Whisper processing in this repo.
 
 # Conference Intelligence System -- Technical Specification
 
@@ -21,9 +21,7 @@ This document provides the complete technical specification for implementing the
 ```mermaid
 graph TD
     subgraph Collection["COLLECTION PHASE"]
-        A1[Floor Lead uploads audio] --> B1[Vercel Blob Storage]
-        B1 --> C1[Whisper API<br/>Transcription Service]
-        C1 --> D1[FloorTranscript<br/>PostgreSQL]
+        A1[External transcription<br/>pipeline] -->|POST /api/transcription| D1[Transcription<br/>PostgreSQL]
         D1 --> E1[GPT-4o<br/>Topic Clustering]
         E1 --> F1[TopicCluster<br/>PostgreSQL]
 
@@ -95,15 +93,14 @@ graph TD
 │  │    ├── isDeliberationAdmin()                               │  │
 │  │    └── assertDeliberationAccess()                          │  │
 │  │                                                            │  │
-│  │  /api/upload/floor-audio/route.ts (Next.js API route)      │  │
-│  │    └── POST → Vercel Blob upload                           │  │
+│  │  /api/transcription/route.ts (Next.js API route)            │  │
+│  │    └── POST → Ingest transcription text via API key auth   │  │
 │  └────────────────────────┬───────────────────────────────────┘  │
 │                           │                                      │
 │  ┌────────────────────────▼───────────────────────────────────┐  │
 │  │  SERVICE LAYER                                             │  │
 │  │                                                            │  │
-│  │  transcription.ts                                          │  │
-│  │    └── transcribeAudio() → OpenAI Whisper API              │  │
+│  │  (transcriptions ingested via REST API — no service needed) │  │
 │  │                                                            │  │
 │  │  topicClustering.ts                                        │  │
 │  │    └── extractTopics() → GPT-4o structured output          │  │
@@ -123,10 +120,10 @@ graph TD
 │  │                                                            │  │
 │  │  PostgreSQL (Prisma ORM)          External Services        │  │
 │  │  ├── Deliberation                 ├── OpenAI API           │  │
-│  │  ├── FloorTranscript              │   ├── Whisper          │  │
-│  │  ├── TopicCluster                 │   └── GPT-4o           │  │
-│  │  ├── DeliberationPriority         ├── Vercel Blob          │  │
-│  │  ├── DeliberationVote             └── AT Protocol PDS      │  │
+│  │  ├── Transcription                │   └── GPT-4o           │  │
+│  │  ├── TopicCluster                 ├── AT Protocol PDS      │  │
+│  │  ├── DeliberationPriority         └── (transcriptions      │  │
+│  │  ├── DeliberationVote                  ingested externally) │  │
 │  │  ├── DeliberationBlocker                                   │  │
 │  │  └── DeliberationResourceSuggestion                        │  │
 │  └────────────────────────────────────────────────────────────┘  │
@@ -138,13 +135,13 @@ graph TD
 ```mermaid
 erDiagram
     Event ||--o{ Deliberation : has
-    Deliberation ||--o{ FloorTranscript : contains
+    Deliberation ||--o{ Transcription : contains
     Deliberation ||--o{ TopicCluster : generates
     Deliberation ||--o{ DeliberationPriority : collects
     DeliberationPriority ||--o{ DeliberationVote : receives
     DeliberationPriority ||--o{ DeliberationBlocker : has
     DeliberationPriority ||--o{ DeliberationResourceSuggestion : has
-    User ||--o{ FloorTranscript : uploads
+    User ||--o{ Transcription : uploads
     User ||--o{ DeliberationPriority : submits
     User ||--o{ DeliberationVote : casts
     User ||--o{ DeliberationBlocker : reports
@@ -164,11 +161,12 @@ erDiagram
         string pcaUri
         string activityUri
     }
-    FloorTranscript {
+    Transcription {
         string id PK
         string deliberationId FK
-        string audioUrl
         string transcript
+        string summary
+        enum source
         enum status
     }
     TopicCluster {
@@ -275,7 +273,7 @@ sequenceDiagram
   - Validate and normalize output
   - Return typed array
 - Leaderboard UI: rank cards with progress bars, severity badges, auto-refresh (5min interval)
-- Whisper transcription via Tinfoil service
+- Whisper transcription via Tinfoil service (reference only — we ingest text externally)
 - Backend: route -> service -> record creation pattern
 - VAD (Voice Activity Detection) settings for chunked recording
 
@@ -284,7 +282,7 @@ sequenceDiagram
 - Lexicon Proxy external service
 - Neo-brutalist styling (we use Mantine)
 - Confessional conversation flow
-- Voice Activity Detection (not needed for file uploads)
+- Voice Activity Detection (not applicable)
 
 **Key dependencies**: `@anthropic-ai/sdk@^0.32.1`, `hono@^4.10.5`, `openai@^4.75.0`, `tinfoil@^0.10.9`, `zod@^3.23.8`
 
@@ -304,7 +302,7 @@ sequenceDiagram
 
 - `@atproto/api`: hypgen uses `^0.15.25`, our codebase has `^0.17.4`. The core APIs (`AtpAgent.login()`, `com.atproto.repo.createRecord()`) are stable. Our existing `activityCerts.ts` already uses the same patterns successfully with `^0.17.4`.
 - `@atproto/sync`: Not needed for POC (no firehose subscription).
-- `@atproto/lex-cli`: Not needed for POC (no code generation; use `Record<string, unknown>` for records, matching `activityCerts.ts` pattern at line 215).
+- `@atproto/lex-cli`: Not needed for POC (no code generation; use `Record<string, unknown>` for records, matching `activityCerts.ts` pattern).
 
 ---
 
@@ -333,6 +331,14 @@ enum TranscriptStatus {
   PROCESSING
   COMPLETED
   FAILED
+}
+
+enum TranscriptionSource {
+  MANUAL
+  WHISPER_API
+  BROWSER
+  WEBHOOK
+  API
 }
 ```
 
@@ -372,25 +378,29 @@ model Deliberation {
   @@index([status])
 }
 
-model FloorTranscript {
-  id              String           @id @default(cuid())
-  deliberationId  String
-  sessionId       String?          // Optional link to ScheduleSession
-  venueId         String?          // Optional link to ScheduleVenue
-  title           String           // e.g. "Floor 3 - Morning Session"
-  audioUrl        String           // Vercel Blob URL
-  audioFileName   String
-  audioSize       Int              // bytes
-  transcript      String?          @db.Text
-  status          TranscriptStatus @default(PENDING)
-  errorMessage    String?
-  uploadedById    String
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+model Transcription {
+  id                String              @id @default(cuid())
+  eventId           String
+  deliberationId    String?
+  sessionId         String?             // Optional link to ScheduleSession
+  venueId           String?             // Optional link to ScheduleVenue
+  title             String              // e.g. "Floor 3 - Morning Session"
+  transcript        String?             @db.Text
+  summary           String?             @db.Text
+  notes             String?             @db.Text
+  source            TranscriptionSource @default(API)
+  sourceSessionId   String?             @unique // External dedup key
+  status            TranscriptStatus    @default(COMPLETED)
+  errorMessage      String?
+  uploadedById      String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 
-  deliberation    Deliberation     @relation(fields: [deliberationId], references: [id], onDelete: Cascade)
-  uploadedBy      User             @relation("TranscriptUploads", fields: [uploadedById], references: [id])
+  event             Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  deliberation      Deliberation?       @relation(fields: [deliberationId], references: [id], onDelete: Cascade)
+  uploadedBy        User?               @relation("TranscriptUploads", fields: [uploadedById], references: [id])
 
+  @@index([eventId])
   @@index([deliberationId])
   @@index([status])
 }
@@ -480,7 +490,7 @@ model DeliberationResourceSuggestion {
 
 ```prisma
 // Add to existing User model:
-transcriptUploads        FloorTranscript[]              @relation("TranscriptUploads")
+transcriptUploads        Transcription[]                @relation("TranscriptUploads")
 deliberationPriorities   DeliberationPriority[]         @relation("UserPriorities")
 deliberationVotes        DeliberationVote[]             @relation("UserDeliberationVotes")
 deliberationBlockers     DeliberationBlocker[]          @relation("UserDeliberationBlockers")
@@ -531,7 +541,7 @@ Auth:   Accepted attendee
 #### `getTranscripts`
 ```typescript
 Input:  z.object({ deliberationId: z.string() })
-Output: Array<{ id, title, status, audioFileName, audioSize, errorMessage, uploadedBy: { name }, createdAt }>
+Output: Array<{ id, title, status, transcript, summary, source, errorMessage, uploadedBy: { name }, createdAt }>
 Auth:   Admin/staff or floor lead
 ```
 
@@ -584,28 +594,10 @@ Output: DeliberationResourceSuggestion
 Auth:   Accepted attendee
 ```
 
-#### `uploadTranscriptComplete`
-```typescript
-Input:  z.object({
-  deliberationId: z.string(),
-  audioUrl: z.string().url(),
-  audioFileName: z.string(),
-  audioSize: z.number(),
-  title: z.string(),
-  sessionId: z.string().optional(),
-  venueId: z.string().optional(),
-})
-Output: FloorTranscript
-Auth:   Admin/staff or floor lead
-Side effect: Fires off transcription as background task
-```
+#### Transcription Ingestion (REST API, not tRPC)
 
-#### `triggerTranscription`
-```typescript
-Input:  z.object({ transcriptId: z.string() })
-Output: { status: "processing" }
-Auth:   Admin/staff
-```
+Transcriptions are ingested via `POST /api/transcription` with API key auth (`TRANSCRIPTION_API_KEY`).
+See "Transcription REST API" section below. No audio upload or processing needed.
 
 #### `triggerClustering`
 ```typescript
@@ -676,42 +668,16 @@ export async function assertDeliberationAdmin(
 
 ## Service Layer
 
-### `src/server/services/transcription.ts`
+### Transcription Ingestion (REST API)
 
-**Pattern reference**: `src/server/services/aiEvaluation.ts` (OpenAI client init, error handling)
+**No transcription service needed in this repo.** Transcriptions are produced externally and ingested via the REST API at `src/app/api/transcription/route.ts`.
 
-```typescript
-import OpenAI from "openai";
-import { type PrismaClient } from "@prisma/client";
-import * as Sentry from "@sentry/nextjs";
+The API accepts `POST` requests with API key auth (`x-api-key` header validated against `TRANSCRIPTION_API_KEY` env var). It supports:
+- Creating new transcriptions with `title`, `transcript`, `summary`, `notes`, `source`, `sourceSessionId`
+- Upserting by `sourceSessionId` for idempotent ingestion
+- Linking to events and optionally to deliberations
 
-export class TranscriptionService {
-  private openai: OpenAI;
-
-  constructor() {
-    this.openai = new OpenAI();  // Uses OPENAI_API_KEY env var
-  }
-
-  async transcribeAudio(audioUrl: string, transcriptId: string, db: PrismaClient): Promise<string> {
-    // 1. Update FloorTranscript status to PROCESSING
-    // 2. Fetch audio from Vercel Blob URL using fetch()
-    // 3. Convert to File object for Whisper API
-    // 4. Call openai.audio.transcriptions.create({ model: "whisper-1", file, response_format: "text" })
-    // 5. Store transcript text on FloorTranscript record
-    // 6. Update status to COMPLETED
-    // 7. On error: update status to FAILED, set errorMessage, Sentry capture
-  }
-}
-
-export function createTranscriptionService(): TranscriptionService {
-  return new TranscriptionService();
-}
-```
-
-**Notes**:
-- Whisper API limit is 25MB per file. For POC, reject files >25MB at upload.
-- Transcription runs as fire-and-forget async task. Status polled by frontend.
-- Use `captureApiError` from `~/utils/errorCapture` for Sentry.
+**Already implemented** — see `src/app/api/transcription/route.ts` and `src/utils/validateApiKey.ts`.
 
 ### `src/server/services/topicClustering.ts`
 
@@ -729,7 +695,7 @@ export class TopicClusteringService {
   private openai: OpenAI;
 
   async extractTopics(deliberationId: string, db: PrismaClient): Promise<ExtractedTopic[]> {
-    // 1. Fetch all COMPLETED FloorTranscript records
+    // 1. Fetch all COMPLETED Transcription records
     // 2. Concatenate transcripts with floor/session labels
     // 3. GPT-4o structured output prompt:
     //    System: "You are analyzing conference transcripts. Extract major topics."
@@ -952,57 +918,32 @@ export class DDSPublicationService {
 
 ---
 
-## Audio Upload + Transcription Flow
+## Transcription Ingestion Flow
 
 ```mermaid
 sequenceDiagram
-    participant FL as Floor Lead
-    participant UI as Upload UI
-    participant API as /api/upload/floor-audio
-    participant Blob as Vercel Blob
-    participant Router as tRPC Router
-    participant Svc as Transcription Service
-    participant W as OpenAI Whisper
+    participant Ext as External Pipeline
+    participant API as POST /api/transcription
+    participant DB as PostgreSQL
 
-    FL->>UI: Select audio file
-    UI->>API: POST formData (file + deliberationId)
-    API->>API: Validate auth, size, type
-    API->>Blob: put(file)
-    Blob-->>API: { url }
-    API-->>UI: { audioUrl, audioFileName }
+    Ext->>API: POST { eventId, title, transcript, source, sourceSessionId }
+    API->>API: Validate x-api-key header
+    API->>DB: Upsert Transcription (by sourceSessionId)
+    DB-->>API: Transcription record
+    API-->>Ext: { status: "created" | "updated", id }
 
-    UI->>Router: uploadTranscriptComplete({ audioUrl, ... })
-    Router->>Router: Create FloorTranscript (PENDING)
-    Router-->>UI: FloorTranscript created
-
-    Note over Router,W: Fire-and-forget async task
-    Router->>Svc: transcribeAudio(audioUrl, transcriptId)
-    Svc->>Svc: Update status: PROCESSING
-    Svc->>W: audio.transcriptions.create({ model: "whisper-1" })
-    W-->>Svc: transcript text
-    Svc->>Svc: Update FloorTranscript (text + COMPLETED)
-
-    Note over UI: Frontend polls getTranscripts every 10s
-    UI->>Router: getTranscripts({ deliberationId })
-    Router-->>UI: [{ status: "COMPLETED", transcript: "..." }]
+    Note over DB: Transcription available for clustering & analysis
 ```
 
-## Upload API Route
+## Transcription REST API
 
-**File**: `src/app/api/upload/floor-audio/route.ts`
-**Pattern reference**: `src/app/api/upload/session-slides/route.ts`
+**File**: `src/app/api/transcription/route.ts` (already implemented)
 
 ```typescript
-// Accept: mp3, wav, m4a, webm
-// Max size: 25MB (Whisper API limit for POC)
-// Upload to Vercel Blob at floor-audio/{deliberationId}-{timestamp}.{ext}
-// Auth: admin/staff or floor lead (check VenueOwner table)
-// Return: { audioUrl, audioFileName }
-
-export const maxDuration = 60;
-
-const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
-const ALLOWED_TYPES = ["audio/mpeg", "audio/wav", "audio/x-m4a", "audio/webm", "audio/mp4"];
+// POST — ingest transcription text from external pipeline
+// Auth: x-api-key header validated against TRANSCRIPTION_API_KEY env var
+// Supports upsert by sourceSessionId for idempotent ingestion
+// Links to event (required) and deliberation (optional)
 ```
 
 ---
@@ -1025,8 +966,7 @@ src/app/events/[eventId]/deliberation/
 Admin pages (embedded in existing admin event detail):
   Deliberation management section with:
     - Create deliberation form
-    - Audio upload (TranscriptUploader)
-    - Transcript status list
+    - Transcription list (ingested via API)
     - Trigger clustering / analysis / publish buttons
 ```
 
@@ -1184,9 +1124,8 @@ const voteMutation = api.deliberation.vote.useMutation({
 
 | Package | Version | Usage |
 |---------|---------|-------|
-| `openai` | ^6.1.0 | Whisper transcription + GPT-4o structured output |
+| `openai` | ^6.1.0 | GPT-4o structured output (topic clustering + analysis) |
 | `@atproto/api` | ^0.17.4 | AT Protocol record creation |
-| `@vercel/blob` | ^2.0.0 | Audio file storage |
 | `zod` | ^3.24.2 | Input validation |
 | `@mantine/core` | ^8.x | UI components |
 | `@tabler/icons-react` | ^3.x | Icons |
@@ -1196,33 +1135,30 @@ const voteMutation = api.deliberation.vote.useMutation({
 
 ## Build Order
 
-### Day 1: Schema + Core API (#27 partial, #28)
+### Phase 1: Schema + Core API (DONE)
 
-1. Add Prisma schema models (all models above)
-2. Add `featureDeliberation` to Event model
-3. Add User model relation fields
-4. User runs: `bunx prisma migrate dev --name add-deliberation-models`
-5. Create `src/server/api/utils/deliberationAuth.ts`
-6. Create `src/server/api/routers/deliberation.ts` (CRUD + voting endpoints)
-7. Register router in `src/server/api/root.ts`
+1. ~~Add Prisma schema models (all models)~~ ✅
+2. ~~Add `featureDeliberation` to Event model~~ ✅
+3. ~~Add User model relation fields~~ ✅
+4. ~~Create `src/server/api/utils/deliberationAuth.ts`~~ ✅
+5. ~~Create `src/server/api/routers/deliberation.ts` (CRUD + voting endpoints)~~ ✅
+6. ~~Register router in `src/server/api/root.ts`~~ ✅
 
-### Day 2: Transcription + Participant UI (#27, #31 partial)
+### Phase 2: Transcription API + Participant UI (MOSTLY DONE)
 
-1. Create `src/app/api/upload/floor-audio/route.ts`
-2. Create `src/server/services/transcription.ts`
-3. Add upload + transcription mutations to router
-4. Build `src/app/events/[eventId]/deliberation/` pages
-5. Add "Priorities" tab to EventDetailClient.tsx
+1. ~~Create `src/app/api/transcription/route.ts` (REST API ingestion)~~ ✅
+2. ~~Build `src/app/events/[eventId]/deliberation/` pages~~ ✅
+3. Add "Priorities" tab to EventDetailClient.tsx (REMAINING)
 
-### Day 3: Clustering + Analysis + Admin (#29, #30, #31 partial)
+### Phase 3: Clustering + Analysis + Admin (REMAINING)
 
 1. Create `src/server/services/topicClustering.ts`
 2. Create `src/server/services/deliberationAnalysis.ts`
-3. Add clustering + analysis endpoints
-4. Build admin deliberation management UI
-5. Build results page
+3. Add `triggerClustering` + `triggerAnalysis` endpoints to deliberation router
+4. Wire admin clustering/analysis buttons
+5. Build results page display
 
-### Day 4: DDS Publication + Polish (#30)
+### Phase 4: DDS Publication + Polish (REMAINING)
 
 1. Create `src/server/services/dds.ts`
 2. Add `publishResults` endpoint
@@ -1236,7 +1172,6 @@ const voteMutation = api.deliberation.vote.useMutation({
 ## Deferred (Post-MVP)
 
 - Real-time vote updates via WebSocket/SSE (use 30s polling for now)
-- Audio chunking for files >25MB
 - Formal lexicon JSON files + `@atproto/lex-cli` code generation
 - Ethereum hash commitment for result verification
 - Firehose/AppView integration
@@ -1250,10 +1185,10 @@ const voteMutation = api.deliberation.vote.useMutation({
 
 ## Verification
 
-1. **Schema**: `bunx prisma migrate dev` succeeds
-2. **API**: All tRPC endpoints callable from browser devtools
-3. **Upload**: Upload test audio -> transcript appears after processing
-4. **Voting**: Submit priority -> vote -> count increments
+1. **Schema**: `bunx prisma migrate dev` succeeds ✅
+2. **API**: All tRPC endpoints callable from browser devtools ✅
+3. **Transcription Ingestion**: POST to `/api/transcription` creates record ✅
+4. **Voting**: Submit priority -> vote -> count increments ✅
 5. **Clustering**: Trigger -> topic clusters appear in sidebar
 6. **Analysis**: Trigger -> priorities classified as convergent/blind_spot/aspirational
 7. **DDS**: Publish -> AT Proto records created (verify URIs)

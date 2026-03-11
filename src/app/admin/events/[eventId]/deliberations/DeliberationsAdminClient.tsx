@@ -58,7 +58,7 @@ export default function DeliberationsAdminClient() {
     { enabled: !!deliberation?.id },
   );
 
-  const { data: transcripts } = api.deliberation.getTranscripts.useQuery(
+  const { data: transcripts } = api.transcription.getByDeliberation.useQuery(
     { deliberationId: deliberation?.id ?? "" },
     { enabled: !!deliberation?.id },
   );

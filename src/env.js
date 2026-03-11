@@ -54,6 +54,7 @@ export const env = createEnv({
     // Exponential API integration (bug reporting)
     EXPONENTIAL_API_KEY: z.string().optional(),
     EXPONENTIAL_BUG_PROJECT_ID: z.string().optional(),
+    TRANSCRIPTION_API_KEY: z.string().optional(),
   },
 
   /**
@@ -110,6 +111,7 @@ export const env = createEnv({
     EAS_SCHEMA_UID: process.env.EAS_SCHEMA_UID,
     EXPONENTIAL_API_KEY: process.env.EXPONENTIAL_API_KEY,
     EXPONENTIAL_BUG_PROJECT_ID: process.env.EXPONENTIAL_BUG_PROJECT_ID,
+    TRANSCRIPTION_API_KEY: process.env.TRANSCRIPTION_API_KEY,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
   },
   /**

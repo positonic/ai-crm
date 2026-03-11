@@ -178,7 +178,7 @@ model User {
   aiFeedback            AiFeedback[]        @relation("UserAiFeedback")
 
   // Deliberation relations
-  transcriptUploads        FloorTranscript[]              @relation("TranscriptUploads")
+  transcriptUploads        Transcription[]                @relation("TranscriptUploads")
   deliberationPriorities   DeliberationPriority[]         @relation("UserPriorities")
   deliberationVotes        DeliberationVote[]             @relation("UserDeliberationVotes")
   deliberationBlockers     DeliberationBlocker[]          @relation("UserDeliberationBlockers")
@@ -288,6 +288,7 @@ model Event {
 
   // Deliberation relations
   deliberations        Deliberation[]
+  transcriptions       Transcription[]
 
   @@index([slug])
 }
@@ -2432,6 +2433,14 @@ enum TranscriptStatus {
   FAILED
 }
 
+enum TranscriptionSource {
+  MANUAL
+  WHISPER_API
+  BROWSER
+  WEBHOOK
+  API
+}
+
 model Deliberation {
   id            String              @id @default(cuid())
   eventId       String
@@ -2456,7 +2465,7 @@ model Deliberation {
   analysisResult Json?
 
   event         Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  transcripts   FloorTranscript[]
+  transcripts   Transcription[]
   topicClusters TopicCluster[]
   priorities    DeliberationPriority[]
 
@@ -2465,27 +2474,46 @@ model Deliberation {
   @@index([status])
 }
 
-model FloorTranscript {
-  id              String           @id @default(cuid())
-  deliberationId  String
-  sessionId       String?          // Optional link to ScheduleSession
-  venueId         String?          // Optional link to ScheduleVenue
-  title           String           // e.g. "Floor 3 - Morning Session"
-  audioUrl        String           // Vercel Blob URL
-  audioFileName   String
-  audioSize       Int              // bytes
-  transcript      String?          @db.Text
-  status          TranscriptStatus @default(PENDING)
+model Transcription {
+  id              String              @id @default(cuid())
+
+  // Flexible linking (all optional)
+  eventId         String?
+  deliberationId  String?
+  sessionId       String?             // Optional link to ScheduleSession
+
+  // Content
+  title           String
+  transcript      String?             @db.Text
+  summary         String?             @db.Text
+  notes           String?             @db.Text
+
+  // Source
+  source          TranscriptionSource @default(MANUAL)
+  sourceSessionId String?             @unique // External dedup key
+  audioUrl        String?
+  audioFileName   String?
+
+  // Processing
+  status          TranscriptStatus    @default(PENDING)
   errorMessage    String?
-  uploadedById    String
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  processedAt     DateTime?
 
-  deliberation    Deliberation     @relation(fields: [deliberationId], references: [id], onDelete: Cascade)
-  uploadedBy      User             @relation("TranscriptUploads", fields: [uploadedById], references: [id])
+  // Ownership
+  uploadedById    String?
 
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  // Relations
+  event           Event?              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  deliberation    Deliberation?       @relation(fields: [deliberationId], references: [id], onDelete: Cascade)
+  uploadedBy      User?               @relation("TranscriptUploads", fields: [uploadedById], references: [id])
+
+  @@index([eventId])
   @@index([deliberationId])
   @@index([status])
+  @@index([source])
 }
 
 model TopicCluster {

@@ -42,7 +42,30 @@ export function withMastraAuth<T extends unknown[]>(
     if (!validateMastraApiKey(request)) {
       return createUnauthorizedResponse();
     }
-    
+
+    return handler(request, ...args);
+  };
+}
+
+/**
+ * Validates an API key for external transcription ingestion
+ */
+export function validateTranscriptionApiKey(request: Request | NextRequest): boolean {
+  const apiKey = request.headers.get('x-api-key');
+  if (!apiKey) return false;
+  return apiKey === env.TRANSCRIPTION_API_KEY;
+}
+
+/**
+ * Higher-order function to wrap API route handlers with transcription API key auth
+ */
+export function withTranscriptionAuth<T extends unknown[]>(
+  handler: (request: NextRequest, ...args: T) => Promise<Response>
+) {
+  return async (request: NextRequest, ...args: T): Promise<Response> => {
+    if (!validateTranscriptionApiKey(request)) {
+      return createUnauthorizedResponse();
+    }
     return handler(request, ...args);
   };
 }

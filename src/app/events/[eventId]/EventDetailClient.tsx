@@ -25,6 +25,7 @@ import {
   IconAlertCircle,
   IconEdit,
   IconMicrophone,
+  IconTarget,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -64,6 +65,7 @@ type Event = {
   endDate: Date;
   location: string | null;
   type: string;
+  featureDeliberation?: boolean;
   applications?: unknown[];
 };
 
@@ -348,6 +350,14 @@ export default function EventDetailClient({
             <Tabs.Tab value="resources">
               Resources
             </Tabs.Tab>
+            {event.featureDeliberation && (
+              <Tabs.Tab value="priorities">
+                <Group gap="xs">
+                  <IconTarget size={14} />
+                  Priorities
+                </Group>
+              </Tabs.Tab>
+            )}
           </Tabs.List>
 
           <Tabs.Panel value="overview" mt="md">
@@ -906,6 +916,29 @@ export default function EventDetailClient({
               </Stack>
             </Paper>
           </Tabs.Panel>
+
+          {event.featureDeliberation && (
+            <Tabs.Panel value="priorities" mt="md">
+              <Paper p="xl" radius="md" withBorder>
+                <Stack gap="md" align="center">
+                  <IconTarget size={48} color="var(--mantine-color-grape-6)" />
+                  <Title order={3}>Community Priorities</Title>
+                  <Text c="dimmed" ta="center">
+                    Share what matters most and vote on community priorities for this event.
+                  </Text>
+                  <Button
+                    component={Link}
+                    href={`/events/${event.slug ?? event.id}/deliberation`}
+                    leftSection={<IconTarget size={16} />}
+                    variant="filled"
+                    color="grape"
+                  >
+                    View Priorities
+                  </Button>
+                </Stack>
+              </Paper>
+            </Tabs.Panel>
+          )}
         </Tabs>
       </Stack>
     </Container>
