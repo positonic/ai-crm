@@ -26,6 +26,20 @@ POST /transcribe
   Input:  { audioUrl: string } OR { text: string }
   Output: { jobId: string, status: "processing" }
 
+  audioUrl validation (SSRF prevention — enforce BEFORE creating jobId):
+    - Scheme:       only https (reject http, file, ftp, data, etc.)
+    - Host:         resolve DNS and reject private/internal IP ranges
+                    (127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12,
+                    192.168.0.0/16, 169.254.0.0/16, ::1, fc00::/7)
+                    and localhost / *.internal hostnames
+    - Allowlist:    optionally restrict to known storage origins
+                    (e.g. *.s3.amazonaws.com, storage.googleapis.com)
+    - Content-Size: reject if Content-Length > 500 MB (configurable)
+    - Fetch timeout: abort fetch after 30 s (configurable)
+    - Content-Type: optionally require audio/* MIME type
+    - On violation return 400 with a descriptive error; never start
+      a background job for a disallowed URL
+
 GET  /jobs/:jobId
   Output: { status, result?, error? }
 
