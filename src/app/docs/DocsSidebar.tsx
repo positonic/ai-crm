@@ -18,6 +18,7 @@ import {
   IconCertificate,
   IconWorldSearch,
   IconTarget,
+  IconDatabase,
 } from "@tabler/icons-react";
 
 interface SidebarItemProps {
@@ -137,6 +138,12 @@ export default function DocsSidebar() {
             label="Deliberation"
             href="/docs/features/deliberation"
             active={isActive("/docs/features/deliberation")}
+          />
+          <SidebarItem
+            icon={<IconDatabase size={18} />}
+            label="DDS Publication"
+            href="/docs/features/dds"
+            active={isActive("/docs/features/dds")}
           />
           <SidebarItem
             icon={<IconWorldSearch size={18} />}
