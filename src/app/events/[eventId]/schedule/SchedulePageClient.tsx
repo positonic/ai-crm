@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Container,
   Title,
@@ -86,9 +86,9 @@ export default function SchedulePageClient({
   const [searchQuery, setSearchQuery] = useState(
     () => searchParams.get("q") ?? "",
   );
-  const [activeVenueId, setActiveVenueId] = useState<string | null>(() =>
-    searchParams.get("venue"),
-  );
+  const [activeVenueId, setActiveVenueId] = useState<string | null>(null);
+  const [activeRoomIds, setActiveRoomIds] = useState<string[]>([]);
+  const [urlParamsResolved, setUrlParamsResolved] = useState(false);
   const [activeSessionTypes, setActiveSessionTypes] = useState<string[]>(() => {
     const types = searchParams.get("types");
     return types ? types.split(",") : [];
@@ -119,6 +119,12 @@ export default function SchedulePageClient({
     [],
   );
 
+  const { data: scheduleData, isLoading: scheduleLoading } =
+    api.schedule.getEventSchedule.useQuery({ eventId });
+  const { data: filterData } = api.schedule.getEventScheduleFilters.useQuery({
+    eventId,
+  });
+
   const handleSetViewMode = useCallback(
     (mode: "simple" | "expanded" | "grid" | "by-floor") => {
       setViewMode(mode);
@@ -138,9 +144,30 @@ export default function SchedulePageClient({
   const handleVenueChange = useCallback(
     (venueId: string | null) => {
       setActiveVenueId(venueId);
-      updateUrlParams({ venue: venueId });
+      setActiveRoomIds([]);
+      const venueName = venueId
+        ? filterData?.venues?.find((v) => v.id === venueId)?.name ?? null
+        : null;
+      updateUrlParams({ venue: venueName, room: null });
     },
-    [updateUrlParams],
+    [updateUrlParams, filterData?.venues],
+  );
+
+  const handleRoomChange = useCallback(
+    (roomId: string | null) => {
+      if (roomId) {
+        setActiveRoomIds([roomId]);
+        const selectedVenue = filterData?.venues?.find(
+          (v) => v.id === activeVenueId,
+        );
+        const roomName = selectedVenue?.rooms?.find((r) => r.id === roomId)?.name ?? null;
+        updateUrlParams({ room: roomName });
+      } else {
+        setActiveRoomIds([]);
+        updateUrlParams({ room: null });
+      }
+    },
+    [updateUrlParams, filterData?.venues, activeVenueId],
   );
 
   const handleToggleMySessions = useCallback(
@@ -151,11 +178,27 @@ export default function SchedulePageClient({
     [updateUrlParams],
   );
 
-  const { data: scheduleData, isLoading: scheduleLoading } =
-    api.schedule.getEventSchedule.useQuery({ eventId });
-  const { data: filterData } = api.schedule.getEventScheduleFilters.useQuery({
-    eventId,
-  });
+  // Resolve URL venue/room names to IDs once filterData loads
+  useEffect(() => {
+    if (!filterData?.venues || urlParamsResolved) return;
+    const venueParam = searchParams.get("venue");
+    if (venueParam) {
+      const venue =
+        filterData.venues.find((v) => v.name === venueParam) ??
+        filterData.venues.find((v) => v.id === venueParam);
+      if (venue) {
+        setActiveVenueId(venue.id);
+        const roomParam = searchParams.get("room");
+        if (roomParam && venue.rooms) {
+          const room =
+            venue.rooms.find((r) => r.name === roomParam) ??
+            venue.rooms.find((r) => r.id === roomParam);
+          if (room) setActiveRoomIds([room.id]);
+        }
+      }
+    }
+    setUrlParamsResolved(true);
+  }, [filterData?.venues, urlParamsResolved, searchParams]);
 
   const sessions = scheduleData?.sessions;
 
@@ -184,6 +227,8 @@ export default function SchedulePageClient({
       }
       // Venue filter
       if (activeVenueId && session.venueId !== activeVenueId) return false;
+      // Room filter
+      if (activeRoomIds.length > 0 && (!session.roomId || !activeRoomIds.includes(session.roomId))) return false;
       // Session type filter
       if (
         activeSessionTypes.length > 0 &&
@@ -208,6 +253,7 @@ export default function SchedulePageClient({
     userId,
     searchQuery,
     activeVenueId,
+    activeRoomIds,
     activeSessionTypes,
     activeTracks,
   ]);
@@ -602,6 +648,34 @@ export default function SchedulePageClient({
                 </div>
               )}
 
+              {(() => {
+                const selectedVenueRooms = activeVenueId
+                  ? filterData?.venues?.find((v) => v.id === activeVenueId)?.rooms ?? []
+                  : [];
+                return selectedVenueRooms.length > 0 ? (
+                  <div className="schedule-filter-section">
+                    <Text fw={600} size="sm" mb="xs">
+                      Filter By Room
+                    </Text>
+                    <Select
+                      placeholder="All rooms"
+                      data={selectedVenueRooms.map((r) => ({
+                        value: r.id,
+                        label: r.name,
+                      }))}
+                      value={activeRoomIds[0] ?? null}
+                      onChange={handleRoomChange}
+                      clearable
+                      styles={{
+                        input: {
+                          backgroundColor: "var(--schedule-search-bg)",
+                        },
+                      }}
+                    />
+                  </div>
+                ) : null;
+              })()}
+
               {filterData?.sessionTypes &&
                 filterData.sessionTypes.length > 0 && (
                   <div className="schedule-filter-section">
@@ -734,6 +808,34 @@ export default function SchedulePageClient({
                 </div>
               )}
 
+              {(() => {
+                const selectedVenueRooms = activeVenueId
+                  ? filterData?.venues?.find((v) => v.id === activeVenueId)?.rooms ?? []
+                  : [];
+                return selectedVenueRooms.length > 0 ? (
+                  <div className="schedule-filter-section">
+                    <Text fw={600} size="sm" mb="xs">
+                      Filter By Room
+                    </Text>
+                    <Select
+                      placeholder="All rooms"
+                      data={selectedVenueRooms.map((r) => ({
+                        value: r.id,
+                        label: r.name,
+                      }))}
+                      value={activeRoomIds[0] ?? null}
+                      onChange={handleRoomChange}
+                      clearable
+                      styles={{
+                        input: {
+                          backgroundColor: "var(--schedule-search-bg)",
+                        },
+                      }}
+                    />
+                  </div>
+                ) : null;
+              })()}
+
               {filterData?.sessionTypes &&
                 filterData.sessionTypes.length > 0 && (
                   <div className="schedule-filter-section">
@@ -842,6 +944,57 @@ export default function SchedulePageClient({
                   }}
                 />
               </div>
+
+              {filterData?.venues && filterData.venues.length > 0 && (
+                <div className="schedule-filter-section">
+                  <Text fw={600} size="sm" mb="xs">
+                    Filter By Venue
+                  </Text>
+                  <Select
+                    placeholder="All venues"
+                    data={filterData.venues.map((v) => ({
+                      value: v.id,
+                      label: v.name,
+                    }))}
+                    value={activeVenueId}
+                    onChange={handleVenueChange}
+                    clearable
+                    styles={{
+                      input: {
+                        backgroundColor: "var(--schedule-search-bg)",
+                      },
+                    }}
+                  />
+                </div>
+              )}
+
+              {(() => {
+                const selectedVenueRooms = activeVenueId
+                  ? filterData?.venues?.find((v) => v.id === activeVenueId)?.rooms ?? []
+                  : [];
+                return selectedVenueRooms.length > 0 ? (
+                  <div className="schedule-filter-section">
+                    <Text fw={600} size="sm" mb="xs">
+                      Filter By Room
+                    </Text>
+                    <Select
+                      placeholder="All rooms"
+                      data={selectedVenueRooms.map((r) => ({
+                        value: r.id,
+                        label: r.name,
+                      }))}
+                      value={activeRoomIds[0] ?? null}
+                      onChange={handleRoomChange}
+                      clearable
+                      styles={{
+                        input: {
+                          backgroundColor: "var(--schedule-search-bg)",
+                        },
+                      }}
+                    />
+                  </div>
+                ) : null;
+              })()}
 
               {filterData?.sessionTypes &&
                 filterData.sessionTypes.length > 0 && (
