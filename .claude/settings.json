@@ -24,7 +24,10 @@
       "/Users/james/code/impactful-events/src/app/docs/features",
       "/Users/james/code/ai-tooling/claude-home/.claude/skills",
       "/Users/james/code/impactful-events/.claude/commands",
-      "/Users/james/code/impactful-events/src/app/api/transcription"
+      "/Users/james/code/impactful-events/src/app/api/transcription",
+      "/Users/james/code/impactful-events/src/app/(embed)/events/[eventId]",
+      "/Users/james/code/impactful-events/src/app/(embed)/embed/events/[eventId]",
+      "/Users/james/code/impactful-events/src/app/(embed)/events/[eventId]/schedule"
     ]
   },
   "hooks": {

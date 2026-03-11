@@ -65,9 +65,10 @@ export type ScheduleSession = {
 
 interface SchedulePageClientProps {
   eventId: string;
+  embed?: boolean;
 }
 
-export default function SchedulePageClient({ eventId }: SchedulePageClientProps) {
+export default function SchedulePageClient({ eventId, embed = false }: SchedulePageClientProps) {
   const searchParams = useSearchParams();
 
   const [viewMode, setViewMode] = useState<"simple" | "expanded" | "grid" | "by-floor">(() => {
@@ -271,58 +272,60 @@ export default function SchedulePageClient({ eventId }: SchedulePageClientProps)
   })) ?? [];
 
   return (
-    <Container size="xl" py="xl">
-      {/* Header with title and view toggle */}
-      <Group justify="space-between" align="flex-start" mb="lg" wrap="wrap" gap="sm">
-        <Stack gap="xs">
-          <Group gap="xs" align="center">
-            <Title order={1}>{scheduleData.event.name}</Title>
-            {showMySessions && (
-              <Badge variant="filled" color="blue" size="lg">
-                {filteredSessions.length} session{filteredSessions.length !== 1 ? "s" : ""}
-              </Badge>
+    <Container size="xl" py={embed ? "sm" : "xl"}>
+      {/* Header with title and view toggle - hidden in embed mode */}
+      {!embed && (
+        <Group justify="space-between" align="flex-start" mb="lg" wrap="wrap" gap="sm">
+          <Stack gap="xs">
+            <Group gap="xs" align="center">
+              <Title order={1}>{scheduleData.event.name}</Title>
+              {showMySessions && (
+                <Badge variant="filled" color="blue" size="lg">
+                  {filteredSessions.length} session{filteredSessions.length !== 1 ? "s" : ""}
+                </Badge>
+              )}
+            </Group>
+            {scheduleData.event.location && (
+              <Text c="dimmed" size="sm">
+                {scheduleData.event.location}
+              </Text>
             )}
-          </Group>
-          {scheduleData.event.location && (
-            <Text c="dimmed" size="sm">
-              {scheduleData.event.location}
-            </Text>
-          )}
-        </Stack>
-        <Menu shadow="md" width={180}>
-          <Menu.Target>
-            <Button variant="default" leftSection={<IconEye size={16} />} size="sm">
-              View
-            </Button>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              onClick={() => handleSetViewMode("simple")}
-              rightSection={viewMode === "simple" ? <IconCheck size={14} /> : null}
-            >
-              Simple
-            </Menu.Item>
-            <Menu.Item
-              onClick={() => handleSetViewMode("expanded")}
-              rightSection={viewMode === "expanded" ? <IconCheck size={14} /> : null}
-            >
-              Expanded
-            </Menu.Item>
-            <Menu.Item
-              onClick={() => handleSetViewMode("grid")}
-              rightSection={viewMode === "grid" ? <IconCheck size={14} /> : null}
-            >
-              Grid
-            </Menu.Item>
-            <Menu.Item
-              onClick={() => handleSetViewMode("by-floor")}
-              rightSection={viewMode === "by-floor" ? <IconCheck size={14} /> : null}
-            >
-              By Floor
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
-      </Group>
+          </Stack>
+          <Menu shadow="md" width={180}>
+            <Menu.Target>
+              <Button variant="default" leftSection={<IconEye size={16} />} size="sm">
+                View
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                onClick={() => handleSetViewMode("simple")}
+                rightSection={viewMode === "simple" ? <IconCheck size={14} /> : null}
+              >
+                Simple
+              </Menu.Item>
+              <Menu.Item
+                onClick={() => handleSetViewMode("expanded")}
+                rightSection={viewMode === "expanded" ? <IconCheck size={14} /> : null}
+              >
+                Expanded
+              </Menu.Item>
+              <Menu.Item
+                onClick={() => handleSetViewMode("grid")}
+                rightSection={viewMode === "grid" ? <IconCheck size={14} /> : null}
+              >
+                Grid
+              </Menu.Item>
+              <Menu.Item
+                onClick={() => handleSetViewMode("by-floor")}
+                rightSection={viewMode === "by-floor" ? <IconCheck size={14} /> : null}
+              >
+                By Floor
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </Group>
+      )}
 
       {/* Day tabs (shared between both views) */}
       {days.length > 1 && (
@@ -389,6 +392,8 @@ export default function SchedulePageClient({ eventId }: SchedulePageClientProps)
                         <Link
                           key={session.id}
                           href={`/events/${eventId}/schedule/${session.id}`}
+                          target={embed ? "_blank" : undefined}
+                          rel={embed ? "noopener noreferrer" : undefined}
                           className="schedule-session-card"
                           style={{
                             borderLeft: `4px solid ${session.sessionType?.color ?? "#94a3b8"}`,
