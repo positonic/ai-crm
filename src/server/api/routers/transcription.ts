@@ -37,6 +37,13 @@ export const transcriptionRouter = createTRPCRouter({
   getByEvent: protectedProcedure
     .input(z.object({ eventId: z.string() }))
     .query(async ({ ctx, input }) => {
+      await assertDeliberationAdmin(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        input.eventId,
+      );
+
       return ctx.db.transcription.findMany({
         where: { eventId: input.eventId },
         include: {
@@ -64,6 +71,13 @@ export const transcriptionRouter = createTRPCRouter({
           message: "Transcription not found",
         });
       }
+
+      await assertDeliberationAdmin(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        transcription.eventId,
+      );
 
       return transcription;
     }),

@@ -62,37 +62,57 @@ async function handlePost(request: NextRequest) {
     // Determine status: if transcript provided and no explicit status, mark COMPLETED
     const status = body.status ?? (body.transcript ? "COMPLETED" : "PENDING");
 
-    // Upsert by sourceSessionId if provided
+    // Atomic upsert by sourceSessionId if provided
     if (body.sourceSessionId) {
-      const existing = await db.transcription.findUnique({
+      // Build update payload — only include fields that are provided,
+      // so existing values are preserved for omitted fields
+      const updateData: Record<string, unknown> = {
+        title: body.title.trim(),
+        status,
+      };
+      if (body.transcript !== undefined) updateData.transcript = body.transcript;
+      if (body.summary !== undefined) updateData.summary = body.summary;
+      if (body.notes !== undefined) updateData.notes = body.notes;
+      if (body.eventId !== undefined) updateData.eventId = body.eventId;
+      if (body.deliberationId !== undefined)
+        updateData.deliberationId = body.deliberationId;
+      if (body.audioUrl !== undefined) updateData.audioUrl = body.audioUrl;
+      if (body.audioFileName !== undefined)
+        updateData.audioFileName = body.audioFileName;
+      if (status === "COMPLETED") updateData.processedAt = new Date();
+
+      const result = await db.transcription.upsert({
         where: { sourceSessionId: body.sourceSessionId },
+        update: updateData,
+        create: {
+          title: body.title.trim(),
+          transcript: body.transcript,
+          summary: body.summary,
+          notes: body.notes,
+          eventId: body.eventId,
+          deliberationId: body.deliberationId,
+          source: body.source ?? "API",
+          sourceSessionId: body.sourceSessionId,
+          audioUrl: body.audioUrl,
+          audioFileName: body.audioFileName,
+          status,
+          processedAt: status === "COMPLETED" ? new Date() : undefined,
+        },
       });
 
-      if (existing) {
-        const updated = await db.transcription.update({
-          where: { id: existing.id },
-          data: {
-            title: body.title.trim(),
-            transcript: body.transcript ?? existing.transcript,
-            summary: body.summary ?? existing.summary,
-            notes: body.notes ?? existing.notes,
-            status,
-            eventId: body.eventId ?? existing.eventId,
-            deliberationId: body.deliberationId ?? existing.deliberationId,
-            audioUrl: body.audioUrl ?? existing.audioUrl,
-            audioFileName: body.audioFileName ?? existing.audioFileName,
-            processedAt:
-              status === "COMPLETED" ? new Date() : existing.processedAt,
-          },
-        });
+      // Determine if this was a create or update via timestamps
+      const wasCreated =
+        result.createdAt.getTime() === result.updatedAt.getTime();
 
-        return Response.json({
-          id: updated.id,
-          sourceSessionId: updated.sourceSessionId,
-          status: updated.status,
-          created: false,
-        });
-      }
+      return Response.json(
+        {
+          id: result.id,
+          sourceSessionId: result.sourceSessionId,
+          status: result.status,
+          created: wasCreated,
+        },
+        { status: wasCreated ? 201 : 200 },
+      );
     }
 
     const transcription = await db.transcription.create({
