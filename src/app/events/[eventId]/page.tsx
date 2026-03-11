@@ -441,6 +441,7 @@ export default function EventPage({ params }: EventPageProps) {
       <ResidentDashboard
         eventId={resolvedEventId}
         eventName={event.name}
+        featureDeliberation={event.featureDeliberation ?? false}
         userApplication={userApplication ?? null}
       />
     );
