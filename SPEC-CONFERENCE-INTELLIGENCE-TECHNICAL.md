@@ -1144,27 +1144,27 @@ const voteMutation = api.deliberation.vote.useMutation({
 5. ~~Create `src/server/api/routers/deliberation.ts` (CRUD + voting endpoints)~~ ✅
 6. ~~Register router in `src/server/api/root.ts`~~ ✅
 
-### Phase 2: Transcription API + Participant UI (MOSTLY DONE)
+### Phase 2: Transcription API + Participant UI (DONE)
 
 1. ~~Create `src/app/api/transcription/route.ts` (REST API ingestion)~~ ✅
 2. ~~Build `src/app/events/[eventId]/deliberation/` pages~~ ✅
-3. Add "Priorities" tab to EventDetailClient.tsx (REMAINING)
+3. ~~Add "Priorities" tab to EventDetailClient.tsx~~ ✅
 
-### Phase 3: Clustering + Analysis + Admin (REMAINING)
+### Phase 3: Clustering + Analysis + Admin (DONE)
 
-1. Create `src/server/services/topicClustering.ts`
-2. Create `src/server/services/deliberationAnalysis.ts`
-3. Add `triggerClustering` + `triggerAnalysis` endpoints to deliberation router
-4. Wire admin clustering/analysis buttons
-5. Build results page display
+1. ~~Create `src/server/services/topicClustering.ts`~~ ✅
+2. ~~Create `src/server/services/deliberationAnalysis.ts`~~ ✅
+3. ~~Add `triggerClustering` + `triggerAnalysis` endpoints to deliberation router~~ ✅
+4. ~~Wire admin clustering/analysis buttons~~ ✅
+5. ~~Build results page display~~ ✅
 
-### Phase 4: DDS Publication + Polish (REMAINING)
+### Phase 4: DDS Publication + Polish (DONE)
 
-1. Create `src/server/services/dds.ts`
-2. Add `publishResults` endpoint
-3. Wire admin publish button
-4. Add AT Proto record links to results page
-5. End-to-end test
+1. ~~Create `src/server/services/dds.ts`~~ ✅
+2. ~~Add `publishResults` endpoint~~ ✅
+3. ~~Wire admin publish button~~ ✅
+4. ~~Add AT Proto record links to results page~~ ✅
+5. End-to-end test (manual)
 6. `bun run check` + `bun run build`
 
 ---

@@ -25,6 +25,9 @@ import {
   IconPlus,
   IconLock,
   IconExternalLink,
+  IconBrain,
+  IconCloudUpload,
+  IconHierarchy2,
 } from "@tabler/icons-react";
 import { useState } from "react";
 import { useParams } from "next/navigation";
@@ -113,18 +116,55 @@ export default function DeliberationsAdminClient() {
     },
   });
 
-  const updateStatus = api.deliberation.updateDeliberationStatus.useMutation({
-    onSuccess: () => {
+  const triggerClustering = api.deliberation.triggerClustering.useMutation({
+    onSuccess: (data) => {
       notifications.show({
-        title: "Status updated",
-        message: "Deliberation status has been updated.",
+        title: "Topic clustering complete",
+        message: `Extracted ${String(data.clusterCount)} topic clusters from transcripts.`,
         color: "green",
       });
       void utils.deliberation.getDeliberation.invalidate();
     },
     onError: (error) => {
       notifications.show({
-        title: "Error",
+        title: "Clustering failed",
+        message: error.message,
+        color: "red",
+      });
+    },
+  });
+
+  const triggerAnalysis = api.deliberation.triggerAnalysis.useMutation({
+    onSuccess: (data) => {
+      notifications.show({
+        title: "Analysis complete",
+        message: `Analyzed ${String(data.statistics.totalPriorities)} priorities with ${String(data.statistics.totalVotes)} votes.`,
+        color: "green",
+      });
+      void utils.deliberation.getDeliberation.invalidate();
+    },
+    onError: (error) => {
+      notifications.show({
+        title: "Analysis failed",
+        message: error.message,
+        color: "red",
+      });
+    },
+  });
+
+  const publishResults = api.deliberation.publishResults.useMutation({
+    onSuccess: () => {
+      notifications.show({
+        title: "Published to DDS",
+        message:
+          "Deliberation results published as AT Protocol records.",
+        color: "green",
+      });
+      void utils.deliberation.getDeliberation.invalidate();
+    },
+    onError: (error) => {
+      notifications.show({
+        title: "Publication failed",
         message: error.message,
         color: "red",
       });
@@ -286,37 +326,92 @@ export default function DeliberationsAdminClient() {
                     </Button>
                   )}
                   {deliberation.status === "CLOSED" && (
-                    <Tooltip label="Handled by external analysis worker">
-                      <Button variant="light" color="blue" disabled>
-                        Run Analysis
+                    <>
+                      <Tooltip label="Extract topic clusters from transcripts using GPT-4o">
+                        <Button
+                          variant="light"
+                          color="teal"
+                          leftSection={<IconHierarchy2 size={14} />}
+                          onClick={() =>
+                            triggerClustering.mutate({
+                              deliberationId: deliberation.id,
+                            })
+                          }
+                          loading={triggerClustering.isPending}
+                        >
+                          Run Clustering
+                        </Button>
+                      </Tooltip>
+                      <Tooltip label="Merge topic clusters with priorities to classify and synthesize">
+                        <Button
+                          variant="light"
+                          color="blue"
+                          leftSection={<IconBrain size={14} />}
+                          onClick={() =>
+                            triggerAnalysis.mutate({
+                              deliberationId: deliberation.id,
+                            })
+                          }
+                          loading={triggerAnalysis.isPending}
+                        >
+                          Run Analysis
+                        </Button>
+                      </Tooltip>
+                    </>
+                  )}
+                  {deliberation.status === "ANALYZING" && (
+                    <Tooltip label="Publish analysis results as AT Protocol records">
+                      <Button
+                        variant="light"
+                        color="violet"
+                        leftSection={<IconCloudUpload size={14} />}
+                        onClick={() =>
+                          publishResults.mutate({
+                            deliberationId: deliberation.id,
+                          })
+                        }
+                        loading={publishResults.isPending}
+                      >
+                        Publish to DDS
                       </Button>
                     </Tooltip>
                   )}
-                  {deliberation.status === "ANALYZING" && (
-                    <Button
-                      variant="light"
-                      color="violet"
-                      onClick={() =>
-                        updateStatus.mutate({
-                          deliberationId: deliberation.id,
-                          status: "PUBLISHED",
-                        })
-                      }
-                      loading={updateStatus.isPending}
-                    >
-                      Mark as Published
-                    </Button>
-                  )}
                   {deliberation.status === "PUBLISHED" && (
-                    <Button
-                      component={Link}
-                      href={`/events/${eventId}/deliberation/results`}
-                      variant="light"
-                      color="violet"
-                      leftSection={<IconExternalLink size={14} />}
-                    >
-                      View Results
-                    </Button>
+                    <>
+                      <Button
+                        component={Link}
+                        href={`/events/${eventId}/deliberation/results`}
+                        variant="light"
+                        color="violet"
+                        leftSection={<IconExternalLink size={14} />}
+                      >
+                        View Results
+                      </Button>
+                      {deliberation.summaryUri && (
+                        <Stack gap={4} mt="xs">
+                          <Text size="xs" fw={600} c="dimmed">
+                            AT Protocol Records
+                          </Text>
+                          {[
+                            { label: "Summary", uri: deliberation.summaryUri },
+                            { label: "PCA", uri: deliberation.pcaUri },
+                            { label: "Activity", uri: deliberation.activityUri },
+                            { label: "Board", uri: deliberation.boardUri },
+                          ]
+                            .filter((r) => r.uri)
+                            .map((r) => (
+                              <Group key={r.label} gap={4}>
+                                <Badge size="xs" variant="light">
+                                  {r.label}
+                                </Badge>
+                                <Text size="xs" c="dimmed" lineClamp={1}>
+                                  {r.uri}
+                                </Text>
+                              </Group>
+                            ))}
+                        </Stack>
+                      )}
+                    </>
                   )}
                 </Group>
               </Stack>
