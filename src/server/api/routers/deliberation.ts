@@ -11,6 +11,7 @@ import {
 } from "~/server/api/utils/deliberationAuth";
 import { getTopicClusteringService } from "~/server/services/topicClustering";
 import { getDeliberationAnalysisService } from "~/server/services/deliberationAnalysis";
+import { createDDSPublicationService } from "~/server/services/dds";
 
 export const deliberationRouter = createTRPCRouter({
   // ─── Queries ──────────────────────────────────────────────
@@ -532,6 +533,47 @@ export const deliberationRouter = createTRPCRouter({
       return {
         success: true,
         statistics: result.statistics,
+      };
+    }),
+
+  publishResults: protectedProcedure
+    .input(z.object({ deliberationId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const deliberation = await ctx.db.deliberation.findUnique({
+        where: { id: input.deliberationId },
+        select: { eventId: true, status: true },
+      });
+      if (!deliberation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Deliberation not found",
+        });
+      }
+
+      await assertDeliberationAdmin(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        deliberation.eventId,
+      );
+
+      if (
+        deliberation.status !== "CLOSED" &&
+        deliberation.status !== "ANALYZING"
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Deliberation must be closed or analyzed before publishing to DDS",
+        });
+      }
+
+      const service = createDDSPublicationService(ctx.db);
+      const result = await service.publishResults(input.deliberationId);
+
+      return {
+        success: true,
+        ...result,
       };
     }),
 
