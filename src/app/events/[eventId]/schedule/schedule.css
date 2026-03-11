@@ -38,6 +38,10 @@
   .schedule-layout {
     grid-template-columns: 1fr;
   }
+
+  .schedule-sidebar {
+    order: -1;
+  }
 }
 
 .schedule-time-group {

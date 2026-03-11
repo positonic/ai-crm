@@ -1,0 +1,101 @@
+.sc-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  padding: 2rem;
+}
+
+.sc-card {
+  width: 100%;
+  max-width: 800px;
+  background: #ffffff;
+}
+
+/* Top bar */
+.sc-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 2rem;
+  border-bottom: 3px solid #000000;
+  margin-bottom: 3rem;
+}
+
+.sc-topbar-day,
+.sc-topbar-date {
+  font-weight: 900;
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+  color: #000000;
+}
+
+.sc-topbar-venue {
+  font-family: monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #000000;
+  text-align: center;
+  white-space: pre-line;
+  line-height: 1.4;
+}
+
+/* Content area */
+.sc-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+}
+
+.sc-time {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 0.5rem;
+}
+
+.sc-type {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #000000;
+  text-transform: uppercase;
+}
+
+.sc-title {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 900;
+  line-height: 1.1;
+  color: #000000;
+  margin: 1rem 0 2rem;
+  max-width: 700px;
+}
+
+/* Speakers */
+.sc-speakers {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.sc-speaker {
+  text-align: center;
+}
+
+.sc-speaker-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+.sc-speaker-company {
+  font-size: 1rem;
+  color: #999999;
+  margin-top: 0.15rem;
+}

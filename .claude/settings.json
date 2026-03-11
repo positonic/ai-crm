@@ -28,7 +28,8 @@
       "/Users/james/code/impactful-events/src/app/api/transcription",
       "/Users/james/code/impactful-events/src/app/(embed)/events/[eventId]",
       "/Users/james/code/impactful-events/src/app/(embed)/embed/events/[eventId]",
-      "/Users/james/code/impactful-events/src/app/(embed)/events/[eventId]/schedule"
+      "/Users/james/code/impactful-events/src/app/(embed)/events/[eventId]/schedule",
+      "/Users/james/code/impactful-events/src/app/events/[eventId]/schedule-card"
     ]
   },
   "hooks": {

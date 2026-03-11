@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { db } from "~/server/db";
 import { auth } from "~/server/auth";
 import EventSubNavigation from "~/app/_components/EventSubNavigation";
@@ -12,6 +13,18 @@ export default async function EventLayout({
   params,
 }: EventLayoutProps) {
   const { eventId } = await params;
+  const headersList = await headers();
+  const pathname =
+    headersList.get("x-nextjs-url") ??
+    headersList.get("x-invoke-path") ??
+    headersList.get("referer") ??
+    "";
+  const isScheduleCard = pathname.includes("/schedule-card/");
+
+  if (isScheduleCard) {
+    return <>{children}</>;
+  }
+
   const session = await auth();
 
   const featureFlagSelect = {

@@ -14,6 +14,7 @@ import { ThemeProvider } from "./_components/ThemeProvider";
 import { ThemeToggle } from "./_components/ThemeToggle";
 import { GitHubCorner } from "./_components/GitHubCorner";
 import { AIChatFABLazy } from "./_components/AIChatFABLazy";
+import { ChromeWrapper } from "./_components/ChromeWrapper";
 import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
@@ -37,12 +38,18 @@ export default function RootLayout({
           <SessionProvider>
             <Notifications />
             <TRPCReactProvider>
-              <HeaderBar />
+              <ChromeWrapper>
+                <HeaderBar />
+              </ChromeWrapper>
               {children}
-              <AIChatFABLazy />
-              <GitHubCorner />
+              <ChromeWrapper>
+                <AIChatFABLazy />
+                <GitHubCorner />
+              </ChromeWrapper>
             </TRPCReactProvider>
-            <ThemeToggle />
+            <ChromeWrapper>
+              <ThemeToggle />
+            </ChromeWrapper>
           </SessionProvider>
         </ThemeProvider>
       </body>
