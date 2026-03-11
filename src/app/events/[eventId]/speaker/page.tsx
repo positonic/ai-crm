@@ -8,7 +8,10 @@ interface SpeakerRedirectProps {
 /**
  * Backward-compatibility redirect: /events/[eventId]/speaker → /events/[eventId]/apply
  */
-export default async function SpeakerRedirectPage({ params, searchParams }: SpeakerRedirectProps) {
+export default async function SpeakerRedirectPage({
+  params,
+  searchParams,
+}: SpeakerRedirectProps) {
   const { eventId } = await params;
   const search = await searchParams;
 

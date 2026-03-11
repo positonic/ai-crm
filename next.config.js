@@ -10,31 +10,31 @@ const config = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: '**.public.blob.vercel-storage.com',
+        protocol: "https",
+        hostname: "**.public.blob.vercel-storage.com",
       },
     ],
   },
   async redirects() {
     return [
       {
-        source: '/contacts',
-        destination: '/crm/contacts',
+        source: "/contacts",
+        destination: "/crm/contacts",
         permanent: true,
       },
       {
-        source: '/contacts/:id',
-        destination: '/crm/contacts/:id',
+        source: "/contacts/:id",
+        destination: "/crm/contacts/:id",
         permanent: true,
       },
       {
-        source: '/organizations',
-        destination: '/crm/organizations',
+        source: "/organizations",
+        destination: "/crm/organizations",
         permanent: true,
       },
       {
-        source: '/organizations/:id',
-        destination: '/crm/organizations/:id',
+        source: "/organizations/:id",
+        destination: "/crm/organizations/:id",
         permanent: true,
       },
     ];

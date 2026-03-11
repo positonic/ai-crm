@@ -18,7 +18,13 @@ import {
   Anchor,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { IconBrandDiscord, IconBrandGoogle, IconCheck, IconAlertCircle, IconMail } from "@tabler/icons-react";
+import {
+  IconBrandDiscord,
+  IconBrandGoogle,
+  IconCheck,
+  IconAlertCircle,
+  IconMail,
+} from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 
 interface AuthFormProps {
@@ -61,7 +67,11 @@ function getPasswordStrengthColor(strength: number): string {
   return "green";
 }
 
-export default function AuthForm({ callbackUrl, className, initialValues }: AuthFormProps) {
+export default function AuthForm({
+  callbackUrl,
+  className,
+  initialValues,
+}: AuthFormProps) {
   const [activeTab, setActiveTab] = useState<string | null>("signup");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +87,7 @@ export default function AuthForm({ callbackUrl, className, initialValues }: Auth
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
       const latePass = urlParams.get("latePass");
-      
+
       if (latePass) {
         // Set client-side cookie to persist late pass through auth flow
         document.cookie = `ftc-late-pass=${latePass}; path=/; max-age=${24 * 60 * 60}; samesite=lax${process.env.NODE_ENV === "production" ? "; secure" : ""}`;
@@ -107,7 +117,8 @@ export default function AuthForm({ callbackUrl, className, initialValues }: Auth
       agreeToTerms: false,
     },
     validate: {
-      firstName: (value) => (value.length < 1 ? "First name is required" : null),
+      firstName: (value) =>
+        value.length < 1 ? "First name is required" : null,
       surname: () => null, // Optional field
       email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
       password: (value) => {
@@ -146,7 +157,7 @@ export default function AuthForm({ callbackUrl, className, initialValues }: Auth
     } finally {
       setIsLoading(false);
     }
-  };;;;;
+  };
 
   const handleSignUp = async (values: SignUpFormData) => {
     setIsLoading(true);
@@ -169,7 +180,9 @@ export default function AuthForm({ callbackUrl, className, initialValues }: Auth
       });
 
       if (result?.error) {
-        setError("Account created but sign in failed. Please try signing in manually.");
+        setError(
+          "Account created but sign in failed. Please try signing in manually.",
+        );
       } else if (result?.url) {
         setSuccess("Account created successfully! Redirecting...");
         window.location.href = result.url;
@@ -233,10 +246,9 @@ export default function AuthForm({ callbackUrl, className, initialValues }: Auth
             {activeTab === "signin" ? "Welcome Back" : "Join the Commons"}
           </Text>
           <Text size="sm" c="dimmed" ta="center" mt="xs">
-            {activeTab === "signin" 
-              ? "Sign in to continue your journey" 
-              : "Create your account to get started"
-            }
+            {activeTab === "signin"
+              ? "Sign in to continue your journey"
+              : "Create your account to get started"}
           </Text>
         </div>
 
@@ -263,7 +275,9 @@ export default function AuthForm({ callbackUrl, className, initialValues }: Auth
             {magicLinkSent ? (
               <Stack gap="sm" align="center" py="md">
                 <IconMail size={48} color="var(--mantine-color-blue-6)" />
-                <Text fw={600} size="lg">Check your email</Text>
+                <Text fw={600} size="lg">
+                  Check your email
+                </Text>
                 <Text size="sm" c="dimmed" ta="center">
                   We sent a sign-in link to <strong>{magicLinkEmail}</strong>.
                   Click the link in the email to sign in.
@@ -348,7 +362,9 @@ export default function AuthForm({ callbackUrl, className, initialValues }: Auth
                     <Checkbox
                       label="Remember me"
                       size="sm"
-                      {...signInForm.getInputProps("rememberMe", { type: "checkbox" })}
+                      {...signInForm.getInputProps("rememberMe", {
+                        type: "checkbox",
+                      })}
                     />
                     <Anchor size="xs" href="/auth/forgot-password">
                       Forgot password?
@@ -430,7 +446,9 @@ export default function AuthForm({ callbackUrl, className, initialValues }: Auth
                       </Text>
                       <Progress
                         value={getPasswordStrength(signUpForm.values.password)}
-                        color={getPasswordStrengthColor(getPasswordStrength(signUpForm.values.password))}
+                        color={getPasswordStrengthColor(
+                          getPasswordStrength(signUpForm.values.password),
+                        )}
                         size="sm"
                         mt="xs"
                       />
@@ -458,14 +476,16 @@ export default function AuthForm({ callbackUrl, className, initialValues }: Auth
                     </Text>
                   }
                   required
-                  {...signUpForm.getInputProps("agreeToTerms", { type: "checkbox" })}
+                  {...signUpForm.getInputProps("agreeToTerms", {
+                    type: "checkbox",
+                  })}
                 />
                 <Button type="submit" loading={isLoading} fullWidth>
                   Create Account
                 </Button>
-                
+
                 <Divider label="Or continue with" labelPosition="center" />
-                
+
                 <Stack gap="xs">
                   <Button
                     variant="outline"
@@ -496,7 +516,9 @@ export default function AuthForm({ callbackUrl, className, initialValues }: Auth
           {activeTab === "signin" ? (
             <>
               Don&apos;t have an account?{" "}
-              <Anchor onClick={() => setActiveTab("signup")}>Join the Commons</Anchor>
+              <Anchor onClick={() => setActiveTab("signup")}>
+                Join the Commons
+              </Anchor>
             </>
           ) : (
             <>

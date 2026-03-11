@@ -1,4 +1,4 @@
-import { convert, type HtmlToTextOptions } from 'html-to-text';
+import { convert, type HtmlToTextOptions } from "html-to-text";
 
 /**
  * Converts HTML content to clean, readable plain text.
@@ -18,8 +18,8 @@ import { convert, type HtmlToTextOptions } from 'html-to-text';
  * ```
  */
 export function convertHtmlToText(html: string): string {
-  if (!html || html.trim() === '') {
-    return '';
+  if (!html || html.trim() === "") {
+    return "";
   }
 
   try {
@@ -30,34 +30,85 @@ export function convertHtmlToText(html: string): string {
       // Configure how different elements are handled
       selectors: [
         // Paragraphs get newlines before/after
-        { selector: 'p', options: { leadingLineBreaks: 1, trailingLineBreaks: 1 } },
+        {
+          selector: "p",
+          options: { leadingLineBreaks: 1, trailingLineBreaks: 1 },
+        },
 
         // Headers get extra spacing
-        { selector: 'h1', options: { uppercase: false, leadingLineBreaks: 2, trailingLineBreaks: 2 } },
-        { selector: 'h2', options: { uppercase: false, leadingLineBreaks: 2, trailingLineBreaks: 1 } },
-        { selector: 'h3', options: { uppercase: false, leadingLineBreaks: 2, trailingLineBreaks: 1 } },
-        { selector: 'h4', options: { uppercase: false, leadingLineBreaks: 1, trailingLineBreaks: 1 } },
-        { selector: 'h5', options: { uppercase: false, leadingLineBreaks: 1, trailingLineBreaks: 1 } },
-        { selector: 'h6', options: { uppercase: false, leadingLineBreaks: 1, trailingLineBreaks: 1 } },
+        {
+          selector: "h1",
+          options: {
+            uppercase: false,
+            leadingLineBreaks: 2,
+            trailingLineBreaks: 2,
+          },
+        },
+        {
+          selector: "h2",
+          options: {
+            uppercase: false,
+            leadingLineBreaks: 2,
+            trailingLineBreaks: 1,
+          },
+        },
+        {
+          selector: "h3",
+          options: {
+            uppercase: false,
+            leadingLineBreaks: 2,
+            trailingLineBreaks: 1,
+          },
+        },
+        {
+          selector: "h4",
+          options: {
+            uppercase: false,
+            leadingLineBreaks: 1,
+            trailingLineBreaks: 1,
+          },
+        },
+        {
+          selector: "h5",
+          options: {
+            uppercase: false,
+            leadingLineBreaks: 1,
+            trailingLineBreaks: 1,
+          },
+        },
+        {
+          selector: "h6",
+          options: {
+            uppercase: false,
+            leadingLineBreaks: 1,
+            trailingLineBreaks: 1,
+          },
+        },
 
         // Lists
-        { selector: 'ul', options: { leadingLineBreaks: 1, trailingLineBreaks: 1 } },
-        { selector: 'ol', options: { leadingLineBreaks: 1, trailingLineBreaks: 1 } },
+        {
+          selector: "ul",
+          options: { leadingLineBreaks: 1, trailingLineBreaks: 1 },
+        },
+        {
+          selector: "ol",
+          options: { leadingLineBreaks: 1, trailingLineBreaks: 1 },
+        },
 
         // Links show the URL in parentheses
-        { selector: 'a', options: { ignoreHref: false } },
+        { selector: "a", options: { ignoreHref: false } },
 
         // Tables are converted to plain text
-        { selector: 'table', options: { uppercaseHeaderCells: false } },
+        { selector: "table", options: { uppercaseHeaderCells: false } },
 
         // Remove images (keep alt text if present)
-        { selector: 'img', format: 'skip' },
+        { selector: "img", format: "skip" },
 
         // Skip scripts, styles, and other non-content elements
-        { selector: 'script', format: 'skip' },
-        { selector: 'style', format: 'skip' },
-        { selector: 'noscript', format: 'skip' },
-        { selector: 'svg', format: 'skip' },
+        { selector: "script", format: "skip" },
+        { selector: "style", format: "skip" },
+        { selector: "noscript", format: "skip" },
+        { selector: "svg", format: "skip" },
       ],
 
       // Decode HTML entities
@@ -70,20 +121,20 @@ export function convertHtmlToText(html: string): string {
     const text = convert(html, options);
 
     // Clean up excessive newlines (more than 2 consecutive)
-    const cleaned = text.replace(/\n{3,}/g, '\n\n').trim();
+    const cleaned = text.replace(/\n{3,}/g, "\n\n").trim();
 
     return cleaned;
   } catch (error) {
-    console.error('Error converting HTML to text:', error);
+    console.error("Error converting HTML to text:", error);
     // Fallback: simple regex-based stripping if conversion fails
     const fallbackText = html
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-      .replace(/<[^>]+>/g, '')
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
       .trim();

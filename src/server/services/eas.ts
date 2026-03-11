@@ -10,7 +10,11 @@
  * - Optimism EAS: https://docs.optimism.io/chain/identity/contracts-eas
  */
 
-import { EAS, SchemaEncoder, SchemaRegistry } from "@ethereum-attestation-service/eas-sdk";
+import {
+  EAS,
+  SchemaEncoder,
+  SchemaRegistry,
+} from "@ethereum-attestation-service/eas-sdk";
 import { ethers } from "ethers";
 import { env } from "~/env";
 
@@ -131,7 +135,9 @@ export class EASService {
    */
   async createAttestation(data: RepoActivityData): Promise<AttestationResult> {
     if (!this.schemaUid) {
-      throw new Error("Schema UID not set. Call registerSchema() or setSchemaUid() first.");
+      throw new Error(
+        "Schema UID not set. Call registerSchema() or setSchemaUid() first.",
+      );
     }
 
     // Encode the attestation data
@@ -141,17 +147,27 @@ export class EASService {
       { name: "totalCommits", value: data.totalCommits, type: "uint32" },
       {
         name: "lastCommitTimestamp",
-        value: data.lastCommitDate ? BigInt(Math.floor(data.lastCommitDate.getTime() / 1000)) : 0n,
-        type: "uint64"
+        value: data.lastCommitDate
+          ? BigInt(Math.floor(data.lastCommitDate.getTime() / 1000))
+          : 0n,
+        type: "uint64",
       },
-      { name: "weeksActive", value: Math.floor(data.weeksActive ?? 0), type: "uint16" },
+      {
+        name: "weeksActive",
+        value: Math.floor(data.weeksActive ?? 0),
+        type: "uint16",
+      },
       { name: "isActive", value: data.isActive, type: "bool" },
       {
         name: "snapshotTimestamp",
         value: BigInt(Math.floor(data.snapshotDate.getTime() / 1000)),
-        type: "uint64"
+        type: "uint64",
       },
-      { name: "isRetroactive", value: data.isRetroactive ?? false, type: "bool" },
+      {
+        name: "isRetroactive",
+        value: data.isRetroactive ?? false,
+        type: "bool",
+      },
     ]);
 
     console.log(`Creating attestation for repo ${data.repositoryId}...`);
@@ -178,7 +194,10 @@ export class EASService {
     // Extract tx hash safely - SDK structure varies between versions
     let txHash = "unknown";
     try {
-      const txData = transaction as unknown as { tx?: { hash?: string }; receipt?: { hash?: string } };
+      const txData = transaction as unknown as {
+        tx?: { hash?: string };
+        receipt?: { hash?: string };
+      };
       txHash = txData.tx?.hash ?? txData.receipt?.hash ?? "unknown";
     } catch {
       // Ignore - txHash is just for logging
@@ -195,9 +214,10 @@ export class EASService {
    * Get the explorer URL for an attestation
    */
   getExplorerUrl(uid: string): string {
-    const baseUrl = this.network === OPTIMISM_MAINNET
-      ? "https://optimism.easscan.org"
-      : "https://optimism-sepolia.easscan.org";
+    const baseUrl =
+      this.network === OPTIMISM_MAINNET
+        ? "https://optimism.easscan.org"
+        : "https://optimism-sepolia.easscan.org";
     return `${baseUrl}/attestation/view/${uid}`;
   }
 
@@ -205,9 +225,10 @@ export class EASService {
    * Get the explorer URL for a schema
    */
   getSchemaExplorerUrl(schemaUid: string): string {
-    const baseUrl = this.network === OPTIMISM_MAINNET
-      ? "https://optimism.easscan.org"
-      : "https://optimism-sepolia.easscan.org";
+    const baseUrl =
+      this.network === OPTIMISM_MAINNET
+        ? "https://optimism.easscan.org"
+        : "https://optimism-sepolia.easscan.org";
     return `${baseUrl}/schema/view/${schemaUid}`;
   }
 }

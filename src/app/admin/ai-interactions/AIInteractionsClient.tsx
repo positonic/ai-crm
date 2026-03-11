@@ -65,9 +65,15 @@ function StarRating({ rating }: { rating: number }) {
       {[1, 2, 3, 4, 5].map((star) => (
         <span key={star}>
           {star <= rating ? (
-            <IconStarFilled size={14} style={{ color: "var(--mantine-color-yellow-5)" }} />
+            <IconStarFilled
+              size={14}
+              style={{ color: "var(--mantine-color-yellow-5)" }}
+            />
           ) : (
-            <IconStar size={14} style={{ color: "var(--mantine-color-gray-4)" }} />
+            <IconStar
+              size={14}
+              style={{ color: "var(--mantine-color-gray-4)" }}
+            />
           )}
         </span>
       ))}
@@ -112,7 +118,12 @@ export function AIInteractionsClient() {
     limit: ITEMS_PER_PAGE,
     offset: (currentPage - 1) * ITEMS_PER_PAGE,
     search: debouncedSearch || undefined,
-    hasError: errorFilter === "errors" ? true : errorFilter === "success" ? false : undefined,
+    hasError:
+      errorFilter === "errors"
+        ? true
+        : errorFilter === "success"
+          ? false
+          : undefined,
   });
 
   const { data: stats } = api.aiInteraction.getInteractionStats.useQuery();
@@ -137,11 +148,7 @@ export function AIInteractionsClient() {
         </Table.Td>
         <Table.Td>
           <Group gap="xs">
-            <Avatar
-              src={interaction.user.image}
-              size="sm"
-              radius="xl"
-            />
+            <Avatar src={interaction.user.image} size="sm" radius="xl" />
             <Text size="sm">{getUserDisplayName(interaction.user)}</Text>
           </Group>
         </Table.Td>
@@ -170,14 +177,18 @@ export function AIInteractionsClient() {
           {interaction.feedback ? (
             <StarRating rating={interaction.feedback.rating} />
           ) : (
-            <Text size="xs" c="dimmed">—</Text>
+            <Text size="xs" c="dimmed">
+              —
+            </Text>
           )}
         </Table.Td>
         <Table.Td>
           <Tooltip label="View details">
             <ActionIcon
               variant="subtle"
-              onClick={() => setSelectedInteraction(interaction as InteractionDetail)}
+              onClick={() =>
+                setSelectedInteraction(interaction as InteractionDetail)
+              }
             >
               <IconEye size={16} />
             </ActionIcon>
@@ -191,7 +202,9 @@ export function AIInteractionsClient() {
     <Container size="xl" py="xl">
       <Stack gap="lg">
         <div>
-          <Title order={2} mb="xs">AI Interactions</Title>
+          <Title order={2} mb="xs">
+            AI Interactions
+          </Title>
           <Text c="dimmed">
             View what users are asking the AI assistant and how it responds
           </Text>
@@ -202,31 +215,57 @@ export function AIInteractionsClient() {
           <SimpleGrid cols={{ base: 2, md: 5 }}>
             <Paper p="md" withBorder>
               <Group gap="xs">
-                <IconMessage size={16} style={{ color: "var(--mantine-color-blue-5)" }} />
-                <Text size="xs" c="dimmed">Total Interactions</Text>
-              </Group>
-              <Text fw={700} size="xl" mt={4}>{stats.totalInteractions}</Text>
-            </Paper>
-            <Paper p="md" withBorder>
-              <Group gap="xs">
-                <IconStarFilled size={16} style={{ color: "var(--mantine-color-yellow-5)" }} />
-                <Text size="xs" c="dimmed">Avg Rating</Text>
+                <IconMessage
+                  size={16}
+                  style={{ color: "var(--mantine-color-blue-5)" }}
+                />
+                <Text size="xs" c="dimmed">
+                  Total Interactions
+                </Text>
               </Group>
               <Text fw={700} size="xl" mt={4}>
-                {stats.averageRating != null ? stats.averageRating.toFixed(1) : "—"}
+                {stats.totalInteractions}
               </Text>
             </Paper>
             <Paper p="md" withBorder>
               <Group gap="xs">
-                <IconRobot size={16} style={{ color: "var(--mantine-color-violet-5)" }} />
-                <Text size="xs" c="dimmed">Feedback Count</Text>
+                <IconStarFilled
+                  size={16}
+                  style={{ color: "var(--mantine-color-yellow-5)" }}
+                />
+                <Text size="xs" c="dimmed">
+                  Avg Rating
+                </Text>
               </Group>
-              <Text fw={700} size="xl" mt={4}>{stats.totalFeedback}</Text>
+              <Text fw={700} size="xl" mt={4}>
+                {stats.averageRating != null
+                  ? stats.averageRating.toFixed(1)
+                  : "—"}
+              </Text>
             </Paper>
             <Paper p="md" withBorder>
               <Group gap="xs">
-                <IconClock size={16} style={{ color: "var(--mantine-color-teal-5)" }} />
-                <Text size="xs" c="dimmed">Avg Response</Text>
+                <IconRobot
+                  size={16}
+                  style={{ color: "var(--mantine-color-violet-5)" }}
+                />
+                <Text size="xs" c="dimmed">
+                  Feedback Count
+                </Text>
+              </Group>
+              <Text fw={700} size="xl" mt={4}>
+                {stats.totalFeedback}
+              </Text>
+            </Paper>
+            <Paper p="md" withBorder>
+              <Group gap="xs">
+                <IconClock
+                  size={16}
+                  style={{ color: "var(--mantine-color-teal-5)" }}
+                />
+                <Text size="xs" c="dimmed">
+                  Avg Response
+                </Text>
               </Group>
               <Text fw={700} size="xl" mt={4}>
                 {formatMs(stats.averageResponseTimeMs)}
@@ -234,8 +273,13 @@ export function AIInteractionsClient() {
             </Paper>
             <Paper p="md" withBorder>
               <Group gap="xs">
-                <IconAlertTriangle size={16} style={{ color: "var(--mantine-color-red-5)" }} />
-                <Text size="xs" c="dimmed">Error Rate</Text>
+                <IconAlertTriangle
+                  size={16}
+                  style={{ color: "var(--mantine-color-red-5)" }}
+                />
+                <Text size="xs" c="dimmed">
+                  Error Rate
+                </Text>
               </Group>
               <Text fw={700} size="xl" mt={4}>
                 {stats.errorRate.toFixed(1)}%
@@ -336,7 +380,11 @@ export function AIInteractionsClient() {
           <Stack gap="md">
             <Group justify="space-between">
               <Group gap="xs">
-                <Avatar src={selectedInteraction.user.image} size="sm" radius="xl" />
+                <Avatar
+                  src={selectedInteraction.user.image}
+                  size="sm"
+                  radius="xl"
+                />
                 <Text size="sm" fw={500}>
                   {getUserDisplayName(selectedInteraction.user)}
                 </Text>
@@ -348,27 +396,37 @@ export function AIInteractionsClient() {
 
             {selectedInteraction.pathname && (
               <Group gap="xs">
-                <Text size="xs" c="dimmed">Page:</Text>
+                <Text size="xs" c="dimmed">
+                  Page:
+                </Text>
                 <Text size="xs">{selectedInteraction.pathname}</Text>
               </Group>
             )}
 
             {selectedInteraction.responseTimeMs != null && (
               <Group gap="xs">
-                <Text size="xs" c="dimmed">Response time:</Text>
-                <Text size="xs">{formatMs(selectedInteraction.responseTimeMs)}</Text>
+                <Text size="xs" c="dimmed">
+                  Response time:
+                </Text>
+                <Text size="xs">
+                  {formatMs(selectedInteraction.responseTimeMs)}
+                </Text>
               </Group>
             )}
 
             <div>
-              <Text size="sm" fw={600} mb={4}>User Message</Text>
+              <Text size="sm" fw={600} mb={4}>
+                User Message
+              </Text>
               <Paper p="sm" withBorder style={{ whiteSpace: "pre-wrap" }}>
                 <Text size="sm">{selectedInteraction.userMessage}</Text>
               </Paper>
             </div>
 
             <div>
-              <Text size="sm" fw={600} mb={4}>AI Response</Text>
+              <Text size="sm" fw={600} mb={4}>
+                AI Response
+              </Text>
               <Paper p="sm" withBorder>
                 <ScrollArea.Autosize mah={300}>
                   <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
@@ -378,31 +436,50 @@ export function AIInteractionsClient() {
               </Paper>
             </div>
 
-            {selectedInteraction.hadError && selectedInteraction.errorMessage && (
-              <div>
-                <Text size="sm" fw={600} mb={4} c="red">Error</Text>
-                <Paper p="sm" withBorder style={{ borderColor: "var(--mantine-color-red-3)" }}>
-                  <Text size="sm" c="red">{selectedInteraction.errorMessage}</Text>
-                </Paper>
-              </div>
-            )}
+            {selectedInteraction.hadError &&
+              selectedInteraction.errorMessage && (
+                <div>
+                  <Text size="sm" fw={600} mb={4} c="red">
+                    Error
+                  </Text>
+                  <Paper
+                    p="sm"
+                    withBorder
+                    style={{ borderColor: "var(--mantine-color-red-3)" }}
+                  >
+                    <Text size="sm" c="red">
+                      {selectedInteraction.errorMessage}
+                    </Text>
+                  </Paper>
+                </div>
+              )}
 
             {selectedInteraction.feedback && (
               <div>
-                <Text size="sm" fw={600} mb={4}>User Feedback</Text>
+                <Text size="sm" fw={600} mb={4}>
+                  User Feedback
+                </Text>
                 <Paper p="sm" withBorder>
                   <Stack gap="xs">
                     <StarRating rating={selectedInteraction.feedback.rating} />
                     {selectedInteraction.feedback.comment && (
                       <div>
-                        <Text size="xs" c="dimmed">Comment:</Text>
-                        <Text size="sm">{selectedInteraction.feedback.comment}</Text>
+                        <Text size="xs" c="dimmed">
+                          Comment:
+                        </Text>
+                        <Text size="sm">
+                          {selectedInteraction.feedback.comment}
+                        </Text>
                       </div>
                     )}
                     {selectedInteraction.feedback.improvement && (
                       <div>
-                        <Text size="xs" c="dimmed">Improvement suggestion:</Text>
-                        <Text size="sm">{selectedInteraction.feedback.improvement}</Text>
+                        <Text size="xs" c="dimmed">
+                          Improvement suggestion:
+                        </Text>
+                        <Text size="sm">
+                          {selectedInteraction.feedback.improvement}
+                        </Text>
                       </div>
                     )}
                   </Stack>

@@ -41,7 +41,11 @@ export async function acceptPendingInvitations(
   const acceptedRoles: AcceptedRole[] = [];
 
   for (const invitation of invitations) {
-    if (invitation.type === "EVENT_ROLE" && invitation.eventId && invitation.roleId) {
+    if (
+      invitation.type === "EVENT_ROLE" &&
+      invitation.eventId &&
+      invitation.roleId
+    ) {
       const existingRole = await db.userRole.findUnique({
         where: {
           userId_eventId_roleId: {
@@ -67,7 +71,8 @@ export async function acceptPendingInvitations(
         });
       }
     } else if (
-      (invitation.type === "GLOBAL_ADMIN" || invitation.type === "GLOBAL_STAFF") &&
+      (invitation.type === "GLOBAL_ADMIN" ||
+        invitation.type === "GLOBAL_STAFF") &&
       invitation.globalRole
     ) {
       await db.user.update({
@@ -79,7 +84,11 @@ export async function acceptPendingInvitations(
         eventName: "Global Platform",
         roleName: invitation.globalRole,
       });
-    } else if (invitation.type === "VENUE_OWNER" && invitation.eventId && invitation.venueId) {
+    } else if (
+      invitation.type === "VENUE_OWNER" &&
+      invitation.eventId &&
+      invitation.venueId
+    ) {
       const existingOwnership = await db.venueOwner.findUnique({
         where: {
           userId_venueId: { userId, venueId: invitation.venueId },

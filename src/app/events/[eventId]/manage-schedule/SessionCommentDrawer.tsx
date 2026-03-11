@@ -85,9 +85,7 @@ function CommentItem({
   const [optimisticLiked, setOptimisticLiked] = useState(
     comment.likes.some((l) => l.userId === currentUserId),
   );
-  const [optimisticCount, setOptimisticCount] = useState(
-    comment._count.likes,
-  );
+  const [optimisticCount, setOptimisticCount] = useState(comment._count.likes);
 
   const utils = api.useUtils();
 
@@ -200,9 +198,7 @@ function CommentItem({
                   color={optimisticLiked ? "red" : "gray"}
                   size="sm"
                   onClick={handleLike}
-                  loading={
-                    likeMutation.isPending || unlikeMutation.isPending
-                  }
+                  loading={likeMutation.isPending || unlikeMutation.isPending}
                 >
                   {optimisticLiked ? (
                     <IconHeartFilled size={14} />
@@ -222,9 +218,7 @@ function CommentItem({
                     variant="subtle"
                     color="red"
                     size="sm"
-                    onClick={() =>
-                      deleteComment.mutate({ id: comment.id })
-                    }
+                    onClick={() => deleteComment.mutate({ id: comment.id })}
                     loading={deleteComment.isPending}
                   >
                     <IconTrash size={14} />

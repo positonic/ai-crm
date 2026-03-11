@@ -21,7 +21,11 @@ import {
   IconDatabase,
   IconUpload,
 } from "@tabler/icons-react";
-import { type HyperboardConfig, type PresetKey, SAMPLE_PRESETS } from "../HyperboardPlaygroundClient";
+import {
+  type HyperboardConfig,
+  type PresetKey,
+  SAMPLE_PRESETS,
+} from "../HyperboardPlaygroundClient";
 import { type HyperboardEntry } from "~/app/_components/Hyperboard/types";
 
 interface ConfigurationPanelProps {
@@ -34,7 +38,10 @@ export function ConfigurationPanel({ form }: ConfigurationPanelProps) {
     const preset = SAMPLE_PRESETS[value as PresetKey];
     if (preset) {
       form.setFieldValue("data", preset);
-      form.setFieldValue("label", value.charAt(0).toUpperCase() + value.slice(1));
+      form.setFieldValue(
+        "label",
+        value.charAt(0).toUpperCase() + value.slice(1),
+      );
       notifications.show({
         title: "Preset Loaded",
         message: `Loaded ${value} sample data`,
@@ -69,7 +76,7 @@ export function ConfigurationPanel({ form }: ConfigurationPanelProps) {
 
       if (!isValid) {
         throw new Error(
-          "Invalid data structure. Each item must have: type, id, value, isBlueprint"
+          "Invalid data structure. Each item must have: type, id, value, isBlueprint",
         );
       }
 
@@ -102,7 +109,10 @@ export function ConfigurationPanel({ form }: ConfigurationPanelProps) {
             label="Sample Preset"
             description="Choose a sample dataset"
             data={[
-              { value: "combined", label: "Combined (Sponsors 64% + Residents 36%)" },
+              {
+                value: "combined",
+                label: "Combined (Sponsors 64% + Residents 36%)",
+              },
               { value: "sponsors", label: "Sponsors" },
               { value: "users", label: "Users" },
               { value: "projects", label: "Projects" },

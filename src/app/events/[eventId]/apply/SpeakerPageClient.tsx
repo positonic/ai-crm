@@ -178,7 +178,9 @@ export default function SpeakerPageClient({
                       {event.name}
                     </Text>
                     <Text size="lg" fw={500} ta="center" c="teal">
-                      {event.type === "EIR" ? "EIR Application" : "Speaker Application"}
+                      {event.type === "EIR"
+                        ? "EIR Application"
+                        : "Speaker Application"}
                     </Text>
                     <Text c="dimmed" ta="center">
                       {event.type === "EIR"
@@ -244,8 +246,10 @@ export default function SpeakerPageClient({
             eventType={event.type}
             invitationToken={invitationToken}
             existingApplicationStatus={initialUserApplication?.status}
-            existingVenueIds={initialUserApplication?.venues?.map(v => v.venueId)}
-            existingResponses={initialUserApplication?.responses?.map(r => ({
+            existingVenueIds={initialUserApplication?.venues?.map(
+              (v) => v.venueId,
+            )}
+            existingResponses={initialUserApplication?.responses?.map((r) => ({
               id: r.id,
               answer: r.answer,
               question: {

@@ -2,9 +2,12 @@ import type { NextRequest } from "next/server";
 import { db } from "~/server/db";
 import { withMastraAuth } from "~/utils/validateApiKey";
 
-async function GET(request: NextRequest, context: { params: Promise<{ eventId: string }> }) {
+async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ eventId: string }> },
+) {
   const { eventId } = await context.params;
-  
+
   try {
     const data = await db.application.findMany({
       where: { eventId },
@@ -26,14 +29,14 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
                 githubUrl: true,
                 website: true,
                 twitterUrl: true,
-              }
-            }
-          }
+              },
+            },
+          },
         },
         responses: {
           include: {
-            question: true
-          }
+            question: true,
+          },
         },
         evaluations: {
           include: {
@@ -42,28 +45,28 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
                 id: true,
                 name: true,
                 email: true,
-              }
+              },
             },
-            scores: true
-          }
-        }
-      }
+            scores: true,
+          },
+        },
+      },
     });
-    
+
     return Response.json({
       success: true,
-      data
+      data,
     });
   } catch (error) {
     console.error("[MASTRA API] Error fetching applications:", error);
-    
+
     return Response.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "Failed to fetch applications",
-        details: error instanceof Error ? error.message : "Unknown error"
-      }, 
-      { status: 500 }
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
     );
   }
 }

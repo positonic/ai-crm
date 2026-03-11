@@ -13,7 +13,7 @@ export type ProjectWithRepositories = UserProject & {
  * Falls back to legacy githubUrl field if no repositories exist
  */
 export function getPrimaryRepoUrl(
-  project: ProjectWithRepositories | null | undefined
+  project: ProjectWithRepositories | null | undefined,
 ): string | null {
   if (!project) return null;
 
@@ -34,7 +34,7 @@ export function getPrimaryRepoUrl(
  * Includes legacy githubUrl if no repositories exist
  */
 export function getAllRepoUrls(
-  project: ProjectWithRepositories | null | undefined
+  project: ProjectWithRepositories | null | undefined,
 ): string[] {
   if (!project) return [];
 
@@ -65,7 +65,7 @@ export function getAllRepoUrls(
  * Returns the primary repo, or first repo, or null
  */
 export function getPrimaryRepo(
-  project: ProjectWithRepositories | null | undefined
+  project: ProjectWithRepositories | null | undefined,
 ): Repository | null {
   if (!project?.repositories || project.repositories.length === 0) {
     return null;
@@ -76,7 +76,9 @@ export function getPrimaryRepo(
   if (primaryRepo) return primaryRepo;
 
   // If no primary, return first repository (sorted by order)
-  const sortedRepos = [...project.repositories].sort((a, b) => a.order - b.order);
+  const sortedRepos = [...project.repositories].sort(
+    (a, b) => a.order - b.order,
+  );
   return sortedRepos[0] ?? null;
 }
 
@@ -84,7 +86,7 @@ export function getPrimaryRepo(
  * Check if a project has multiple repositories
  */
 export function hasMultipleRepos(
-  project: ProjectWithRepositories | null | undefined
+  project: ProjectWithRepositories | null | undefined,
 ): boolean {
   if (!project) return false;
 

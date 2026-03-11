@@ -35,6 +35,7 @@ import {
   IconLink,
   IconTicket,
   IconCertificate,
+  IconTarget,
 } from "@tabler/icons-react";
 import { useState } from "react";
 import Link from "next/link";
@@ -63,6 +64,7 @@ interface EventData {
   featureSponsorManagement: boolean;
   featureScheduleManagement: boolean;
   featureFloorManagement: boolean;
+  featureDeliberation: boolean;
   registrationUrl: string | null;
   lumaEventId: string | null;
   _count: {
@@ -82,7 +84,8 @@ type FeatureFlagKey =
   | "featureImpactAnalytics"
   | "featureSponsorManagement"
   | "featureScheduleManagement"
-  | "featureFloorManagement";
+  | "featureFloorManagement"
+  | "featureDeliberation";
 
 const FEATURE_FLAGS: {
   key: FeatureFlagKey;
@@ -156,6 +159,12 @@ const FEATURE_FLAGS: {
     description: "Enable floor lead assignments and venue management",
     icon: IconMapPin,
   },
+  {
+    key: "featureDeliberation",
+    label: "Deliberation",
+    description: "Enable community priority deliberation for this event",
+    icon: IconTarget,
+  },
 ];
 
 function getStatusColor(status: string): string {
@@ -183,34 +192,39 @@ interface AdminEventDetailClientProps {
   event: EventData;
 }
 
-export default function AdminEventDetailClient({ event }: AdminEventDetailClientProps) {
+export default function AdminEventDetailClient({
+  event,
+}: AdminEventDetailClientProps) {
   const router = useRouter();
   const eventIdentifier = event.slug ?? event.id;
 
-  const [registrationUrl, setRegistrationUrl] = useState(event.registrationUrl ?? "");
+  const [registrationUrl, setRegistrationUrl] = useState(
+    event.registrationUrl ?? "",
+  );
   const [lumaEventId, setLumaEventId] = useState(event.lumaEventId ?? "");
 
   const activityCertStatus = api.hypercerts.getEventActivityCertStatus.useQuery(
     { eventId: event.id },
   );
 
-  const publishActivityCert = api.hypercerts.publishEventActivityCert.useMutation({
-    onSuccess: (data) => {
-      notifications.show({
-        title: "Activity Cert Published",
-        message: `Published with ${String(data.contributorCount)} contributor${data.contributorCount === 1 ? "" : "s"}`,
-        color: "green",
-      });
-      void activityCertStatus.refetch();
-    },
-    onError: (error) => {
-      notifications.show({
-        title: "Failed to Publish",
-        message: error.message,
-        color: "red",
-      });
-    },
-  });
+  const publishActivityCert =
+    api.hypercerts.publishEventActivityCert.useMutation({
+      onSuccess: (data) => {
+        notifications.show({
+          title: "Activity Cert Published",
+          message: `Published with ${String(data.contributorCount)} contributor${data.contributorCount === 1 ? "" : "s"}`,
+          color: "green",
+        });
+        void activityCertStatus.refetch();
+      },
+      onError: (error) => {
+        notifications.show({
+          title: "Failed to Publish",
+          message: error.message,
+          color: "red",
+        });
+      },
+    });
 
   const updateEvent = api.event.updateEvent.useMutation({
     onSuccess: () => {
@@ -230,8 +244,12 @@ export default function AdminEventDetailClient({ event }: AdminEventDetailClient
     },
   });
 
-  const handleSaveField = (field: "registrationUrl" | "lumaEventId", value: string) => {
-    const currentValue = field === "registrationUrl" ? event.registrationUrl : event.lumaEventId;
+  const handleSaveField = (
+    field: "registrationUrl" | "lumaEventId",
+    value: string,
+  ) => {
+    const currentValue =
+      field === "registrationUrl" ? event.registrationUrl : event.lumaEventId;
     if (value === (currentValue ?? "")) return;
     updateEvent.mutate({ id: event.id, [field]: value || undefined });
   };
@@ -280,7 +298,11 @@ export default function AdminEventDetailClient({ event }: AdminEventDetailClient
                 <Badge variant="light" tt="uppercase">
                   {event.type}
                 </Badge>
-                <Badge color={getStatusColor(event.status)} variant="light" tt="uppercase">
+                <Badge
+                  color={getStatusColor(event.status)}
+                  variant="light"
+                  tt="uppercase"
+                >
                   {event.status}
                 </Badge>
               </Group>
@@ -362,6 +384,14 @@ export default function AdminEventDetailClient({ event }: AdminEventDetailClient
               visible: event.featureFloorManagement,
             },
             {
+              label: "Deliberation",
+              description: "Manage community priority deliberation and results",
+              icon: IconTarget,
+              color: "grape",
+              href: `/admin/events/${eventIdentifier}/deliberations`,
+              visible: event.featureDeliberation,
+            },
+            {
               label: "Manage Schedule",
               description: "Create and manage sessions, floors, and tracks",
               icon: IconCalendarEvent,
@@ -369,54 +399,66 @@ export default function AdminEventDetailClient({ event }: AdminEventDetailClient
               href: `/events/${eventIdentifier}/manage-schedule`,
               visible: event.featureScheduleManagement,
             },
-          ].filter((card) => card.visible !== false).map((card) => {
-            const CardIcon = card.icon;
-            return (
-              <Paper
-                key={card.label}
-                p="lg"
-                radius="md"
-                withBorder
-                component={Link}
-                href={card.href}
-                style={{
-                  textDecoration: "none",
-                  cursor: "pointer",
-                  transition: "box-shadow 150ms ease",
-                }}
-                onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                  e.currentTarget.style.boxShadow = "var(--mantine-shadow-md)";
-                }}
-                onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                  e.currentTarget.style.boxShadow = "";
-                }}
-              >
-                <Group justify="space-between" align="flex-start" wrap="nowrap">
-                  <Group gap="sm" wrap="nowrap" style={{ flex: 1 }}>
-                    <ThemeIcon size="lg" radius="md" variant="light" color={card.color}>
-                      <CardIcon size={20} />
-                    </ThemeIcon>
-                    <Stack gap={2}>
-                      <Group gap="xs">
-                        <Text size="sm" fw={600}>
-                          {card.label}
+          ]
+            .filter((card) => card.visible !== false)
+            .map((card) => {
+              const CardIcon = card.icon;
+              return (
+                <Paper
+                  key={card.label}
+                  p="lg"
+                  radius="md"
+                  withBorder
+                  component={Link}
+                  href={card.href}
+                  style={{
+                    textDecoration: "none",
+                    cursor: "pointer",
+                    transition: "box-shadow 150ms ease",
+                  }}
+                  onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                    e.currentTarget.style.boxShadow =
+                      "var(--mantine-shadow-md)";
+                  }}
+                  onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                    e.currentTarget.style.boxShadow = "";
+                  }}
+                >
+                  <Group
+                    justify="space-between"
+                    align="flex-start"
+                    wrap="nowrap"
+                  >
+                    <Group gap="sm" wrap="nowrap" style={{ flex: 1 }}>
+                      <ThemeIcon
+                        size="lg"
+                        radius="md"
+                        variant="light"
+                        color={card.color}
+                      >
+                        <CardIcon size={20} />
+                      </ThemeIcon>
+                      <Stack gap={2}>
+                        <Group gap="xs">
+                          <Text size="sm" fw={600}>
+                            {card.label}
+                          </Text>
+                          {"count" in card && card.count !== undefined && (
+                            <Badge size="sm" variant="light" color={card.color}>
+                              {card.count}
+                            </Badge>
+                          )}
+                        </Group>
+                        <Text size="xs" c="dimmed">
+                          {card.description}
                         </Text>
-                        {"count" in card && card.count !== undefined && (
-                          <Badge size="sm" variant="light" color={card.color}>
-                            {card.count}
-                          </Badge>
-                        )}
-                      </Group>
-                      <Text size="xs" c="dimmed">
-                        {card.description}
-                      </Text>
-                    </Stack>
+                      </Stack>
+                    </Group>
+                    <IconChevronRight size={16} style={{ opacity: 0.5 }} />
                   </Group>
-                  <IconChevronRight size={16} style={{ opacity: 0.5 }} />
-                </Group>
-              </Paper>
-            );
-          })}
+                </Paper>
+              );
+            })}
         </SimpleGrid>
 
         {/* Integrations */}
@@ -439,7 +481,9 @@ export default function AdminEventDetailClient({ event }: AdminEventDetailClient
                 leftSection={<IconLink size={16} />}
                 value={registrationUrl}
                 onChange={(e) => setRegistrationUrl(e.currentTarget.value)}
-                onBlur={() => handleSaveField("registrationUrl", registrationUrl)}
+                onBlur={() =>
+                  handleSaveField("registrationUrl", registrationUrl)
+                }
                 disabled={updateEvent.isPending}
               />
               <TextInput
@@ -461,16 +505,22 @@ export default function AdminEventDetailClient({ event }: AdminEventDetailClient
               <Stack gap="sm">
                 <Group gap="xs">
                   <IconCertificate size={20} />
-                  <Text size="sm" fw={500}>Activity Cert (Hypercerts)</Text>
+                  <Text size="sm" fw={500}>
+                    Activity Cert (Hypercerts)
+                  </Text>
                 </Group>
 
                 {activityCertStatus.data?.isPublished ? (
                   <Stack gap="xs">
                     <Group gap="xs">
-                      <Badge color="green" variant="light">Published</Badge>
+                      <Badge color="green" variant="light">
+                        Published
+                      </Badge>
                       {activityCertStatus.data.publishedAt && (
                         <Text size="xs" c="dimmed">
-                          {new Date(activityCertStatus.data.publishedAt).toLocaleDateString("en-US", {
+                          {new Date(
+                            activityCertStatus.data.publishedAt,
+                          ).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
@@ -478,20 +528,33 @@ export default function AdminEventDetailClient({ event }: AdminEventDetailClient
                         </Text>
                       )}
                     </Group>
-                    <Text size="xs" c="dimmed" style={{ wordBreak: "break-all" }}>
+                    <Text
+                      size="xs"
+                      c="dimmed"
+                      style={{ wordBreak: "break-all" }}
+                    >
                       {activityCertStatus.data.activityUri}
                     </Text>
                   </Stack>
                 ) : (
                   <Stack gap="xs">
                     <Text size="xs" c="dimmed">
-                      Publish this event as an activity cert on the Hypersphere with speakers as contributors and a hyperboard.
+                      Publish this event as an activity cert on the Hypersphere
+                      with speakers as contributors and a hyperboard.
                     </Text>
                     <Button
                       size="sm"
                       variant="light"
-                      leftSection={publishActivityCert.isPending ? <Loader size={14} /> : <IconCertificate size={14} />}
-                      onClick={() => publishActivityCert.mutate({ eventId: event.id })}
+                      leftSection={
+                        publishActivityCert.isPending ? (
+                          <Loader size={14} />
+                        ) : (
+                          <IconCertificate size={14} />
+                        )
+                      }
+                      onClick={() =>
+                        publishActivityCert.mutate({ eventId: event.id })
+                      }
                       loading={publishActivityCert.isPending}
                       style={{ alignSelf: "flex-start" }}
                     >
@@ -512,7 +575,8 @@ export default function AdminEventDetailClient({ event }: AdminEventDetailClient
               <Title order={3}>Feature Configuration</Title>
             </Group>
             <Text size="sm" c="dimmed">
-              Toggle which features are enabled for this event. Disabled features will be hidden from the event navigation.
+              Toggle which features are enabled for this event. Disabled
+              features will be hidden from the event navigation.
             </Text>
 
             <Divider />
@@ -522,7 +586,11 @@ export default function AdminEventDetailClient({ event }: AdminEventDetailClient
                 const FlagIcon = flag.icon;
                 return (
                   <Paper key={flag.key} p="md" radius="sm" withBorder>
-                    <Group wrap="nowrap" justify="space-between" align="flex-start">
+                    <Group
+                      wrap="nowrap"
+                      justify="space-between"
+                      align="flex-start"
+                    >
                       <Group wrap="nowrap" gap="sm" style={{ flex: 1 }}>
                         <FlagIcon size={20} />
                         <Stack gap={2}>

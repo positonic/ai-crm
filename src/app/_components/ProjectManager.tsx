@@ -65,25 +65,32 @@ interface ProjectManagerProps {
   eventId?: string;
 }
 
-export function ProjectManager({ projects, onProjectsChange, eventId }: ProjectManagerProps) {
+export function ProjectManager({
+  projects,
+  onProjectsChange,
+  eventId,
+}: ProjectManagerProps) {
   const [opened, setOpened] = useState(false);
-  const [editingProject, setEditingProject] = useState<ProjectWithRepositories | null>(null);
-  const [repositories, setRepositories] = useState<Array<{
-    id?: string;
-    url: string;
-    name: string;
-    description: string;
-    isPrimary: boolean;
-    order: number;
-    isNew?: boolean;
-  }>>([]);
+  const [editingProject, setEditingProject] =
+    useState<ProjectWithRepositories | null>(null);
+  const [repositories, setRepositories] = useState<
+    Array<{
+      id?: string;
+      url: string;
+      name: string;
+      description: string;
+      isPrimary: boolean;
+      order: number;
+      isNew?: boolean;
+    }>
+  >([]);
   const { data: session } = useSession();
 
   // Fetch collaborators for the editing project
   const { data: collaboratorsData, refetch: refetchCollaborators } =
     api.profile.getProjectCollaborators.useQuery(
       { projectId: editingProject?.id ?? "" },
-      { enabled: !!editingProject?.id }
+      { enabled: !!editingProject?.id },
     );
 
   const addCollaborators = api.profile.addProjectCollaborators.useMutation({
@@ -144,8 +151,8 @@ export function ProjectManager({ projects, onProjectsChange, eventId }: ProjectM
                 description: repo.description || undefined,
                 isPrimary: repo.isPrimary,
                 order: repo.order,
-              })
-            )
+              }),
+            ),
           );
         } catch {
           notifications.show({
@@ -182,12 +189,19 @@ export function ProjectManager({ projects, onProjectsChange, eventId }: ProjectM
       // Handle repository updates if editing a project
       if (editingProject && repositories.length > 0) {
         try {
-          const existingRepoIds = editingProject.repositories?.map((r) => r.id) ?? [];
-          const currentRepoIds = repositories.filter((r) => r.id).map((r) => r.id!);
+          const existingRepoIds =
+            editingProject.repositories?.map((r) => r.id) ?? [];
+          const currentRepoIds = repositories
+            .filter((r) => r.id)
+            .map((r) => r.id!);
 
           // Delete removed repositories
-          const toDelete = existingRepoIds.filter((id) => !currentRepoIds.includes(id));
-          await Promise.all(toDelete.map((id) => removeRepository.mutateAsync({ id })));
+          const toDelete = existingRepoIds.filter(
+            (id) => !currentRepoIds.includes(id),
+          );
+          await Promise.all(
+            toDelete.map((id) => removeRepository.mutateAsync({ id })),
+          );
 
           // Add or update repositories
           await Promise.all(
@@ -213,7 +227,7 @@ export function ProjectManager({ projects, onProjectsChange, eventId }: ProjectM
                   order: repo.order,
                 });
               }
-            })
+            }),
           );
         } catch {
           notifications.show({
@@ -286,7 +300,7 @@ export function ProjectManager({ projects, onProjectsChange, eventId }: ProjectM
       Object.entries(values).map(([key, value]) => [
         key,
         value === "" ? undefined : value,
-      ])
+      ]),
     ) as ProjectFormData;
 
     if (editingProject) {
@@ -321,7 +335,7 @@ export function ProjectManager({ projects, onProjectsChange, eventId }: ProjectM
         description: r.description ?? "",
         isPrimary: r.isPrimary,
         order: r.order,
-      })) ?? []
+      })) ?? [],
     );
 
     setOpened(true);
@@ -340,7 +354,12 @@ export function ProjectManager({ projects, onProjectsChange, eventId }: ProjectM
     setOpened(true);
   };
 
-  const handleAddCollaborator = (user: { id: string; name: string | null; email: string | null; image: string | null }) => {
+  const handleAddCollaborator = (user: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    image: string | null;
+  }) => {
     if (!editingProject) return;
     addCollaborators.mutate({
       projectId: editingProject.id,
@@ -393,9 +412,13 @@ export function ProjectManager({ projects, onProjectsChange, eventId }: ProjectM
                     <Group justify="space-between" align="flex-start" mb="sm">
                       <div style={{ flex: 1 }}>
                         <Group gap="xs" mb="xs">
-                          <Text fw={500} size="lg">{project.title}</Text>
+                          <Text fw={500} size="lg">
+                            {project.title}
+                          </Text>
                           {project.featured && (
-                            <Badge size="xs" color="yellow">Featured</Badge>
+                            <Badge size="xs" color="yellow">
+                              Featured
+                            </Badge>
                           )}
                         </Group>
                         {project.description && (
@@ -403,15 +426,21 @@ export function ProjectManager({ projects, onProjectsChange, eventId }: ProjectM
                             {project.description}
                           </Text>
                         )}
-                        {project.focusAreas && project.focusAreas.length > 0 && (
-                          <Group gap={4} mb="xs">
-                            {project.focusAreas.map((area) => (
-                              <Badge key={area} size="sm" color="blue" variant="light">
-                                {area}
-                              </Badge>
-                            ))}
-                          </Group>
-                        )}
+                        {project.focusAreas &&
+                          project.focusAreas.length > 0 && (
+                            <Group gap={4} mb="xs">
+                              {project.focusAreas.map((area) => (
+                                <Badge
+                                  key={area}
+                                  size="sm"
+                                  color="blue"
+                                  variant="light"
+                                >
+                                  {area}
+                                </Badge>
+                              ))}
+                            </Group>
+                          )}
                       </div>
 
                       <Group gap="xs">
@@ -460,11 +489,12 @@ export function ProjectManager({ projects, onProjectsChange, eventId }: ProjectM
                             <IconBrandGithub size={16} />
                           </ActionIcon>
                         )}
-                        {project.repositories && project.repositories.length > 1 && (
-                          <Badge size="xs" variant="light">
-                            +{project.repositories.length - 1} more
-                          </Badge>
-                        )}
+                        {project.repositories &&
+                          project.repositories.length > 1 && (
+                            <Badge size="xs" variant="light">
+                              +{project.repositories.length - 1} more
+                            </Badge>
+                          )}
                         {project.liveUrl && (
                           <ActionIcon
                             component="a"
@@ -489,7 +519,11 @@ export function ProjectManager({ projects, onProjectsChange, eventId }: ProjectM
                     radius="md"
                     component={Link}
                     href={`/projects/${project.id}`}
-                    style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}
+                    style={{
+                      textDecoration: "none",
+                      color: "inherit",
+                      cursor: "pointer",
+                    }}
                   >
                     {content}
                   </Paper>

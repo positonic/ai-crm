@@ -17,12 +17,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { DatePickerInput } from "@mantine/dates";
-import {
-  IconPlus,
-  IconMail,
-  IconUpload,
-  IconCopy,
-} from "@tabler/icons-react";
+import { IconPlus, IconMail, IconUpload, IconCopy } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { api } from "~/trpc/react";
 import TelegramMessageButton from "~/app/_components/TelegramMessageButton";
@@ -59,14 +54,23 @@ export default function InvitationsClient() {
   const [filterEmail, setFilterEmail] = useState("");
 
   // API queries
-  const { data: invitations, refetch: refetchInvitations, isLoading: loadingInvitations } = api.invitation.getAll.useQuery({
+  const {
+    data: invitations,
+    refetch: refetchInvitations,
+    isLoading: loadingInvitations,
+  } = api.invitation.getAll.useQuery({
     eventId: filterEventId || undefined,
-    status: (filterStatus && filterStatus !== "" ? filterStatus as "PENDING" | "ACCEPTED" | "EXPIRED" | "CANCELLED" : undefined),
+    status:
+      filterStatus && filterStatus !== ""
+        ? (filterStatus as "PENDING" | "ACCEPTED" | "EXPIRED" | "CANCELLED")
+        : undefined,
     email: filterEmail || undefined,
   });
 
-  const { data: events, isLoading: loadingEvents } = api.event.getEvents.useQuery();
-  const { data: roles, isLoading: loadingRoles } = api.invitation.getAvailableRoles.useQuery();
+  const { data: events, isLoading: loadingEvents } =
+    api.event.getEvents.useQuery();
+  const { data: roles, isLoading: loadingRoles } =
+    api.invitation.getAvailableRoles.useQuery();
   const { data: stats } = api.invitation.getStats.useQuery({
     eventId: filterEventId || undefined,
   });
@@ -161,7 +165,8 @@ export default function InvitationsClient() {
 
   const copyInvitationLink = (token: string) => {
     const invitationUrl = `${window.location.origin}/accept-invitation?token=${token}`;
-    void navigator.clipboard.writeText(invitationUrl)
+    void navigator.clipboard
+      .writeText(invitationUrl)
       .then(() => {
         notifications.show({
           title: "Success",
@@ -179,9 +184,7 @@ export default function InvitationsClient() {
   };
 
   // Transform invitation data for TelegramMessageButton
-  const createMockApplicationForTelegram = (invitation: {
-    email: string;
-  }) => {
+  const createMockApplicationForTelegram = (invitation: { email: string }) => {
     return {
       responses: [
         {
@@ -194,7 +197,7 @@ export default function InvitationsClient() {
         },
       ],
       user: {
-        name: invitation.email.split('@')[0] ?? null,
+        name: invitation.email.split("@")[0] ?? null,
         email: invitation.email,
       },
     };
@@ -209,8 +212,14 @@ export default function InvitationsClient() {
     expiresAt: string | Date;
   }) => {
     const invitationUrl = `${window.location.origin}/accept-invitation?token=${invitation.token}`;
-    const eventName = invitation.type === "EVENT_ROLE" ? invitation.event?.name : "Platform Administration";
-    const roleName = invitation.type === "EVENT_ROLE" ? invitation.role?.name : invitation.globalRole;
+    const eventName =
+      invitation.type === "EVENT_ROLE"
+        ? invitation.event?.name
+        : "Platform Administration";
+    const roleName =
+      invitation.type === "EVENT_ROLE"
+        ? invitation.role?.name
+        : invitation.globalRole;
 
     return `You've been invited to join ${eventName ?? "an event"} as ${roleName ?? "a role"}!
 
@@ -276,7 +285,12 @@ We're excited to have you on board!`;
             placeholder="Filter by event"
             value={filterEventId}
             onChange={(value) => setFilterEventId(value ?? "")}
-            data={events?.map(event => ({ value: event.id, label: event.name })) ?? []}
+            data={
+              events?.map((event) => ({
+                value: event.id,
+                label: event.name,
+              })) ?? []
+            }
             clearable
             style={{ minWidth: 200 }}
           />
@@ -302,8 +316,12 @@ We're excited to have you on board!`;
         totalCount={invitations?.length ?? 0}
         roleName="invitation"
         title="Event Invitations"
-        onResend={(id) => mutations.resendInvitation.mutate({ invitationId: id })}
-        onCancel={(id) => mutations.cancelInvitation.mutate({ invitationId: id })}
+        onResend={(id) =>
+          mutations.resendInvitation.mutate({ invitationId: id })
+        }
+        onCancel={(id) =>
+          mutations.cancelInvitation.mutate({ invitationId: id })
+        }
         isResending={mutations.resendInvitation.isPending}
         isCancelling={mutations.cancelInvitation.isPending}
         extraColumns={[
@@ -312,10 +330,14 @@ We're excited to have you on board!`;
             render: (inv) => (
               <Group gap="xs">
                 <Text size="sm" fw={500}>
-                  {inv.type === "EVENT_ROLE" ? inv.event?.name : "Global Platform"}
+                  {inv.type === "EVENT_ROLE"
+                    ? inv.event?.name
+                    : "Global Platform"}
                 </Text>
                 {inv.type !== "EVENT_ROLE" && (
-                  <Badge size="xs" color="red" variant="dot">Global</Badge>
+                  <Badge size="xs" color="red" variant="dot">
+                    Global
+                  </Badge>
                 )}
               </Group>
             ),
@@ -346,7 +368,9 @@ We're excited to have you on board!`;
             </ActionIcon>
             <TelegramMessageButton
               application={createMockApplicationForTelegram(inv)}
-              customMessage={createInvitationTelegramMessage(inv as Parameters<typeof createInvitationTelegramMessage>[0])}
+              customMessage={createInvitationTelegramMessage(
+                inv as Parameters<typeof createInvitationTelegramMessage>[0],
+              )}
               size={14}
               variant="light"
               color="blue"
@@ -375,21 +399,28 @@ We're excited to have you on board!`;
               label="Invitation Type"
               placeholder="Select invitation type"
               data={[
-                { value: "EVENT_ROLE", label: "Event Role (mentor, sponsor, etc.)" },
+                {
+                  value: "EVENT_ROLE",
+                  label: "Event Role (mentor, sponsor, etc.)",
+                },
                 { value: "GLOBAL_ADMIN", label: "Global Admin" },
                 { value: "GLOBAL_STAFF", label: "Global Staff" },
               ]}
               {...createForm.getInputProps("type")}
               required
               onChange={(value) => {
-                createForm.setFieldValue("type", value as "EVENT_ROLE" | "GLOBAL_ADMIN" | "GLOBAL_STAFF");
+                createForm.setFieldValue(
+                  "type",
+                  value as "EVENT_ROLE" | "GLOBAL_ADMIN" | "GLOBAL_STAFF",
+                );
                 createForm.setFieldValue("eventId", "");
                 createForm.setFieldValue("roleId", "");
                 createForm.setFieldValue("globalRole", undefined);
               }}
             />
 
-            {(createForm.values.type === "GLOBAL_ADMIN" || createForm.values.type === "GLOBAL_STAFF") && (
+            {(createForm.values.type === "GLOBAL_ADMIN" ||
+              createForm.values.type === "GLOBAL_STAFF") && (
               <Select
                 label="Global Role"
                 placeholder="Select global role"
@@ -406,7 +437,12 @@ We're excited to have you on board!`;
               <Select
                 label="Event"
                 placeholder="Select an event"
-                data={events?.map(event => ({ value: event.id, label: event.name })) ?? []}
+                data={
+                  events?.map((event) => ({
+                    value: event.id,
+                    label: event.name,
+                  })) ?? []
+                }
                 {...createForm.getInputProps("eventId")}
                 required
               />
@@ -416,7 +452,12 @@ We're excited to have you on board!`;
               <Select
                 label="Event Role"
                 placeholder="Select a role"
-                data={roles?.map(role => ({ value: role.id, label: role.name })) ?? []}
+                data={
+                  roles?.map((role) => ({
+                    value: role.id,
+                    label: role.name,
+                  })) ?? []
+                }
                 {...createForm.getInputProps("roleId")}
                 required
               />
@@ -457,7 +498,9 @@ We're excited to have you on board!`;
             <Textarea
               label="Emails"
               description="Enter one email per line or separate with commas"
-              placeholder={"user1@example.com\nuser2@example.com\nuser3@example.com"}
+              placeholder={
+                "user1@example.com\nuser2@example.com\nuser3@example.com"
+              }
               {...bulkForm.getInputProps("emails")}
               rows={6}
               required
@@ -466,7 +509,12 @@ We're excited to have you on board!`;
             <Select
               label="Event"
               placeholder="Select an event"
-              data={events?.map(event => ({ value: event.id, label: event.name })) ?? []}
+              data={
+                events?.map((event) => ({
+                  value: event.id,
+                  label: event.name,
+                })) ?? []
+              }
               {...bulkForm.getInputProps("eventId")}
               required
             />
@@ -474,7 +522,10 @@ We're excited to have you on board!`;
             <Select
               label="Role"
               placeholder="Select a role"
-              data={roles?.map(role => ({ value: role.id, label: role.name })) ?? []}
+              data={
+                roles?.map((role) => ({ value: role.id, label: role.name })) ??
+                []
+              }
               {...bulkForm.getInputProps("roleId")}
               required
             />

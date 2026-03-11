@@ -1,9 +1,9 @@
 import "~/styles/globals.css";
-import { Notifications } from '@mantine/notifications';
-import '@mantine/core/styles.css';
-import '@mantine/notifications/styles.css';
-import '@mantine/dates/styles.css';
-import 'mantine-datatable/styles.layer.css';
+import { Notifications } from "@mantine/notifications";
+import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
+import "@mantine/dates/styles.css";
+import "mantine-datatable/styles.layer.css";
 
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
@@ -13,7 +13,7 @@ import HeaderBar from "./admin/events/HeaderBar";
 import { ThemeProvider } from "./_components/ThemeProvider";
 import { ThemeToggle } from "./_components/ThemeToggle";
 import { GitHubCorner } from "./_components/GitHubCorner";
-import { AIChatFAB } from "./_components/AIChatFAB";
+import { AIChatFABLazy } from "./_components/AIChatFABLazy";
 import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
@@ -39,10 +39,10 @@ export default function RootLayout({
             <TRPCReactProvider>
               <HeaderBar />
               {children}
-              <AIChatFAB />
+              <AIChatFABLazy />
+              <GitHubCorner />
             </TRPCReactProvider>
             <ThemeToggle />
-            <GitHubCorner />
           </SessionProvider>
         </ThemeProvider>
       </body>

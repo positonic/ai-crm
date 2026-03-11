@@ -9,7 +9,7 @@ interface EvaluationPageProps {
 
 export default async function EvaluationPage({ params }: EvaluationPageProps) {
   const { evaluationId } = await params;
-  
+
   return (
     <Container size="xl" py="md">
       <EvaluationPageClient evaluationId={evaluationId} />

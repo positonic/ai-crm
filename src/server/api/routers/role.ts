@@ -38,7 +38,7 @@ export const roleRouter = createTRPCRouter({
           globalRole: true,
         },
       });
-      return userRoles.map(ur => ur.globalRole);
+      return userRoles.map((ur) => ur.globalRole);
     }),
 
   // Get current user's global roles
@@ -49,7 +49,7 @@ export const roleRouter = createTRPCRouter({
         globalRole: true,
       },
     });
-    return userRoles.map(ur => ur.globalRole);
+    return userRoles.map((ur) => ur.globalRole);
   }),
 
   // Get current user's event roles
@@ -73,10 +73,7 @@ export const roleRouter = createTRPCRouter({
           },
         },
       },
-      orderBy: [
-        { event: { startDate: "desc" } },
-        { role: { name: "asc" } },
-      ],
+      orderBy: [{ event: { startDate: "desc" } }, { role: { name: "asc" } }],
     });
 
     return userRoles;
@@ -94,18 +91,20 @@ export const roleRouter = createTRPCRouter({
       });
 
       // Check if any of the user's roles has the required permission
-      return userRoles.some(ur => 
-        ur.globalRole.permissions.includes(input.permission)
+      return userRoles.some((ur) =>
+        ur.globalRole.permissions.includes(input.permission),
       );
     }),
 
   // Create a new global role (admin only)
   createGlobalRole: protectedProcedure
-    .input(z.object({
-      name: z.string().min(1),
-      description: z.string().optional(),
-      permissions: z.array(z.string()),
-    }))
+    .input(
+      z.object({
+        name: z.string().min(1),
+        description: z.string().optional(),
+        permissions: z.array(z.string()),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // TODO: Add admin check here once we implement it
       const role = await ctx.db.globalRole.create({
@@ -120,13 +119,15 @@ export const roleRouter = createTRPCRouter({
 
   // Assign role to user (admin only)
   assignGlobalRole: protectedProcedure
-    .input(z.object({
-      userId: z.string(),
-      globalRoleId: z.string(),
-    }))
+    .input(
+      z.object({
+        userId: z.string(),
+        globalRoleId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // TODO: Add admin check here once we implement it
-      
+
       // Check if assignment already exists
       const existing = await ctx.db.userGlobalRole.findUnique({
         where: {
@@ -168,13 +169,15 @@ export const roleRouter = createTRPCRouter({
 
   // Remove role from user (admin only)
   removeGlobalRole: protectedProcedure
-    .input(z.object({
-      userId: z.string(),
-      globalRoleId: z.string(),
-    }))
+    .input(
+      z.object({
+        userId: z.string(),
+        globalRoleId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // TODO: Add admin check here once we implement it
-      
+
       const deleted = await ctx.db.userGlobalRole.deleteMany({
         where: {
           userId: input.userId,
@@ -195,7 +198,7 @@ export const roleRouter = createTRPCRouter({
   // Get all users with their global roles (admin only)
   getUsersWithRoles: protectedProcedure.query(async ({ ctx }) => {
     // TODO: Add admin check here once we implement it
-    
+
     const users = await ctx.db.user.findMany({
       select: {
         id: true,
@@ -209,22 +212,24 @@ export const roleRouter = createTRPCRouter({
       },
     });
 
-    return users.map(user => ({
+    return users.map((user) => ({
       ...user,
-      globalRoles: user.userGlobalRoles.map(ur => ur.globalRole),
+      globalRoles: user.userGlobalRoles.map((ur) => ur.globalRole),
     }));
   }),
 
   // Get all users with their event roles and applications
   getAllUsersWithEventRoles: protectedProcedure
-    .input(z.object({
-      search: z.string().optional(),
-      eventId: z.string().optional(),
-      roleId: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        search: z.string().optional(),
+        eventId: z.string().optional(),
+        roleId: z.string().optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       // TODO: Add admin check here once we implement it
-      
+
       const users = await ctx.db.user.findMany({
         where: {
           ...(input.search && {
@@ -291,14 +296,16 @@ export const roleRouter = createTRPCRouter({
 
   // Assign event role to existing user
   assignEventRole: protectedProcedure
-    .input(z.object({
-      userId: z.string(),
-      eventId: z.string(),
-      roleId: z.string(),
-    }))
+    .input(
+      z.object({
+        userId: z.string(),
+        eventId: z.string(),
+        roleId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // TODO: Add admin check here once we implement it
-      
+
       // Check if assignment already exists
       const existing = await ctx.db.userRole.findUnique({
         where: {
@@ -367,14 +374,16 @@ export const roleRouter = createTRPCRouter({
 
   // Remove event role from user
   removeEventRole: protectedProcedure
-    .input(z.object({
-      userId: z.string(),
-      eventId: z.string(),
-      roleId: z.string(),
-    }))
+    .input(
+      z.object({
+        userId: z.string(),
+        eventId: z.string(),
+        roleId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // TODO: Add admin check here once we implement it
-      
+
       const deleted = await ctx.db.userRole.deleteMany({
         where: {
           userId: input.userId,
@@ -395,13 +404,15 @@ export const roleRouter = createTRPCRouter({
 
   // Update user's global role (admin -> staff -> user)
   updateUserGlobalRole: protectedProcedure
-    .input(z.object({
-      userId: z.string(),
-      newRole: z.enum(["user", "staff", "admin"]),
-    }))
+    .input(
+      z.object({
+        userId: z.string(),
+        newRole: z.enum(["user", "staff", "admin"]),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // TODO: Add admin check here once we implement it
-      
+
       const user = await ctx.db.user.update({
         where: { id: input.userId },
         data: { role: input.newRole },
@@ -423,7 +434,7 @@ export const roleRouter = createTRPCRouter({
     .input(z.object({ userId: z.string() }))
     .query(async ({ ctx, input }) => {
       // TODO: Add admin check here once we implement it
-      
+
       const user = await ctx.db.user.findUnique({
         where: { id: input.userId },
         include: {
@@ -486,19 +497,20 @@ export const roleRouter = createTRPCRouter({
   // Get user statistics
   getUserStats: protectedProcedure.query(async ({ ctx }) => {
     // TODO: Add admin check here once we implement it
-    
-    const [totalUsers, adminCount, staffCount, usersWithRoles] = await Promise.all([
-      ctx.db.user.count(),
-      ctx.db.user.count({ where: { role: "admin" } }),
-      ctx.db.user.count({ where: { role: "staff" } }),
-      ctx.db.user.count({
-        where: {
-          userRoles: {
-            some: {},
+
+    const [totalUsers, adminCount, staffCount, usersWithRoles] =
+      await Promise.all([
+        ctx.db.user.count(),
+        ctx.db.user.count({ where: { role: "admin" } }),
+        ctx.db.user.count({ where: { role: "staff" } }),
+        ctx.db.user.count({
+          where: {
+            userRoles: {
+              some: {},
+            },
           },
-        },
-      }),
-    ]);
+        }),
+      ]);
 
     return {
       total: totalUsers,
@@ -538,25 +550,26 @@ export const roleRouter = createTRPCRouter({
       else if (globalRole === "staff") roles.push("staff");
 
       // 2-5. Fetch all role sources in parallel (these are independent queries)
-      const [userRoles, venueOwner, acceptedApps, sessionSpeaker] = await Promise.all([
-        ctx.db.userRole.findMany({
-          where: { userId, eventId: resolvedEventId },
-          include: { role: { select: { name: true } } },
-        }),
-        ctx.db.venueOwner.findFirst({
-          where: { userId, eventId: resolvedEventId },
-        }),
-        ctx.db.application.findMany({
-          where: { userId, eventId: resolvedEventId, status: "ACCEPTED" },
-          select: { applicationType: true },
-        }),
-        ctx.db.sessionSpeaker.findFirst({
-          where: {
-            userId,
-            session: { eventId: resolvedEventId },
-          },
-        }),
-      ]);
+      const [userRoles, venueOwner, acceptedApps, sessionSpeaker] =
+        await Promise.all([
+          ctx.db.userRole.findMany({
+            where: { userId, eventId: resolvedEventId },
+            include: { role: { select: { name: true } } },
+          }),
+          ctx.db.venueOwner.findFirst({
+            where: { userId, eventId: resolvedEventId },
+          }),
+          ctx.db.application.findMany({
+            where: { userId, eventId: resolvedEventId, status: "ACCEPTED" },
+            select: { applicationType: true },
+          }),
+          ctx.db.sessionSpeaker.findFirst({
+            where: {
+              userId,
+              session: { eventId: resolvedEventId },
+            },
+          }),
+        ]);
 
       // Event-specific roles from UserRole table
       for (const ur of userRoles) {
@@ -574,9 +587,15 @@ export const roleRouter = createTRPCRouter({
       for (const app of acceptedApps) {
         if (app.applicationType === "SPEAKER" && !roles.includes("speaker")) {
           roles.push("speaker");
-        } else if (app.applicationType === "MENTOR" && !roles.includes("mentor")) {
+        } else if (
+          app.applicationType === "MENTOR" &&
+          !roles.includes("mentor")
+        ) {
           roles.push("mentor");
-        } else if (app.applicationType === "RESIDENT" && !roles.includes("resident")) {
+        } else if (
+          app.applicationType === "RESIDENT" &&
+          !roles.includes("resident")
+        ) {
           roles.push("resident");
         }
       }
@@ -600,7 +619,7 @@ export const roleRouter = createTRPCRouter({
   // Ensure mentor role exists
   ensureMentorRole: protectedProcedure.mutation(async ({ ctx }) => {
     // TODO: Add admin check here once we implement it
-    
+
     const mentorRole = await ctx.db.role.findFirst({
       where: { name: "mentor" },
     });

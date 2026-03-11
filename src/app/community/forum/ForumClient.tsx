@@ -61,7 +61,9 @@ export default function ForumClient() {
   const [newThreadTitle, setNewThreadTitle] = useState("");
   const [newThreadContent, setNewThreadContent] = useState("");
   const [newThreadTags, setNewThreadTags] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<"recent" | "popular" | "mostCommented">("recent");
+  const [sortBy, setSortBy] = useState<"recent" | "popular" | "mostCommented">(
+    "recent",
+  );
 
   // Fetch threads
   const { data: threadsData, isLoading } = api.forum.getThreads.useQuery({
@@ -158,7 +160,10 @@ export default function ForumClient() {
         </Group>
 
         {/* Sort Tabs */}
-        <Tabs value={sortBy} onChange={(value) => setSortBy(value as typeof sortBy)}>
+        <Tabs
+          value={sortBy}
+          onChange={(value) => setSortBy(value as typeof sortBy)}
+        >
           <Tabs.List>
             <Tabs.Tab value="recent" leftSection={<IconClock size={16} />}>
               Recent
@@ -166,7 +171,10 @@ export default function ForumClient() {
             <Tabs.Tab value="popular" leftSection={<IconFlame size={16} />}>
               Popular
             </Tabs.Tab>
-            <Tabs.Tab value="mostCommented" leftSection={<IconMessageCircle size={16} />}>
+            <Tabs.Tab
+              value="mostCommented"
+              leftSection={<IconMessageCircle size={16} />}
+            >
               Most Discussed
             </Tabs.Tab>
           </Tabs.List>
@@ -204,7 +212,8 @@ export default function ForumClient() {
                 }}
                 onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
                   e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 12px rgba(0,0,0,0.1)";
                 }}
                 onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
                   e.currentTarget.style.transform = "translateY(0)";
@@ -237,13 +246,17 @@ export default function ForumClient() {
                         </Text>
                         {thread.user.profile?.jobTitle && (
                           <>
-                            <Text size="sm" c="dimmed">·</Text>
+                            <Text size="sm" c="dimmed">
+                              ·
+                            </Text>
                             <Text size="sm" c="dimmed">
                               {thread.user.profile.jobTitle}
                             </Text>
                           </>
                         )}
-                        <Text size="sm" c="dimmed">·</Text>
+                        <Text size="sm" c="dimmed">
+                          ·
+                        </Text>
                         <Text size="sm" c="dimmed">
                           {getRelativeTime(thread.createdAt)}
                         </Text>
@@ -265,11 +278,15 @@ export default function ForumClient() {
                     <Group gap="xs">
                       <Group gap={4}>
                         <IconHeart size={16} style={{ opacity: 0.6 }} />
-                        <Text size="sm" c="dimmed">{thread.likeCount}</Text>
+                        <Text size="sm" c="dimmed">
+                          {thread.likeCount}
+                        </Text>
                       </Group>
                       <Group gap={4}>
                         <IconMessageCircle size={16} style={{ opacity: 0.6 }} />
-                        <Text size="sm" c="dimmed">{thread.commentCount}</Text>
+                        <Text size="sm" c="dimmed">
+                          {thread.commentCount}
+                        </Text>
                       </Group>
                     </Group>
 
@@ -330,10 +347,7 @@ export default function ForumClient() {
             clearable
           />
           <Group justify="flex-end" mt="md">
-            <Button
-              variant="subtle"
-              onClick={() => setCreateModalOpen(false)}
-            >
+            <Button variant="subtle" onClick={() => setCreateModalOpen(false)}>
               Cancel
             </Button>
             <Button

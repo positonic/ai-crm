@@ -88,7 +88,9 @@ async function main() {
     },
     select: { id: true, name: true },
   });
-  console.log(`Demo venues to delete: ${demoVenues.length} (preserving floor venues)`);
+  console.log(
+    `Demo venues to delete: ${demoVenues.length} (preserving floor venues)`,
+  );
 
   // 7. Find all venues to show what's preserved
   const allVenues = await prisma.scheduleVenue.findMany({
@@ -123,8 +125,12 @@ async function main() {
   // Separate demo users into IATF speakers vs example-conf users
   const iatfDemoUsers = demoUsers.filter((u) => iatfSpeakerUserIds.has(u.id));
   const otherDemoUsers = demoUsers.filter((u) => !iatfSpeakerUserIds.has(u.id));
-  console.log(`  - IATF speakers (will check if safe to delete): ${iatfDemoUsers.length}`);
-  console.log(`  - Other demo users (example-conf, keep): ${otherDemoUsers.length}`);
+  console.log(
+    `  - IATF speakers (will check if safe to delete): ${iatfDemoUsers.length}`,
+  );
+  console.log(
+    `  - Other demo users (example-conf, keep): ${otherDemoUsers.length}`,
+  );
 
   // For IATF demo users, check if they have data in other events
   const usersToDelete: string[] = [];
@@ -153,7 +159,12 @@ async function main() {
     });
 
     const totalOtherRefs =
-      otherSessionSpeakers + applications + projects + askOffers + praise + forumThreads;
+      otherSessionSpeakers +
+      applications +
+      projects +
+      askOffers +
+      praise +
+      forumThreads;
 
     if (totalOtherRefs === 0) {
       usersToDelete.push(user.id);
@@ -230,7 +241,9 @@ async function main() {
       name: { in: DEMO_VENUE_NAMES },
     },
   });
-  console.log(`  Deleted ${deletedVenues.count} ScheduleVenue records (demo only)`);
+  console.log(
+    `  Deleted ${deletedVenues.count} ScheduleVenue records (demo only)`,
+  );
 
   // Delete UserRole records for the event
   const deletedRoles = await prisma.userRole.deleteMany({

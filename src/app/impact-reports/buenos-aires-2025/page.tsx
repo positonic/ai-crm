@@ -32,16 +32,60 @@ import {
 
 export default function BuenosAiresImpactReport() {
   const stats = [
-    { value: "305", label: "Attendees", subtitle: "60% show rate", icon: IconUsers, color: "violet" },
-    { value: "45+", label: "Countries", subtitle: "41% Global South", icon: IconWorld, color: "blue" },
-    { value: "65%", label: "First-Timers", subtitle: "new to FtC", icon: IconSparkles, color: "pink" },
-    { value: "502", label: "Total Reach", subtitle: "in-person + livestream", icon: IconTrendingUp, color: "teal" },
+    {
+      value: "305",
+      label: "Attendees",
+      subtitle: "60% show rate",
+      icon: IconUsers,
+      color: "violet",
+    },
+    {
+      value: "45+",
+      label: "Countries",
+      subtitle: "41% Global South",
+      icon: IconWorld,
+      color: "blue",
+    },
+    {
+      value: "65%",
+      label: "First-Timers",
+      subtitle: "new to FtC",
+      icon: IconSparkles,
+      color: "pink",
+    },
+    {
+      value: "502",
+      label: "Total Reach",
+      subtitle: "in-person + livestream",
+      icon: IconTrendingUp,
+      color: "teal",
+    },
   ];
 
   const socialStats = [
-    { platform: "Twitter/X", impressions: "102k", engagement: "5.3%", followers: "+268", icon: IconBrandX, color: "blue" },
-    { platform: "LinkedIn", impressions: "13.3k", engagement: "6.6%", followers: "+114", icon: IconBrandLinkedin, color: "cyan" },
-    { platform: "Livestream", viewers: "197", subtitle: "real-time engagement", icon: IconPlayerPlay, color: "pink" },
+    {
+      platform: "Twitter/X",
+      impressions: "102k",
+      engagement: "5.3%",
+      followers: "+268",
+      icon: IconBrandX,
+      color: "blue",
+    },
+    {
+      platform: "LinkedIn",
+      impressions: "13.3k",
+      engagement: "6.6%",
+      followers: "+114",
+      icon: IconBrandLinkedin,
+      color: "cyan",
+    },
+    {
+      platform: "Livestream",
+      viewers: "197",
+      subtitle: "real-time engagement",
+      icon: IconPlayerPlay,
+      color: "pink",
+    },
   ];
 
   const contentAssets = [
@@ -85,14 +129,20 @@ export default function BuenosAiresImpactReport() {
     { name: "Logos", url: "https://logos.co" },
     { name: "GoodDollar", url: "https://gooddollar.org" },
     { name: "Ethereum for the World", url: "https://ethereum.foundation" },
-    { name: "Ethereum Ecosystem Support Program", url: "https://esp.ethereum.foundation" },
+    {
+      name: "Ethereum Ecosystem Support Program",
+      url: "https://esp.ethereum.foundation",
+    },
   ];
 
   const partners = [
     { name: "Deep Work", url: "https://deepwork.studio" },
     { name: "Crecimiento", url: "#" },
     { name: "Tor Project", url: "https://torproject.org" },
-    { name: "UNICEF Office of Innovation", url: "https://unicef.org/innovation" },
+    {
+      name: "UNICEF Office of Innovation",
+      url: "https://unicef.org/innovation",
+    },
     { name: "UNDP AltFinLab", url: "https://undp.org" },
     { name: "SEED Latam", url: "https://seedlatam.org" },
     { name: "BAF", url: "#" },
@@ -107,17 +157,33 @@ export default function BuenosAiresImpactReport() {
             <Text size="sm" tt="uppercase" fw={700} c="dimmed" mb="xs">
               Impact Report
             </Text>
-            <Title order={1} size={56} fw={900} mb="md" style={{ lineHeight: 1.1 }}>
+            <Title
+              order={1}
+              size={56}
+              fw={900}
+              mb="md"
+              style={{ lineHeight: 1.1 }}
+            >
               Funding the Commons
             </Title>
             <Group gap="md" align="center">
               <Title order={2} size={32} fw={600} c="dimmed">
                 Buenos Aires 2025
               </Title>
-              <Badge size="lg" variant="light" color="blue" leftSection={<IconMapPin size={14} />}>
+              <Badge
+                size="lg"
+                variant="light"
+                color="blue"
+                leftSection={<IconMapPin size={14} />}
+              >
                 Argentina
               </Badge>
-              <Badge size="lg" variant="light" color="violet" leftSection={<IconCalendar size={14} />}>
+              <Badge
+                size="lg"
+                variant="light"
+                color="violet"
+                leftSection={<IconCalendar size={14} />}
+              >
                 DevConnect Week
               </Badge>
             </Group>
@@ -139,7 +205,12 @@ export default function BuenosAiresImpactReport() {
               >
                 <Stack gap="md">
                   <Group justify="space-between">
-                    <ThemeIcon size={48} radius="md" variant="light" color={stat.color}>
+                    <ThemeIcon
+                      size={48}
+                      radius="md"
+                      variant="light"
+                      color={stat.color}
+                    >
                       <stat.icon size={28} />
                     </ThemeIcon>
                   </Group>
@@ -162,8 +233,9 @@ export default function BuenosAiresImpactReport() {
           {/* Description */}
           <Paper p="xl" radius="lg" withBorder>
             <Text size="lg" fw={500} style={{ lineHeight: 1.6 }}>
-              A single-day conference on public goods funding, financial access, and privacy—grounded in the
-              Argentinian context. Co-produced with Schelling Point during DevConnect week. Our highest single-day
+              A single-day conference on public goods funding, financial access,
+              and privacy—grounded in the Argentinian context. Co-produced with
+              Schelling Point during DevConnect week. Our highest single-day
               attendance to date.
             </Text>
           </Paper>
@@ -204,7 +276,8 @@ export default function BuenosAiresImpactReport() {
                         style={{
                           height: "100%",
                           width: `${item.percentage}%`,
-                          background: "linear-gradient(90deg, var(--mantine-color-blue-5), var(--mantine-color-violet-5))",
+                          background:
+                            "linear-gradient(90deg, var(--mantine-color-blue-5), var(--mantine-color-violet-5))",
                           transition: "width 0.5s ease",
                         }}
                       />
@@ -242,7 +315,8 @@ export default function BuenosAiresImpactReport() {
                         style={{
                           height: "100%",
                           width: `${item.percentage}%`,
-                          background: "linear-gradient(90deg, var(--mantine-color-pink-5), var(--mantine-color-orange-5))",
+                          background:
+                            "linear-gradient(90deg, var(--mantine-color-pink-5), var(--mantine-color-orange-5))",
                           transition: "width 0.5s ease",
                         }}
                       />
@@ -252,7 +326,8 @@ export default function BuenosAiresImpactReport() {
                 <Divider my="md" />
                 <Stack gap="xs">
                   <Text size="sm" fw={600}>
-                    <strong>Sectors:</strong> Web3 (63%), Tech (11%), Nonprofit (9%), Finance (3%), Academia (3%)
+                    <strong>Sectors:</strong> Web3 (63%), Tech (11%), Nonprofit
+                    (9%), Finance (3%), Academia (3%)
                   </Text>
                   <Text size="sm" fw={600}>
                     <strong>Age:</strong> 83% between 25-44 years old
@@ -285,7 +360,12 @@ export default function BuenosAiresImpactReport() {
                     <Text size="lg" fw={700}>
                       {stat.platform}
                     </Text>
-                    <ThemeIcon size={36} radius="md" variant="light" color={stat.color}>
+                    <ThemeIcon
+                      size={36}
+                      radius="md"
+                      variant="light"
+                      color={stat.color}
+                    >
                       <stat.icon size={20} />
                     </ThemeIcon>
                   </Group>
@@ -332,19 +412,27 @@ export default function BuenosAiresImpactReport() {
             p="xl"
             radius="lg"
             style={{
-              background: "linear-gradient(135deg, var(--mantine-color-grape-0) 0%, var(--mantine-color-violet-0) 100%)",
+              background:
+                "linear-gradient(135deg, var(--mantine-color-grape-0) 0%, var(--mantine-color-violet-0) 100%)",
               border: "2px solid var(--mantine-color-grape-3)",
             }}
           >
-            <Badge size="lg" variant="filled" color="grape" mb="md" leftSection={<IconSparkles size={14} />}>
+            <Badge
+              size="lg"
+              variant="filled"
+              color="grape"
+              mb="md"
+              leftSection={<IconSparkles size={14} />}
+            >
               Viral Moment
             </Badge>
             <Text size="lg" fw={600} mb="sm">
               134.7K views, 1K likes, 117 reposts on a single community post
             </Text>
             <Text size="md" fs="italic" style={{ lineHeight: 1.6 }}>
-              &ldquo;If I did not go to an in-person event for one and a half years and I only read Twitter every day...
-              that would almost certainly lead me to rage quit and retire.&rdquo;
+              &ldquo;If I did not go to an in-person event for one and a half
+              years and I only read Twitter every day... that would almost
+              certainly lead me to rage quit and retire.&rdquo;
             </Text>
             <Text size="sm" c="dimmed" mt="sm">
               — Vitalik Buterin, on stage with Roger Dingledine
@@ -389,7 +477,8 @@ export default function BuenosAiresImpactReport() {
 
           <Paper p="md" radius="md" withBorder>
             <Text size="sm" c="dimmed">
-              <strong>Interviews include:</strong> Roger Dingledine (Tor), Jarrad Hope (Logos)
+              <strong>Interviews include:</strong> Roger Dingledine (Tor),
+              Jarrad Hope (Logos)
             </Text>
           </Paper>
         </Stack>
@@ -408,14 +497,16 @@ export default function BuenosAiresImpactReport() {
               </Title>
               <List spacing="md" size="sm">
                 <List.Item>
-                  <Text fw={600}>FtC stage debuts:</Text> Vitalik Buterin and Roger Dingledine (Tor)
+                  <Text fw={600}>FtC stage debuts:</Text> Vitalik Buterin and
+                  Roger Dingledine (Tor)
                 </List.Item>
                 <List.Item>
-                  <Text fw={600}>Cross-ecosystem dialogue:</Text> bridged web3, open source, and privacy communities
+                  <Text fw={600}>Cross-ecosystem dialogue:</Text> bridged web3,
+                  open source, and privacy communities
                 </List.Item>
                 <List.Item>
-                  <Text fw={600}>Local relevance:</Text> Argentine judge presented a live decentralized arbitration
-                  pilot
+                  <Text fw={600}>Local relevance:</Text> Argentine judge
+                  presented a live decentralized arbitration pilot
                 </List.Item>
                 <List.Item>
                   <Text fw={600}>High dwell time:</Text> most stayed 4+ hours
@@ -430,16 +521,20 @@ export default function BuenosAiresImpactReport() {
               </Title>
               <List spacing="md" size="sm">
                 <List.Item>
-                  <Text fw={600}>67% free/discounted tickets</Text> via community promo codes
+                  <Text fw={600}>67% free/discounted tickets</Text> via
+                  community promo codes
                 </List.Item>
                 <List.Item>
-                  <Text fw={600}>$40 standard, $20 local</Text>—set for local affordability
+                  <Text fw={600}>$40 standard, $20 local</Text>—set for local
+                  affordability
                 </List.Item>
                 <List.Item>
-                  <Text fw={600}>Ticketing drove quality:</Text> 60% show rate vs ~10% for free events
+                  <Text fw={600}>Ticketing drove quality:</Text> 60% show rate
+                  vs ~10% for free events
                 </List.Item>
                 <List.Item>
-                  <Text fw={600}>Reduced waste:</Text> accurate catering from committed registrations
+                  <Text fw={600}>Reduced waste:</Text> accurate catering from
+                  committed registrations
                 </List.Item>
               </List>
             </Paper>
@@ -458,7 +553,8 @@ export default function BuenosAiresImpactReport() {
               p="xl"
               radius="lg"
               style={{
-                background: "linear-gradient(135deg, var(--mantine-color-teal-0) 0%, var(--mantine-color-cyan-0) 100%)",
+                background:
+                  "linear-gradient(135deg, var(--mantine-color-teal-0) 0%, var(--mantine-color-cyan-0) 100%)",
                 border: "2px solid var(--mantine-color-teal-3)",
               }}
             >
@@ -484,7 +580,8 @@ export default function BuenosAiresImpactReport() {
                   </Text>
                 </Box>
                 <Text size="sm" c="dimmed" mt="md">
-                  Includes: full-day programming, meals, swag, video production, VIP dinner
+                  Includes: full-day programming, meals, swag, video production,
+                  VIP dinner
                 </Text>
               </Stack>
             </Paper>
@@ -542,10 +639,19 @@ export default function BuenosAiresImpactReport() {
                 Lessons from BA
               </Title>
               <List spacing="md" size="sm">
-                <List.Item>Single-day format harder to balance sponsor vs. community stage time</List.Item>
-                <List.Item>20+ competing events despite early announcements</List.Item>
-                <List.Item>Wayfinding gaps in a complex venue interior</List.Item>
-                <List.Item>Local infrastructure (A/V, internet) needs more buffer</List.Item>
+                <List.Item>
+                  Single-day format harder to balance sponsor vs. community
+                  stage time
+                </List.Item>
+                <List.Item>
+                  20+ competing events despite early announcements
+                </List.Item>
+                <List.Item>
+                  Wayfinding gaps in a complex venue interior
+                </List.Item>
+                <List.Item>
+                  Local infrastructure (A/V, internet) needs more buffer
+                </List.Item>
               </List>
             </Paper>
 
@@ -555,9 +661,16 @@ export default function BuenosAiresImpactReport() {
                 Commitments for 2026
               </Title>
               <List spacing="md" size="sm">
-                <List.Item>Schedule before or after main conference week</List.Item>
-                <List.Item>Advance venue scout + analog schedule backups</List.Item>
-                <List.Item>Amplify workshop space, add dedicated coworking with an office hours section</List.Item>
+                <List.Item>
+                  Schedule before or after main conference week
+                </List.Item>
+                <List.Item>
+                  Advance venue scout + analog schedule backups
+                </List.Item>
+                <List.Item>
+                  Amplify workshop space, add dedicated coworking with an office
+                  hours section
+                </List.Item>
                 <List.Item>Hands-on experiences: DIY swag, PGF games</List.Item>
               </List>
             </Paper>
@@ -570,7 +683,8 @@ export default function BuenosAiresImpactReport() {
           radius="lg"
           mb={60}
           style={{
-            background: "linear-gradient(135deg, var(--mantine-color-indigo-6) 0%, var(--mantine-color-violet-6) 100%)",
+            background:
+              "linear-gradient(135deg, var(--mantine-color-indigo-6) 0%, var(--mantine-color-violet-6) 100%)",
           }}
         >
           <Stack gap="lg">
@@ -578,12 +692,19 @@ export default function BuenosAiresImpactReport() {
               Thank You
             </Title>
             <Text size="lg" c="white" style={{ lineHeight: 1.6 }}>
-              This event was made possible by our sponsors, speakers, and the FtC community. Argentina during
-              DevConnect was the right context to ground public goods funding in real-world narratives—and
+              This event was made possible by our sponsors, speakers, and the
+              FtC community. Argentina during DevConnect was the right context
+              to ground public goods funding in real-world narratives—and
               we&apos;re committed to maintaining momentum here.
             </Text>
             <Group gap="xl" mt="md">
-              <Anchor href="https://fundingthecommons.io/ba2025" target="_blank" c="white" fw={600} size="lg">
+              <Anchor
+                href="https://fundingthecommons.io/ba2025"
+                target="_blank"
+                c="white"
+                fw={600}
+                size="lg"
+              >
                 Event page: fundingthecommons.io/ba2025
               </Anchor>
               <Anchor

@@ -68,7 +68,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
     if (hash && validMainTabs.includes(hash)) {
       setMainTab(hash);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleMainTabChange = (value: string | null) => {
@@ -79,12 +79,19 @@ export default function SpeakerManagementClient({ eventId }: Props) {
   };
 
   // ── Applications State ──
-  const [selectedApplications, setSelectedApplications] = useState<string[]>([]);
+  const [selectedApplications, setSelectedApplications] = useState<string[]>(
+    [],
+  );
   const [bulkStatusModalOpen, setBulkStatusModalOpen] = useState(false);
-  const [bulkStatus, setBulkStatus] = useState<"ACCEPTED" | "REJECTED" | null>(null);
+  const [bulkStatus, setBulkStatus] = useState<"ACCEPTED" | "REJECTED" | null>(
+    null,
+  );
   const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
-  const [viewDrawerOpened, { open: openViewDrawer, close: closeViewDrawer }] = useDisclosure(false);
-  const [viewingApplication, setViewingApplication] = useState<{ id: string } | null>(null);
+  const [viewDrawerOpened, { open: openViewDrawer, close: closeViewDrawer }] =
+    useDisclosure(false);
+  const [viewingApplication, setViewingApplication] = useState<{
+    id: string;
+  } | null>(null);
 
   // ── Invitations (via shared hook) ──
   const inv = useInvitationManager({
@@ -112,65 +119,93 @@ export default function SpeakerManagementClient({ eventId }: Props) {
       setSelectedReminders([]);
     },
     onError: (error) => {
-      notifications.show({ title: "Error", message: error.message, color: "red" });
+      notifications.show({
+        title: "Error",
+        message: error.message,
+        color: "red",
+      });
     },
   });
 
   // ── Application Queries ──
-  const { data: speakerApplications, refetch: refetchApplications, isLoading: loadingApplications, error: applicationsError } =
-    api.application.getEventApplications.useQuery({
+  const {
+    data: speakerApplications,
+    refetch: refetchApplications,
+    isLoading: loadingApplications,
+    error: applicationsError,
+  } = api.application.getEventApplications.useQuery({
+    eventId,
+    applicationType: "SPEAKER",
+  });
+
+  const { data: currentSpeakers, isLoading: loadingSpeakers } =
+    api.role.getAllUsersWithEventRoles.useQuery({
       eventId,
-      applicationType: "SPEAKER",
+      roleId: inv.resolvedRoleId,
     });
 
-  const { data: currentSpeakers, isLoading: loadingSpeakers } = api.role.getAllUsersWithEventRoles.useQuery({
-    eventId,
-    roleId: inv.resolvedRoleId,
-  });
-
   // ── Application Mutations ──
-  const updateApplicationStatus = api.application.updateApplicationStatus.useMutation({
-    onSuccess: () => {
-      notifications.show({ title: "Success", message: "Speaker application status updated", color: "green" });
-      void refetchApplications();
-    },
-    onError: (error) => {
-      notifications.show({ title: "Error", message: error.message, color: "red" });
-    },
-  });
+  const updateApplicationStatus =
+    api.application.updateApplicationStatus.useMutation({
+      onSuccess: () => {
+        notifications.show({
+          title: "Success",
+          message: "Speaker application status updated",
+          color: "green",
+        });
+        void refetchApplications();
+      },
+      onError: (error) => {
+        notifications.show({
+          title: "Error",
+          message: error.message,
+          color: "red",
+        });
+      },
+    });
 
-  const bulkUpdateApplicationStatus = api.application.bulkUpdateApplicationStatus.useMutation({
-    onSuccess: (result) => {
-      notifications.show({
-        title: "Success",
-        message: `${result.count} speaker applications updated`,
-        color: "green",
-      });
-      setSelectedApplications([]);
-      setBulkStatusModalOpen(false);
-      setBulkStatus(null);
-      void refetchApplications();
-    },
-    onError: (error) => {
-      notifications.show({ title: "Error", message: error.message, color: "red" });
-    },
-  });
+  const bulkUpdateApplicationStatus =
+    api.application.bulkUpdateApplicationStatus.useMutation({
+      onSuccess: (result) => {
+        notifications.show({
+          title: "Success",
+          message: `${result.count} speaker applications updated`,
+          color: "green",
+        });
+        setSelectedApplications([]);
+        setBulkStatusModalOpen(false);
+        setBulkStatus(null);
+        void refetchApplications();
+      },
+      onError: (error) => {
+        notifications.show({
+          title: "Error",
+          message: error.message,
+          color: "red",
+        });
+      },
+    });
 
-  const bulkDeleteApplications = api.application.bulkDeleteApplications.useMutation({
-    onSuccess: (result) => {
-      notifications.show({
-        title: "Deleted",
-        message: `${result.count} speaker application${result.count !== 1 ? "s" : ""} permanently deleted`,
-        color: "red",
-      });
-      setSelectedApplications([]);
-      setBulkDeleteModalOpen(false);
-      void refetchApplications();
-    },
-    onError: (error) => {
-      notifications.show({ title: "Error", message: error.message, color: "red" });
-    },
-  });
+  const bulkDeleteApplications =
+    api.application.bulkDeleteApplications.useMutation({
+      onSuccess: (result) => {
+        notifications.show({
+          title: "Deleted",
+          message: `${result.count} speaker application${result.count !== 1 ? "s" : ""} permanently deleted`,
+          color: "red",
+        });
+        setSelectedApplications([]);
+        setBulkDeleteModalOpen(false);
+        void refetchApplications();
+      },
+      onError: (error) => {
+        notifications.show({
+          title: "Error",
+          message: error.message,
+          color: "red",
+        });
+      },
+    });
 
   // Build a set of invited emails for cross-referencing (must be before early returns)
   const invitedEmails = useMemo(() => {
@@ -226,7 +261,8 @@ export default function SpeakerManagementClient({ eventId }: Props) {
             sessionId: session.id,
             sessionTitle: session.title,
             speakerUserId: sp.user.id,
-            speakerName: sp.user.firstName ?? sp.user.name ?? sp.user.email ?? "Unknown",
+            speakerName:
+              sp.user.firstName ?? sp.user.name ?? sp.user.email ?? "Unknown",
             speakerEmail: sp.user.email ?? "",
             slidesUrl: session.slidesUrl,
             slidesFileName: session.slidesFileName,
@@ -259,7 +295,9 @@ export default function SpeakerManagementClient({ eventId }: Props) {
   if (inv.isLoading || loadingApplications || loadingSpeakers) {
     return (
       <Container size="xl" py="xl">
-        <Group justify="center"><Loader size="xl" /></Group>
+        <Group justify="center">
+          <Loader size="xl" />
+        </Group>
       </Container>
     );
   }
@@ -277,40 +315,56 @@ export default function SpeakerManagementClient({ eventId }: Props) {
 
   // ── Application Helpers ──
   const allApplications = speakerApplications ?? [];
-  const acceptedApplications = allApplications.filter(app => app.status === "ACCEPTED");
-  const rejectedApplications = allApplications.filter(app => app.status === "REJECTED");
-  const pendingApplications = allApplications.filter(app => !["ACCEPTED", "REJECTED"].includes(app.status));
+  const acceptedApplications = allApplications.filter(
+    (app) => app.status === "ACCEPTED",
+  );
+  const rejectedApplications = allApplications.filter(
+    (app) => app.status === "REJECTED",
+  );
+  const pendingApplications = allApplications.filter(
+    (app) => !["ACCEPTED", "REJECTED"].includes(app.status),
+  );
   const invitedApplications = allApplications.filter(
-    app => app.invitationId != null || invitedEmails.has(app.email.toLowerCase())
+    (app) =>
+      app.invitationId != null || invitedEmails.has(app.email.toLowerCase()),
   );
 
   const applyFloorFilter = (apps: typeof allApplications) => {
     if (!floorFilter) return apps;
-    return apps.filter(app => app.venues?.some(av => av.venue.id === floorFilter));
+    return apps.filter((app) =>
+      app.venues?.some((av) => av.venue.id === floorFilter),
+    );
   };
 
   const applySearchFilter = (apps: typeof allApplications) => {
     if (!appSearch.trim()) return apps;
     const q = appSearch.trim().toLowerCase();
-    return apps.filter(app =>
-      (app.user?.name?.toLowerCase().includes(q) ?? false) ||
-      app.email.toLowerCase().includes(q)
+    return apps.filter(
+      (app) =>
+        (app.user?.name?.toLowerCase().includes(q) ?? false) ||
+        app.email.toLowerCase().includes(q),
     );
   };
 
-  const applyFilters = (apps: typeof allApplications) => applySearchFilter(applyFloorFilter(apps));
+  const applyFilters = (apps: typeof allApplications) =>
+    applySearchFilter(applyFloorFilter(apps));
 
   const getCurrentTabApplications = () => {
     switch (appTab) {
-      case "accepted": return applyFilters(acceptedApplications);
-      case "rejected": return applyFilters(rejectedApplications);
-      case "invited": return applyFilters(invitedApplications);
-      default: return applyFilters(allApplications);
+      case "accepted":
+        return applyFilters(acceptedApplications);
+      case "rejected":
+        return applyFilters(rejectedApplications);
+      case "invited":
+        return applyFilters(invitedApplications);
+      default:
+        return applyFilters(allApplications);
     }
   };
   const currentApplications = getCurrentTabApplications();
 
-  const activeSpeakerCount = currentSpeakers?.filter(user => user.userRoles.length > 0).length ?? 0;
+  const activeSpeakerCount =
+    currentSpeakers?.filter((user) => user.userRoles.length > 0).length ?? 0;
 
   // Only rows that can receive reminders (has speaker email, no slides)
   const remindableRows = filteredSessionRows.filter(
@@ -324,7 +378,9 @@ export default function SpeakerManagementClient({ eventId }: Props) {
         if (!row?.speakerUserId) return null;
         return { sessionId: row.sessionId, speakerUserId: row.speakerUserId };
       })
-      .filter((r): r is { sessionId: string; speakerUserId: string } => r !== null);
+      .filter(
+        (r): r is { sessionId: string; speakerUserId: string } => r !== null,
+      );
 
     if (reminders.length === 0) return;
     sendSlidesReminder.mutate({ eventId, reminders });
@@ -349,7 +405,9 @@ export default function SpeakerManagementClient({ eventId }: Props) {
             <IconMicrophone size={28} />
             <Title order={1}>Speaker Management</Title>
           </Group>
-          <Text c="dimmed" mb="xs">{inv.event?.name ?? "Loading..."}</Text>
+          <Text c="dimmed" mb="xs">
+            {inv.event?.name ?? "Loading..."}
+          </Text>
         </div>
       </Group>
 
@@ -357,9 +415,21 @@ export default function SpeakerManagementClient({ eventId }: Props) {
       <InvitationStatsGrid
         stats={[
           { value: allApplications.length, label: "Applications" },
-          { value: pendingApplications.length, label: "Pending", color: "orange" },
-          { value: acceptedApplications.length, label: "Accepted", color: "green" },
-          { value: activeSpeakerCount, label: "Invited Speakers", color: "blue" },
+          {
+            value: pendingApplications.length,
+            label: "Pending",
+            color: "orange",
+          },
+          {
+            value: acceptedApplications.length,
+            label: "Accepted",
+            color: "green",
+          },
+          {
+            value: activeSpeakerCount,
+            label: "Invited Speakers",
+            color: "blue",
+          },
         ]}
         cols={{ base: 2, sm: 4 }}
       />
@@ -369,15 +439,30 @@ export default function SpeakerManagementClient({ eventId }: Props) {
         <Tabs.List mb="md">
           <Tabs.Tab value="applications">
             Applications
-            {allApplications.length > 0 && <Badge size="sm" variant="light" ml="xs">{allApplications.length}</Badge>}
+            {allApplications.length > 0 && (
+              <Badge size="sm" variant="light" ml="xs">
+                {allApplications.length}
+              </Badge>
+            )}
           </Tabs.Tab>
           <Tabs.Tab value="invitations">
             Invitations
-            {inv.invitations.length > 0 && <Badge size="sm" variant="light" ml="xs">{inv.invitations.length}</Badge>}
+            {inv.invitations.length > 0 && (
+              <Badge size="sm" variant="light" ml="xs">
+                {inv.invitations.length}
+              </Badge>
+            )}
           </Tabs.Tab>
-          <Tabs.Tab value="sessions" leftSection={<IconPresentation size={16} />}>
+          <Tabs.Tab
+            value="sessions"
+            leftSection={<IconPresentation size={16} />}
+          >
             Sessions
-            {sessionRows.length > 0 && <Badge size="sm" variant="light" ml="xs">{sessionRows.length}</Badge>}
+            {sessionRows.length > 0 && (
+              <Badge size="sm" variant="light" ml="xs">
+                {sessionRows.length}
+              </Badge>
+            )}
           </Tabs.Tab>
         </Tabs.List>
 
@@ -387,19 +472,46 @@ export default function SpeakerManagementClient({ eventId }: Props) {
             <Card withBorder mb="md" p="md">
               <Group justify="space-between">
                 <Text size="sm">
-                  {selectedApplications.length} application{selectedApplications.length !== 1 ? "s" : ""} selected
+                  {selectedApplications.length} application
+                  {selectedApplications.length !== 1 ? "s" : ""} selected
                 </Text>
                 <Group gap="xs">
-                  <Button variant="light" color="green" size="sm" onClick={() => { setBulkStatus("ACCEPTED"); setBulkStatusModalOpen(true); }}>
+                  <Button
+                    variant="light"
+                    color="green"
+                    size="sm"
+                    onClick={() => {
+                      setBulkStatus("ACCEPTED");
+                      setBulkStatusModalOpen(true);
+                    }}
+                  >
                     Accept Selected
                   </Button>
-                  <Button variant="light" color="red" size="sm" onClick={() => { setBulkStatus("REJECTED"); setBulkStatusModalOpen(true); }}>
+                  <Button
+                    variant="light"
+                    color="red"
+                    size="sm"
+                    onClick={() => {
+                      setBulkStatus("REJECTED");
+                      setBulkStatusModalOpen(true);
+                    }}
+                  >
                     Reject Selected
                   </Button>
-                  <Button variant="light" color="dark" size="sm" leftSection={<IconTrash size={14} />} onClick={() => setBulkDeleteModalOpen(true)}>
+                  <Button
+                    variant="light"
+                    color="dark"
+                    size="sm"
+                    leftSection={<IconTrash size={14} />}
+                    onClick={() => setBulkDeleteModalOpen(true)}
+                  >
                     Delete Selected
                   </Button>
-                  <Button variant="subtle" size="sm" onClick={() => setSelectedApplications([])}>
+                  <Button
+                    variant="subtle"
+                    size="sm"
+                    onClick={() => setSelectedApplications([])}
+                  >
                     Clear
                   </Button>
                 </Group>
@@ -434,16 +546,36 @@ export default function SpeakerManagementClient({ eventId }: Props) {
             <Tabs value={appTab} onChange={(v) => setAppTab(v ?? "all")}>
               <Tabs.List grow>
                 <Tabs.Tab value="all">
-                  All {applyFilters(allApplications).length > 0 && <Badge size="sm" variant="light" ml="xs">{applyFilters(allApplications).length}</Badge>}
+                  All{" "}
+                  {applyFilters(allApplications).length > 0 && (
+                    <Badge size="sm" variant="light" ml="xs">
+                      {applyFilters(allApplications).length}
+                    </Badge>
+                  )}
                 </Tabs.Tab>
                 <Tabs.Tab value="accepted">
-                  Accepted {applyFilters(acceptedApplications).length > 0 && <Badge size="sm" variant="light" color="green" ml="xs">{applyFilters(acceptedApplications).length}</Badge>}
+                  Accepted{" "}
+                  {applyFilters(acceptedApplications).length > 0 && (
+                    <Badge size="sm" variant="light" color="green" ml="xs">
+                      {applyFilters(acceptedApplications).length}
+                    </Badge>
+                  )}
                 </Tabs.Tab>
                 <Tabs.Tab value="rejected">
-                  Rejected {applyFilters(rejectedApplications).length > 0 && <Badge size="sm" variant="light" color="red" ml="xs">{applyFilters(rejectedApplications).length}</Badge>}
+                  Rejected{" "}
+                  {applyFilters(rejectedApplications).length > 0 && (
+                    <Badge size="sm" variant="light" color="red" ml="xs">
+                      {applyFilters(rejectedApplications).length}
+                    </Badge>
+                  )}
                 </Tabs.Tab>
                 <Tabs.Tab value="invited">
-                  Invited {applyFilters(invitedApplications).length > 0 && <Badge size="sm" variant="light" color="violet" ml="xs">{applyFilters(invitedApplications).length}</Badge>}
+                  Invited{" "}
+                  {applyFilters(invitedApplications).length > 0 && (
+                    <Badge size="sm" variant="light" color="violet" ml="xs">
+                      {applyFilters(invitedApplications).length}
+                    </Badge>
+                  )}
                 </Tabs.Tab>
               </Tabs.List>
 
@@ -453,17 +585,29 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                   selectedApplications={selectedApplications}
                   invitedEmails={invitedEmails}
                   onSelectAll={() => {
-                    setSelectedApplications(prev =>
-                      prev.length === currentApplications.length ? [] : currentApplications.map(a => a.id)
+                    setSelectedApplications((prev) =>
+                      prev.length === currentApplications.length
+                        ? []
+                        : currentApplications.map((a) => a.id),
                     );
                   }}
                   onSelectApplication={(id) => {
-                    setSelectedApplications(prev =>
-                      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+                    setSelectedApplications((prev) =>
+                      prev.includes(id)
+                        ? prev.filter((x) => x !== id)
+                        : [...prev, id],
                     );
                   }}
-                  onStatusUpdate={(id, status) => updateApplicationStatus.mutate({ applicationId: id, status })}
-                  onViewApplication={(id) => { setViewingApplication({ id }); openViewDrawer(); }}
+                  onStatusUpdate={(id, status) =>
+                    updateApplicationStatus.mutate({
+                      applicationId: id,
+                      status,
+                    })
+                  }
+                  onViewApplication={(id) => {
+                    setViewingApplication({ id });
+                    openViewDrawer();
+                  }}
                   isUpdating={updateApplicationStatus.isPending}
                 />
               </Tabs.Panel>
@@ -473,17 +617,29 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                   selectedApplications={selectedApplications}
                   invitedEmails={invitedEmails}
                   onSelectAll={() => {
-                    setSelectedApplications(prev =>
-                      prev.length === currentApplications.length ? [] : currentApplications.map(a => a.id)
+                    setSelectedApplications((prev) =>
+                      prev.length === currentApplications.length
+                        ? []
+                        : currentApplications.map((a) => a.id),
                     );
                   }}
                   onSelectApplication={(id) => {
-                    setSelectedApplications(prev =>
-                      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+                    setSelectedApplications((prev) =>
+                      prev.includes(id)
+                        ? prev.filter((x) => x !== id)
+                        : [...prev, id],
                     );
                   }}
-                  onStatusUpdate={(id, status) => updateApplicationStatus.mutate({ applicationId: id, status })}
-                  onViewApplication={(id) => { setViewingApplication({ id }); openViewDrawer(); }}
+                  onStatusUpdate={(id, status) =>
+                    updateApplicationStatus.mutate({
+                      applicationId: id,
+                      status,
+                    })
+                  }
+                  onViewApplication={(id) => {
+                    setViewingApplication({ id });
+                    openViewDrawer();
+                  }}
                   isUpdating={updateApplicationStatus.isPending}
                 />
               </Tabs.Panel>
@@ -493,17 +649,29 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                   selectedApplications={selectedApplications}
                   invitedEmails={invitedEmails}
                   onSelectAll={() => {
-                    setSelectedApplications(prev =>
-                      prev.length === currentApplications.length ? [] : currentApplications.map(a => a.id)
+                    setSelectedApplications((prev) =>
+                      prev.length === currentApplications.length
+                        ? []
+                        : currentApplications.map((a) => a.id),
                     );
                   }}
                   onSelectApplication={(id) => {
-                    setSelectedApplications(prev =>
-                      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+                    setSelectedApplications((prev) =>
+                      prev.includes(id)
+                        ? prev.filter((x) => x !== id)
+                        : [...prev, id],
                     );
                   }}
-                  onStatusUpdate={(id, status) => updateApplicationStatus.mutate({ applicationId: id, status })}
-                  onViewApplication={(id) => { setViewingApplication({ id }); openViewDrawer(); }}
+                  onStatusUpdate={(id, status) =>
+                    updateApplicationStatus.mutate({
+                      applicationId: id,
+                      status,
+                    })
+                  }
+                  onViewApplication={(id) => {
+                    setViewingApplication({ id });
+                    openViewDrawer();
+                  }}
                   isUpdating={updateApplicationStatus.isPending}
                 />
               </Tabs.Panel>
@@ -513,17 +681,29 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                   selectedApplications={selectedApplications}
                   invitedEmails={invitedEmails}
                   onSelectAll={() => {
-                    setSelectedApplications(prev =>
-                      prev.length === currentApplications.length ? [] : currentApplications.map(a => a.id)
+                    setSelectedApplications((prev) =>
+                      prev.length === currentApplications.length
+                        ? []
+                        : currentApplications.map((a) => a.id),
                     );
                   }}
                   onSelectApplication={(id) => {
-                    setSelectedApplications(prev =>
-                      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+                    setSelectedApplications((prev) =>
+                      prev.includes(id)
+                        ? prev.filter((x) => x !== id)
+                        : [...prev, id],
                     );
                   }}
-                  onStatusUpdate={(id, status) => updateApplicationStatus.mutate({ applicationId: id, status })}
-                  onViewApplication={(id) => { setViewingApplication({ id }); openViewDrawer(); }}
+                  onStatusUpdate={(id, status) =>
+                    updateApplicationStatus.mutate({
+                      applicationId: id,
+                      status,
+                    })
+                  }
+                  onViewApplication={(id) => {
+                    setViewingApplication({ id });
+                    openViewDrawer();
+                  }}
                   isUpdating={updateApplicationStatus.isPending}
                 />
               </Tabs.Panel>
@@ -534,10 +714,17 @@ export default function SpeakerManagementClient({ eventId }: Props) {
         {/* ── Invitations Tab ── */}
         <Tabs.Panel value="invitations">
           <Group justify="flex-end" mb="md">
-            <Button leftSection={<IconUserPlus size={16} />} onClick={() => inv.setInviteModalOpen(true)}>
+            <Button
+              leftSection={<IconUserPlus size={16} />}
+              onClick={() => inv.setInviteModalOpen(true)}
+            >
               Invite Speaker
             </Button>
-            <Button variant="light" leftSection={<IconUpload size={16} />} onClick={() => inv.setBulkInviteModalOpen(true)}>
+            <Button
+              variant="light"
+              leftSection={<IconUpload size={16} />}
+              onClick={() => inv.setBulkInviteModalOpen(true)}
+            >
               Bulk Invite
             </Button>
           </Group>
@@ -547,12 +734,18 @@ export default function SpeakerManagementClient({ eventId }: Props) {
               { value: inv.stats.total, label: "Total Invites" },
               { value: inv.stats.pending, label: "Pending", color: "blue" },
               { value: inv.stats.accepted, label: "Accepted", color: "green" },
-              { value: activeSpeakerCount, label: "Active Speakers", color: "teal" },
+              {
+                value: activeSpeakerCount,
+                label: "Active Speakers",
+                color: "teal",
+              },
             ]}
           />
 
           <CurrentRoleHoldersTable
-            holders={currentSpeakers?.filter(user => user.userRoles.length > 0) ?? []}
+            holders={
+              currentSpeakers?.filter((user) => user.userRoles.length > 0) ?? []
+            }
             roleName="speaker"
             badgeColor="teal"
             title="Current Speakers"
@@ -581,15 +774,25 @@ export default function SpeakerManagementClient({ eventId }: Props) {
         {/* ── Sessions Tab ── */}
         <Tabs.Panel value="sessions">
           {loadingSessions ? (
-            <Group justify="center" py="xl"><Loader size="lg" /></Group>
+            <Group justify="center" py="xl">
+              <Loader size="lg" />
+            </Group>
           ) : (
             <>
               {/* Stats row */}
               <InvitationStatsGrid
                 stats={[
                   { value: sessionRows.length, label: "Total Rows" },
-                  { value: uploadedSlidesCount, label: "Slides Uploaded", color: "green" },
-                  { value: missingSlidesCount, label: "Missing Slides", color: "red" },
+                  {
+                    value: uploadedSlidesCount,
+                    label: "Slides Uploaded",
+                    color: "green",
+                  },
+                  {
+                    value: missingSlidesCount,
+                    label: "Missing Slides",
+                    color: "red",
+                  },
                 ]}
                 cols={{ base: 3, sm: 3 }}
               />
@@ -619,7 +822,8 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                 <Card withBorder mb="md" p="md">
                   <Group justify="space-between">
                     <Text size="sm">
-                      {selectedReminders.length} speaker{selectedReminders.length !== 1 ? "s" : ""} selected
+                      {selectedReminders.length} speaker
+                      {selectedReminders.length !== 1 ? "s" : ""} selected
                     </Text>
                     <Group gap="xs">
                       <Button
@@ -628,9 +832,14 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                         onClick={handleBulkRemind}
                         loading={sendSlidesReminder.isPending}
                       >
-                        Send Reminder to {selectedReminders.length} Speaker{selectedReminders.length !== 1 ? "s" : ""}
+                        Send Reminder to {selectedReminders.length} Speaker
+                        {selectedReminders.length !== 1 ? "s" : ""}
                       </Button>
-                      <Button variant="subtle" size="sm" onClick={() => setSelectedReminders([])}>
+                      <Button
+                        variant="subtle"
+                        size="sm"
+                        onClick={() => setSelectedReminders([])}
+                      >
                         Clear
                       </Button>
                     </Group>
@@ -647,8 +856,14 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                   {remindableRows.length > 0 && (
                     <Group mb="md">
                       <Checkbox
-                        checked={selectedReminders.length === remindableRows.length && remindableRows.length > 0}
-                        indeterminate={selectedReminders.length > 0 && selectedReminders.length < remindableRows.length}
+                        checked={
+                          selectedReminders.length === remindableRows.length &&
+                          remindableRows.length > 0
+                        }
+                        indeterminate={
+                          selectedReminders.length > 0 &&
+                          selectedReminders.length < remindableRows.length
+                        }
                         onChange={() => {
                           setSelectedReminders((prev) =>
                             prev.length === remindableRows.length
@@ -694,17 +909,25 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                               )}
                             </Table.Td>
                             <Table.Td>
-                              <Text size="sm" fw={500}>{row.sessionTitle}</Text>
+                              <Text size="sm" fw={500}>
+                                {row.sessionTitle}
+                              </Text>
                             </Table.Td>
                             <Table.Td>
                               <Text size="sm">{row.speakerName}</Text>
                             </Table.Td>
                             <Table.Td>
-                              <Text size="sm" c="dimmed">{row.speakerEmail}</Text>
+                              <Text size="sm" c="dimmed">
+                                {row.speakerEmail}
+                              </Text>
                             </Table.Td>
                             <Table.Td>
                               {row.slidesUrl ? (
-                                <Anchor href={row.slidesUrl} target="_blank" size="sm">
+                                <Anchor
+                                  href={row.slidesUrl}
+                                  target="_blank"
+                                  size="sm"
+                                >
                                   <Group gap={4} wrap="nowrap">
                                     <IconDownload size={14} />
                                     <Text size="sm" truncate maw={150}>
@@ -724,7 +947,12 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                                   variant="light"
                                   size="xs"
                                   leftSection={<IconSend size={14} />}
-                                  onClick={() => handleSingleRemind(row.sessionId, row.speakerUserId)}
+                                  onClick={() =>
+                                    handleSingleRemind(
+                                      row.sessionId,
+                                      row.speakerUserId,
+                                    )
+                                  }
                                   loading={sendSlidesReminder.isPending}
                                 >
                                   Remind
@@ -746,23 +974,41 @@ export default function SpeakerManagementClient({ eventId }: Props) {
       {/* Bulk Status Update Modal */}
       <Modal
         opened={bulkStatusModalOpen}
-        onClose={() => { setBulkStatusModalOpen(false); setBulkStatus(null); }}
+        onClose={() => {
+          setBulkStatusModalOpen(false);
+          setBulkStatus(null);
+        }}
         title={`${bulkStatus === "ACCEPTED" ? "Accept" : "Reject"} Selected Applications`}
         size="md"
       >
         <Stack>
           <Text size="sm" c="dimmed">
-            Are you sure you want to {bulkStatus?.toLowerCase()} {selectedApplications.length} speaker application{selectedApplications.length !== 1 ? "s" : ""}?
-            {bulkStatus === "ACCEPTED" && " This will send acceptance emails to the speakers."}
-            {bulkStatus === "REJECTED" && " This will send rejection emails to the speakers."}
+            Are you sure you want to {bulkStatus?.toLowerCase()}{" "}
+            {selectedApplications.length} speaker application
+            {selectedApplications.length !== 1 ? "s" : ""}?
+            {bulkStatus === "ACCEPTED" &&
+              " This will send acceptance emails to the speakers."}
+            {bulkStatus === "REJECTED" &&
+              " This will send rejection emails to the speakers."}
           </Text>
           <Group justify="flex-end">
-            <Button variant="light" onClick={() => { setBulkStatusModalOpen(false); setBulkStatus(null); }}>Cancel</Button>
+            <Button
+              variant="light"
+              onClick={() => {
+                setBulkStatusModalOpen(false);
+                setBulkStatus(null);
+              }}
+            >
+              Cancel
+            </Button>
             <Button
               color={bulkStatus === "ACCEPTED" ? "green" : "red"}
               onClick={() => {
                 if (!bulkStatus || selectedApplications.length === 0) return;
-                bulkUpdateApplicationStatus.mutate({ applicationIds: selectedApplications, status: bulkStatus });
+                bulkUpdateApplicationStatus.mutate({
+                  applicationIds: selectedApplications,
+                  status: bulkStatus,
+                });
               }}
               loading={bulkUpdateApplicationStatus.isPending}
             >
@@ -781,15 +1027,25 @@ export default function SpeakerManagementClient({ eventId }: Props) {
       >
         <Stack>
           <Text size="sm" c="dimmed">
-            Are you sure you want to permanently delete {selectedApplications.length} application{selectedApplications.length !== 1 ? "s" : ""}? This action cannot be undone.
+            Are you sure you want to permanently delete{" "}
+            {selectedApplications.length} application
+            {selectedApplications.length !== 1 ? "s" : ""}? This action cannot
+            be undone.
           </Text>
           <Group justify="flex-end">
-            <Button variant="light" onClick={() => setBulkDeleteModalOpen(false)}>Cancel</Button>
+            <Button
+              variant="light"
+              onClick={() => setBulkDeleteModalOpen(false)}
+            >
+              Cancel
+            </Button>
             <Button
               color="red"
               onClick={() => {
                 if (selectedApplications.length === 0) return;
-                bulkDeleteApplications.mutate({ applicationIds: selectedApplications });
+                bulkDeleteApplications.mutate({
+                  applicationIds: selectedApplications,
+                });
               }}
               loading={bulkDeleteApplications.isPending}
             >
@@ -881,14 +1137,21 @@ function SpeakerApplicationsTable({
     <>
       <Group justify="space-between" mb="md">
         <Checkbox
-          checked={selectedApplications.length === applications.length && applications.length > 0}
-          indeterminate={selectedApplications.length > 0 && selectedApplications.length < applications.length}
+          checked={
+            selectedApplications.length === applications.length &&
+            applications.length > 0
+          }
+          indeterminate={
+            selectedApplications.length > 0 &&
+            selectedApplications.length < applications.length
+          }
           onChange={onSelectAll}
           label={`Select all (${applications.length})`}
           size="sm"
         />
         <Text size="sm" c="dimmed">
-          {applications.length} application{applications.length !== 1 ? "s" : ""}
+          {applications.length} application
+          {applications.length !== 1 ? "s" : ""}
         </Text>
       </Group>
 
@@ -926,8 +1189,14 @@ function SpeakerApplicationsTable({
                   >
                     {application.user?.name ?? "Unknown"}
                   </Text>
-                  {(application.invitationId ?? invitedEmails.has(application.email.toLowerCase())) && (
-                    <Badge size="xs" variant="light" color="violet" leftSection={<IconMail size={10} />}>
+                  {(application.invitationId ??
+                    invitedEmails.has(application.email.toLowerCase())) && (
+                    <Badge
+                      size="xs"
+                      variant="light"
+                      color="violet"
+                      leftSection={<IconMail size={10} />}
+                    >
                       Invited
                     </Badge>
                   )}
@@ -939,35 +1208,70 @@ function SpeakerApplicationsTable({
               <Table.Td>
                 <Group gap={4} wrap="wrap">
                   {application.venues?.map((av) => (
-                    <Badge key={av.venue.id} size="xs" variant="light" color="cyan">
+                    <Badge
+                      key={av.venue.id}
+                      size="xs"
+                      variant="light"
+                      color="cyan"
+                    >
                       {av.venue.name}
                     </Badge>
                   ))}
                 </Group>
               </Table.Td>
               <Table.Td>
-                <Badge color={getApplicationStatusColor(application.status)} variant="light" size="sm" leftSection={getApplicationStatusIcon(application.status)}>
+                <Badge
+                  color={getApplicationStatusColor(application.status)}
+                  variant="light"
+                  size="sm"
+                  leftSection={getApplicationStatusIcon(application.status)}
+                >
                   {application.status.replace("_", " ").toLowerCase()}
                 </Badge>
               </Table.Td>
               <Table.Td>
                 <Text size="sm" c="dimmed">
-                  {application.submittedAt ? new Date(application.submittedAt).toLocaleDateString("en-US", { timeZone: "UTC" }) : "Not submitted"}
+                  {application.submittedAt
+                    ? new Date(application.submittedAt).toLocaleDateString(
+                        "en-US",
+                        { timeZone: "UTC" },
+                      )
+                    : "Not submitted"}
                 </Text>
               </Table.Td>
               <Table.Td>
                 <Group gap={4}>
                   {application.status !== "ACCEPTED" && (
-                    <ActionIcon variant="light" color="green" size="sm" onClick={() => onStatusUpdate(application.id, "ACCEPTED")} loading={isUpdating} title="Accept">
+                    <ActionIcon
+                      variant="light"
+                      color="green"
+                      size="sm"
+                      onClick={() => onStatusUpdate(application.id, "ACCEPTED")}
+                      loading={isUpdating}
+                      title="Accept"
+                    >
                       <IconCheck size={14} />
                     </ActionIcon>
                   )}
                   {application.status !== "REJECTED" && (
-                    <ActionIcon variant="light" color="red" size="sm" onClick={() => onStatusUpdate(application.id, "REJECTED")} loading={isUpdating} title="Reject">
+                    <ActionIcon
+                      variant="light"
+                      color="red"
+                      size="sm"
+                      onClick={() => onStatusUpdate(application.id, "REJECTED")}
+                      loading={isUpdating}
+                      title="Reject"
+                    >
                       <IconX size={14} />
                     </ActionIcon>
                   )}
-                  <ActionIcon variant="light" color="blue" size="sm" onClick={() => onViewApplication(application.id)} title="View details">
+                  <ActionIcon
+                    variant="light"
+                    color="blue"
+                    size="sm"
+                    onClick={() => onViewApplication(application.id)}
+                    title="View details"
+                  >
                     <IconEye size={14} />
                   </ActionIcon>
                 </Group>

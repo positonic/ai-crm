@@ -1,8 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Paper, Stack, Text, Alert, Group, Loader } from "@mantine/core";
-import { IconCloudDownload, IconAlertCircle, IconCheck, IconRefresh } from "@tabler/icons-react";
+import {
+  Button,
+  Paper,
+  Stack,
+  Text,
+  Alert,
+  Group,
+  Loader,
+} from "@mantine/core";
+import {
+  IconCloudDownload,
+  IconAlertCircle,
+  IconCheck,
+  IconRefresh,
+} from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import TelegramAuthStatus from "~/app/_components/TelegramAuthStatus";
 
@@ -10,10 +23,13 @@ export default function ContactsClient() {
   const { refetch } = api.contact.getContacts.useQuery();
   const importContacts = api.contact.importGoogleContacts.useMutation();
   const importNotionContacts = api.contact.importNotionContacts.useMutation();
-  const importTelegramContacts = api.contact.importTelegramContacts.useMutation();
+  const importTelegramContacts =
+    api.contact.importTelegramContacts.useMutation();
   const matchEventApplicants = api.contact.matchEventApplicants.useMutation();
-  const disconnectGoogleAccount = api.contact.disconnectGoogleAccount.useMutation();
-  const { data: telegramAuthStatus, refetch: refetchTelegramAuth } = api.telegramAuth.getAuthStatus.useQuery();
+  const disconnectGoogleAccount =
+    api.contact.disconnectGoogleAccount.useMutation();
+  const { data: telegramAuthStatus, refetch: refetchTelegramAuth } =
+    api.telegramAuth.getAuthStatus.useQuery();
   const [syncing, setSyncing] = useState(false);
   const [syncingNotion, setSyncingNotion] = useState(false);
   const [syncingTelegram, setSyncingTelegram] = useState(false);
@@ -64,7 +80,9 @@ export default function ContactsClient() {
     try {
       const result = await matchEventApplicants.mutateAsync();
       await refetch();
-      console.log(`Successfully processed ${result.applicationsProcessed} applications: ${result.contactsCreated} contacts created, ${result.contactsUpdated} updated, ${result.errors} errors`);
+      console.log(
+        `Successfully processed ${result.applicationsProcessed} applications: ${result.contactsCreated} contacts created, ${result.contactsUpdated} updated, ${result.errors} errors`,
+      );
     } catch (e) {
       console.error("Match applicants failed:", e);
     } finally {
@@ -78,7 +96,7 @@ export default function ContactsClient() {
       console.log("Disconnecting existing Google account...");
       await disconnectGoogleAccount.mutateAsync();
       console.log("Google account disconnected, redirecting to OAuth...");
-      
+
       // Small delay to ensure the disconnect is processed
       setTimeout(() => {
         window.location.href = "/api/auth/signin?provider=google";
@@ -95,35 +113,52 @@ export default function ContactsClient() {
       <Paper shadow="xs" p="md" radius="md" withBorder>
         <Stack gap="md">
           <Group justify="space-between" align="center">
-            <Text fw={500} size="lg">Match Event Applicants</Text>
+            <Text fw={500} size="lg">
+              Match Event Applicants
+            </Text>
             <Button
-              leftSection={matchingApplicants ? <Loader size="xs" /> : <IconCloudDownload size={16} />}
+              leftSection={
+                matchingApplicants ? (
+                  <Loader size="xs" />
+                ) : (
+                  <IconCloudDownload size={16} />
+                )
+              }
               onClick={handleMatchApplicants}
               disabled={matchingApplicants || matchEventApplicants.isPending}
               loading={matchingApplicants || matchEventApplicants.isPending}
             >
-              {matchingApplicants || matchEventApplicants.isPending ? "Processing..." : "Match Event Applicants"}
+              {matchingApplicants || matchEventApplicants.isPending
+                ? "Processing..."
+                : "Match Event Applicants"}
             </Button>
           </Group>
           <Text size="sm" c="dimmed">
-            Extract contact information from event applications and sync with the contacts database.
-            This will process all applications and create or update contact records based on application data.
+            Extract contact information from event applications and sync with
+            the contacts database. This will process all applications and create
+            or update contact records based on application data.
           </Text>
           {matchEventApplicants.isSuccess && (
             <Alert icon={<IconCheck size={16} />} color="green" variant="light">
-              Successfully processed applications! 
+              Successfully processed applications!
               {matchEventApplicants.data && (
                 <Text size="sm" mt="xs">
-                  Processed {matchEventApplicants.data.applicationsProcessed} applications: 
-                  {matchEventApplicants.data.contactsCreated} contacts created, 
+                  Processed {matchEventApplicants.data.applicationsProcessed}{" "}
+                  applications:
+                  {matchEventApplicants.data.contactsCreated} contacts created,
                   {matchEventApplicants.data.contactsUpdated} updated
-                  {matchEventApplicants.data.errors > 0 && `, ${matchEventApplicants.data.errors} errors`}
+                  {matchEventApplicants.data.errors > 0 &&
+                    `, ${matchEventApplicants.data.errors} errors`}
                 </Text>
               )}
             </Alert>
           )}
           {matchEventApplicants.error && (
-            <Alert icon={<IconAlertCircle size={16} />} color="red" variant="light">
+            <Alert
+              icon={<IconAlertCircle size={16} />}
+              color="red"
+              variant="light"
+            >
               <Text fw={500}>Processing error:</Text>
               <Text size="sm">{matchEventApplicants.error.message}</Text>
             </Alert>
@@ -134,19 +169,26 @@ export default function ContactsClient() {
       <Paper shadow="xs" p="md" radius="md" withBorder>
         <Stack gap="md">
           <Group justify="space-between" align="center">
-            <Text fw={500} size="lg">Google Contacts Sync</Text>
+            <Text fw={500} size="lg">
+              Google Contacts Sync
+            </Text>
             <Button
-              leftSection={syncing ? <Loader size="xs" /> : <IconCloudDownload size={16} />}
+              leftSection={
+                syncing ? <Loader size="xs" /> : <IconCloudDownload size={16} />
+              }
               onClick={handleSync}
               disabled={syncing || importContacts.isPending}
               loading={syncing || importContacts.isPending}
             >
-              {syncing || importContacts.isPending ? "Syncing..." : "Sync Google Contacts"}
+              {syncing || importContacts.isPending
+                ? "Syncing..."
+                : "Sync Google Contacts"}
             </Button>
           </Group>
           <Text size="sm" c="dimmed">
-            Import contacts from your Google account to automatically populate the contacts database.
-            Contacts will be automatically associated with sponsors based on their email domains.
+            Import contacts from your Google account to automatically populate
+            the contacts database. Contacts will be automatically associated
+            with sponsors based on their email domains.
           </Text>
           {importContacts.isSuccess && (
             <Alert icon={<IconCheck size={16} />} color="green" variant="light">
@@ -154,32 +196,43 @@ export default function ContactsClient() {
             </Alert>
           )}
           {importContacts.error && (
-            <Alert icon={<IconAlertCircle size={16} />} color="red" variant="light">
+            <Alert
+              icon={<IconAlertCircle size={16} />}
+              color="red"
+              variant="light"
+            >
               <Text fw={500}>Sync error:</Text>
               <Text size="sm" mb="sm">
-                {importContacts.error.message === "GOOGLE_AUTH_EXPIRED" 
+                {importContacts.error.message === "GOOGLE_AUTH_EXPIRED"
                   ? "Your Google account connection has expired. Please reconnect to sync contacts."
                   : importContacts.error.message === "GOOGLE_NOT_CONNECTED"
-                  ? "No Google account connected. Please sign in with Google to sync contacts."
-                  : importContacts.error.message === "GOOGLE_PERMISSIONS_INSUFFICIENT"
-                  ? "Insufficient permissions to access Google Contacts. Please reconnect and grant contacts access."
-                  : importContacts.error.message}
+                    ? "No Google account connected. Please sign in with Google to sync contacts."
+                    : importContacts.error.message ===
+                        "GOOGLE_PERMISSIONS_INSUFFICIENT"
+                      ? "Insufficient permissions to access Google Contacts. Please reconnect and grant contacts access."
+                      : importContacts.error.message}
               </Text>
-              {(importContacts.error.message === "GOOGLE_AUTH_EXPIRED" || 
+              {(importContacts.error.message === "GOOGLE_AUTH_EXPIRED" ||
                 importContacts.error.message === "GOOGLE_NOT_CONNECTED" ||
-                importContacts.error.message === "GOOGLE_PERMISSIONS_INSUFFICIENT") && (
-                <Button 
-                  size="xs" 
-                  variant="outline" 
-                  leftSection={reconnecting ? <Loader size={14} /> : <IconRefresh size={14} />}
+                importContacts.error.message ===
+                  "GOOGLE_PERMISSIONS_INSUFFICIENT") && (
+                <Button
+                  size="xs"
+                  variant="outline"
+                  leftSection={
+                    reconnecting ? (
+                      <Loader size={14} />
+                    ) : (
+                      <IconRefresh size={14} />
+                    )
+                  }
                   onClick={handleReconnectGoogle}
                   disabled={reconnecting || disconnectGoogleAccount.isPending}
                   loading={reconnecting || disconnectGoogleAccount.isPending}
                 >
-                  {reconnecting || disconnectGoogleAccount.isPending 
-                    ? "Reconnecting..." 
-                    : "Disconnect & Reconnect Google"
-                  }
+                  {reconnecting || disconnectGoogleAccount.isPending
+                    ? "Reconnecting..."
+                    : "Disconnect & Reconnect Google"}
                 </Button>
               )}
             </Alert>
@@ -191,18 +244,30 @@ export default function ContactsClient() {
       <Paper shadow="xs" p="md" radius="md" withBorder>
         <Stack gap="md">
           <Group justify="space-between" align="center">
-            <Text fw={500} size="lg">Notion Contacts Sync</Text>
+            <Text fw={500} size="lg">
+              Notion Contacts Sync
+            </Text>
             <Button
-              leftSection={syncingNotion ? <Loader size="xs" /> : <IconCloudDownload size={16} />}
+              leftSection={
+                syncingNotion ? (
+                  <Loader size="xs" />
+                ) : (
+                  <IconCloudDownload size={16} />
+                )
+              }
               onClick={handleNotionSync}
               disabled={syncingNotion || importNotionContacts.isPending}
               loading={syncingNotion || importNotionContacts.isPending}
             >
-              {syncingNotion || importNotionContacts.isPending ? "Syncing..." : "Sync Notion Contacts"}
+              {syncingNotion || importNotionContacts.isPending
+                ? "Syncing..."
+                : "Sync Notion Contacts"}
             </Button>
           </Group>
           <Text size="sm" c="dimmed">
-            Import contacts from your Notion database. You will need to provide a Notion integration token and database ID in the backend configuration.
+            Import contacts from your Notion database. You will need to provide
+            a Notion integration token and database ID in the backend
+            configuration.
           </Text>
           {importNotionContacts.isSuccess && (
             <Alert icon={<IconCheck size={16} />} color="green" variant="light">
@@ -210,7 +275,11 @@ export default function ContactsClient() {
             </Alert>
           )}
           {importNotionContacts.error && (
-            <Alert icon={<IconAlertCircle size={16} />} color="red" variant="light">
+            <Alert
+              icon={<IconAlertCircle size={16} />}
+              color="red"
+              variant="light"
+            >
               <Text fw={500}>Sync error:</Text>
               <Text size="sm">{importNotionContacts.error.message}</Text>
             </Alert>
@@ -222,27 +291,40 @@ export default function ContactsClient() {
       <Paper shadow="xs" p="md" radius="md" withBorder>
         <Stack gap="md">
           <Group justify="space-between" align="center">
-            <Text fw={500} size="lg">Telegram Contacts Sync</Text>
+            <Text fw={500} size="lg">
+              Telegram Contacts Sync
+            </Text>
             <Button
-              leftSection={syncingTelegram ? <Loader size="xs" /> : <IconCloudDownload size={16} />}
+              leftSection={
+                syncingTelegram ? (
+                  <Loader size="xs" />
+                ) : (
+                  <IconCloudDownload size={16} />
+                )
+              }
               onClick={handleTelegramSync}
               disabled={
-                !telegramAuthStatus?.isAuthenticated || 
-                syncingTelegram || 
+                !telegramAuthStatus?.isAuthenticated ||
+                syncingTelegram ||
                 importTelegramContacts.isPending
               }
               loading={syncingTelegram || importTelegramContacts.isPending}
             >
-              {syncingTelegram || importTelegramContacts.isPending ? "Syncing..." : "Sync Telegram Contacts"}
+              {syncingTelegram || importTelegramContacts.isPending
+                ? "Syncing..."
+                : "Sync Telegram Contacts"}
             </Button>
           </Group>
-          
+
           <Text size="sm" c="dimmed">
-            Import contacts from your Telegram account using your secure authentication.
+            Import contacts from your Telegram account using your secure
+            authentication.
           </Text>
 
           {/* Authentication Status */}
-          <TelegramAuthStatus onAuthChanged={() => void refetchTelegramAuth()} />
+          <TelegramAuthStatus
+            onAuthChanged={() => void refetchTelegramAuth()}
+          />
 
           {importTelegramContacts.isSuccess && (
             <Alert icon={<IconCheck size={16} />} color="green" variant="light">
@@ -250,7 +332,11 @@ export default function ContactsClient() {
             </Alert>
           )}
           {importTelegramContacts.error && (
-            <Alert icon={<IconAlertCircle size={16} />} color="red" variant="light">
+            <Alert
+              icon={<IconAlertCircle size={16} />}
+              color="red"
+              variant="light"
+            >
               <Text fw={500}>Sync error:</Text>
               <Text size="sm">{importTelegramContacts.error.message}</Text>
             </Alert>

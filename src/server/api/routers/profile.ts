@@ -1,11 +1,16 @@
 import type { Prisma } from "@prisma/client";
 
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure, protectedProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  protectedProcedure,
+} from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 
 // URL validation that accepts URLs with or without protocol, normalizes to https://
-const lenientUrlSchema = z.string()
+const lenientUrlSchema = z
+  .string()
   .refine(
     (val) => {
       if (!val || val === "") return true;
@@ -13,7 +18,7 @@ const lenientUrlSchema = z.string()
       const urlPattern = /^(https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/\S*)?$/i;
       return urlPattern.test(val);
     },
-    { message: "Invalid URL" }
+    { message: "Invalid URL" },
   )
   .transform((val) => {
     if (!val || val === "") return val;
@@ -129,78 +134,73 @@ const projectsSearchSchema = z.object({
 
 export const profileRouter = createTRPCRouter({
   // Get current user's profile
-  getMyProfile: protectedProcedure
-    .query(async ({ ctx }) => {
-      const profile = await ctx.db.userProfile.findUnique({
-        where: { userId: ctx.session.user.id },
-        include: {
-          projects: {
-            include: {
-              repositories: {
-                orderBy: [
-                  { isPrimary: "desc" },
-                  { order: "asc" },
-                  { createdAt: "asc" },
-                ],
-              },
+  getMyProfile: protectedProcedure.query(async ({ ctx }) => {
+    const profile = await ctx.db.userProfile.findUnique({
+      where: { userId: ctx.session.user.id },
+      include: {
+        projects: {
+          include: {
+            repositories: {
+              orderBy: [
+                { isPrimary: "desc" },
+                { order: "asc" },
+                { createdAt: "asc" },
+              ],
             },
-            orderBy: [
-              { featured: "desc" },
-              { order: "asc" },
-              { createdAt: "desc" },
-            ],
           },
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              image: true,
-            },
+          orderBy: [
+            { featured: "desc" },
+            { order: "asc" },
+            { createdAt: "desc" },
+          ],
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
           },
         },
-      });
+      },
+    });
 
-      if (!profile) {
-        return profile;
-      }
+    if (!profile) {
+      return profile;
+    }
 
-      // Also get projects where user is a collaborator
-      const collaboratorProjects = await ctx.db.userProject.findMany({
-        where: {
-          collaborators: {
-            some: {
-              userId: ctx.session.user.id,
-            },
+    // Also get projects where user is a collaborator
+    const collaboratorProjects = await ctx.db.userProject.findMany({
+      where: {
+        collaborators: {
+          some: {
+            userId: ctx.session.user.id,
           },
         },
-        orderBy: [
-          { featured: "desc" },
-          { order: "asc" },
-          { createdAt: "desc" },
-        ],
-      });
+      },
+      orderBy: [{ featured: "desc" }, { order: "asc" }, { createdAt: "desc" }],
+    });
 
-      // Merge owned projects and collaborator projects
-      const allProjects = [...profile.projects, ...collaboratorProjects];
+    // Merge owned projects and collaborator projects
+    const allProjects = [...profile.projects, ...collaboratorProjects];
 
-      // Remove duplicates and sort
-      const uniqueProjects = Array.from(
-        new Map(allProjects.map(p => [p.id, p])).values()
-      ).sort((a, b) => {
-        // Sort by featured first
-        if (a.featured !== b.featured) return a.featured ? -1 : 1;
-        // Then by order
-        if (a.order !== b.order) return a.order - b.order;
-        // Finally by creation date
-        return b.createdAt.getTime() - a.createdAt.getTime();
-      });
+    // Remove duplicates and sort
+    const uniqueProjects = Array.from(
+      new Map(allProjects.map((p) => [p.id, p])).values(),
+    ).sort((a, b) => {
+      // Sort by featured first
+      if (a.featured !== b.featured) return a.featured ? -1 : 1;
+      // Then by order
+      if (a.order !== b.order) return a.order - b.order;
+      // Finally by creation date
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    });
 
-      return {
-        ...profile,
-        projects: uniqueProjects,
-      };
-    }),
+    return {
+      ...profile,
+      projects: uniqueProjects,
+    };
+  }),
 
   // Get any user's profile by ID (public)
   getProfile: publicProcedure
@@ -282,14 +282,17 @@ export const profileRouter = createTRPCRouter({
           projects: [],
           createdAt: new Date(),
           updatedAt: new Date(),
-          userId: input.userId
-        };      }
+          userId: input.userId,
+        };
+      }
 
       // Check privacy settings - block access if profile is private and viewer is not the owner
       const isOwner = ctx.session?.user?.id === input.userId;
 
       // Cast to access isPublic field (TypeScript inference issue with include)
-      const profileWithPrivacy = profile as typeof profile & { isPublic: boolean };
+      const profileWithPrivacy = profile as typeof profile & {
+        isPublic: boolean;
+      };
       const isPublic = profileWithPrivacy.isPublic ?? true; // Default to public if not set
 
       if (isPublic === false && !isOwner) {
@@ -453,10 +456,7 @@ export const profileRouter = createTRPCRouter({
             where: { featured: true },
             include: {
               repositories: {
-                orderBy: [
-                  { isPrimary: "desc" },
-                  { order: "asc" },
-                ],
+                orderBy: [{ isPrimary: "desc" }, { order: "asc" }],
               },
             },
             take: 3,
@@ -513,32 +513,32 @@ export const profileRouter = createTRPCRouter({
               userSkills: {
                 some: {
                   skill: {
-                    name: { contains: search, mode: "insensitive" }
-                  }
-                }
-              }
+                    name: { contains: search, mode: "insensitive" },
+                  },
+                },
+              },
             },
             {
               profile: {
-                bio: { contains: search, mode: "insensitive" }
-              }
+                bio: { contains: search, mode: "insensitive" },
+              },
             },
             {
               profile: {
-                jobTitle: { contains: search, mode: "insensitive" }
-              }
+                jobTitle: { contains: search, mode: "insensitive" },
+              },
             },
             {
               profile: {
-                company: { contains: search, mode: "insensitive" }
-              }
+                company: { contains: search, mode: "insensitive" },
+              },
             },
             {
               profile: {
-                priorExperience: { contains: search, mode: "insensitive" }
-              }
+                priorExperience: { contains: search, mode: "insensitive" },
+              },
             },
-          ]
+          ],
         });
       }
 
@@ -548,10 +548,10 @@ export const profileRouter = createTRPCRouter({
           userSkills: {
             some: {
               skill: {
-                name: { in: skills }
-              }
-            }
-          }
+                name: { in: skills },
+              },
+            },
+          },
         });
       }
 
@@ -559,8 +559,8 @@ export const profileRouter = createTRPCRouter({
       if (location) {
         whereConditions.push({
           profile: {
-            location: { contains: location, mode: "insensitive" }
-          }
+            location: { contains: location, mode: "insensitive" },
+          },
         });
       }
 
@@ -568,22 +568,22 @@ export const profileRouter = createTRPCRouter({
       if (availableForMentoring !== undefined) {
         whereConditions.push({
           profile: {
-            availableForMentoring: availableForMentoring
-          }
+            availableForMentoring: availableForMentoring,
+          },
         });
       }
       if (availableForHiring !== undefined) {
         whereConditions.push({
           profile: {
-            availableForHiring: availableForHiring
-          }
+            availableForHiring: availableForHiring,
+          },
         });
       }
       if (availableForOfficeHours !== undefined) {
         whereConditions.push({
           profile: {
-            availableForOfficeHours: availableForOfficeHours
-          }
+            availableForOfficeHours: availableForOfficeHours,
+          },
         });
       }
 
@@ -754,10 +754,14 @@ export const profileRouter = createTRPCRouter({
 
   // Add collaborators to a project (owner only)
   addProjectCollaborators: protectedProcedure
-    .input(z.object({
-      projectId: z.string(),
-      userIds: z.array(z.string()).min(1, "At least one collaborator is required"),
-    }))
+    .input(
+      z.object({
+        projectId: z.string(),
+        userIds: z
+          .array(z.string())
+          .min(1, "At least one collaborator is required"),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // Verify user owns the project
       const project = await ctx.db.userProject.findUnique({
@@ -773,7 +777,9 @@ export const profileRouter = createTRPCRouter({
       }
 
       // Filter out owner from collaborators
-      const validUserIds = input.userIds.filter(id => id !== ctx.session.user.id);
+      const validUserIds = input.userIds.filter(
+        (id) => id !== ctx.session.user.id,
+      );
 
       if (validUserIds.length === 0) {
         throw new TRPCError({
@@ -784,7 +790,7 @@ export const profileRouter = createTRPCRouter({
 
       // Create collaborator records
       await ctx.db.projectCollaborator.createMany({
-        data: validUserIds.map(userId => ({
+        data: validUserIds.map((userId) => ({
           projectId: input.projectId,
           userId,
         })),
@@ -796,10 +802,12 @@ export const profileRouter = createTRPCRouter({
 
   // Remove a collaborator from a project (owner only)
   removeProjectCollaborator: protectedProcedure
-    .input(z.object({
-      projectId: z.string(),
-      userId: z.string(),
-    }))
+    .input(
+      z.object({
+        projectId: z.string(),
+        userId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // Verify user owns the project
       const project = await ctx.db.userProject.findUnique({
@@ -827,9 +835,11 @@ export const profileRouter = createTRPCRouter({
 
   // Get project collaborators
   getProjectCollaborators: protectedProcedure
-    .input(z.object({
-      projectId: z.string(),
-    }))
+    .input(
+      z.object({
+        projectId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const project = await ctx.db.userProject.findUnique({
         where: { id: input.projectId },
@@ -868,7 +878,8 @@ export const profileRouter = createTRPCRouter({
       if (!isOwner && !isCollaborator && !isAdmin) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You can only view collaborators for projects you own or collaborate on",
+          message:
+            "You can only view collaborators for projects you own or collaborate on",
         });
       }
 
@@ -880,9 +891,11 @@ export const profileRouter = createTRPCRouter({
 
   // Reorder projects
   reorderProjects: protectedProcedure
-    .input(z.object({
-      projectIds: z.array(z.string()),
-    }))
+    .input(
+      z.object({
+        projectIds: z.array(z.string()),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // Get user's profile
       const profile = await ctx.db.userProfile.findUnique({
@@ -898,9 +911,11 @@ export const profileRouter = createTRPCRouter({
       }
 
       // Verify all projects belong to the user
-      const userProjectIds = profile.projects.map(p => p.id);
-      const invalidIds = input.projectIds.filter(id => !userProjectIds.includes(id));
-      
+      const userProjectIds = profile.projects.map((p) => p.id);
+      const invalidIds = input.projectIds.filter(
+        (id) => !userProjectIds.includes(id),
+      );
+
       if (invalidIds.length > 0) {
         throw new TRPCError({
           code: "FORBIDDEN",
@@ -913,7 +928,7 @@ export const profileRouter = createTRPCRouter({
         ctx.db.userProject.update({
           where: { id },
           data: { order: index },
-        })
+        }),
       );
 
       await Promise.all(updatePromises);
@@ -925,12 +940,7 @@ export const profileRouter = createTRPCRouter({
   getAllFeaturedProjects: publicProcedure
     .input(projectsSearchSchema)
     .query(async ({ ctx, input }) => {
-      const {
-        search,
-        technologies,
-        limit,
-        cursor,
-      } = input;
+      const { search, technologies, limit, cursor } = input;
 
       const where: Prisma.UserProjectWhereInput = {
         featured: true,
@@ -988,179 +998,186 @@ export const profileRouter = createTRPCRouter({
     }),
 
   // Calculate profile completion percentage
-  getProfileCompletion: protectedProcedure
-    .query(async ({ ctx }) => {
-      const profile = await ctx.db.userProfile.findUnique({
-        where: { userId: ctx.session.user.id },
-        include: {
-          user: {
-            select: {
-              name: true,
-              image: true,
-            },
+  getProfileCompletion: protectedProcedure.query(async ({ ctx }) => {
+    const profile = await ctx.db.userProfile.findUnique({
+      where: { userId: ctx.session.user.id },
+      include: {
+        user: {
+          select: {
+            name: true,
+            image: true,
           },
         },
-      });
+      },
+    });
 
-      const user = ctx.session.user;
-      
-      const fields = {
-        name: !!user.name,
-        image: !!user.image,
-        bio: !!profile?.bio,
-        jobTitle: !!profile?.jobTitle,
-        company: !!profile?.company,
-        location: !!profile?.location,
-        skills: !!profile?.skills && profile.skills.length > 0,
-        githubUrl: !!profile?.githubUrl,
-        linkedinUrl: !!profile?.linkedinUrl,
-        website: !!profile?.website,
-      };
+    const user = ctx.session.user;
 
-      const completedFields = Object.values(fields).filter(Boolean).length;
-      const totalFields = Object.keys(fields).length;
-      const percentage = Math.round((completedFields / totalFields) * 100);
+    const fields = {
+      name: !!user.name,
+      image: !!user.image,
+      bio: !!profile?.bio,
+      jobTitle: !!profile?.jobTitle,
+      company: !!profile?.company,
+      location: !!profile?.location,
+      skills: !!profile?.skills && profile.skills.length > 0,
+      githubUrl: !!profile?.githubUrl,
+      linkedinUrl: !!profile?.linkedinUrl,
+      website: !!profile?.website,
+    };
 
-      const missingFields = Object.entries(fields)
-        .filter(([_, completed]) => !completed)
-        .map(([field]) => field);
+    const completedFields = Object.values(fields).filter(Boolean).length;
+    const totalFields = Object.keys(fields).length;
+    const percentage = Math.round((completedFields / totalFields) * 100);
 
-      return {
-        percentage,
-        completedFields,
-        totalFields,
-        fields,
-        missingFields,
-        meetsThreshold: percentage >= 70, // 70% threshold for directory visibility
-      };
-    }),
+    const missingFields = Object.entries(fields)
+      .filter(([_, completed]) => !completed)
+      .map(([field]) => field);
+
+    return {
+      percentage,
+      completedFields,
+      totalFields,
+      fields,
+      missingFields,
+      meetsThreshold: percentage >= 70, // 70% threshold for directory visibility
+    };
+  }),
 
   // Get profile statistics
-  getProfileStats: publicProcedure
-    .query(async ({ ctx }) => {
-      const stats = await ctx.db.userProfile.aggregate({
-        _count: {
-          id: true,
-        },
-      });
+  getProfileStats: publicProcedure.query(async ({ ctx }) => {
+    const stats = await ctx.db.userProfile.aggregate({
+      _count: {
+        id: true,
+      },
+    });
 
-      const availableStats = await ctx.db.userProfile.groupBy({
-        by: ['availableForMentoring', 'availableForHiring', 'availableForOfficeHours'],
-        _count: true,
-      });
+    const availableStats = await ctx.db.userProfile.groupBy({
+      by: [
+        "availableForMentoring",
+        "availableForHiring",
+        "availableForOfficeHours",
+      ],
+      _count: true,
+    });
 
-      return {
-        totalProfiles: stats._count.id,
-        availabilityStats: availableStats,
-      };
-    }),
+    return {
+      totalProfiles: stats._count.id,
+      availabilityStats: availableStats,
+    };
+  }),
 
   // Get all skills available in the system
-  getAllSkills: publicProcedure
-    .query(async ({ ctx }) => {
-      const skills = await ctx.db.skills.findMany({
-        where: {
-          isActive: true,
-          popularity: {
-            gt: 0, // Only show skills that are actually being used
-          }
+  getAllSkills: publicProcedure.query(async ({ ctx }) => {
+    const skills = await ctx.db.skills.findMany({
+      where: {
+        isActive: true,
+        popularity: {
+          gt: 0, // Only show skills that are actually being used
         },
-        orderBy: {
-          popularity: 'desc'
-        },
-        select: {
-          id: true,
-          name: true,
-          category: true,
-          popularity: true,
-        }
-      });
+      },
+      orderBy: {
+        popularity: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+        category: true,
+        popularity: true,
+      },
+    });
 
-      return skills.map(skill => ({
-        value: skill.name,
-        label: skill.name,
-        category: skill.category,
-        popularity: skill.popularity,
-      }));
-    }),
+    return skills.map((skill) => ({
+      value: skill.name,
+      label: skill.name,
+      category: skill.category,
+      popularity: skill.popularity,
+    }));
+  }),
 
   // Check if mentor has completed their profile
-  checkMentorCompletion: protectedProcedure
-    .query(async ({ ctx }) => {
-      const profile = await ctx.db.userProfile.findUnique({
-        where: { userId: ctx.session.user.id },
-        select: {
-          mentorSpecializations: true,
-          mentorGoals: true,
-          mentorAvailableDates: true,
-          mentorHoursPerWeek: true,
-          mentorPreferredContact: true,
-          mentorshipStyle: true,
-        },
-      });
+  checkMentorCompletion: protectedProcedure.query(async ({ ctx }) => {
+    const profile = await ctx.db.userProfile.findUnique({
+      where: { userId: ctx.session.user.id },
+      select: {
+        mentorSpecializations: true,
+        mentorGoals: true,
+        mentorAvailableDates: true,
+        mentorHoursPerWeek: true,
+        mentorPreferredContact: true,
+        mentorshipStyle: true,
+      },
+    });
 
-      if (!profile) {
-        return { isComplete: false };
-      }
+    if (!profile) {
+      return { isComplete: false };
+    }
 
-      // Check if key mentor fields are filled
-      const isComplete = !!(
-        profile.mentorSpecializations?.length &&
-        profile.mentorGoals?.trim() &&
-        profile.mentorAvailableDates?.length &&
-        profile.mentorHoursPerWeek?.trim() &&
-        profile.mentorPreferredContact?.trim() &&
-        profile.mentorshipStyle?.trim()
-      );
+    // Check if key mentor fields are filled
+    const isComplete = !!(
+      profile.mentorSpecializations?.length &&
+      profile.mentorGoals?.trim() &&
+      profile.mentorAvailableDates?.length &&
+      profile.mentorHoursPerWeek?.trim() &&
+      profile.mentorPreferredContact?.trim() &&
+      profile.mentorshipStyle?.trim()
+    );
 
-      return { isComplete };
-    }),
+    return { isComplete };
+  }),
 
   // Profile-Application Sync endpoints
-  getUserApplicationsForSync: protectedProcedure
-    .query(async ({ ctx }) => {
-      const applications = await ctx.db.application.findMany({
-        where: { 
-          userId: ctx.session.user.id,
-          status: { in: ["SUBMITTED", "UNDER_REVIEW", "ACCEPTED", "REJECTED", "WAITLISTED"] }, // All submitted applications
-        },
-        include: {
-          event: {
-            select: {
-              id: true,
-              name: true,
-            },
+  getUserApplicationsForSync: protectedProcedure.query(async ({ ctx }) => {
+    const applications = await ctx.db.application.findMany({
+      where: {
+        userId: ctx.session.user.id,
+        status: {
+          in: [
+            "SUBMITTED",
+            "UNDER_REVIEW",
+            "ACCEPTED",
+            "REJECTED",
+            "WAITLISTED",
+          ],
+        }, // All submitted applications
+      },
+      include: {
+        event: {
+          select: {
+            id: true,
+            name: true,
           },
-          responses: {
-            include: {
-              question: {
-                select: {
-                  id: true,
-                  questionKey: true,
-                  questionEn: true,
-                },
+        },
+        responses: {
+          include: {
+            question: {
+              select: {
+                id: true,
+                questionKey: true,
+                questionEn: true,
               },
             },
           },
-          profileSyncs: {
-            select: {
-              id: true,
-              syncedFields: true,
-              syncedAt: true,
-            },
+        },
+        profileSyncs: {
+          select: {
+            id: true,
+            syncedFields: true,
+            syncedAt: true,
           },
         },
-        orderBy: { submittedAt: "desc" },
-      });
+      },
+      orderBy: { submittedAt: "desc" },
+    });
 
-      return applications;
-    }),
+    return applications;
+  }),
 
   previewApplicationSync: protectedProcedure
     .input(z.object({ applicationId: z.string() }))
     .query(async ({ ctx, input }) => {
       const application = await ctx.db.application.findUnique({
-        where: { 
+        where: {
           id: input.applicationId,
           userId: ctx.session.user.id,
         },
@@ -1193,7 +1210,7 @@ export const profileRouter = createTRPCRouter({
 
       if (!application) {
         throw new TRPCError({
-          code: "NOT_FOUND", 
+          code: "NOT_FOUND",
           message: "Application not found",
         });
       }
@@ -1205,28 +1222,36 @@ export const profileRouter = createTRPCRouter({
 
       // Map application responses to profile fields
       const responseMap = new Map(
-        application.responses.map(r => [r.question.questionKey, r.answer])
+        application.responses.map((r) => [r.question.questionKey, r.answer]),
       );
 
-      const syncableData: Record<string, { 
-        source: 'application' | 'profile' | 'merged',
-        applicationValue?: string | string[],
-        profileValue?: string | string[] | boolean | number | null,
-        willSync: boolean,
-        reason?: string,
-      }> = {};
+      const syncableData: Record<
+        string,
+        {
+          source: "application" | "profile" | "merged";
+          applicationValue?: string | string[];
+          profileValue?: string | string[] | boolean | number | null;
+          willSync: boolean;
+          reason?: string;
+        }
+      > = {};
 
       // Technical skills mapping
       if (responseMap.has("technical_skills")) {
         try {
-          const appSkills = JSON.parse(responseMap.get("technical_skills")!) as string[];
+          const appSkills = JSON.parse(
+            responseMap.get("technical_skills")!,
+          ) as string[];
           const profileSkills = currentProfile?.skills ?? [];
           syncableData.skills = {
-            source: profileSkills.length === 0 ? 'application' : 'merged',
+            source: profileSkills.length === 0 ? "application" : "merged",
             applicationValue: appSkills,
             profileValue: profileSkills,
             willSync: appSkills.length > 0,
-            reason: profileSkills.length > 0 ? 'Will merge with existing skills' : 'Will add from application'
+            reason:
+              profileSkills.length > 0
+                ? "Will merge with existing skills"
+                : "Will add from application",
           };
         } catch {
           // Skip if JSON parsing fails
@@ -1237,11 +1262,13 @@ export const profileRouter = createTRPCRouter({
       if (responseMap.has("bio")) {
         const appBio = responseMap.get("bio")!;
         syncableData.bio = {
-          source: 'application',
+          source: "application",
           applicationValue: appBio,
           profileValue: currentProfile?.bio,
           willSync: !currentProfile?.bio && appBio.trim().length > 0,
-          reason: currentProfile?.bio ? 'Profile bio already exists' : 'Will add from application'
+          reason: currentProfile?.bio
+            ? "Profile bio already exists"
+            : "Will add from application",
         };
       }
 
@@ -1249,11 +1276,13 @@ export const profileRouter = createTRPCRouter({
       if (responseMap.has("location")) {
         const appLocation = responseMap.get("location")!;
         syncableData.location = {
-          source: 'application',
+          source: "application",
           applicationValue: appLocation,
           profileValue: currentProfile?.location,
           willSync: !currentProfile?.location && appLocation.trim().length > 0,
-          reason: currentProfile?.location ? 'Profile location already exists' : 'Will add from application'
+          reason: currentProfile?.location
+            ? "Profile location already exists"
+            : "Will add from application",
         };
       }
 
@@ -1261,11 +1290,13 @@ export const profileRouter = createTRPCRouter({
       if (responseMap.has("company")) {
         const appCompany = responseMap.get("company")!;
         syncableData.company = {
-          source: 'application',
+          source: "application",
           applicationValue: appCompany,
           profileValue: currentProfile?.company,
           willSync: !currentProfile?.company && appCompany.trim().length > 0,
-          reason: currentProfile?.company ? 'Profile company already exists' : 'Will add from application'
+          reason: currentProfile?.company
+            ? "Profile company already exists"
+            : "Will add from application",
         };
       }
 
@@ -1273,11 +1304,14 @@ export const profileRouter = createTRPCRouter({
       if (responseMap.has("linkedin_url")) {
         const appLinkedIn = responseMap.get("linkedin_url")!;
         syncableData.linkedinUrl = {
-          source: 'application',
+          source: "application",
           applicationValue: appLinkedIn,
           profileValue: currentProfile?.linkedinUrl,
-          willSync: !currentProfile?.linkedinUrl && appLinkedIn.trim().length > 0,
-          reason: currentProfile?.linkedinUrl ? 'Profile LinkedIn already exists' : 'Will add from application'
+          willSync:
+            !currentProfile?.linkedinUrl && appLinkedIn.trim().length > 0,
+          reason: currentProfile?.linkedinUrl
+            ? "Profile LinkedIn already exists"
+            : "Will add from application",
         };
       }
 
@@ -1285,11 +1319,13 @@ export const profileRouter = createTRPCRouter({
       if (responseMap.has("github_url")) {
         const appGitHub = responseMap.get("github_url")!;
         syncableData.githubUrl = {
-          source: 'application',
+          source: "application",
           applicationValue: appGitHub,
           profileValue: currentProfile?.githubUrl,
           willSync: !currentProfile?.githubUrl && appGitHub.trim().length > 0,
-          reason: currentProfile?.githubUrl ? 'Profile GitHub already exists' : 'Will add from application'
+          reason: currentProfile?.githubUrl
+            ? "Profile GitHub already exists"
+            : "Will add from application",
         };
       }
 
@@ -1297,11 +1333,13 @@ export const profileRouter = createTRPCRouter({
       if (responseMap.has("twitter")) {
         const appTwitter = responseMap.get("twitter")!;
         syncableData.twitterUrl = {
-          source: 'application',
+          source: "application",
           applicationValue: appTwitter,
           profileValue: currentProfile?.twitterUrl,
           willSync: !currentProfile?.twitterUrl && appTwitter.trim().length > 0,
-          reason: currentProfile?.twitterUrl ? 'Profile Twitter already exists' : 'Will add from application'
+          reason: currentProfile?.twitterUrl
+            ? "Profile Twitter already exists"
+            : "Will add from application",
         };
       }
 
@@ -1309,11 +1347,14 @@ export const profileRouter = createTRPCRouter({
       if (responseMap.has("telegram")) {
         const appTelegram = responseMap.get("telegram")!;
         syncableData.telegramHandle = {
-          source: 'application',
+          source: "application",
           applicationValue: appTelegram,
           profileValue: currentProfile?.telegramHandle,
-          willSync: !currentProfile?.telegramHandle && appTelegram.trim().length > 0,
-          reason: currentProfile?.telegramHandle ? 'Profile Telegram already exists' : 'Will add from application'
+          willSync:
+            !currentProfile?.telegramHandle && appTelegram.trim().length > 0,
+          reason: currentProfile?.telegramHandle
+            ? "Profile Telegram already exists"
+            : "Will add from application",
         };
       }
 
@@ -1329,13 +1370,15 @@ export const profileRouter = createTRPCRouter({
     }),
 
   syncFromApplication: protectedProcedure
-    .input(z.object({ 
-      applicationId: z.string(),
-      fieldsToSync: z.array(z.string()), // Array of field names to sync
-    }))
+    .input(
+      z.object({
+        applicationId: z.string(),
+        fieldsToSync: z.array(z.string()), // Array of field names to sync
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const application = await ctx.db.application.findUnique({
-        where: { 
+        where: {
           id: input.applicationId,
           userId: ctx.session.user.id,
         },
@@ -1370,7 +1413,7 @@ export const profileRouter = createTRPCRouter({
 
       // Map responses
       const responseMap = new Map(
-        application.responses.map(r => [r.question.questionKey, r.answer])
+        application.responses.map((r) => [r.question.questionKey, r.answer]),
       );
 
       const updateData: Partial<{
@@ -1388,86 +1431,90 @@ export const profileRouter = createTRPCRouter({
 
       for (const field of input.fieldsToSync) {
         switch (field) {
-          case 'skills':
+          case "skills":
             if (responseMap.has("technical_skills")) {
               try {
-                const appSkills = JSON.parse(responseMap.get("technical_skills")!) as string[];
+                const appSkills = JSON.parse(
+                  responseMap.get("technical_skills")!,
+                ) as string[];
                 const existingSkills = profile.skills ?? [];
-                const mergedSkills = Array.from(new Set([...existingSkills, ...appSkills]));
+                const mergedSkills = Array.from(
+                  new Set([...existingSkills, ...appSkills]),
+                );
                 updateData.skills = mergedSkills;
-                syncedFields.push('skills');
+                syncedFields.push("skills");
               } catch {
                 // Skip if parsing fails
               }
             }
             break;
 
-          case 'bio':
+          case "bio":
             if (responseMap.has("bio") && !profile.bio) {
               const appBio = responseMap.get("bio")!;
               if (appBio.trim()) {
                 updateData.bio = appBio.trim();
-                syncedFields.push('bio');
+                syncedFields.push("bio");
               }
             }
             break;
 
-          case 'location':
+          case "location":
             if (responseMap.has("location") && !profile.location) {
               const appLocation = responseMap.get("location")!;
               if (appLocation.trim()) {
                 updateData.location = appLocation.trim();
-                syncedFields.push('location');
+                syncedFields.push("location");
               }
             }
             break;
 
-          case 'company':
+          case "company":
             if (responseMap.has("company") && !profile.company) {
               const appCompany = responseMap.get("company")!;
               if (appCompany.trim()) {
                 updateData.company = appCompany.trim();
-                syncedFields.push('company');
+                syncedFields.push("company");
               }
             }
             break;
 
-          case 'linkedinUrl':
+          case "linkedinUrl":
             if (responseMap.has("linkedin_url") && !profile.linkedinUrl) {
               const appLinkedIn = responseMap.get("linkedin_url")!;
               if (appLinkedIn.trim()) {
                 updateData.linkedinUrl = appLinkedIn.trim();
-                syncedFields.push('linkedinUrl');
+                syncedFields.push("linkedinUrl");
               }
             }
             break;
 
-          case 'githubUrl':
+          case "githubUrl":
             if (responseMap.has("github_url") && !profile.githubUrl) {
               const appGitHub = responseMap.get("github_url")!;
               if (appGitHub.trim()) {
                 updateData.githubUrl = appGitHub.trim();
-                syncedFields.push('githubUrl');
+                syncedFields.push("githubUrl");
               }
             }
             break;
 
-          case 'twitterUrl':
+          case "twitterUrl":
             if (responseMap.has("twitter") && !profile.twitterUrl) {
               const appTwitter = responseMap.get("twitter")!;
               if (appTwitter.trim()) {
                 updateData.twitterUrl = appTwitter.trim();
-                syncedFields.push('twitterUrl');
+                syncedFields.push("twitterUrl");
               }
             }
             break;
 
-          case 'telegramHandle':
+          case "telegramHandle":
             if (responseMap.has("telegram") && !profile.telegramHandle) {
               const appTelegram = responseMap.get("telegram")!;
               if (appTelegram.trim()) {
                 updateData.telegramHandle = appTelegram.trim();
-                syncedFields.push('telegramHandle');
+                syncedFields.push("telegramHandle");
               }
             }
             break;
@@ -1495,7 +1542,8 @@ export const profileRouter = createTRPCRouter({
       if (existingSync) {
         throw new TRPCError({
           code: "CONFLICT",
-          message: "This application has already been imported to your profile. Each application can only be imported once to prevent data conflicts.",
+          message:
+            "This application has already been imported to your profile. Each application can only be imported once to prevent data conflicts.",
         });
       }
 
@@ -1519,7 +1567,10 @@ export const profileRouter = createTRPCRouter({
     .input(z.object({ eventId: z.string() }))
     .query(async ({ ctx, input }) => {
       // Check admin access
-      if (ctx.session.user.role !== "admin" && ctx.session.user.role !== "staff") {
+      if (
+        ctx.session.user.role !== "admin" &&
+        ctx.session.user.role !== "staff"
+      ) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Admin access required",
@@ -1596,15 +1647,19 @@ export const profileRouter = createTRPCRouter({
               website: !!profile?.website,
             };
 
-            const completedFields = Object.values(fields).filter(Boolean).length;
+            const completedFields =
+              Object.values(fields).filter(Boolean).length;
             const totalFields = Object.keys(fields).length;
-            const percentage = Math.round((completedFields / totalFields) * 100);
+            const percentage = Math.round(
+              (completedFields / totalFields) * 100,
+            );
 
             // Calculate total update count across all projects
-            const totalUpdates = profile?.projects.reduce(
-              (sum, project) => sum + project.updates.length,
-              0
-            ) ?? 0;
+            const totalUpdates =
+              profile?.projects.reduce(
+                (sum, project) => sum + project.updates.length,
+                0,
+              ) ?? 0;
 
             return {
               userId: app.user!.id,
@@ -1618,19 +1673,20 @@ export const profileRouter = createTRPCRouter({
               },
               projectCount: profile?.projects.length ?? 0,
               projectUpdateCount: totalUpdates,
-              projects: profile?.projects.map(p => ({
-                id: p.id,
-                title: p.title,
-                updateCount: p.updates.length,
-              })) ?? [],
+              projects:
+                profile?.projects.map((p) => ({
+                  id: p.id,
+                  title: p.title,
+                  updateCount: p.updates.length,
+                })) ?? [],
               application: app,
             };
-          })
+          }),
       );
 
       // Sort by profile completeness (descending - highest completion first)
       const sortedResidents = residentsWithProfiles.sort(
-        (a, b) => b.completeness.percentage - a.completeness.percentage
+        (a, b) => b.completeness.percentage - a.completeness.percentage,
       );
 
       return sortedResidents;
@@ -1638,12 +1694,17 @@ export const profileRouter = createTRPCRouter({
 
   // Get all user profiles for admin with optional event filter
   getAllProfilesForAdmin: protectedProcedure
-    .input(z.object({
-      eventId: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        eventId: z.string().optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       // Check admin access
-      if (ctx.session.user.role !== "admin" && ctx.session.user.role !== "staff") {
+      if (
+        ctx.session.user.role !== "admin" &&
+        ctx.session.user.role !== "staff"
+      ) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Admin access required",
@@ -1745,10 +1806,11 @@ export const profileRouter = createTRPCRouter({
           const percentage = Math.round((completedFields / totalFields) * 100);
 
           // Calculate total update count across all projects
-          const totalUpdates = profile?.projects.reduce(
-            (sum, project) => sum + project.updates.length,
-            0
-          ) ?? 0;
+          const totalUpdates =
+            profile?.projects.reduce(
+              (sum, project) => sum + project.updates.length,
+              0,
+            ) ?? 0;
 
           return {
             userId: user.id,
@@ -1762,77 +1824,106 @@ export const profileRouter = createTRPCRouter({
             },
             projectCount: profile?.projects.length ?? 0,
             projectUpdateCount: totalUpdates,
-            projects: profile?.projects.map(p => ({
-              id: p.id,
-              title: p.title,
-              updateCount: p.updates.length,
-            })) ?? [],
+            projects:
+              profile?.projects.map((p) => ({
+                id: p.id,
+                title: p.title,
+                updateCount: p.updates.length,
+              })) ?? [],
             application,
           };
-        })
+        }),
       );
 
       // Sort by profile completeness (descending - highest completion first)
       const sortedUsers = usersWithProfiles.sort(
-        (a, b) => b.completeness.percentage - a.completeness.percentage
+        (a, b) => b.completeness.percentage - a.completeness.percentage,
       );
 
       return sortedUsers;
     }),
 
   // Admin endpoints for bulk profile sync
-  adminGetSyncStats: protectedProcedure
-    .query(async ({ ctx }) => {
-      // Check admin access
-      if (ctx.session.user.role !== "admin" && ctx.session.user.role !== "staff") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Admin access required",
-        });
-      }
-
-      // Get submitted applications count (all statuses except DRAFT)
-      const submittedApps = await ctx.db.application.count({
-        where: { 
-          status: { in: ["SUBMITTED", "UNDER_REVIEW", "ACCEPTED", "REJECTED", "WAITLISTED"] }
-        },
+  adminGetSyncStats: protectedProcedure.query(async ({ ctx }) => {
+    // Check admin access
+    if (
+      ctx.session.user.role !== "admin" &&
+      ctx.session.user.role !== "staff"
+    ) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Admin access required",
       });
+    }
 
-      // Get users with submitted applications but no profile syncs
-      const usersWithUnsyncedApps = await ctx.db.user.count({
-        where: {
-          applications: {
-            some: {
-              status: { in: ["SUBMITTED", "UNDER_REVIEW", "ACCEPTED", "REJECTED", "WAITLISTED"] },
-              profileSyncs: { none: {} },
+    // Get submitted applications count (all statuses except DRAFT)
+    const submittedApps = await ctx.db.application.count({
+      where: {
+        status: {
+          in: [
+            "SUBMITTED",
+            "UNDER_REVIEW",
+            "ACCEPTED",
+            "REJECTED",
+            "WAITLISTED",
+          ],
+        },
+      },
+    });
+
+    // Get users with submitted applications but no profile syncs
+    const usersWithUnsyncedApps = await ctx.db.user.count({
+      where: {
+        applications: {
+          some: {
+            status: {
+              in: [
+                "SUBMITTED",
+                "UNDER_REVIEW",
+                "ACCEPTED",
+                "REJECTED",
+                "WAITLISTED",
+              ],
             },
+            profileSyncs: { none: {} },
           },
         },
-      });
+      },
+    });
 
-      // Get total profile syncs
-      const totalSyncs = await ctx.db.profileSync.count();
+    // Get total profile syncs
+    const totalSyncs = await ctx.db.profileSync.count();
 
-      // Get profiles count
-      const totalProfiles = await ctx.db.userProfile.count();
+    // Get profiles count
+    const totalProfiles = await ctx.db.userProfile.count();
 
-      return {
-        submittedApplications: submittedApps,
-        usersWithUnsyncedApplications: usersWithUnsyncedApps,
-        totalProfileSyncs: totalSyncs,
-        totalProfiles,
-        syncCoverage: submittedApps > 0 ? Math.round(((submittedApps - usersWithUnsyncedApps) / submittedApps) * 100) : 0,
-      };
-    }),
+    return {
+      submittedApplications: submittedApps,
+      usersWithUnsyncedApplications: usersWithUnsyncedApps,
+      totalProfileSyncs: totalSyncs,
+      totalProfiles,
+      syncCoverage:
+        submittedApps > 0
+          ? Math.round(
+              ((submittedApps - usersWithUnsyncedApps) / submittedApps) * 100,
+            )
+          : 0,
+    };
+  }),
 
   adminBulkSyncProfiles: protectedProcedure
-    .input(z.object({
-      dryRun: z.boolean().default(false),
-      limitUsers: z.number().min(1).max(100).optional(),
-    }))
+    .input(
+      z.object({
+        dryRun: z.boolean().default(false),
+        limitUsers: z.number().min(1).max(100).optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // Check admin access
-      if (ctx.session.user.role !== "admin" && ctx.session.user.role !== "staff") {
+      if (
+        ctx.session.user.role !== "admin" &&
+        ctx.session.user.role !== "staff"
+      ) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Admin access required",
@@ -1844,16 +1935,32 @@ export const profileRouter = createTRPCRouter({
         where: {
           applications: {
             some: {
-              status: { in: ["SUBMITTED", "UNDER_REVIEW", "ACCEPTED", "REJECTED", "WAITLISTED"] },
+              status: {
+                in: [
+                  "SUBMITTED",
+                  "UNDER_REVIEW",
+                  "ACCEPTED",
+                  "REJECTED",
+                  "WAITLISTED",
+                ],
+              },
               profileSyncs: { none: {} },
             },
           },
         },
         include: {
           applications: {
-            where: { 
-              status: { in: ["SUBMITTED", "UNDER_REVIEW", "ACCEPTED", "REJECTED", "WAITLISTED"] },
-              profileSyncs: { none: {} }
+            where: {
+              status: {
+                in: [
+                  "SUBMITTED",
+                  "UNDER_REVIEW",
+                  "ACCEPTED",
+                  "REJECTED",
+                  "WAITLISTED",
+                ],
+              },
+              profileSyncs: { none: {} },
             },
             include: {
               responses: {
@@ -1890,7 +1997,7 @@ export const profileRouter = createTRPCRouter({
           if (!app) continue;
 
           const responseMap = new Map(
-            app.responses.map(r => [r.question.questionKey, r.answer])
+            app.responses.map((r) => [r.question.questionKey, r.answer]),
           );
 
           const previewFields: string[] = [];
@@ -1898,8 +2005,10 @@ export const profileRouter = createTRPCRouter({
           // Check which fields would be synced
           if (responseMap.has("technical_skills")) {
             try {
-              const appSkills = JSON.parse(responseMap.get("technical_skills")!) as string[];
-              if (appSkills.length > 0) previewFields.push('skills');
+              const appSkills = JSON.parse(
+                responseMap.get("technical_skills")!,
+              ) as string[];
+              if (appSkills.length > 0) previewFields.push("skills");
             } catch {
               // Skip if parsing fails
             }
@@ -1907,42 +2016,42 @@ export const profileRouter = createTRPCRouter({
 
           if (responseMap.has("bio") && !user.profile?.bio) {
             const appBio = responseMap.get("bio")!;
-            if (appBio.trim()) previewFields.push('bio');
+            if (appBio.trim()) previewFields.push("bio");
           }
 
           if (responseMap.has("location") && !user.profile?.location) {
             const appLocation = responseMap.get("location")!;
-            if (appLocation.trim()) previewFields.push('location');
+            if (appLocation.trim()) previewFields.push("location");
           }
 
           if (responseMap.has("company") && !user.profile?.company) {
             const appCompany = responseMap.get("company")!;
-            if (appCompany.trim()) previewFields.push('company');
+            if (appCompany.trim()) previewFields.push("company");
           }
 
           if (responseMap.has("linkedin_url") && !user.profile?.linkedinUrl) {
             const appLinkedIn = responseMap.get("linkedin_url")!;
-            if (appLinkedIn.trim()) previewFields.push('linkedinUrl');
+            if (appLinkedIn.trim()) previewFields.push("linkedinUrl");
           }
 
           if (responseMap.has("github_url") && !user.profile?.githubUrl) {
             const appGitHub = responseMap.get("github_url")!;
-            if (appGitHub.trim()) previewFields.push('githubUrl');
+            if (appGitHub.trim()) previewFields.push("githubUrl");
           }
 
           if (responseMap.has("twitter") && !user.profile?.twitterUrl) {
             const appTwitter = responseMap.get("twitter")!;
-            if (appTwitter.trim()) previewFields.push('twitterUrl');
+            if (appTwitter.trim()) previewFields.push("twitterUrl");
           }
 
           if (responseMap.has("telegram") && !user.profile?.telegramHandle) {
             const appTelegram = responseMap.get("telegram")!;
-            if (appTelegram.trim()) previewFields.push('telegramHandle');
+            if (appTelegram.trim()) previewFields.push("telegramHandle");
           }
 
           syncResults.push({
             userId: user.id,
-            userEmail: user.email ?? 'unknown',
+            userEmail: user.email ?? "unknown",
             applicationId: app.id,
             syncedFields: previewFields,
           });
@@ -1960,7 +2069,7 @@ export const profileRouter = createTRPCRouter({
               data: { userId: user.id },
             });
             const responseMap = new Map(
-              app.responses.map(r => [r.question.questionKey, r.answer])
+              app.responses.map((r) => [r.question.questionKey, r.answer]),
             );
 
             const updateData: Partial<{
@@ -1979,11 +2088,15 @@ export const profileRouter = createTRPCRouter({
             // Sync skills
             if (responseMap.has("technical_skills")) {
               try {
-                const appSkills = JSON.parse(responseMap.get("technical_skills")!) as string[];
+                const appSkills = JSON.parse(
+                  responseMap.get("technical_skills")!,
+                ) as string[];
                 const existingSkills = profile.skills ?? [];
-                const mergedSkills = Array.from(new Set([...existingSkills, ...appSkills]));
+                const mergedSkills = Array.from(
+                  new Set([...existingSkills, ...appSkills]),
+                );
                 updateData.skills = mergedSkills;
-                syncedFields.push('skills');
+                syncedFields.push("skills");
               } catch {
                 // Skip if parsing fails
               }
@@ -1994,7 +2107,7 @@ export const profileRouter = createTRPCRouter({
               const appBio = responseMap.get("bio")!;
               if (appBio.trim()) {
                 updateData.bio = appBio.trim();
-                syncedFields.push('bio');
+                syncedFields.push("bio");
               }
             }
 
@@ -2002,7 +2115,7 @@ export const profileRouter = createTRPCRouter({
               const appLocation = responseMap.get("location")!;
               if (appLocation.trim()) {
                 updateData.location = appLocation.trim();
-                syncedFields.push('location');
+                syncedFields.push("location");
               }
             }
 
@@ -2010,7 +2123,7 @@ export const profileRouter = createTRPCRouter({
               const appCompany = responseMap.get("company")!;
               if (appCompany.trim()) {
                 updateData.company = appCompany.trim();
-                syncedFields.push('company');
+                syncedFields.push("company");
               }
             }
 
@@ -2018,7 +2131,7 @@ export const profileRouter = createTRPCRouter({
               const appLinkedIn = responseMap.get("linkedin_url")!;
               if (appLinkedIn.trim()) {
                 updateData.linkedinUrl = appLinkedIn.trim();
-                syncedFields.push('linkedinUrl');
+                syncedFields.push("linkedinUrl");
               }
             }
 
@@ -2026,7 +2139,7 @@ export const profileRouter = createTRPCRouter({
               const appGitHub = responseMap.get("github_url")!;
               if (appGitHub.trim()) {
                 updateData.githubUrl = appGitHub.trim();
-                syncedFields.push('githubUrl');
+                syncedFields.push("githubUrl");
               }
             }
 
@@ -2035,7 +2148,7 @@ export const profileRouter = createTRPCRouter({
               const appTwitter = responseMap.get("twitter")!;
               if (appTwitter.trim()) {
                 updateData.twitterUrl = appTwitter.trim();
-                syncedFields.push('twitterUrl');
+                syncedFields.push("twitterUrl");
               }
             }
 
@@ -2044,7 +2157,7 @@ export const profileRouter = createTRPCRouter({
               const appTelegram = responseMap.get("telegram")!;
               if (appTelegram.trim()) {
                 updateData.telegramHandle = appTelegram.trim();
-                syncedFields.push('telegramHandle');
+                syncedFields.push("telegramHandle");
               }
             }
 
@@ -2076,18 +2189,17 @@ export const profileRouter = createTRPCRouter({
 
             syncResults.push({
               userId: user.id,
-              userEmail: user.email ?? 'unknown',
+              userEmail: user.email ?? "unknown",
               applicationId: app.id,
               syncedFields,
             });
-
           } catch (error) {
             syncResults.push({
               userId: user.id,
-              userEmail: user.email ?? 'unknown',
+              userEmail: user.email ?? "unknown",
               applicationId: app.id,
               syncedFields: [],
-              error: error instanceof Error ? error.message : 'Unknown error',
+              error: error instanceof Error ? error.message : "Unknown error",
             });
           }
         }
@@ -2095,8 +2207,8 @@ export const profileRouter = createTRPCRouter({
 
       return {
         totalProcessed: usersToSync.length,
-        successful: syncResults.filter(r => !r.error).length,
-        failed: syncResults.filter(r => r.error).length,
+        successful: syncResults.filter((r) => !r.error).length,
+        failed: syncResults.filter((r) => r.error).length,
         results: syncResults,
         dryRun: input.dryRun,
       };
@@ -2127,7 +2239,8 @@ export const profileRouter = createTRPCRouter({
       if (!project || (!isOwner && !isCollaborator && !isAdmin)) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You can only add repositories to projects you own or collaborate on",
+          message:
+            "You can only add repositories to projects you own or collaborate on",
         });
       }
 
@@ -2188,7 +2301,8 @@ export const profileRouter = createTRPCRouter({
       if (!isOwner && !isCollaborator && !isAdmin) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You can only update repositories for projects you own or collaborate on",
+          message:
+            "You can only update repositories for projects you own or collaborate on",
         });
       }
 
@@ -2249,7 +2363,8 @@ export const profileRouter = createTRPCRouter({
       if (!isOwner && !isCollaborator && !isAdmin) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You can only remove repositories from projects you own or collaborate on",
+          message:
+            "You can only remove repositories from projects you own or collaborate on",
         });
       }
 
@@ -2261,13 +2376,17 @@ export const profileRouter = createTRPCRouter({
     }),
 
   reorderRepositories: protectedProcedure
-    .input(z.object({
-      projectId: z.string(),
-      repositoryOrders: z.array(z.object({
-        id: z.string(),
-        order: z.number().int(),
-      })),
-    }))
+    .input(
+      z.object({
+        projectId: z.string(),
+        repositoryOrders: z.array(
+          z.object({
+            id: z.string(),
+            order: z.number().int(),
+          }),
+        ),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // Verify user owns the project OR is a collaborator with edit permission
       const project = await ctx.db.userProject.findUnique({
@@ -2289,7 +2408,8 @@ export const profileRouter = createTRPCRouter({
       if (!project || (!isOwner && !isCollaborator)) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You can only reorder repositories for projects you own or collaborate on",
+          message:
+            "You can only reorder repositories for projects you own or collaborate on",
         });
       }
 
@@ -2299,8 +2419,8 @@ export const profileRouter = createTRPCRouter({
           ctx.db.repository.update({
             where: { id: repoOrder.id },
             data: { order: repoOrder.order },
-          })
-        )
+          }),
+        ),
       );
 
       return { success: true };
@@ -2322,26 +2442,33 @@ export const profileRouter = createTRPCRouter({
     }),
 
   // Wallet Address Management
-  getMyWalletAddresses: protectedProcedure
-    .query(async ({ ctx }) => {
-      const wallets = await ctx.db.walletAddress.findMany({
-        where: { userId: ctx.session.user.id },
-        orderBy: [
-          { isPrimary: "desc" },
-          { createdAt: "asc" },
-        ],
-      });
+  getMyWalletAddresses: protectedProcedure.query(async ({ ctx }) => {
+    const wallets = await ctx.db.walletAddress.findMany({
+      where: { userId: ctx.session.user.id },
+      orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+    });
 
-      return wallets;
-    }),
+    return wallets;
+  }),
 
   addWalletAddress: protectedProcedure
-    .input(z.object({
-      address: z.string().min(1, "Wallet address is required"),
-      chain: z.enum(["ETHEREUM", "POLYGON", "ARBITRUM", "OPTIMISM", "BASE", "SOLANA", "COSMOS", "OTHER"]),
-      label: z.string().max(100).optional(),
-      isPrimary: z.boolean().optional().default(false),
-    }))
+    .input(
+      z.object({
+        address: z.string().min(1, "Wallet address is required"),
+        chain: z.enum([
+          "ETHEREUM",
+          "POLYGON",
+          "ARBITRUM",
+          "OPTIMISM",
+          "BASE",
+          "SOLANA",
+          "COSMOS",
+          "OTHER",
+        ]),
+        label: z.string().max(100).optional(),
+        isPrimary: z.boolean().optional().default(false),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // If setting as primary, unset other primary wallets
       if (input.isPrimary) {
@@ -2368,11 +2495,13 @@ export const profileRouter = createTRPCRouter({
     }),
 
   updateWalletAddress: protectedProcedure
-    .input(z.object({
-      id: z.string(),
-      label: z.string().max(100).optional(),
-      isPrimary: z.boolean().optional(),
-    }))
+    .input(
+      z.object({
+        id: z.string(),
+        label: z.string().max(100).optional(),
+        isPrimary: z.boolean().optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // Verify ownership
       const wallet = await ctx.db.walletAddress.findUnique({

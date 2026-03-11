@@ -35,8 +35,13 @@ const formSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().optional(),
   talkTitle: z.string().min(1, "Session name is required").max(200),
-  talkAbstract: z.string().min(50, "Description must be at least 50 characters").max(2000),
-  talkFormat: z.array(z.string()).min(1, "Please select at least one session type"),
+  talkAbstract: z
+    .string()
+    .min(50, "Description must be at least 50 characters")
+    .max(2000),
+  talkFormat: z
+    .array(z.string())
+    .min(1, "Please select at least one session type"),
   talkDuration: z.string().min(1, "Session length is required"),
   talkTopic: z.string().min(1, "Topic is required"),
   entityName: z.string().max(200).optional().or(z.literal("")),
@@ -56,7 +61,11 @@ interface AddSpeakerModalProps {
   onClose: () => void;
 }
 
-export function AddSpeakerModal({ eventId, opened, onClose }: AddSpeakerModalProps) {
+export function AddSpeakerModal({
+  eventId,
+  opened,
+  onClose,
+}: AddSpeakerModalProps) {
   const [selectedVenueIds, setSelectedVenueIds] = useState<string[]>([]);
   const [headshotUrl, setHeadshotUrl] = useState<string | null>(null);
   const [headshotFileName, setHeadshotFileName] = useState<string | null>(null);
@@ -78,19 +87,24 @@ export function AddSpeakerModal({ eventId, opened, onClose }: AddSpeakerModalPro
     { eventId },
     { enabled: opened },
   );
-  const venueIdKey = floorsData?.venues?.map(v => v.id).join(',') ?? '';
+  const venueIdKey = floorsData?.venues?.map((v) => v.id).join(",") ?? "";
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const venues = useMemo(() => floorsData?.venues ?? [], [venueIdKey]);
 
   // Fetch schedule filters for session types
-  const { data: scheduleFilters } = api.schedule.getEventScheduleFilters.useQuery(
-    { eventId },
-    { enabled: opened },
-  );
+  const { data: scheduleFilters } =
+    api.schedule.getEventScheduleFilters.useQuery(
+      { eventId },
+      { enabled: opened },
+    );
 
   // Pre-select floor lead's venues on first load
   const [venuesInitialized, setVenuesInitialized] = useState(false);
-  if (venues.length > 0 && !venuesInitialized && selectedVenueIds.length === 0) {
+  if (
+    venues.length > 0 &&
+    !venuesInitialized &&
+    selectedVenueIds.length === 0
+  ) {
     setSelectedVenueIds(venues.map((v) => v.id));
     setVenuesInitialized(true);
   }
@@ -99,7 +113,9 @@ export function AddSpeakerModal({ eventId, opened, onClose }: AddSpeakerModalPro
   const isFtcVenue = useMemo(() => {
     if (selectedVenueIds.length === 0) return false;
     return venues.some(
-      (v) => selectedVenueIds.includes(v.id) && v.name.toLowerCase().includes("funding the commons"),
+      (v) =>
+        selectedVenueIds.includes(v.id) &&
+        v.name.toLowerCase().includes("funding the commons"),
     );
   }, [selectedVenueIds, venues]);
 
@@ -116,24 +132,25 @@ export function AddSpeakerModal({ eventId, opened, onClose }: AddSpeakerModalPro
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFtcVenue, ftcTopicValues, ftcTopicOtherText]);
 
-  const createSpeakerMutation = api.application.createSpeakerOnBehalf.useMutation({
-    onSuccess: () => {
-      notifications.show({
-        title: "Speaker added",
-        message: "Speaker application created successfully",
-        color: "green",
-      });
-      void utils.application.invalidate();
-      handleClose();
-    },
-    onError: (error) => {
-      notifications.show({
-        title: "Error",
-        message: error.message,
-        color: "red",
-      });
-    },
-  });
+  const createSpeakerMutation =
+    api.application.createSpeakerOnBehalf.useMutation({
+      onSuccess: () => {
+        notifications.show({
+          title: "Speaker added",
+          message: "Speaker application created successfully",
+          color: "green",
+        });
+        void utils.application.invalidate();
+        handleClose();
+      },
+      onError: (error) => {
+        notifications.show({
+          title: "Error",
+          message: error.message,
+          color: "red",
+        });
+      },
+    });
 
   const form = useForm({
     initialValues: {
@@ -276,7 +293,8 @@ export function AddSpeakerModal({ eventId, opened, onClose }: AddSpeakerModalPro
       bio: values.bio.trim(),
       jobTitle: values.jobTitle?.trim() || undefined,
       company: values.company?.trim() || undefined,
-      previousSpeakingExperience: values.previousSpeakingExperience?.trim() || undefined,
+      previousSpeakingExperience:
+        values.previousSpeakingExperience?.trim() || undefined,
       website: values.website?.trim() || undefined,
       linkedinUrl: values.linkedinUrl?.trim() || undefined,
       twitterUrl: values.twitterUrl?.trim() || undefined,
@@ -297,7 +315,9 @@ export function AddSpeakerModal({ eventId, opened, onClose }: AddSpeakerModalPro
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="md">
           {/* Speaker Identity */}
-          <Text fw={600} size="sm">Speaker Identity</Text>
+          <Text fw={600} size="sm">
+            Speaker Identity
+          </Text>
           <TextInput
             label="Email"
             placeholder="speaker@example.com"
@@ -311,16 +331,28 @@ export function AddSpeakerModal({ eventId, opened, onClose }: AddSpeakerModalPro
           {emailChecked && existingUser && (
             <Alert color="blue" variant="light">
               <Group gap="xs">
-                <Badge color="blue" size="sm">Existing user</Badge>
+                <Badge color="blue" size="sm">
+                  Existing user
+                </Badge>
                 <Text size="sm">{existingUser.name ?? existingUser.email}</Text>
               </Group>
             </Alert>
           )}
-          {emailChecked && !existingUser && form.values.email && !form.errors.email && (
-            <Alert color="yellow" variant="light" icon={<IconAlertCircle size={16} />}>
-              <Text size="sm">No account found. A new account will be created for this speaker.</Text>
-            </Alert>
-          )}
+          {emailChecked &&
+            !existingUser &&
+            form.values.email &&
+            !form.errors.email && (
+              <Alert
+                color="yellow"
+                variant="light"
+                icon={<IconAlertCircle size={16} />}
+              >
+                <Text size="sm">
+                  No account found. A new account will be created for this
+                  speaker.
+                </Text>
+              </Alert>
+            )}
           <Group grow>
             <TextInput
               label="First Name"
@@ -367,10 +399,12 @@ export function AddSpeakerModal({ eventId, opened, onClose }: AddSpeakerModalPro
               description="Select the type of session you may be interested in"
               data={
                 (scheduleFilters?.sessionTypes ?? []).length > 0
-                  ? (scheduleFilters?.sessionTypes ?? []).map((st: { name: string }) => ({
-                      value: st.name,
-                      label: st.name,
-                    }))
+                  ? (scheduleFilters?.sessionTypes ?? []).map(
+                      (st: { name: string }) => ({
+                        value: st.name,
+                        label: st.name,
+                      }),
+                    )
                   : talkFormatOptions
               }
               required
@@ -470,7 +504,9 @@ export function AddSpeakerModal({ eventId, opened, onClose }: AddSpeakerModalPro
 
           {headshotUrl ? (
             <Stack gap="xs">
-              <Text size="sm" fw={500}>Speaker Headshot</Text>
+              <Text size="sm" fw={500}>
+                Speaker Headshot
+              </Text>
               <Group>
                 <Image
                   src={headshotUrl}
@@ -481,7 +517,9 @@ export function AddSpeakerModal({ eventId, opened, onClose }: AddSpeakerModalPro
                   fit="cover"
                 />
                 <Stack gap={4}>
-                  <Text size="xs" c="green">Uploaded: {headshotFileName}</Text>
+                  <Text size="xs" c="green">
+                    Uploaded: {headshotFileName}
+                  </Text>
                   <Group gap="xs">
                     <Button
                       size="xs"
@@ -516,7 +554,11 @@ export function AddSpeakerModal({ eventId, opened, onClose }: AddSpeakerModalPro
                 onChange={(file) => void handleHeadshotUpload(file)}
                 disabled={isUploading}
               />
-              {isUploading && <Text size="xs" c="dimmed">Uploading...</Text>}
+              {isUploading && (
+                <Text size="xs" c="dimmed">
+                  Uploading...
+                </Text>
+              )}
             </>
           )}
 
@@ -551,10 +593,7 @@ export function AddSpeakerModal({ eventId, opened, onClose }: AddSpeakerModalPro
             <Button variant="default" onClick={handleClose}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              loading={createSpeakerMutation.isPending}
-            >
+            <Button type="submit" loading={createSpeakerMutation.isPending}>
               Add Speaker
             </Button>
           </Group>

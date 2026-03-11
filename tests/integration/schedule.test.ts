@@ -25,13 +25,19 @@ describe("Schedule Router", () => {
     it("admin creates a session with linked speakers", async () => {
       const db = getTestDb();
       const admin = await createTestUser({ role: "admin" }, db);
-      const speaker = await createTestUser({ role: "user", name: "Test Speaker" }, db);
+      const speaker = await createTestUser(
+        { role: "user", name: "Test Speaker" },
+        db,
+      );
       const event = await createTestEvent({ name: "Schedule Test Event" }, db);
-      const venue = await createTestVenue({ eventId: event.id, name: "Main Hall" }, db);
+      const venue = await createTestVenue(
+        { eventId: event.id, name: "Main Hall" },
+        db,
+      );
 
       const caller = createTestCaller("admin", { id: admin.id });
 
-      const startTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       const result = await caller.schedule.createSession({
@@ -60,17 +66,23 @@ describe("Schedule Router", () => {
     // ── Test 2: Floor lead creates session in their venue ───────────────
     it("floor lead creates a session in their own venue", async () => {
       const db = getTestDb();
-      const floorLead = await createTestUser({ role: "user", name: "Floor Lead" }, db);
+      const floorLead = await createTestUser(
+        { role: "user", name: "Floor Lead" },
+        db,
+      );
       const event = await createTestEvent({ name: "Floor Lead Event" }, db);
-      const venue = await createTestVenue({
-        eventId: event.id,
-        name: "Floor 1",
-        ownerUserId: floorLead.id,
-      }, db);
+      const venue = await createTestVenue(
+        {
+          eventId: event.id,
+          name: "Floor 1",
+          ownerUserId: floorLead.id,
+        },
+        db,
+      );
 
       const caller = createTestCaller("user", { id: floorLead.id });
 
-      const startTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       const result = await caller.schedule.createSession({
@@ -89,27 +101,39 @@ describe("Schedule Router", () => {
     // ── Test 3: Floor lead blocked from other venues ────────────────────
     it("floor lead cannot create session in another venue", async () => {
       const db = getTestDb();
-      const floorLead = await createTestUser({ role: "user", name: "Blocked Lead" }, db);
-      const otherUser = await createTestUser({ role: "user", name: "Other Owner" }, db);
+      const floorLead = await createTestUser(
+        { role: "user", name: "Blocked Lead" },
+        db,
+      );
+      const otherUser = await createTestUser(
+        { role: "user", name: "Other Owner" },
+        db,
+      );
       const event = await createTestEvent({ name: "Blocked Venue Event" }, db);
 
       // Floor lead owns venue A
-      await createTestVenue({
-        eventId: event.id,
-        name: "Venue A",
-        ownerUserId: floorLead.id,
-      }, db);
+      await createTestVenue(
+        {
+          eventId: event.id,
+          name: "Venue A",
+          ownerUserId: floorLead.id,
+        },
+        db,
+      );
 
       // Other user owns venue B
-      const venueB = await createTestVenue({
-        eventId: event.id,
-        name: "Venue B",
-        ownerUserId: otherUser.id,
-      }, db);
+      const venueB = await createTestVenue(
+        {
+          eventId: event.id,
+          name: "Venue B",
+          ownerUserId: otherUser.id,
+        },
+        db,
+      );
 
       const caller = createTestCaller("user", { id: floorLead.id });
 
-      const startTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       try {
@@ -134,10 +158,16 @@ describe("Schedule Router", () => {
     it("returns only published sessions, not drafts", async () => {
       const db = getTestDb();
       const admin = await createTestUser({ role: "admin" }, db);
-      const event = await createTestEvent({ name: "Published Filter Event" }, db);
-      const venue = await createTestVenue({ eventId: event.id, name: "Filter Hall" }, db);
+      const event = await createTestEvent(
+        { name: "Published Filter Event" },
+        db,
+      );
+      const venue = await createTestVenue(
+        { eventId: event.id, name: "Filter Hall" },
+        db,
+      );
 
-      const startTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       const adminCaller = createTestCaller("admin", { id: admin.id });
@@ -182,21 +212,33 @@ describe("Schedule Router", () => {
   describe("floor applicant validation", () => {
     it("floor lead cannot add speakers who haven't applied for their floor", async () => {
       const db = getTestDb();
-      const floorLead = await createTestUser({ role: "user", name: "Strict Lead" }, db);
-      const nonApplicant = await createTestUser({ role: "user", name: "Non Applicant" }, db);
-      const event = await createTestEvent({ name: "Applicant Check Event" }, db);
-      const venue = await createTestVenue({
-        eventId: event.id,
-        name: "Strict Floor",
-        ownerUserId: floorLead.id,
-      }, db);
+      const floorLead = await createTestUser(
+        { role: "user", name: "Strict Lead" },
+        db,
+      );
+      const nonApplicant = await createTestUser(
+        { role: "user", name: "Non Applicant" },
+        db,
+      );
+      const event = await createTestEvent(
+        { name: "Applicant Check Event" },
+        db,
+      );
+      const venue = await createTestVenue(
+        {
+          eventId: event.id,
+          name: "Strict Floor",
+          ownerUserId: floorLead.id,
+        },
+        db,
+      );
 
       // nonApplicant has NOT applied for this venue/floor
       // (no ApplicationVenue record exists)
 
       const caller = createTestCaller("user", { id: floorLead.id });
 
-      const startTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       try {

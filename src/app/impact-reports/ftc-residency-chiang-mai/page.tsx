@@ -1,6 +1,9 @@
 "use client";
 
-import { ResidencyImpactReport, type ResidencyReportConfig } from "~/app/_components/ResidencyImpactReport";
+import {
+  ResidencyImpactReport,
+  type ResidencyReportConfig,
+} from "~/app/_components/ResidencyImpactReport";
 
 const config: ResidencyReportConfig = {
   // Core identifiers
@@ -18,7 +21,8 @@ const config: ResidencyReportConfig = {
   projectCount: "TBD",
 
   // Program details
-  description: "An intensive residency program bringing together builders, researchers, and funders to develop projects advancing public goods funding, web3 infrastructure, and decentralized governance. Set in Chiang Mai, Thailand, the program fosters collaboration, learning, and meaningful impact in the Funding the Commons ecosystem.",
+  description:
+    "An intensive residency program bringing together builders, researchers, and funders to develop projects advancing public goods funding, web3 infrastructure, and decentralized governance. Set in Chiang Mai, Thailand, the program fosters collaboration, learning, and meaningful impact in the Funding the Commons ecosystem.",
 
   programHighlights: [
     "Multi-week intensive residency program",
@@ -38,17 +42,32 @@ const config: ResidencyReportConfig = {
     {
       phase: "Week 1: Foundation",
       description: "Onboarding, team formation, and project scoping",
-      activities: ["Welcome sessions", "Mentor introductions", "Initial project pitches", "Workshop sessions"],
+      activities: [
+        "Welcome sessions",
+        "Mentor introductions",
+        "Initial project pitches",
+        "Workshop sessions",
+      ],
     },
     {
       phase: "Week 2: Development",
       description: "Intensive building, collaboration, and iteration",
-      activities: ["Daily standups", "Technical workshops", "One-on-one mentoring", "Mid-program check-ins"],
+      activities: [
+        "Daily standups",
+        "Technical workshops",
+        "One-on-one mentoring",
+        "Mid-program check-ins",
+      ],
     },
     {
       phase: "Week 3: Launch",
       description: "Finalization, presentations, and community showcase",
-      activities: ["Project demos", "Impact measurement", "Community presentations", "Next steps planning"],
+      activities: [
+        "Project demos",
+        "Impact measurement",
+        "Community presentations",
+        "Next steps planning",
+      ],
     },
   ],
 

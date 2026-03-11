@@ -27,8 +27,8 @@ export default function FloorOwnersPage() {
         Assigning Floor Leads
       </h2>
       <p className="docs-text">
-        Navigate to your event in the admin panel and open the
-        &ldquo;Floor Leads&rdquo; tab. From here, you have two options:
+        Navigate to your event in the admin panel and open the &ldquo;Floor
+        Leads&rdquo; tab. From here, you have two options:
       </p>
 
       <h3 id="assign-existing-user" className="docs-heading-h3">
@@ -37,8 +37,8 @@ export default function FloorOwnersPage() {
       <p className="docs-text">
         If the person already has an account on the platform, search for them by
         name or email, select the venue you want them to manage, and click
-        assign. They will see the &ldquo;Manage Floors&rdquo; tab the next
-        time they visit the event.
+        assign. They will see the &ldquo;Manage Floors&rdquo; tab the next time
+        they visit the event.
       </p>
 
       <h3 id="invite-by-email" className="docs-heading-h3">
@@ -56,41 +56,37 @@ export default function FloorOwnersPage() {
       </h2>
       <p className="docs-text">
         The Floor Leads tab shows all current assignments grouped by venue. For
-        each venue, you can see who is assigned, when they were added, and remove
-        them if needed.
+        each venue, you can see who is assigned, when they were added, and
+        remove them if needed.
       </p>
 
       <h2 id="enabling-schedule-management" className="docs-heading-h2">
         Enabling Schedule Management
       </h2>
       <p className="docs-text">
-        For floor leads to see the &ldquo;Manage Floors&rdquo; tab, the
-        schedule management feature flag must be enabled for your event. You can
-        toggle this from the event settings page in the admin panel.
+        For floor leads to see the &ldquo;Manage Floors&rdquo; tab, the schedule
+        management feature flag must be enabled for your event. You can toggle
+        this from the event settings page in the admin panel.
       </p>
 
       <div className="docs-callout">
         <p className="docs-callout-text">
           <strong>Note:</strong> The Floor Leads admin tab is always visible
-          regardless of the feature flag. This lets you set up assignments before
-          enabling the feature for floor leads.
+          regardless of the feature flag. This lets you set up assignments
+          before enabling the feature for floor leads.
         </p>
       </div>
 
       <h2 id="what-floor-leads-can-do" className="docs-heading-h2">
         What Floor Leads Can Do
       </h2>
-      <p className="docs-text">
-        Once assigned, floor leads can:
-      </p>
+      <p className="docs-text">Once assigned, floor leads can:</p>
       <ul className="docs-list">
         <li>Create, edit, and delete sessions on their assigned venue</li>
         <li>Update venue details (name, description, capacity)</li>
         <li>Toggle sessions between published and draft status</li>
         <li>View other sessions on their floor</li>
-        <li>
-          Share applications with other floors (see below)
-        </li>
+        <li>Share applications with other floors (see below)</li>
       </ul>
 
       <h2 id="what-floor-leads-cannot-do" className="docs-heading-h2">
@@ -139,10 +135,10 @@ export default function FloorOwnersPage() {
         Removing a Floor Lead
       </h2>
       <p className="docs-text">
-        To remove a floor lead, go to the Floor Leads tab, find the
-        assignment, and click the remove button. The person will lose access to
-        the &ldquo;Manage Floors&rdquo; tab for that venue, but their account
-        and any sessions they created will remain.
+        To remove a floor lead, go to the Floor Leads tab, find the assignment,
+        and click the remove button. The person will lose access to the
+        &ldquo;Manage Floors&rdquo; tab for that venue, but their account and
+        any sessions they created will remain.
       </p>
 
       <hr className="docs-divider" />

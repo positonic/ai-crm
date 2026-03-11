@@ -44,15 +44,18 @@ interface EventInfo {
   type: string;
 }
 
-async function GET(request: NextRequest, context: { params: Promise<{ eventId: string }> }) {
+async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ eventId: string }> },
+) {
   const { eventId } = await context.params;
-  
+
   try {
     // Get all accepted applications with user demographics
     const acceptedApplications = await db.application.findMany({
       where: {
         eventId,
-        status: "ACCEPTED"
+        status: "ACCEPTED",
       },
       include: {
         user: {
@@ -72,8 +75,9 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
                 githubUrl: true,
                 website: true,
                 twitterUrl: true,
-              }
-            }          },
+              },
+            },
+          },
         },
         responses: {
           include: {
@@ -82,10 +86,10 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
                 questionKey: true,
                 questionEn: true,
                 questionType: true,
-              }
-            }
-          }
-        }
+              },
+            },
+          },
+        },
       },
     });
 
@@ -94,73 +98,102 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
     // Extract demographic insights
     const demographics = {
       totalAccepted: typedAcceptedApplications.length,
-      
+
       // Company distribution
       companies: typedAcceptedApplications
-        .map(app => app.user?.profile?.company)
+        .map((app) => app.user?.profile?.company)
         .filter((company): company is string => company !== null)
-        .reduce((acc, company) => {
-          acc[company] = (acc[company] ?? 0) + 1;
-          return acc;
-        }, {} as Record<string, number>),
-      
+        .reduce(
+          (acc, company) => {
+            acc[company] = (acc[company] ?? 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>,
+        ),
+
       // Job title patterns
       jobTitles: typedAcceptedApplications
-        .map(app => app.user?.profile?.jobTitle)
+        .map((app) => app.user?.profile?.jobTitle)
         .filter((title): title is string => title !== null)
-        .reduce((acc, title) => {
-          acc[title] = (acc[title] ?? 0) + 1;
-          return acc;
-        }, {} as Record<string, number>),
-      
+        .reduce(
+          (acc, title) => {
+            acc[title] = (acc[title] ?? 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>,
+        ),
+
       // Geographic distribution
       locations: typedAcceptedApplications
-        .map(app => app.user?.profile?.location)
+        .map((app) => app.user?.profile?.location)
         .filter((location): location is string => location !== null)
-        .reduce((acc, location) => {
-          acc[location] = (acc[location] ?? 0) + 1;
-          return acc;
-        }, {} as Record<string, number>),
-      
+        .reduce(
+          (acc, location) => {
+            acc[location] = (acc[location] ?? 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>,
+        ),
+
       // Social presence indicators
       socialPresence: {
-        hasLinkedIn: typedAcceptedApplications.filter(app => app.user?.profile?.linkedinUrl).length,
-        hasGitHub: typedAcceptedApplications.filter(app => app.user?.profile?.githubUrl).length,
-        hasWebsite: typedAcceptedApplications.filter(app => app.user?.profile?.website).length,
-        hasTwitter: typedAcceptedApplications.filter(app => app.user?.profile?.twitterUrl).length,
-        hasProfilePicture: typedAcceptedApplications.filter(app => app.user?.image).length,
+        hasLinkedIn: typedAcceptedApplications.filter(
+          (app) => app.user?.profile?.linkedinUrl,
+        ).length,
+        hasGitHub: typedAcceptedApplications.filter(
+          (app) => app.user?.profile?.githubUrl,
+        ).length,
+        hasWebsite: typedAcceptedApplications.filter(
+          (app) => app.user?.profile?.website,
+        ).length,
+        hasTwitter: typedAcceptedApplications.filter(
+          (app) => app.user?.profile?.twitterUrl,
+        ).length,
+        hasProfilePicture: typedAcceptedApplications.filter(
+          (app) => app.user?.image,
+        ).length,
       },
-      
+
       // Application response patterns
-      responsePatterns: {} as Record<string, Record<string, number>>
+      responsePatterns: {} as Record<string, Record<string, number>>,
     };
 
     // Analyze response patterns for key demographic questions
-    const sampleResponses = typedAcceptedApplications[0]?.responses.filter(r => 
-      r.question.questionKey?.includes('background') ??
-      r.question.questionKey?.includes('experience') ??
-      r.question.questionKey?.includes('expertise') ??
-      r.question.questionKey?.includes('skills')
-    ) ?? [];
+    const sampleResponses =
+      typedAcceptedApplications[0]?.responses.filter(
+        (r) =>
+          r.question.questionKey?.includes("background") ??
+          r.question.questionKey?.includes("experience") ??
+          r.question.questionKey?.includes("expertise") ??
+          r.question.questionKey?.includes("skills"),
+      ) ?? [];
 
-    sampleResponses.forEach(response => {
+    sampleResponses.forEach((response) => {
       const questionKey = response.question.questionKey;
       if (!questionKey) return;
-      
+
       demographics.responsePatterns[questionKey] ??= {};
       // Count responses across all accepted applications
-      typedAcceptedApplications.forEach(app => {
-        const appResponse = app.responses.find(r => r.question.questionKey === questionKey);
+      typedAcceptedApplications.forEach((app) => {
+        const appResponse = app.responses.find(
+          (r) => r.question.questionKey === questionKey,
+        );
         if (!appResponse) return;
-        
-        if (response.question.questionType === 'SELECT' || response.question.questionType === 'MULTISELECT') {
-          const answers = Array.isArray(appResponse.answer) 
-            ? appResponse.answer as unknown[]
-            : appResponse.answer ? [appResponse.answer] : [];
-          
-          answers.forEach(answer => {
-            if (typeof answer === 'string') {
-              const currentPatterns = demographics.responsePatterns[questionKey];
+
+        if (
+          response.question.questionType === "SELECT" ||
+          response.question.questionType === "MULTISELECT"
+        ) {
+          const answers = Array.isArray(appResponse.answer)
+            ? (appResponse.answer as unknown[])
+            : appResponse.answer
+              ? [appResponse.answer]
+              : [];
+
+          answers.forEach((answer) => {
+            if (typeof answer === "string") {
+              const currentPatterns =
+                demographics.responsePatterns[questionKey];
               if (currentPatterns) {
                 currentPatterns[answer] = (currentPatterns[answer] ?? 0) + 1;
               }
@@ -171,7 +204,7 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
     });
 
     // Get event context
-    const event = await db.event.findUnique({
+    const event = (await db.event.findUnique({
       where: { id: eventId },
       select: {
         id: true,
@@ -181,7 +214,7 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
         endDate: true,
         type: true,
       },
-    }) as EventInfo | null;
+    })) as EventInfo | null;
 
     return Response.json({
       success: true,
@@ -191,24 +224,25 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
         demographics,
         metadata: {
           generatedAt: new Date().toISOString(),
-          purpose: "Demographics analysis of accepted applications for diversity tracking and bias detection",
+          purpose:
+            "Demographics analysis of accepted applications for diversity tracking and bias detection",
           totalApplications: typedAcceptedApplications.length,
           anonymized: true,
-          usage: "Use this data to track diversity and identify potential bias patterns in acceptance decisions"
-        }
-      }
+          usage:
+            "Use this data to track diversity and identify potential bias patterns in acceptance decisions",
+        },
+      },
     });
-
   } catch (error) {
     console.error("[MASTRA API] Error fetching accepted demographics:", error);
-    
+
     return Response.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "Failed to fetch accepted demographics",
-        details: error instanceof Error ? error.message : "Unknown error"
-      }, 
-      { status: 500 }
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
     );
   }
 }

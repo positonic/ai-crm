@@ -1,13 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Modal,
-  Stack,
-  TextInput,
-  Button,
-  Group,
-} from "@mantine/core";
+import { Modal, Stack, TextInput, Button, Group } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import { notifications } from "@mantine/notifications";

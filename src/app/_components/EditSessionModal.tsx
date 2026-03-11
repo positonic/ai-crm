@@ -88,7 +88,12 @@ export type FloorSession = {
   slidesUploadedAt?: Date | null;
 };
 
-export type VenueRoom = { id: string; name: string; capacity: number | null; order: number };
+export type VenueRoom = {
+  id: string;
+  name: string;
+  capacity: number | null;
+  order: number;
+};
 
 // ──────────────────────────────────────────
 // UTC/Local date conversion helpers
@@ -101,7 +106,9 @@ export type VenueRoom = { id: string; name: string; capacity: number | null; ord
  */
 export function localToUTC(date: Date | null | undefined): Date {
   if (!date) return new Date();
-  const d = new Date(date instanceof Date ? date.getTime() : (date as string | number));
+  const d = new Date(
+    date instanceof Date ? date.getTime() : (date as string | number),
+  );
   if (isNaN(d.getTime())) return new Date();
   return new Date(
     Date.UTC(
@@ -122,7 +129,9 @@ export function localToUTC(date: Date | null | undefined): Date {
  */
 export function utcToLocal(date: Date | null | undefined): Date {
   if (!date) return new Date();
-  const d = new Date(date instanceof Date ? date.getTime() : (date as string | number));
+  const d = new Date(
+    date instanceof Date ? date.getTime() : (date as string | number),
+  );
   if (isNaN(d.getTime())) return new Date();
   return new Date(
     d.getUTCFullYear(),
@@ -265,13 +274,19 @@ function FloorApplicantSearchSelect({
                   style={{
                     cursor: "pointer",
                     backgroundColor:
-                      index === selectedIndex ? "var(--mantine-color-gray-1)" : "transparent",
+                      index === selectedIndex
+                        ? "var(--mantine-color-gray-1)"
+                        : "transparent",
                   }}
                   onClick={() => handleSelect(user)}
                   onMouseEnter={() => setSelectedIndex(index)}
                 >
                   <Group gap="sm">
-                    <Avatar src={user.image} alt={getDisplayName(user, "User")} size="sm" />
+                    <Avatar
+                      src={user.image}
+                      alt={getDisplayName(user, "User")}
+                      size="sm"
+                    />
                     <div style={{ flex: 1 }}>
                       <Text size="sm" fw={500}>
                         {getDisplayName(user, "Unknown")}
@@ -323,12 +338,16 @@ export function SpeakerSelector({
   eventId,
 }: SpeakerSelectorProps) {
   const useFloorSearch = venueId && !isAdmin;
-  const [quickAddOpened, { open: openQuickAdd, close: closeQuickAdd }] = useDisclosure(false);
+  const [quickAddOpened, { open: openQuickAdd, close: closeQuickAdd }] =
+    useDisclosure(false);
   const [prefillName, setPrefillName] = useState<string | null>(null);
 
   // Parse text speakers for linking UI
   const textSpeakerNames = textSpeakers
-    ? textSpeakers.split(",").map((s) => s.trim()).filter(Boolean)
+    ? textSpeakers
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
     : [];
 
   // Split a full name into first/last name parts (best-effort heuristic)
@@ -361,7 +380,9 @@ export function SpeakerSelector({
   return (
     <Stack gap="xs">
       <div>
-        <Text size="sm" fw={500} mb={4}>Participants</Text>
+        <Text size="sm" fw={500} mb={4}>
+          Participants
+        </Text>
         {useFloorSearch ? (
           <FloorApplicantSearchSelect
             venueId={venueId}
@@ -400,7 +421,9 @@ export function SpeakerSelector({
                   <ActionIcon
                     size="xs"
                     variant="transparent"
-                    onClick={() => onRemoveLinkedSpeaker(speakerWithRole.user.id)}
+                    onClick={() =>
+                      onRemoveLinkedSpeaker(speakerWithRole.user.id)
+                    }
                   >
                     <IconX size={12} />
                   </ActionIcon>
@@ -415,7 +438,11 @@ export function SpeakerSelector({
                 data={PARTICIPANT_ROLES as unknown as string[]}
                 value={speakerWithRole.role}
                 onChange={(val) => {
-                  if (val) onChangeSpeakerRole(speakerWithRole.user.id, val as ParticipantRole);
+                  if (val)
+                    onChangeSpeakerRole(
+                      speakerWithRole.user.id,
+                      val as ParticipantRole,
+                    );
                 }}
                 allowDeselect={false}
               />
@@ -450,7 +477,9 @@ export function SpeakerSelector({
               {name}
             </Badge>
           ))}
-          <Text size="xs" c="dimmed">Click to link to a user account</Text>
+          <Text size="xs" c="dimmed">
+            Click to link to a user account
+          </Text>
         </Group>
       )}
 
@@ -502,20 +531,35 @@ export default function EditSessionModal({
 
   const [title, setTitle] = useState(session.title);
   const [description, setDescription] = useState(session.description ?? "");
-  const [startTime, setStartTime] = useState<Date | null>(utcToLocal(new Date(session.startTime)));
-  const [endTime, setEndTime] = useState<Date | null>(utcToLocal(new Date(session.endTime)));
-  const [linkedSpeakers, setLinkedSpeakers] = useState<SelectedSpeakerWithRole[]>(
-    session.sessionSpeakers.map((s) => ({ user: s.user, role: s.role as ParticipantRole })),
+  const [startTime, setStartTime] = useState<Date | null>(
+    utcToLocal(new Date(session.startTime)),
+  );
+  const [endTime, setEndTime] = useState<Date | null>(
+    utcToLocal(new Date(session.endTime)),
+  );
+  const [linkedSpeakers, setLinkedSpeakers] = useState<
+    SelectedSpeakerWithRole[]
+  >(
+    session.sessionSpeakers.map((s) => ({
+      user: s.user,
+      role: s.role as ParticipantRole,
+    })),
   );
   const [textSpeakers, setTextSpeakers] = useState(session.speakers.join(", "));
   const [roomId, setRoomId] = useState<string | null>(session.roomId);
-  const [sessionTypeId, setSessionTypeId] = useState<string | null>(session.sessionTypeId);
+  const [sessionTypeId, setSessionTypeId] = useState<string | null>(
+    session.sessionTypeId,
+  );
   const [trackId, setTrackId] = useState<string | null>(session.trackId);
   const [isPublished, setIsPublished] = useState(session.isPublished);
 
   const updateMutation = api.schedule.updateSession.useMutation({
     onSuccess: () => {
-      notifications.show({ title: "Updated", message: "Session updated", color: "green" });
+      notifications.show({
+        title: "Updated",
+        message: "Session updated",
+        color: "green",
+      });
       if (venueId) {
         void utils.schedule.getFloorSessions.invalidate({ eventId, venueId });
       }
@@ -524,14 +568,22 @@ export default function EditSessionModal({
       onClose();
     },
     onError: (err) => {
-      notifications.show({ title: "Error", message: err.message, color: "red" });
+      notifications.show({
+        title: "Error",
+        message: err.message,
+        color: "red",
+      });
     },
   });
 
   const handleSubmit = () => {
     if (isSpeakerOnly) {
       if (!title) {
-        notifications.show({ title: "Missing fields", message: "Title is required", color: "orange" });
+        notifications.show({
+          title: "Missing fields",
+          message: "Title is required",
+          color: "orange",
+        });
         return;
       }
       updateMutation.mutate({
@@ -542,7 +594,11 @@ export default function EditSessionModal({
       return;
     }
     if (!title || !startTime || !endTime) {
-      notifications.show({ title: "Missing fields", message: "Title, start time, and end time are required", color: "orange" });
+      notifications.show({
+        title: "Missing fields",
+        message: "Title, start time, and end time are required",
+        color: "orange",
+      });
       return;
     }
     updateMutation.mutate({
@@ -551,7 +607,12 @@ export default function EditSessionModal({
       description: description || null,
       startTime: localToUTC(startTime),
       endTime: localToUTC(endTime),
-      speakers: textSpeakers ? textSpeakers.split(",").map((s) => s.trim()).filter(Boolean) : [],
+      speakers: textSpeakers
+        ? textSpeakers
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [],
       linkedSpeakers: linkedSpeakers.map((s) => ({
         userId: s.user.id,
         role: s.role,
@@ -598,10 +659,15 @@ export default function EditSessionModal({
             <SpeakerSelector
               linkedSpeakers={linkedSpeakers}
               onAddLinkedSpeaker={(user) =>
-                setLinkedSpeakers((prev) => [...prev, { user, role: "Speaker" }])
+                setLinkedSpeakers((prev) => [
+                  ...prev,
+                  { user, role: "Speaker" },
+                ])
               }
               onRemoveLinkedSpeaker={(userId) =>
-                setLinkedSpeakers((prev) => prev.filter((s) => s.user.id !== userId))
+                setLinkedSpeakers((prev) =>
+                  prev.filter((s) => s.user.id !== userId),
+                )
               }
               onChangeSpeakerRole={(userId, role) =>
                 setLinkedSpeakers((prev) =>
@@ -660,7 +726,9 @@ export default function EditSessionModal({
           </>
         )}
         <Group justify="flex-end">
-          <Button variant="subtle" onClick={onClose}>Cancel</Button>
+          <Button variant="subtle" onClick={onClose}>
+            Cancel
+          </Button>
           <Button onClick={handleSubmit} loading={updateMutation.isPending}>
             Save Changes
           </Button>

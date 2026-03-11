@@ -13,7 +13,7 @@ interface PageProps {
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { eventId, projectId } = await params;
   const session = await auth();
-  
+
   try {
     // Get project details with author information
     const project = await api.project.getProjectDetails({
@@ -29,17 +29,17 @@ export default async function ProjectDetailPage({ params }: PageProps) {
     const timelineRaw = await api.project.getProjectTimeline({
       projectId,
     });
-    
+
     // Transform weekNumber from null to undefined for type compatibility
-    const timeline = timelineRaw.map(update => ({
+    const timeline = timelineRaw.map((update) => ({
       ...update,
-      weekNumber: update.weekNumber ?? undefined
+      weekNumber: update.weekNumber ?? undefined,
     }));
     // Check if current user is the project owner
     const isOwner = session?.user?.id === project.author.id;
 
     return (
-      <ProjectDetailClient 
+      <ProjectDetailClient
         project={project}
         timeline={timeline}
         eventId={eventId}

@@ -28,7 +28,10 @@ export function getEventCardIcon(type: string) {
 }
 
 /** Canonical Mantine gradient mapping for event cards */
-export function getEventCardGradient(type: string): { from: string; to: string } {
+export function getEventCardGradient(type: string): {
+  from: string;
+  to: string;
+} {
   switch (type.toUpperCase()) {
     case "EIR":
     case "RESIDENCY":

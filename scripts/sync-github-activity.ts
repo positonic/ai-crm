@@ -40,13 +40,15 @@ async function main() {
     console.error("  bun run scripts/sync-github-activity.ts <eventId>");
     console.error("\nExample:");
     console.error(
-      "  bun run scripts/sync-github-activity.ts funding-commons-residency-2025"
+      "  bun run scripts/sync-github-activity.ts funding-commons-residency-2025",
     );
     process.exit(1);
   }
 
   if (!process.env.GITHUB_API_TOKEN) {
-    console.error("❌ Error: GITHUB_API_TOKEN environment variable is required");
+    console.error(
+      "❌ Error: GITHUB_API_TOKEN environment variable is required",
+    );
     console.error("   Add it to your .env.local file");
     process.exit(1);
   }
@@ -72,7 +74,9 @@ async function main() {
   }
 
   console.log(`📅 Event: ${event.name}`);
-  console.log(`   Period: ${event.startDate.toLocaleDateString()} - ${event.endDate.toLocaleDateString()}`);
+  console.log(
+    `   Period: ${event.startDate.toLocaleDateString()} - ${event.endDate.toLocaleDateString()}`,
+  );
 
   // Get all repositories for this event's projects
   const repositories = await db.repository.findMany({
@@ -125,7 +129,9 @@ async function main() {
       // Fetch lifetime activity
       const activity = await github.fetchRepositoryActivity(repo.url);
 
-      console.log(`   📈 Lifetime: ${activity.totalCommits} commits, ${activity.isActive ? "✓ active" : "✗ inactive"}`);
+      console.log(
+        `   📈 Lifetime: ${activity.totalCommits} commits, ${activity.isActive ? "✓ active" : "✗ inactive"}`,
+      );
 
       // Update Repository model with lifetime metrics
       await db.repository.update({
@@ -146,10 +152,12 @@ async function main() {
         const residencyActivity = await github.fetchResidencyActivity(
           repo.url,
           event.startDate,
-          event.endDate
+          event.endDate,
         );
 
-        console.log(`   🎯 Residency: ${residencyActivity.residencyCommits} commits`);
+        console.log(
+          `   🎯 Residency: ${residencyActivity.residencyCommits} commits`,
+        );
 
         // Upsert residency metrics
         await db.repositoryResidencyMetrics.upsert({
@@ -162,14 +170,16 @@ async function main() {
           create: {
             repositoryId: repo.id,
             eventId: event.id,
-            commitsData: residencyActivity.commitsData as unknown as Prisma.InputJsonValue,
+            commitsData:
+              residencyActivity.commitsData as unknown as Prisma.InputJsonValue,
             residencyCommits: residencyActivity.residencyCommits,
             residencyStartDate: event.startDate,
             residencyEndDate: event.endDate,
             lastSyncedAt: new Date(),
           },
           update: {
-            commitsData: residencyActivity.commitsData as unknown as Prisma.InputJsonValue,
+            commitsData:
+              residencyActivity.commitsData as unknown as Prisma.InputJsonValue,
             residencyCommits: residencyActivity.residencyCommits,
             residencyStartDate: event.startDate,
             residencyEndDate: event.endDate,
@@ -178,12 +188,16 @@ async function main() {
         });
 
         // Create attestation if enabled
-        if (env.EAS_ATTESTATIONS_ENABLED === 'true') {
+        if (env.EAS_ATTESTATIONS_ENABLED === "true") {
           // Validate required env vars before attempting
           if (!env.EAS_PRIVATE_KEY) {
-            console.warn(`   ⚠ Attestations enabled but EAS_PRIVATE_KEY not set, skipping`);
+            console.warn(
+              `   ⚠ Attestations enabled but EAS_PRIVATE_KEY not set, skipping`,
+            );
           } else if (!env.EAS_SCHEMA_UID) {
-            console.warn(`   ⚠ Attestations enabled but EAS_SCHEMA_UID not set, skipping`);
+            console.warn(
+              `   ⚠ Attestations enabled but EAS_SCHEMA_UID not set, skipping`,
+            );
           } else {
             try {
               const easService = createEASService();
@@ -206,12 +220,13 @@ async function main() {
                   uid: attestation.uid,
                   repositoryId: repo.id,
                   schemaId: env.EAS_SCHEMA_UID,
-                  chain: 'optimism',
+                  chain: "optimism",
                   data: {
                     projectId: repo.project.id,
                     repositoryId: repo.id,
                     totalCommits: residencyActivity.residencyCommits,
-                    lastCommitDate: activity.lastCommitDate?.toISOString() ?? null,
+                    lastCommitDate:
+                      activity.lastCommitDate?.toISOString() ?? null,
                     weeksActive: activity.weeksActive ?? 0,
                     isActive: activity.isActive,
                   },
@@ -222,7 +237,10 @@ async function main() {
 
               console.log(`   ✓ Attestation: ${attestation.uid}`);
             } catch (error) {
-              console.error(`   ⚠ Attestation failed (sync still succeeded):`, error instanceof Error ? error.message : error);
+              console.error(
+                `   ⚠ Attestation failed (sync still succeeded):`,
+                error instanceof Error ? error.message : error,
+              );
             }
           }
         }

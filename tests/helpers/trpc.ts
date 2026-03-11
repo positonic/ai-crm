@@ -28,7 +28,9 @@ export function getTestDb(): PrismaClient {
   if (!_db) {
     const url = process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL;
     if (!url) {
-      throw new Error("No TEST_DATABASE_URL or DATABASE_URL set. Is globalSetup running?");
+      throw new Error(
+        "No TEST_DATABASE_URL or DATABASE_URL set. Is globalSetup running?",
+      );
     }
     _db = new PrismaClient({
       datasources: { db: { url } },
@@ -46,7 +48,10 @@ export function getTestDb(): PrismaClient {
  * For "user"   -> session.user.role = "user"
  * For null     -> unauthenticated (no session)
  */
-export function createTestCaller(role: TestRole | null, overrides?: TestUserOverrides) {
+export function createTestCaller(
+  role: TestRole | null,
+  overrides?: TestUserOverrides,
+) {
   const db = getTestDb();
 
   const session =

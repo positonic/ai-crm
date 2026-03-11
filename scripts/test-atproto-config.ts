@@ -13,12 +13,16 @@ console.log("━".repeat(50));
 // Test 1: Environment Variables
 console.log("\n📋 Environment Variables:");
 console.log(`  ATPROTO_PDS_URL: ${env.ATPROTO_PDS_URL}`);
-console.log(`  ATPROTO_ENCRYPTION_KEY: ${env.ATPROTO_ENCRYPTION_KEY ? `✅ Configured (${env.ATPROTO_ENCRYPTION_KEY.length} chars)` : "❌ Not configured"}`);
+console.log(
+  `  ATPROTO_ENCRYPTION_KEY: ${env.ATPROTO_ENCRYPTION_KEY ? `✅ Configured (${env.ATPROTO_ENCRYPTION_KEY.length} chars)` : "❌ Not configured"}`,
+);
 
 // Test 2: Encryption Configuration
 console.log("\n🔐 Encryption Test:");
 const encryptionConfigured = isEncryptionConfigured();
-console.log(`  Encryption configured: ${encryptionConfigured ? "✅ Yes" : "❌ No"}`);
+console.log(
+  `  Encryption configured: ${encryptionConfigured ? "✅ Yes" : "❌ No"}`,
+);
 
 // Test 3: Encryption Round-trip
 if (encryptionConfigured) {
@@ -41,7 +45,10 @@ if (encryptionConfigured) {
       process.exit(1);
     }
   } catch (error) {
-    console.log(`  ❌ Encryption test failed:`, error instanceof Error ? error.message : error);
+    console.log(
+      `  ❌ Encryption test failed:`,
+      error instanceof Error ? error.message : error,
+    );
     process.exit(1);
   }
 } else {

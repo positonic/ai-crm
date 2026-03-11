@@ -23,12 +23,14 @@ export interface UserNameFields {
  * getFullName({ name: "Legacy User" }) // "Legacy User"
  * getFullName({}) // null
  */
-export function getFullName(user: UserNameFields | null | undefined): string | null {
+export function getFullName(
+  user: UserNameFields | null | undefined,
+): string | null {
   if (!user) return null;
 
   // Try firstName + surname first (new fields)
   if (user.firstName ?? user.surname) {
-    return `${user.firstName ?? ''} ${user.surname ?? ''}`.trim();
+    return `${user.firstName ?? ""} ${user.surname ?? ""}`.trim();
   }
 
   // Fall back to legacy name field
@@ -55,7 +57,7 @@ export function getFullName(user: UserNameFields | null | undefined): string | n
  */
 export function getDisplayName(
   user: UserNameFields | null | undefined,
-  fallback = "Anonymous"
+  fallback = "Anonymous",
 ): string {
   const fullName = getFullName(user);
   if (fullName) return fullName;

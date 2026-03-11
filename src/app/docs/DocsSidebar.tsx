@@ -16,6 +16,8 @@ import {
   IconSettings,
   IconUsers,
   IconCertificate,
+  IconWorldSearch,
+  IconTarget,
 } from "@tabler/icons-react";
 
 interface SidebarItemProps {
@@ -62,8 +64,7 @@ export default function DocsSidebar() {
             label="Introduction"
             href="/docs/get-started/introduction"
             active={
-              isActive("/docs/get-started/introduction") ||
-              pathname === "/docs"
+              isActive("/docs/get-started/introduction") || pathname === "/docs"
             }
           />
           <SidebarItem
@@ -130,6 +131,18 @@ export default function DocsSidebar() {
             label="Activity Certs"
             href="/docs/features/activity-certs"
             active={isActive("/docs/features/activity-certs")}
+          />
+          <SidebarItem
+            icon={<IconTarget size={18} />}
+            label="Deliberation"
+            href="/docs/features/deliberation"
+            active={isActive("/docs/features/deliberation")}
+          />
+          <SidebarItem
+            icon={<IconWorldSearch size={18} />}
+            label="Hypersphere"
+            href="/docs/features/hypersphere"
+            active={isActive("/docs/features/hypersphere")}
           />
         </div>
 

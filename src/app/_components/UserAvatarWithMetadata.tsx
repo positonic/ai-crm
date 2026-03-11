@@ -52,7 +52,7 @@ export function UserAvatarWithMetadata({
       surname: user.surname,
       email: user.email,
     },
-    "Unknown User"
+    "Unknown User",
   );
 
   const metadataLines: string[] = [];
@@ -66,9 +66,10 @@ export function UserAvatarWithMetadata({
   }
 
   const Container = orientation === "horizontal" ? Group : Stack;
-  const containerProps = orientation === "horizontal"
-    ? { gap: "sm", align: "center" }
-    : { gap: 4, align: "center" };
+  const containerProps =
+    orientation === "horizontal"
+      ? { gap: "sm", align: "center" }
+      : { gap: 4, align: "center" };
 
   return (
     <Container {...containerProps}>

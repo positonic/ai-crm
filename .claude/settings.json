@@ -2,10 +2,33 @@
   "permissions": {
     "allow": [
       "Read(//Users/james/code/impactful-events/**)",
-      "WebFetch(domain:www.dds.xyz)"
+      "WebFetch(domain:www.dds.xyz)",
+      "Read(//Users/james/code/hypgen/**)",
+      "Read(//Users/james/code/father-governance/**)",
+      "Read(//Users/james/code/dds/**)",
+      "Read(//Users/james/code/alpha-chrome-plugin/**)",
+      "Read(//Users/james/code/meeting-minutes/**)",
+      "Read(//Users/james/code/**)",
+      "Bash(bash .github/issues/create-all.sh)",
+      "Bash(bunx prisma:*)",
+      "Read(//Users/james/.claude/**)",
+      "Bash(npm list:*)",
+      "Bash(exponential actions:*)",
+      "Bash(ln -s ../../code/ai-tooling/claude-home/.claude/skills/exponential ~/.claude/skills/exponential)",
+      "Bash(find /Users/james/code/impactful-events -type f \\\\\\(-name *deliberation* -o -name *priority* -o -name *intelligence* -o -name *whisper* -o -name *transcri* -o -name *topic* \\\\\\))",
+      "WebFetch(domain:biomejs.dev)"
     ],
     "additionalDirectories": [
-      "/tmp"
+      "/tmp",
+      "/Users/james/code/impactful-events/.next",
+      "/Users/james/code/impactful-events/src/app/admin/events/[eventId]",
+      "/Users/james/code/impactful-events/src/app/docs/features",
+      "/Users/james/code/ai-tooling/claude-home/.claude/skills",
+      "/Users/james/code/impactful-events/.claude/commands",
+      "/Users/james/code/impactful-events/src/app/api/transcription",
+      "/Users/james/code/impactful-events/src/app/(embed)/events/[eventId]",
+      "/Users/james/code/impactful-events/src/app/(embed)/embed/events/[eventId]",
+      "/Users/james/code/impactful-events/src/app/(embed)/events/[eventId]/schedule"
     ]
   },
   "hooks": {

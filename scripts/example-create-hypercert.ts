@@ -30,7 +30,8 @@ async function createHypercertFromProject() {
     const result = await hypercertsService.createHypercert(userId, {
       // Required fields
       title: project.title,
-      shortDescription: project.description ?? "Impact work done during the residency",
+      shortDescription:
+        project.description ?? "Impact work done during the residency",
       workScope: project.technologies.join(", ") || "Software development",
       workTimeFrameFrom: project.createdAt.toISOString(),
       workTimeFrameTo: new Date().toISOString(),
@@ -56,7 +57,9 @@ async function createHypercertFromProject() {
     console.log("📍 URI:", result.uri);
     console.log("🔗 CID:", result.cid);
     console.log("\n🌐 View on your PDS:");
-    console.log(`   curl "https://pds-eu-west4.test.certified.app/xrpc/com.atproto.repo.getRecord?repo=did:plc:63ohi2g5n5xlqgd5z3isdbyx&collection=org.hypercerts.claim&rkey=${result.uri.split('/').pop()}"`);
+    console.log(
+      `   curl "https://pds-eu-west4.test.certified.app/xrpc/com.atproto.repo.getRecord?repo=did:plc:63ohi2g5n5xlqgd5z3isdbyx&collection=org.hypercerts.claim&rkey=${result.uri.split("/").pop()}"`,
+    );
   } catch (error) {
     console.error("❌ Failed to create hypercert:", error);
   }

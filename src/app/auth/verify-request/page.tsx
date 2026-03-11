@@ -1,6 +1,13 @@
 "use client";
 
-import { Container, Paper, Stack, Text, ThemeIcon, Button } from "@mantine/core";
+import {
+  Container,
+  Paper,
+  Stack,
+  Text,
+  ThemeIcon,
+  Button,
+} from "@mantine/core";
 import { IconMail } from "@tabler/icons-react";
 import Link from "next/link";
 
@@ -12,10 +19,12 @@ export default function VerifyRequestPage() {
           <ThemeIcon size={60} radius="xl" color="blue" variant="light">
             <IconMail size={30} />
           </ThemeIcon>
-          <Text size="xl" fw={600}>Check your email</Text>
+          <Text size="xl" fw={600}>
+            Check your email
+          </Text>
           <Text c="dimmed">
-            A sign-in link has been sent to your email address.
-            Click the link in the email to sign in to your account.
+            A sign-in link has been sent to your email address. Click the link
+            in the email to sign in to your account.
           </Text>
           <Text size="sm" c="dimmed">
             The link will expire in 24 hours. If you don&apos;t see the email,

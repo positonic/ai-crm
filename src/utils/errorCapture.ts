@@ -4,7 +4,7 @@ interface ErrorContext {
   userId?: string;
   operation?: string;
   metadata?: Record<string, unknown>;
-  severity?: 'error' | 'warning' | 'info';
+  severity?: "error" | "warning" | "info";
 }
 
 /**
@@ -12,15 +12,15 @@ interface ErrorContext {
  */
 export function captureError(error: unknown, context?: ErrorContext) {
   // Always log to console for development debugging
-  const operation = context?.operation ?? 'Unknown operation';
+  const operation = context?.operation ?? "Unknown operation";
   console.error(`[${operation}] Error:`, error);
-  
+
   if (context?.metadata) {
     console.error(`[${operation}] Context:`, context.metadata);
   }
 
   // Only send to Sentry in production or when DSN is configured
-  if (process.env.NODE_ENV === 'production' || process.env.SENTRY_DSN) {
+  if (process.env.NODE_ENV === "production" || process.env.SENTRY_DSN) {
     Sentry.withScope((scope) => {
       // Set user context if available
       if (context?.userId) {
@@ -29,13 +29,13 @@ export function captureError(error: unknown, context?: ErrorContext) {
 
       // Set operation context
       if (context?.operation) {
-        scope.setTag('operation', context.operation);
-        scope.setContext('operation_details', { operation: context.operation });
+        scope.setTag("operation", context.operation);
+        scope.setContext("operation_details", { operation: context.operation });
       }
 
       // Add custom metadata
       if (context?.metadata) {
-        scope.setContext('error_metadata', context.metadata);
+        scope.setContext("error_metadata", context.metadata);
       }
 
       // Set severity level
@@ -47,7 +47,7 @@ export function captureError(error: unknown, context?: ErrorContext) {
       if (error instanceof Error) {
         Sentry.captureException(error);
       } else {
-        Sentry.captureMessage(String(error), 'error');
+        Sentry.captureMessage(String(error), "error");
       }
     });
   }
@@ -56,32 +56,38 @@ export function captureError(error: unknown, context?: ErrorContext) {
 /**
  * Captures API route errors with request context
  */
-export function captureApiError(error: unknown, context: {
-  userId?: string;
-  route: string;
-  method?: string;
-  input?: unknown;
-}) {
+export function captureApiError(
+  error: unknown,
+  context: {
+    userId?: string;
+    route: string;
+    method?: string;
+    input?: unknown;
+  },
+) {
   captureError(error, {
     userId: context.userId,
-    operation: `API: ${context.method ?? 'UNKNOWN'} ${context.route}`,
+    operation: `API: ${context.method ?? "UNKNOWN"} ${context.route}`,
     metadata: {
       route: context.route,
       method: context.method,
       input: context.input,
     },
-    severity: 'error'
+    severity: "error",
   });
 }
 
 /**
  * Captures authentication errors
  */
-export function captureAuthError(error: unknown, context: {
-  userId?: string;
-  operation: string;
-  provider?: string;
-}) {
+export function captureAuthError(
+  error: unknown,
+  context: {
+    userId?: string;
+    operation: string;
+    provider?: string;
+  },
+) {
   captureError(error, {
     userId: context.userId,
     operation: `Auth: ${context.operation}`,
@@ -89,19 +95,22 @@ export function captureAuthError(error: unknown, context: {
       provider: context.provider,
       authOperation: context.operation,
     },
-    severity: 'error'
+    severity: "error",
   });
 }
 
 /**
  * Captures email sending errors
  */
-export function captureEmailError(error: unknown, context: {
-  userId?: string;
-  emailType: string;
-  recipient?: string;
-  templateName?: string;
-}) {
+export function captureEmailError(
+  error: unknown,
+  context: {
+    userId?: string;
+    emailType: string;
+    recipient?: string;
+    templateName?: string;
+  },
+) {
   captureError(error, {
     userId: context.userId,
     operation: `Email: ${context.emailType}`,
@@ -110,19 +119,22 @@ export function captureEmailError(error: unknown, context: {
       recipient: context.recipient,
       templateName: context.templateName,
     },
-    severity: 'warning'
+    severity: "warning",
   });
 }
 
 /**
  * Captures database operation errors
  */
-export function captureDatabaseError(error: unknown, context: {
-  userId?: string;
-  operation: string;
-  table?: string;
-  query?: string;
-}) {
+export function captureDatabaseError(
+  error: unknown,
+  context: {
+    userId?: string;
+    operation: string;
+    table?: string;
+    query?: string;
+  },
+) {
   captureError(error, {
     userId: context.userId,
     operation: `Database: ${context.operation}`,
@@ -131,6 +143,6 @@ export function captureDatabaseError(error: unknown, context: {
       dbOperation: context.operation,
       query: context.query,
     },
-    severity: 'error'
+    severity: "error",
   });
 }

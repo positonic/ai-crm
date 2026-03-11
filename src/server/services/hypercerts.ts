@@ -50,7 +50,8 @@ export class HypercertsService {
     if (!account?.accessJwt || !account.refreshJwt) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
-        message: "No AT Proto account connected. Please connect your account first.",
+        message:
+          "No AT Proto account connected. Please connect your account first.",
       });
     }
 
@@ -74,7 +75,8 @@ export class HypercertsService {
     } catch {
       throw new TRPCError({
         code: "UNAUTHORIZED",
-        message: "Failed to authenticate with AT Proto. Please reconnect your account.",
+        message:
+          "Failed to authenticate with AT Proto. Please reconnect your account.",
       });
     }
   }
@@ -82,7 +84,10 @@ export class HypercertsService {
   /**
    * Creates a hypercert record on the user's PDS
    */
-  async createHypercert(userId: string, data: HypercertData): Promise<{
+  async createHypercert(
+    userId: string,
+    data: HypercertData,
+  ): Promise<{
     uri: string;
     cid: string;
   }> {
@@ -161,11 +166,16 @@ export class HypercertsService {
   /**
    * Lists hypercerts for a user
    */
-  async listHypercerts(userId: string, limit = 10): Promise<Array<{
-    uri: string;
-    cid: string;
-    value: HypercertData & { createdAt: string };
-  }>> {
+  async listHypercerts(
+    userId: string,
+    limit = 10,
+  ): Promise<
+    Array<{
+      uri: string;
+      cid: string;
+      value: HypercertData & { createdAt: string };
+    }>
+  > {
     try {
       const agent = await this.getAuthenticatedAgent(userId);
       const account = await this.db.atProtoAccount.findUnique({
@@ -214,7 +224,10 @@ export class HypercertsService {
   /**
    * Gets a specific hypercert by rkey
    */
-  async getHypercert(userId: string, rkey: string): Promise<{
+  async getHypercert(
+    userId: string,
+    rkey: string,
+  ): Promise<{
     uri: string;
     cid: string;
     value: HypercertData & { createdAt: string };
@@ -270,7 +283,7 @@ export class HypercertsService {
  */
 export function createHypercertsService(
   db: PrismaClient,
-  customPdsUrl?: string
+  customPdsUrl?: string,
 ): HypercertsService {
   return new HypercertsService(db, customPdsUrl);
 }

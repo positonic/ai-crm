@@ -20,7 +20,8 @@ export default async function HeaderBar() {
   let acceptedEvents: AcceptedEvent[] = [];
 
   if (session?.user) {
-    const isAdmin = session.user.role === "admin" || session.user.role === "staff";
+    const isAdmin =
+      session.user.role === "admin" || session.user.role === "staff";
 
     // Query all accepted applications
     const acceptedApplications = await db.application.findMany({
@@ -95,7 +96,7 @@ export default async function HeaderBar() {
           },
         },
       },
-      distinct: ['eventId'],
+      distinct: ["eventId"],
     });
 
     // Combine and deduplicate events
@@ -151,7 +152,12 @@ export default async function HeaderBar() {
         <Group justify="space-between" align="center">
           <Group align="center" gap={8}>
             <Link href="/" className="flex items-center cursor-pointer">
-              <Image src="/images/ftc-logo.avif" alt="FtC" width={100} height={100} />
+              <Image
+                src="/images/ftc-logo.avif"
+                alt="FtC"
+                width={100}
+                height={100}
+              />
             </Link>
           </Group>
 
@@ -164,7 +170,7 @@ export default async function HeaderBar() {
       {/* Navigation - Show appropriate menu based on user role */}
       {session?.user && (
         <>
-          {(session.user.role === "admin" || session.user.role === "staff") ? (
+          {session.user.role === "admin" || session.user.role === "staff" ? (
             <AdminNavigation acceptedEvents={acceptedEvents} />
           ) : (
             <MainNavigation acceptedEvents={acceptedEvents} />

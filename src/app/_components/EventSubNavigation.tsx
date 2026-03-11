@@ -78,21 +78,25 @@ export default function EventSubNavigation({
 
   // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
   const isEffectiveFloorOwner = isFloorOwner || clientIsFloorOwner === true;
-  const showManageSchedule =
-    isEffectiveFloorOwner || isAdmin;
+  const showManageSchedule = isEffectiveFloorOwner || isAdmin;
 
   // --- Admin route: management tabs ---
   if (adminBasePath) {
     const getAdminActiveTab = () => {
-      if (pathname.startsWith(`${adminBasePath}/applications`)) return "applications";
-      if (pathname.startsWith(`${adminBasePath}/floor-owners`)) return "floor-owners";
+      if (pathname.startsWith(`${adminBasePath}/applications`))
+        return "applications";
+      if (pathname.startsWith(`${adminBasePath}/floor-owners`))
+        return "floor-owners";
       if (pathname.startsWith(`${adminBasePath}/mentors`)) return "mentors";
       if (pathname.startsWith(`${adminBasePath}/speakers`)) return "speakers";
       if (pathname.startsWith(`${adminBasePath}/sponsors`)) return "sponsors";
-      if (pathname.startsWith(`${adminBasePath}/select-rubric`)) return "select-rubric";
-      if (pathname.startsWith(`${adminBasePath}/onboarding`)) return "onboarding";
+      if (pathname.startsWith(`${adminBasePath}/select-rubric`))
+        return "select-rubric";
+      if (pathname.startsWith(`${adminBasePath}/onboarding`))
+        return "onboarding";
       if (pathname.startsWith(`${basePath}/schedule`)) return "schedule";
-      if (pathname === adminBasePath || pathname === `${adminBasePath}/`) return "overview";
+      if (pathname === adminBasePath || pathname === `${adminBasePath}/`)
+        return "overview";
       return null;
     };
 
@@ -200,10 +204,16 @@ export default function EventSubNavigation({
 
             <Link
               href={basePath}
-              style={{ textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}
+              style={{
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
             >
               <Group gap={4}>
-                <Text size="xs" c="dimmed">View as participant</Text>
+                <Text size="xs" c="dimmed">
+                  View as participant
+                </Text>
                 <IconExternalLink size={14} style={{ opacity: 0.5 }} />
               </Group>
             </Link>
@@ -345,25 +355,32 @@ export default function EventSubNavigation({
               </NavigationTab>
             )}
 
-            {showManageSchedule && featureFlags?.featureSpeakerVetting !== false && (
-              <NavigationTab
-                value="speakers"
-                href={`${basePath}/speakers`}
-                icon={<IconMicrophone size={16} />}
-                level="sub"
-              >
-                Speakers
-              </NavigationTab>
-            )}
+            {showManageSchedule &&
+              featureFlags?.featureSpeakerVetting !== false && (
+                <NavigationTab
+                  value="speakers"
+                  href={`${basePath}/speakers`}
+                  icon={<IconMicrophone size={16} />}
+                  level="sub"
+                >
+                  Speakers
+                </NavigationTab>
+              )}
           </NavigationTabs>
 
           {isAdmin && (
             <Link
               href={`/admin/events/${eventId}`}
-              style={{ textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}
+              style={{
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
             >
               <Group gap={4}>
-                <Text size="xs" c="dimmed">Manage event</Text>
+                <Text size="xs" c="dimmed">
+                  Manage event
+                </Text>
                 <IconExternalLink size={14} style={{ opacity: 0.5 }} />
               </Group>
             </Link>

@@ -92,7 +92,6 @@ interface SessionPrefillData {
   trackId: string | null;
 }
 
-
 function findMatchingSessionType(
   talkFormat: string | null | undefined,
   sessionTypes: { id: string; name: string }[],
@@ -194,11 +193,25 @@ interface ColumnMapping {
 }
 
 const COLUMN_ALIASES: Record<keyof ColumnMapping, string[]> = {
-  title: ["talk title", "title", "session title", "name", "session name", "session"],
+  title: [
+    "talk title",
+    "title",
+    "session title",
+    "name",
+    "session name",
+    "session",
+  ],
   date: ["date", "day", "session date"],
   startTime: ["start time", "start", "begin", "from"],
   endTime: ["end time", "end", "to", "until"],
-  presenters: ["presenter(s) names", "presenters", "speakers", "speaker", "speaker name", "speaker names"],
+  presenters: [
+    "presenter(s) names",
+    "presenters",
+    "speakers",
+    "speaker",
+    "speaker name",
+    "speaker names",
+  ],
   type: ["type", "session type", "format", "talk type", "category"],
   curator: ["curator", "track", "topic", "stream"],
   description: ["description", "abstract", "summary", "details"],
@@ -237,10 +250,29 @@ function detectColumns(headers: string[]): ColumnMapping {
 }
 
 const MONTH_NAMES: Record<string, number> = {
-  january: 0, february: 1, march: 2, april: 3, may: 4, june: 5,
-  july: 6, august: 7, september: 8, october: 9, november: 10, december: 11,
-  jan: 0, feb: 1, mar: 2, apr: 3, jun: 5,
-  jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+  january: 0,
+  february: 1,
+  march: 2,
+  april: 3,
+  may: 4,
+  june: 5,
+  july: 6,
+  august: 7,
+  september: 8,
+  october: 9,
+  november: 10,
+  december: 11,
+  jan: 0,
+  feb: 1,
+  mar: 2,
+  apr: 3,
+  jun: 5,
+  jul: 6,
+  aug: 7,
+  sep: 8,
+  oct: 9,
+  nov: 10,
+  dec: 11,
 };
 
 function parseCsvDateTime(
@@ -318,9 +350,12 @@ function parseCsvRows(
     const rawTitle = mapping.title ? row[mapping.title]?.trim() : undefined;
     let title = rawTitle ?? "";
     if (!title || title === "—" || title === "\u2014" || title === "-") {
-      const presenter = mapping.presenters ? row[mapping.presenters]?.trim() : undefined;
+      const presenter = mapping.presenters
+        ? row[mapping.presenters]?.trim()
+        : undefined;
       title = presenter ?? "TBD";
-      if (!rawTitle) warnings.push("No title found, using presenter name or TBD");
+      if (!rawTitle)
+        warnings.push("No title found, using presenter name or TBD");
     }
 
     // Date/Time
@@ -334,7 +369,9 @@ function parseCsvRows(
     if (!endTime) errors.push("Could not parse end time");
 
     // Presenters
-    const presenterRaw = mapping.presenters ? row[mapping.presenters] : undefined;
+    const presenterRaw = mapping.presenters
+      ? row[mapping.presenters]
+      : undefined;
     const presenterNames = extractPresenterNames(presenterRaw);
 
     // Session type
@@ -352,7 +389,9 @@ function parseCsvRows(
     }
 
     // Description
-    const description = mapping.description ? row[mapping.description]?.trim() ?? "" : "";
+    const description = mapping.description
+      ? (row[mapping.description]?.trim() ?? "")
+      : "";
 
     // Order
     const orderStr = mapping.order ? row[mapping.order] : undefined;
@@ -363,7 +402,8 @@ function parseCsvRows(
       ? existingSessions.some(
           (s) =>
             s.title.toLowerCase() === title.toLowerCase() &&
-            Math.abs(new Date(s.startTime).getTime() - startTime.getTime()) < 60000,
+            Math.abs(new Date(s.startTime).getTime() - startTime.getTime()) <
+              60000,
         )
       : false;
     if (isDuplicate) warnings.push("Possible duplicate of existing session");
@@ -393,8 +433,10 @@ function parseCsvRows(
   });
 }
 
-
-export default function ManageScheduleClient({ eventId, showWelcome }: ManageScheduleClientProps) {
+export default function ManageScheduleClient({
+  eventId,
+  showWelcome,
+}: ManageScheduleClientProps) {
   const [welcomeDismissed, setWelcomeDismissed] = useState(false);
   const [activeVenueId, setActiveVenueId] = useState<string | null>(null);
 
@@ -403,7 +445,9 @@ export default function ManageScheduleClient({ eventId, showWelcome }: ManageSch
 
   // Set default active venue once loaded
   if (floorsData?.venues && floorsData.venues.length > 0 && !activeVenueId) {
-    setActiveVenueId(floorsData.venues.length > 1 ? "all" : floorsData.venues[0]!.id);
+    setActiveVenueId(
+      floorsData.venues.length > 1 ? "all" : floorsData.venues[0]!.id,
+    );
   }
 
   if (floorsLoading) {
@@ -422,8 +466,8 @@ export default function ManageScheduleClient({ eventId, showWelcome }: ManageSch
             <IconBuilding size={48} color="var(--mantine-color-dimmed)" />
             <Title order={3}>No Floors Assigned</Title>
             <Text c="dimmed" ta="center">
-              You don&apos;t have any floors assigned to manage.
-              Contact an admin to get floor lead access.
+              You don&apos;t have any floors assigned to manage. Contact an
+              admin to get floor lead access.
             </Text>
           </Stack>
         </Center>
@@ -445,8 +489,9 @@ export default function ManageScheduleClient({ eventId, showWelcome }: ManageSch
             variant="light"
           >
             <Text size="sm">
-              Your Floor Lead access has been set up successfully. You can now manage
-              sessions, rooms, and speakers for your assigned floors below.
+              Your Floor Lead access has been set up successfully. You can now
+              manage sessions, rooms, and speakers for your assigned floors
+              below.
             </Text>
           </Alert>
         )}
@@ -470,7 +515,10 @@ export default function ManageScheduleClient({ eventId, showWelcome }: ManageSch
                   leftSection={<IconLayoutGrid size={14} />}
                   rightSection={
                     <Badge size="sm" variant="light" circle>
-                      {floorsData.venues.reduce((sum, v) => sum + v._count.sessions, 0)}
+                      {floorsData.venues.reduce(
+                        (sum, v) => sum + v._count.sessions,
+                        0,
+                      )}
                     </Badge>
                   }
                   style={{ whiteSpace: "nowrap" }}
@@ -528,7 +576,16 @@ interface AllFloorsViewProps {
     description: string | null;
     capacity: number | null;
     rooms: VenueRoom[];
-    owners: { user: { id: string; firstName: string | null; surname: string | null; name: string | null; email: string | null; image: string | null } }[];
+    owners: {
+      user: {
+        id: string;
+        firstName: string | null;
+        surname: string | null;
+        name: string | null;
+        email: string | null;
+        image: string | null;
+      };
+    }[];
     _count: { sessions: number };
   }>;
   isAdmin: boolean;
@@ -548,8 +605,9 @@ function AllFloorsView({ eventId, venues, isAdmin }: AllFloorsViewProps) {
   const { data: sessionsData, isLoading: sessionsLoading } =
     api.schedule.getAllFloorSessions.useQuery({ eventId });
 
-  const { data: filterData } =
-    api.schedule.getEventScheduleFilters.useQuery({ eventId });
+  const { data: filterData } = api.schedule.getEventScheduleFilters.useQuery({
+    eventId,
+  });
 
   const allRooms = useMemo(() => {
     return venues.flatMap((v) => v.rooms);
@@ -557,12 +615,20 @@ function AllFloorsView({ eventId, venues, isAdmin }: AllFloorsViewProps) {
 
   const deleteSessionMutation = api.schedule.deleteSession.useMutation({
     onSuccess: () => {
-      notifications.show({ title: "Deleted", message: "Session deleted", color: "green" });
+      notifications.show({
+        title: "Deleted",
+        message: "Session deleted",
+        color: "green",
+      });
       void utils.schedule.getAllFloorSessions.invalidate({ eventId });
       void utils.schedule.getMyFloors.invalidate({ eventId });
     },
     onError: (err: { message: string }) => {
-      notifications.show({ title: "Error", message: err.message, color: "red" });
+      notifications.show({
+        title: "Error",
+        message: err.message,
+        color: "red",
+      });
     },
   });
 
@@ -611,10 +677,14 @@ function AllFloorsView({ eventId, venues, isAdmin }: AllFloorsViewProps) {
                   session={session as FloorSession}
                   eventId={eventId}
                   venueId={session.venueId ?? ""}
-                  rooms={venues.find((v) => v.id === session.venueId)?.rooms ?? []}
+                  rooms={
+                    venues.find((v) => v.id === session.venueId)?.rooms ?? []
+                  }
                   sessionTypes={filterData?.sessionTypes ?? []}
                   tracks={filterData?.tracks ?? []}
-                  onDelete={() => deleteSessionMutation.mutate({ id: session.id })}
+                  onDelete={() =>
+                    deleteSessionMutation.mutate({ id: session.id })
+                  }
                   isDeleting={deleteSessionMutation.isPending}
                   isAdmin={isAdmin}
                   onOpenComments={(id, title) => {
@@ -682,7 +752,16 @@ interface FloorManagerProps {
     description: string | null;
     capacity: number | null;
     rooms: VenueRoom[];
-    owners: { user: { id: string; firstName: string | null; surname: string | null; name: string | null; email: string | null; image: string | null } }[];
+    owners: {
+      user: {
+        id: string;
+        firstName: string | null;
+        surname: string | null;
+        name: string | null;
+        email: string | null;
+        image: string | null;
+      };
+    }[];
   };
   isAdmin: boolean;
 }
@@ -690,11 +769,19 @@ interface FloorManagerProps {
 function FloorManager({ eventId, venueId, venue, isAdmin }: FloorManagerProps) {
   const [editingMeta, setEditingMeta] = useState(false);
   const [metaName, setMetaName] = useState(venue?.name ?? "");
-  const [metaDescription, setMetaDescription] = useState(venue?.description ?? "");
-  const [metaCapacity, setMetaCapacity] = useState<number | "">(venue?.capacity ?? "");
-  const [prefillData, setPrefillData] = useState<SessionPrefillData | null>(null);
+  const [metaDescription, setMetaDescription] = useState(
+    venue?.description ?? "",
+  );
+  const [metaCapacity, setMetaCapacity] = useState<number | "">(
+    venue?.capacity ?? "",
+  );
+  const [prefillData, setPrefillData] = useState<SessionPrefillData | null>(
+    null,
+  );
   const [createModalOpened, setCreateModalOpened] = useState(false);
-  const [sessionView, setSessionView] = useState<"cards" | "table" | "grid">("cards");
+  const [sessionView, setSessionView] = useState<"cards" | "table" | "grid">(
+    "cards",
+  );
   const [commentSessionId, setCommentSessionId] = useState<string | null>(null);
   const [commentSessionTitle, setCommentSessionTitle] = useState("");
   const [detailSession, setDetailSession] = useState<FloorSession | null>(null);
@@ -704,76 +791,119 @@ function FloorManager({ eventId, venueId, venue, isAdmin }: FloorManagerProps) {
 
   const utils = api.useUtils();
 
-  const { data: sessionsData, isLoading: sessionsLoading, error: sessionsError } =
-    api.schedule.getFloorSessions.useQuery({ eventId, venueId });
+  const {
+    data: sessionsData,
+    isLoading: sessionsLoading,
+    error: sessionsError,
+  } = api.schedule.getFloorSessions.useQuery({ eventId, venueId });
 
   if (sessionsError) {
-    console.error("[ManageSchedule] getFloorSessions ERROR:", sessionsError.message, sessionsError);
+    console.error(
+      "[ManageSchedule] getFloorSessions ERROR:",
+      sessionsError.message,
+      sessionsError,
+    );
   }
   if (sessionsData) {
     console.log("[ManageSchedule] getFloorSessions loaded:", {
       sessionCount: sessionsData.sessions.length,
       eventName: sessionsData.event?.name,
-      sampleSession: sessionsData.sessions[0] ? {
-        title: sessionsData.sessions[0].title,
-        startTime: sessionsData.sessions[0].startTime,
-        endTime: sessionsData.sessions[0].endTime,
-        roomId: sessionsData.sessions[0].roomId,
-      } : null,
+      sampleSession: sessionsData.sessions[0]
+        ? {
+            title: sessionsData.sessions[0].title,
+            startTime: sessionsData.sessions[0].startTime,
+            endTime: sessionsData.sessions[0].endTime,
+            roomId: sessionsData.sessions[0].roomId,
+          }
+        : null,
     });
   }
 
-  const { data: filterData } =
-    api.schedule.getEventScheduleFilters.useQuery({ eventId });
+  const { data: filterData } = api.schedule.getEventScheduleFilters.useQuery({
+    eventId,
+  });
 
-  const { data: applicationsData } =
-    api.schedule.getFloorApplications.useQuery({ eventId, venueId });
+  const { data: applicationsData } = api.schedule.getFloorApplications.useQuery(
+    { eventId, venueId },
+  );
 
   const [newRoomName, setNewRoomName] = useState("");
 
   const updateVenueMutation = api.schedule.updateVenue.useMutation({
     onSuccess: () => {
-      notifications.show({ title: "Updated", message: "Floor info updated", color: "green" });
+      notifications.show({
+        title: "Updated",
+        message: "Floor info updated",
+        color: "green",
+      });
       setEditingMeta(false);
       void utils.schedule.getMyFloors.invalidate({ eventId });
     },
     onError: (err) => {
-      notifications.show({ title: "Error", message: err.message, color: "red" });
+      notifications.show({
+        title: "Error",
+        message: err.message,
+        color: "red",
+      });
     },
   });
 
   const createRoomMutation = api.schedule.createRoom.useMutation({
     onSuccess: () => {
-      notifications.show({ title: "Created", message: "Room added", color: "green" });
+      notifications.show({
+        title: "Created",
+        message: "Room added",
+        color: "green",
+      });
       setNewRoomName("");
       void utils.schedule.getMyFloors.invalidate({ eventId });
     },
     onError: (err) => {
-      notifications.show({ title: "Error", message: err.message, color: "red" });
+      notifications.show({
+        title: "Error",
+        message: err.message,
+        color: "red",
+      });
     },
   });
 
   const deleteRoomMutation = api.schedule.deleteRoom.useMutation({
     onSuccess: () => {
-      notifications.show({ title: "Deleted", message: "Room removed", color: "green" });
+      notifications.show({
+        title: "Deleted",
+        message: "Room removed",
+        color: "green",
+      });
       void utils.schedule.getMyFloors.invalidate({ eventId });
       void utils.schedule.getFloorSessions.invalidate({ eventId, venueId });
       void utils.schedule.getAllFloorSessions.invalidate({ eventId });
     },
     onError: (err) => {
-      notifications.show({ title: "Error", message: err.message, color: "red" });
+      notifications.show({
+        title: "Error",
+        message: err.message,
+        color: "red",
+      });
     },
   });
 
   const deleteSessionMutation = api.schedule.deleteSession.useMutation({
     onSuccess: () => {
-      notifications.show({ title: "Deleted", message: "Session deleted", color: "green" });
+      notifications.show({
+        title: "Deleted",
+        message: "Session deleted",
+        color: "green",
+      });
       void utils.schedule.getFloorSessions.invalidate({ eventId, venueId });
       void utils.schedule.getAllFloorSessions.invalidate({ eventId });
       void utils.schedule.getMyFloors.invalidate({ eventId });
     },
     onError: (err) => {
-      notifications.show({ title: "Error", message: err.message, color: "red" });
+      notifications.show({
+        title: "Error",
+        message: err.message,
+        color: "red",
+      });
     },
   });
 
@@ -850,17 +980,29 @@ function FloorManager({ eventId, venueId, venue, isAdmin }: FloorManagerProps) {
         ) : (
           <Stack gap="xs">
             <Text fw={500}>{venue?.name}</Text>
-            {venue?.description && <Text size="sm" c="dimmed">{venue.description}</Text>}
+            {venue?.description && (
+              <Text size="sm" c="dimmed">
+                {venue.description}
+              </Text>
+            )}
             {venue?.capacity != null && (
               <Text size="sm" c="dimmed">
-                <IconUsers size={14} style={{ verticalAlign: "middle" }} /> Capacity: {venue.capacity}
+                <IconUsers size={14} style={{ verticalAlign: "middle" }} />{" "}
+                Capacity: {venue.capacity}
               </Text>
             )}
             {venue?.owners && venue.owners.length > 0 && (
               <Text size="sm" c="dimmed">
-                Owners: {venue.owners.map((o) =>
-                  o.user.firstName ?? o.user.name ?? o.user.email ?? "Unknown"
-                ).join(", ")}
+                Owners:{" "}
+                {venue.owners
+                  .map(
+                    (o) =>
+                      o.user.firstName ??
+                      o.user.name ??
+                      o.user.email ??
+                      "Unknown",
+                  )
+                  .join(", ")}
               </Text>
             )}
           </Stack>
@@ -883,9 +1025,13 @@ function FloorManager({ eventId, venueId, venue, isAdmin }: FloorManagerProps) {
             {venue.rooms.map((room) => (
               <Group key={room.id} justify="space-between">
                 <Group gap="xs">
-                  <Text size="sm" fw={500}>{room.name}</Text>
+                  <Text size="sm" fw={500}>
+                    {room.name}
+                  </Text>
                   {room.capacity != null && (
-                    <Text size="xs" c="dimmed">(capacity: {room.capacity})</Text>
+                    <Text size="xs" c="dimmed">
+                      (capacity: {room.capacity})
+                    </Text>
                   )}
                 </Group>
                 <ActionIcon
@@ -984,7 +1130,14 @@ function FloorManager({ eventId, venueId, venue, isAdmin }: FloorManagerProps) {
               startTime: s.startTime,
               endTime: s.endTime,
             }))}
-            eventYear={(() => { const d = sessionsData?.event?.startDate ? new Date(sessionsData.event.startDate) : null; return d && !isNaN(d.getTime()) ? d.getUTCFullYear() : new Date().getUTCFullYear(); })()}
+            eventYear={(() => {
+              const d = sessionsData?.event?.startDate
+                ? new Date(sessionsData.event.startDate)
+                : null;
+              return d && !isNaN(d.getTime())
+                ? d.getUTCFullYear()
+                : new Date().getUTCFullYear();
+            })()}
           />
           <CreateSessionButton
             eventId={eventId}
@@ -1014,7 +1167,9 @@ function FloorManager({ eventId, venueId, venue, isAdmin }: FloorManagerProps) {
           <Center>
             <Stack align="center" gap="sm">
               <IconClock size={32} color="var(--mantine-color-dimmed)" />
-              <Text c="dimmed">No sessions yet. Create your first session.</Text>
+              <Text c="dimmed">
+                No sessions yet. Create your first session.
+              </Text>
             </Stack>
           </Center>
         </Paper>
@@ -1031,7 +1186,9 @@ function FloorManager({ eventId, venueId, venue, isAdmin }: FloorManagerProps) {
                   rooms={venue?.rooms ?? []}
                   sessionTypes={filterData?.sessionTypes ?? []}
                   tracks={filterData?.tracks ?? []}
-                  onDelete={() => deleteSessionMutation.mutate({ id: session.id })}
+                  onDelete={() =>
+                    deleteSessionMutation.mutate({ id: session.id })
+                  }
                   isDeleting={deleteSessionMutation.isPending}
                   isAdmin={isAdmin}
                   onOpenComments={(id, title) => {
@@ -1122,30 +1279,58 @@ interface SessionCardProps {
   showFloorBadge?: boolean;
 }
 
-function SessionCard({ session, eventId, venueId, rooms, sessionTypes, tracks, onDelete, isDeleting, isAdmin, onOpenComments, onViewDetail, showFloorBadge }: SessionCardProps) {
+function SessionCard({
+  session,
+  eventId,
+  venueId,
+  rooms,
+  sessionTypes,
+  tracks,
+  onDelete,
+  isDeleting,
+  isAdmin,
+  onOpenComments,
+  onViewDetail,
+  showFloorBadge,
+}: SessionCardProps) {
   const [editing, { open: openEdit, close: closeEdit }] = useDisclosure(false);
 
   const startTime = new Date(session.startTime);
   const endTime = new Date(session.endTime);
 
   const timeStr = `${startTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" })} – ${endTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" })}`;
-  const dateStr = startTime.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
+  const dateStr = startTime.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 
   return (
     <>
-      <Paper p="md" withBorder style={{ cursor: onViewDetail ? "pointer" : undefined }} onClick={() => onViewDetail?.(session)}>
+      <Paper
+        p="md"
+        withBorder
+        style={{ cursor: onViewDetail ? "pointer" : undefined }}
+        onClick={() => onViewDetail?.(session)}
+      >
         <Group justify="space-between" wrap="nowrap" align="flex-start">
           <Stack gap={4} style={{ flex: 1 }}>
             <Group gap="xs">
               <Text fw={600}>{session.title}</Text>
               {!session.isPublished && (
-                <Badge size="xs" color="yellow" variant="light">Draft</Badge>
+                <Badge size="xs" color="yellow" variant="light">
+                  Draft
+                </Badge>
               )}
               {session.sessionType && (
                 <Badge
                   size="xs"
                   variant="light"
-                  style={{ backgroundColor: `${session.sessionType.color}20`, color: session.sessionType.color }}
+                  style={{
+                    backgroundColor: `${session.sessionType.color}20`,
+                    color: session.sessionType.color,
+                  }}
                 >
                   {session.sessionType.name}
                 </Badge>
@@ -1154,7 +1339,10 @@ function SessionCard({ session, eventId, venueId, rooms, sessionTypes, tracks, o
                 <Badge
                   size="xs"
                   variant="light"
-                  style={{ backgroundColor: `${session.track.color}20`, color: session.track.color }}
+                  style={{
+                    backgroundColor: `${session.track.color}20`,
+                    color: session.track.color,
+                  }}
                 >
                   {session.track.name}
                 </Badge>
@@ -1171,9 +1359,11 @@ function SessionCard({ session, eventId, venueId, rooms, sessionTypes, tracks, o
               )}
             </Group>
             <Text size="sm" c="dimmed">
-              <IconClock size={12} style={{ verticalAlign: "middle" }} /> {dateStr} {timeStr}
+              <IconClock size={12} style={{ verticalAlign: "middle" }} />{" "}
+              {dateStr} {timeStr}
             </Text>
-            {(session.sessionSpeakers.length > 0 || session.speakers.length > 0) && (
+            {(session.sessionSpeakers.length > 0 ||
+              session.speakers.length > 0) && (
               <Text size="sm" c="dimmed">
                 <IconUsers size={12} style={{ verticalAlign: "middle" }} />{" "}
                 {[
@@ -1187,12 +1377,16 @@ function SessionCard({ session, eventId, venueId, rooms, sessionTypes, tracks, o
               </Text>
             )}
             {session.description && (
-              <Text size="sm" c="dimmed" lineClamp={2}>{session.description}</Text>
+              <Text size="sm" c="dimmed" lineClamp={2}>
+                {session.description}
+              </Text>
             )}
           </Stack>
           <Group gap={4} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
             {onOpenComments && (
-              <Tooltip label={`${String(session._count?.comments ?? 0)} comments`}>
+              <Tooltip
+                label={`${String(session._count?.comments ?? 0)} comments`}
+              >
                 <ActionIcon
                   variant="subtle"
                   color={session._count?.comments ? "blue" : "gray"}
@@ -1201,7 +1395,9 @@ function SessionCard({ session, eventId, venueId, rooms, sessionTypes, tracks, o
                   <Group gap={2} wrap="nowrap">
                     <IconMessageCircle size={16} />
                     {(session._count?.comments ?? 0) > 0 && (
-                      <Text size="xs" fw={600}>{session._count?.comments}</Text>
+                      <Text size="xs" fw={600}>
+                        {session._count?.comments}
+                      </Text>
                     )}
                   </Group>
                 </ActionIcon>
@@ -1287,8 +1483,12 @@ function FloorApplicationsList({
   onCreateFromApplication,
 }: FloorApplicationsListProps) {
   const [expanded, { toggle }] = useDisclosure(false);
-  const [selectedApp, setSelectedApp] = useState<FloorApplicationData | null>(null);
-  const [editingApp, setEditingApp] = useState<FloorApplicationData | null>(null);
+  const [selectedApp, setSelectedApp] = useState<FloorApplicationData | null>(
+    null,
+  );
+  const [editingApp, setEditingApp] = useState<FloorApplicationData | null>(
+    null,
+  );
   const [editModalOpened, setEditModalOpened] = useState(false);
 
   const handleEdit = (app: FloorApplicationData) => {
@@ -1299,7 +1499,9 @@ function FloorApplicationsList({
   if (applicationsData.length === 0) return null;
 
   const approvedApps = applicationsData.filter((a) => a.status === "ACCEPTED");
-  const unapprovedApps = applicationsData.filter((a) => a.status !== "ACCEPTED");
+  const unapprovedApps = applicationsData.filter(
+    (a) => a.status !== "ACCEPTED",
+  );
   const speakersUrl = `/events/${eventId}/speakers`;
 
   return (
@@ -1308,7 +1510,13 @@ function FloorApplicationsList({
       <Alert
         variant="light"
         color={unapprovedApps.length > 0 ? "orange" : "green"}
-        icon={unapprovedApps.length > 0 ? <IconAlertCircle size={20} /> : <IconCheck size={20} />}
+        icon={
+          unapprovedApps.length > 0 ? (
+            <IconAlertCircle size={20} />
+          ) : (
+            <IconCheck size={20} />
+          )
+        }
         radius="md"
         title={
           <Text fw={600} size="sm">
@@ -1324,13 +1532,16 @@ function FloorApplicationsList({
             </Text>
             {unapprovedApps.length > 0 && (
               <>
-                {" "}and{" "}
+                {" "}
+                and{" "}
                 <Text span fw={700} c="orange">
                   {unapprovedApps.length} unapproved
                 </Text>
               </>
-            )}
-            {" "}speaker {applicationsData.length === 1 ? "application" : "applications"} for this floor.
+            )}{" "}
+            speaker{" "}
+            {applicationsData.length === 1 ? "application" : "applications"} for
+            this floor.
           </Text>
           <Group gap="sm">
             {approvedApps.length > 0 && (
@@ -1366,7 +1577,8 @@ function FloorApplicationsList({
         <Group gap="xs">
           <IconFileText size={18} />
           <Text size="sm" fw={500}>
-            You currently have {approvedApps.length} accepted {approvedApps.length === 1 ? "application" : "applications"}
+            You currently have {approvedApps.length} accepted{" "}
+            {approvedApps.length === 1 ? "application" : "applications"}
           </Text>
         </Group>
         <Button
@@ -1472,14 +1684,22 @@ function ApplicationCard({
     });
   };
 
-  const statusColor =
-    application.status === "ACCEPTED" ? "green" : "blue";
+  const statusColor = application.status === "ACCEPTED" ? "green" : "blue";
 
   return (
-    <Paper p="sm" withBorder style={{ cursor: "pointer" }} onClick={() => onViewDetail(application)}>
+    <Paper
+      p="sm"
+      withBorder
+      style={{ cursor: "pointer" }}
+      onClick={() => onViewDetail(application)}
+    >
       <Group justify="space-between" wrap="nowrap" align="flex-start">
         <Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
-          <Avatar src={user.image} alt={getDisplayName(user, "User")} size="sm" />
+          <Avatar
+            src={user.image}
+            alt={getDisplayName(user, "User")}
+            size="sm"
+          />
           <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
             <Group gap="xs" wrap="wrap">
               <Text size="sm" fw={600} truncate>
@@ -1517,7 +1737,11 @@ function ApplicationCard({
               )}
               {application.speakerPreferredDates?.split(",").map((date) => (
                 <Badge key={date} size="xs" variant="light" color="teal">
-                  {date === "2026-03-14" ? "Mar 14" : date === "2026-03-15" ? "Mar 15" : date}
+                  {date === "2026-03-14"
+                    ? "Mar 14"
+                    : date === "2026-03-15"
+                      ? "Mar 15"
+                      : date}
                 </Badge>
               ))}
               {application.speakerPreferredTimes?.split(",").map((slot) => (
@@ -1611,7 +1835,11 @@ function ApplicationDetailModal({
       onClose={onClose}
       title={
         <Group gap="sm">
-          <Avatar src={user.image} alt={getDisplayName(user, "User")} size="md" />
+          <Avatar
+            src={user.image}
+            alt={getDisplayName(user, "User")}
+            size="md"
+          />
           <Stack gap={0}>
             <Group gap="xs">
               <Text fw={600}>{getDisplayName(user, "Unknown")}</Text>
@@ -1621,7 +1849,9 @@ function ApplicationDetailModal({
             </Group>
             {(profile?.jobTitle ?? profile?.company) && (
               <Text size="sm" c="dimmed">
-                {[profile?.jobTitle, profile?.company].filter(Boolean).join(" at ")}
+                {[profile?.jobTitle, profile?.company]
+                  .filter(Boolean)
+                  .join(" at ")}
               </Text>
             )}
           </Stack>
@@ -1687,7 +1917,8 @@ function ApplicationDetailModal({
         )}
 
         {/* Scheduling Preferences */}
-        {(application.speakerPreferredDates ?? application.speakerPreferredTimes) && (
+        {(application.speakerPreferredDates ??
+          application.speakerPreferredTimes) && (
           <Stack gap={4}>
             <Text size="sm" fw={600} c="dimmed">
               Scheduling Preferences
@@ -1695,7 +1926,11 @@ function ApplicationDetailModal({
             <Group gap="xs" wrap="wrap">
               {application.speakerPreferredDates?.split(",").map((date) => (
                 <Badge key={date} size="sm" variant="light" color="teal">
-                  {date === "2026-03-14" ? "Mar 14" : date === "2026-03-15" ? "Mar 15" : date}
+                  {date === "2026-03-14"
+                    ? "Mar 14"
+                    : date === "2026-03-15"
+                      ? "Mar 15"
+                      : date}
                 </Badge>
               ))}
               {application.speakerPreferredTimes?.split(",").map((slot) => (
@@ -1828,9 +2063,18 @@ function EditApplicationModal({
       applicationId: application?.id ?? "",
       eventId,
       venueId,
-      status: values.status as "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "ACCEPTED" | "REJECTED" | "WAITLISTED" | "CANCELLED",
-      speakerPreferredDates: preferredDates.length > 0 ? preferredDates.join(",") : null,
-      speakerPreferredTimes: preferredTimes.length > 0 ? preferredTimes.join(",") : null,
+      status: values.status as
+        | "DRAFT"
+        | "SUBMITTED"
+        | "UNDER_REVIEW"
+        | "ACCEPTED"
+        | "REJECTED"
+        | "WAITLISTED"
+        | "CANCELLED",
+      speakerPreferredDates:
+        preferredDates.length > 0 ? preferredDates.join(",") : null,
+      speakerPreferredTimes:
+        preferredTimes.length > 0 ? preferredTimes.join(",") : null,
       speakerTalkTitle: toNullable(values.speakerTalkTitle),
       speakerTalkAbstract: toNullable(values.speakerTalkAbstract),
       speakerTalkFormat: toNullable(values.speakerTalkFormat),
@@ -1997,20 +2241,36 @@ interface SessionDetailModalProps {
   isAdmin: boolean;
 }
 
-function SessionDetailModal({ session, onClose, eventId, venueId, rooms, sessionTypes, tracks, isAdmin }: SessionDetailModalProps) {
+function SessionDetailModal({
+  session,
+  onClose,
+  eventId,
+  venueId,
+  rooms,
+  sessionTypes,
+  tracks,
+  isAdmin,
+}: SessionDetailModalProps) {
   const [editing, { open: openEdit, close: closeEdit }] = useDisclosure(false);
 
   if (!session) return null;
 
   const startTime = new Date(session.startTime);
   const endTime = new Date(session.endTime);
-  const dateStr = startTime.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
+  const dateStr = startTime.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
   const timeStr = `${startTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" })} – ${endTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" })}`;
   const durationMs = endTime.getTime() - startTime.getTime();
   const durationMin = Math.round(durationMs / 60000);
-  const durationStr = durationMin >= 60
-    ? `${String(Math.floor(durationMin / 60))}h${durationMin % 60 > 0 ? ` ${String(durationMin % 60)}m` : ""}`
-    : `${String(durationMin)}m`;
+  const durationStr =
+    durationMin >= 60
+      ? `${String(Math.floor(durationMin / 60))}h${durationMin % 60 > 0 ? ` ${String(durationMin % 60)}m` : ""}`
+      : `${String(durationMin)}m`;
 
   const speakerNames = [
     ...session.sessionSpeakers.map((s) =>
@@ -2023,117 +2283,148 @@ function SessionDetailModal({ session, onClose, eventId, venueId, rooms, session
 
   return (
     <>
-    <Modal
-      opened={!!session}
-      onClose={onClose}
-      title={
-        <Group gap="sm">
-          <Text fw={600} size="lg">{session.title}</Text>
-          {!session.isPublished && (
-            <Badge size="sm" color="yellow" variant="light">Draft</Badge>
-          )}
-        </Group>
-      }
-      size="lg"
-    >
-      <Stack gap="md">
-        {/* Badges */}
-        <Group gap="xs" wrap="wrap">
-          {session.sessionType && (
-            <Badge
-              variant="light"
-              style={{ backgroundColor: `${session.sessionType.color}20`, color: session.sessionType.color }}
-            >
-              {session.sessionType.name}
-            </Badge>
-          )}
-          {session.track && (
-            <Badge
-              variant="light"
-              style={{ backgroundColor: `${session.track.color}20`, color: session.track.color }}
-            >
-              {session.track.name}
-            </Badge>
-          )}
-          {session.room && (
-            <Badge variant="light" color="teal">
-              {session.room.name}
-            </Badge>
-          )}
-        </Group>
-
-        {/* Date & Time */}
-        <Stack gap={4}>
-          <Text size="sm" fw={600} c="dimmed">Schedule</Text>
-          <Group gap="xs">
-            <IconClock size={14} />
-            <Text size="sm">{dateStr}</Text>
+      <Modal
+        opened={!!session}
+        onClose={onClose}
+        title={
+          <Group gap="sm">
+            <Text fw={600} size="lg">
+              {session.title}
+            </Text>
+            {!session.isPublished && (
+              <Badge size="sm" color="yellow" variant="light">
+                Draft
+              </Badge>
+            )}
           </Group>
-          <Group gap="xs">
-            <Text size="sm">{timeStr} ({durationStr})</Text>
+        }
+        size="lg"
+      >
+        <Stack gap="md">
+          {/* Badges */}
+          <Group gap="xs" wrap="wrap">
+            {session.sessionType && (
+              <Badge
+                variant="light"
+                style={{
+                  backgroundColor: `${session.sessionType.color}20`,
+                  color: session.sessionType.color,
+                }}
+              >
+                {session.sessionType.name}
+              </Badge>
+            )}
+            {session.track && (
+              <Badge
+                variant="light"
+                style={{
+                  backgroundColor: `${session.track.color}20`,
+                  color: session.track.color,
+                }}
+              >
+                {session.track.name}
+              </Badge>
+            )}
+            {session.room && (
+              <Badge variant="light" color="teal">
+                {session.room.name}
+              </Badge>
+            )}
           </Group>
-        </Stack>
 
-        {/* Speakers */}
-        {speakerNames.length > 0 && (
+          {/* Date & Time */}
           <Stack gap={4}>
-            <Text size="sm" fw={600} c="dimmed">Speakers</Text>
-            <Group gap="xs" wrap="wrap">
-              {session.sessionSpeakers.map((s) => (
-                <Group key={s.user.id} gap={6} wrap="nowrap">
-                  <Avatar src={s.user.image} size="sm" radius="xl">
-                    {(s.user.firstName?.[0] ?? s.user.name?.[0] ?? "?").toUpperCase()}
-                  </Avatar>
-                  <Text size="sm">
-                    {getDisplayName(s.user, "Unknown")}
-                    {s.role !== "Speaker" && (
-                      <Text span size="xs" c="dimmed"> ({s.role})</Text>
-                    )}
-                  </Text>
-                </Group>
-              ))}
-              {session.speakers.length > 0 && (
-                <Text size="sm" c="dimmed">{session.speakers.join(", ")}</Text>
-              )}
+            <Text size="sm" fw={600} c="dimmed">
+              Schedule
+            </Text>
+            <Group gap="xs">
+              <IconClock size={14} />
+              <Text size="sm">{dateStr}</Text>
+            </Group>
+            <Group gap="xs">
+              <Text size="sm">
+                {timeStr} ({durationStr})
+              </Text>
             </Group>
           </Stack>
-        )}
 
-        {/* Description */}
-        {session.description && (
-          <Stack gap={4}>
-            <Text size="sm" fw={600} c="dimmed">Description</Text>
-            <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>{session.description}</Text>
-          </Stack>
-        )}
+          {/* Speakers */}
+          {speakerNames.length > 0 && (
+            <Stack gap={4}>
+              <Text size="sm" fw={600} c="dimmed">
+                Speakers
+              </Text>
+              <Group gap="xs" wrap="wrap">
+                {session.sessionSpeakers.map((s) => (
+                  <Group key={s.user.id} gap={6} wrap="nowrap">
+                    <Avatar src={s.user.image} size="sm" radius="xl">
+                      {(
+                        s.user.firstName?.[0] ??
+                        s.user.name?.[0] ??
+                        "?"
+                      ).toUpperCase()}
+                    </Avatar>
+                    <Text size="sm">
+                      {getDisplayName(s.user, "Unknown")}
+                      {s.role !== "Speaker" && (
+                        <Text span size="xs" c="dimmed">
+                          {" "}
+                          ({s.role})
+                        </Text>
+                      )}
+                    </Text>
+                  </Group>
+                ))}
+                {session.speakers.length > 0 && (
+                  <Text size="sm" c="dimmed">
+                    {session.speakers.join(", ")}
+                  </Text>
+                )}
+              </Group>
+            </Stack>
+          )}
 
-        {/* Footer */}
-        <Group justify="flex-end" mt="sm">
-          <Button variant="light" onClick={onClose}>Close</Button>
-          <Button
-            leftSection={<IconEdit size={16} />}
-            onClick={() => {
-              onClose();
-              openEdit();
-            }}
-          >
-            Edit
-          </Button>
-        </Group>
-      </Stack>
-    </Modal>
+          {/* Description */}
+          {session.description && (
+            <Stack gap={4}>
+              <Text size="sm" fw={600} c="dimmed">
+                Description
+              </Text>
+              <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+                {session.description}
+              </Text>
+            </Stack>
+          )}
 
-    <EditSessionModal
-      opened={editing}
-      onClose={closeEdit}
-      session={session}
-      eventId={eventId}
-      venueId={venueId}
-      rooms={rooms}
-      sessionTypes={sessionTypes}
-      tracks={tracks}
-      isAdmin={isAdmin}
-    />
+          {/* Footer */}
+          <Group justify="flex-end" mt="sm">
+            <Button variant="light" onClick={onClose}>
+              Close
+            </Button>
+            <Button
+              leftSection={<IconEdit size={16} />}
+              onClick={() => {
+                onClose();
+                openEdit();
+              }}
+            >
+              Edit
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <EditSessionModal
+        opened={editing}
+        onClose={closeEdit}
+        session={session}
+        eventId={eventId}
+        venueId={venueId}
+        rooms={rooms}
+        sessionTypes={sessionTypes}
+        tracks={tracks}
+        isAdmin={isAdmin}
+      />
     </>
   );
 }
@@ -2169,7 +2460,8 @@ function CreateSessionButton({
   onExternalClose,
   eventStartDate,
 }: CreateSessionButtonProps) {
-  const [internalOpened, { open: internalOpen, close: internalClose }] = useDisclosure(false);
+  const [internalOpened, { open: internalOpen, close: internalClose }] =
+    useDisclosure(false);
   const utils = api.useUtils();
 
   const modalOpened = externalOpened ?? internalOpened;
@@ -2177,7 +2469,13 @@ function CreateSessionButton({
   const getDefaultDate = useCallback(() => {
     const d = eventStartDate ? new Date(eventStartDate) : null;
     if (d && !isNaN(d.getTime())) {
-      return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0);
+      return new Date(
+        d.getUTCFullYear(),
+        d.getUTCMonth(),
+        d.getUTCDate(),
+        12,
+        0,
+      );
     }
     return null;
   }, [eventStartDate]);
@@ -2186,7 +2484,9 @@ function CreateSessionButton({
   const [description, setDescription] = useState("");
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
-  const [linkedSpeakers, setLinkedSpeakers] = useState<SelectedSpeakerWithRole[]>([]);
+  const [linkedSpeakers, setLinkedSpeakers] = useState<
+    SelectedSpeakerWithRole[]
+  >([]);
   const [textSpeakers, setTextSpeakers] = useState("");
   const [roomId, setRoomId] = useState<string | null>(null);
   const [sessionTypeId, setSessionTypeId] = useState<string | null>(null);
@@ -2215,7 +2515,11 @@ function CreateSessionButton({
 
   const createMutation = api.schedule.createSession.useMutation({
     onSuccess: () => {
-      notifications.show({ title: "Created", message: "Session created", color: "green" });
+      notifications.show({
+        title: "Created",
+        message: "Session created",
+        color: "green",
+      });
       void utils.schedule.getFloorSessions.invalidate({ eventId, venueId });
       void utils.schedule.getAllFloorSessions.invalidate({ eventId });
       void utils.schedule.getMyFloors.invalidate({ eventId });
@@ -2223,7 +2527,11 @@ function CreateSessionButton({
       handleClose();
     },
     onError: (err) => {
-      notifications.show({ title: "Error", message: err.message, color: "red" });
+      notifications.show({
+        title: "Error",
+        message: err.message,
+        color: "red",
+      });
     },
   });
 
@@ -2255,24 +2563,32 @@ function CreateSessionButton({
     const profile = app.user.profile;
     setTitle(profile?.speakerTalkTitle ?? profile?.speakerEntityName ?? "");
     setDescription(profile?.speakerTalkAbstract ?? "");
-    setLinkedSpeakers([{
-      user: {
-        id: app.user.id,
-        firstName: app.user.firstName,
-        surname: app.user.surname,
-        name: app.user.name,
-        email: app.user.email,
-        image: app.user.image,
+    setLinkedSpeakers([
+      {
+        user: {
+          id: app.user.id,
+          firstName: app.user.firstName,
+          surname: app.user.surname,
+          name: app.user.name,
+          email: app.user.email,
+          image: app.user.image,
+        },
+        role: "Speaker",
       },
-      role: "Speaker",
-    }]);
-    setSessionTypeId(findMatchingSessionType(profile?.speakerTalkFormat, sessionTypes));
+    ]);
+    setSessionTypeId(
+      findMatchingSessionType(profile?.speakerTalkFormat, sessionTypes),
+    );
     setTrackId(findMatchingTrack(profile?.speakerTalkTopic, tracks));
   };
 
   const handleSubmit = () => {
     if (!title || !startTime || !endTime) {
-      notifications.show({ title: "Missing fields", message: "Title, start time, and end time are required", color: "orange" });
+      notifications.show({
+        title: "Missing fields",
+        message: "Title, start time, and end time are required",
+        color: "orange",
+      });
       return;
     }
     createMutation.mutate({
@@ -2281,7 +2597,12 @@ function CreateSessionButton({
       description: description || undefined,
       startTime: localToUTC(startTime),
       endTime: localToUTC(endTime),
-      speakers: textSpeakers ? textSpeakers.split(",").map((s) => s.trim()).filter(Boolean) : [],
+      speakers: textSpeakers
+        ? textSpeakers
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [],
       linkedSpeakers: linkedSpeakers.map((s) => ({
         userId: s.user.id,
         role: s.role,
@@ -2297,10 +2618,12 @@ function CreateSessionButton({
   const importOptions = (applicationsData ?? []).flatMap((a) => {
     if (!a.user) return [];
     const user = a.user;
-    return [{
-      value: a.id,
-      label: `${getDisplayName(user, "Unknown")}${user.profile?.speakerTalkTitle ? ` — ${user.profile.speakerTalkTitle}` : ""}`,
-    }];
+    return [
+      {
+        value: a.id,
+        label: `${getDisplayName(user, "Unknown")}${user.profile?.speakerTalkTitle ? ` — ${user.profile.speakerTalkTitle}` : ""}`,
+      },
+    ];
   });
 
   return (
@@ -2309,7 +2632,12 @@ function CreateSessionButton({
         Add Session
       </Button>
 
-      <Modal opened={modalOpened} onClose={handleClose} title="Create Session" size="lg">
+      <Modal
+        opened={modalOpened}
+        onClose={handleClose}
+        title="Create Session"
+        size="lg"
+      >
         <Stack gap="sm">
           {!isAdmin && importOptions.length > 0 && (
             <Select
@@ -2355,7 +2683,9 @@ function CreateSessionButton({
               setLinkedSpeakers((prev) => [...prev, { user, role: "Speaker" }])
             }
             onRemoveLinkedSpeaker={(userId) =>
-              setLinkedSpeakers((prev) => prev.filter((s) => s.user.id !== userId))
+              setLinkedSpeakers((prev) =>
+                prev.filter((s) => s.user.id !== userId),
+              )
             }
             onChangeSpeakerRole={(userId, role) =>
               setLinkedSpeakers((prev) =>
@@ -2412,7 +2742,9 @@ function CreateSessionButton({
             onChange={(e) => setIsPublished(e.currentTarget.checked)}
           />
           <Group justify="flex-end">
-            <Button variant="subtle" onClick={handleClose}>Cancel</Button>
+            <Button variant="subtle" onClick={handleClose}>
+              Cancel
+            </Button>
             <Button onClick={handleSubmit} loading={createMutation.isPending}>
               Create Session
             </Button>
@@ -2495,9 +2827,16 @@ function CsvUploadModal({
   const [rawHeaders, setRawHeaders] = useState<string[]>([]);
   const [rawData, setRawData] = useState<Record<string, string>[]>([]);
   const [columnMapping, setColumnMapping] = useState<ColumnMapping>({
-    title: null, date: null, startTime: null, endTime: null,
-    presenters: null, type: null, curator: null,
-    description: null, facilitator: null, order: null,
+    title: null,
+    date: null,
+    startTime: null,
+    endTime: null,
+    presenters: null,
+    type: null,
+    curator: null,
+    description: null,
+    facilitator: null,
+    order: null,
   });
   const [parsedSessions, setParsedSessions] = useState<ParsedCsvSession[]>([]);
   const [newTypesToCreate, setNewTypesToCreate] = useState<
@@ -2574,7 +2913,11 @@ function CsvUploadModal({
             unmatched.push(name);
           }
         }
-        return { ...session, matchedSpeakers: matched, unmatchedSpeakers: unmatched };
+        return {
+          ...session,
+          matchedSpeakers: matched,
+          unmatchedSpeakers: unmatched,
+        };
       }),
     );
   }, [speakerMatches]);
@@ -2585,9 +2928,16 @@ function CsvUploadModal({
     setRawHeaders([]);
     setRawData([]);
     setColumnMapping({
-      title: null, date: null, startTime: null, endTime: null,
-      presenters: null, type: null, curator: null,
-      description: null, facilitator: null, order: null,
+      title: null,
+      date: null,
+      startTime: null,
+      endTime: null,
+      presenters: null,
+      type: null,
+      curator: null,
+      description: null,
+      facilitator: null,
+      order: null,
     });
     setParsedSessions([]);
     setNewTypesToCreate([]);
@@ -2644,7 +2994,8 @@ function CsvUploadModal({
     const unmatchedTypes = new Set<string>();
     const unmatchedTracks = new Set<string>();
     for (const s of parsed) {
-      if (s.sessionTypeName && !s.sessionTypeId) unmatchedTypes.add(s.sessionTypeName);
+      if (s.sessionTypeName && !s.sessionTypeId)
+        unmatchedTypes.add(s.sessionTypeName);
       if (s.trackName && !s.trackId) unmatchedTracks.add(s.trackName);
     }
     setNewTypesToCreate(
@@ -2663,10 +3014,19 @@ function CsvUploadModal({
     );
 
     setActiveStep(1);
-  }, [rawData, columnMapping, eventYear, sessionTypes, tracks, existingSessions]);
+  }, [
+    rawData,
+    columnMapping,
+    eventYear,
+    sessionTypes,
+    tracks,
+    existingSessions,
+  ]);
 
   const handleImport = useCallback(() => {
-    const toImport = parsedSessions.filter((s) => s.included && s.status !== "error");
+    const toImport = parsedSessions.filter(
+      (s) => s.included && s.status !== "error",
+    );
     if (toImport.length === 0) {
       notifications.show({
         title: "Nothing to Import",
@@ -2697,14 +3057,29 @@ function CsvUploadModal({
         order: s.order,
         isPublished: true,
       })),
-      newSessionTypes: typesToCreate.length > 0 ? typesToCreate.map((t) => ({ name: t.name, color: t.color })) : undefined,
-      newTracks: tracksToCreate.length > 0 ? tracksToCreate.map((t) => ({ name: t.name, color: t.color })) : undefined,
+      newSessionTypes:
+        typesToCreate.length > 0
+          ? typesToCreate.map((t) => ({ name: t.name, color: t.color }))
+          : undefined,
+      newTracks:
+        tracksToCreate.length > 0
+          ? tracksToCreate.map((t) => ({ name: t.name, color: t.color }))
+          : undefined,
     });
-  }, [parsedSessions, newTypesToCreate, newTracksToCreate, eventId, venueId, bulkCreateMutation]);
+  }, [
+    parsedSessions,
+    newTypesToCreate,
+    newTracksToCreate,
+    eventId,
+    venueId,
+    bulkCreateMutation,
+  ]);
 
   const includedCount = parsedSessions.filter((s) => s.included).length;
   const readyCount = parsedSessions.filter((s) => s.status === "ready").length;
-  const warningCount = parsedSessions.filter((s) => s.status === "warning").length;
+  const warningCount = parsedSessions.filter(
+    (s) => s.status === "warning",
+  ).length;
   const errorCount = parsedSessions.filter((s) => s.status === "error").length;
 
   const columnOptions = rawHeaders.map((h) => ({ value: h, label: h }));
@@ -2731,13 +3106,20 @@ function CsvUploadModal({
 
             {rawData.length > 0 && (
               <>
-                <Alert variant="light" color="blue" icon={<IconCheck size={16} />}>
+                <Alert
+                  variant="light"
+                  color="blue"
+                  icon={<IconCheck size={16} />}
+                >
                   Parsed {rawData.length} rows with {rawHeaders.length} columns
                 </Alert>
 
-                <Text fw={600} size="sm">Column Mapping</Text>
+                <Text fw={600} size="sm">
+                  Column Mapping
+                </Text>
                 <Text size="xs" c="dimmed">
-                  Auto-detected columns are shown below. Override any that are incorrect.
+                  Auto-detected columns are shown below. Override any that are
+                  incorrect.
                 </Text>
 
                 <Group grow>
@@ -2745,7 +3127,9 @@ function CsvUploadModal({
                     label="Title"
                     data={columnOptions}
                     value={columnMapping.title}
-                    onChange={(v) => setColumnMapping((m) => ({ ...m, title: v }))}
+                    onChange={(v) =>
+                      setColumnMapping((m) => ({ ...m, title: v }))
+                    }
                     clearable
                     size="xs"
                   />
@@ -2753,7 +3137,9 @@ function CsvUploadModal({
                     label="Date"
                     data={columnOptions}
                     value={columnMapping.date}
-                    onChange={(v) => setColumnMapping((m) => ({ ...m, date: v }))}
+                    onChange={(v) =>
+                      setColumnMapping((m) => ({ ...m, date: v }))
+                    }
                     clearable
                     size="xs"
                   />
@@ -2763,7 +3149,9 @@ function CsvUploadModal({
                     label="Start Time"
                     data={columnOptions}
                     value={columnMapping.startTime}
-                    onChange={(v) => setColumnMapping((m) => ({ ...m, startTime: v }))}
+                    onChange={(v) =>
+                      setColumnMapping((m) => ({ ...m, startTime: v }))
+                    }
                     clearable
                     size="xs"
                   />
@@ -2771,7 +3159,9 @@ function CsvUploadModal({
                     label="End Time"
                     data={columnOptions}
                     value={columnMapping.endTime}
-                    onChange={(v) => setColumnMapping((m) => ({ ...m, endTime: v }))}
+                    onChange={(v) =>
+                      setColumnMapping((m) => ({ ...m, endTime: v }))
+                    }
                     clearable
                     size="xs"
                   />
@@ -2781,7 +3171,9 @@ function CsvUploadModal({
                     label="Presenters"
                     data={columnOptions}
                     value={columnMapping.presenters}
-                    onChange={(v) => setColumnMapping((m) => ({ ...m, presenters: v }))}
+                    onChange={(v) =>
+                      setColumnMapping((m) => ({ ...m, presenters: v }))
+                    }
                     clearable
                     size="xs"
                   />
@@ -2789,7 +3181,9 @@ function CsvUploadModal({
                     label="Session Type"
                     data={columnOptions}
                     value={columnMapping.type}
-                    onChange={(v) => setColumnMapping((m) => ({ ...m, type: v }))}
+                    onChange={(v) =>
+                      setColumnMapping((m) => ({ ...m, type: v }))
+                    }
                     clearable
                     size="xs"
                   />
@@ -2799,7 +3193,9 @@ function CsvUploadModal({
                     label="Track / Curator"
                     data={columnOptions}
                     value={columnMapping.curator}
-                    onChange={(v) => setColumnMapping((m) => ({ ...m, curator: v }))}
+                    onChange={(v) =>
+                      setColumnMapping((m) => ({ ...m, curator: v }))
+                    }
                     clearable
                     size="xs"
                   />
@@ -2807,7 +3203,9 @@ function CsvUploadModal({
                     label="Description"
                     data={columnOptions}
                     value={columnMapping.description}
-                    onChange={(v) => setColumnMapping((m) => ({ ...m, description: v }))}
+                    onChange={(v) =>
+                      setColumnMapping((m) => ({ ...m, description: v }))
+                    }
                     clearable
                     size="xs"
                   />
@@ -2827,12 +3225,18 @@ function CsvUploadModal({
         <Stepper.Step label="Preview" description="Review sessions">
           <Stack gap="md" mt="md">
             <Group gap="md">
-              <Badge color="green" variant="light">{readyCount} ready</Badge>
+              <Badge color="green" variant="light">
+                {readyCount} ready
+              </Badge>
               {warningCount > 0 && (
-                <Badge color="yellow" variant="light">{warningCount} warnings</Badge>
+                <Badge color="yellow" variant="light">
+                  {warningCount} warnings
+                </Badge>
               )}
               {errorCount > 0 && (
-                <Badge color="red" variant="light">{errorCount} errors</Badge>
+                <Badge color="red" variant="light">
+                  {errorCount} errors
+                </Badge>
               )}
               <Badge variant="light">{includedCount} selected</Badge>
             </Group>
@@ -2853,7 +3257,9 @@ function CsvUploadModal({
                       onChange={(e) =>
                         setNewTypesToCreate((prev) =>
                           prev.map((p, j) =>
-                            i === j ? { ...p, create: e.currentTarget.checked } : p,
+                            i === j
+                              ? { ...p, create: e.currentTarget.checked }
+                              : p,
                           ),
                         )
                       }
@@ -2880,7 +3286,9 @@ function CsvUploadModal({
                       onChange={(e) =>
                         setNewTracksToCreate((prev) =>
                           prev.map((p, j) =>
-                            i === j ? { ...p, create: e.currentTarget.checked } : p,
+                            i === j
+                              ? { ...p, create: e.currentTarget.checked }
+                              : p,
                           ),
                         )
                       }
@@ -2929,18 +3337,34 @@ function CsvUploadModal({
                         />
                       </Table.Td>
                       <Table.Td>
-                        <Text size="sm" lineClamp={1}>{session.title}</Text>
+                        <Text size="sm" lineClamp={1}>
+                          {session.title}
+                        </Text>
                       </Table.Td>
                       <Table.Td>
                         {session.startTime && session.endTime ? (
                           <Text size="xs">
-                            {session.startTime.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}{" "}
-                            {session.startTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" })}
+                            {session.startTime.toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              timeZone: "UTC",
+                            })}{" "}
+                            {session.startTime.toLocaleTimeString("en-US", {
+                              hour: "numeric",
+                              minute: "2-digit",
+                              timeZone: "UTC",
+                            })}
                             {" – "}
-                            {session.endTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" })}
+                            {session.endTime.toLocaleTimeString("en-US", {
+                              hour: "numeric",
+                              minute: "2-digit",
+                              timeZone: "UTC",
+                            })}
                           </Text>
                         ) : (
-                          <Text size="xs" c="red">Invalid</Text>
+                          <Text size="xs" c="red">
+                            Invalid
+                          </Text>
                         )}
                       </Table.Td>
                       <Table.Td>
@@ -2953,7 +3377,11 @@ function CsvUploadModal({
                         <Stack gap={2}>
                           {session.matchedSpeakers.map((ms) => (
                             <Group key={ms.user.id} gap={4}>
-                              <Avatar src={ms.user.image} size={16} radius="xl" />
+                              <Avatar
+                                src={ms.user.image}
+                                size={16}
+                                radius="xl"
+                              />
                               <Text size="xs">
                                 {getDisplayName(ms.user, "Unknown")}
                               </Text>
@@ -2968,7 +3396,9 @@ function CsvUploadModal({
                       </Table.Td>
                       <Table.Td>
                         {session.status === "ready" && (
-                          <Badge size="xs" color="green" variant="light">Ready</Badge>
+                          <Badge size="xs" color="green" variant="light">
+                            Ready
+                          </Badge>
                         )}
                         {session.status === "warning" && (
                           <Tooltip label={session.warnings.join("; ")}>
@@ -3035,15 +3465,17 @@ function CsvUploadModal({
                 {parsedSessions.some((s) => s.matchedSpeakers.length > 0) && (
                   <Text size="sm">
                     Matched speakers:{" "}
-                    {new Set(
-                      parsedSessions
-                        .filter((s) => s.included)
-                        .flatMap((s) =>
-                          s.matchedSpeakers.map((ms) =>
-                            getDisplayName(ms.user, "Unknown"),
+                    {
+                      new Set(
+                        parsedSessions
+                          .filter((s) => s.included)
+                          .flatMap((s) =>
+                            s.matchedSpeakers.map((ms) =>
+                              getDisplayName(ms.user, "Unknown"),
+                            ),
                           ),
-                        ),
-                    ).size}{" "}
+                      ).size
+                    }{" "}
                     users linked
                   </Text>
                 )}

@@ -30,7 +30,16 @@ import {
   Progress,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconX, IconArrowLeft, IconDownload, IconEye, IconWallet, IconTrash, IconStar } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconX,
+  IconArrowLeft,
+  IconDownload,
+  IconEye,
+  IconWallet,
+  IconTrash,
+  IconStar,
+} from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -81,7 +90,7 @@ type ProfileFormData = z.infer<typeof schema>;
 const timezoneOptions = [
   // UTC
   { value: "UTC", label: "UTC" },
-  
+
   // Americas
   { value: "America/New_York", label: "New York (ET)" },
   { value: "America/Chicago", label: "Chicago (CT)" },
@@ -97,7 +106,7 @@ const timezoneOptions = [
   { value: "America/Lima", label: "Lima (PET)" },
   { value: "America/Bogota", label: "Bogotá (COT)" },
   { value: "America/Caracas", label: "Caracas (VET)" },
-  
+
   // Europe
   { value: "Europe/London", label: "London (GMT)" },
   { value: "Europe/Paris", label: "Paris (CET)" },
@@ -114,7 +123,7 @@ const timezoneOptions = [
   { value: "Europe/Athens", label: "Athens (EET)" },
   { value: "Europe/Istanbul", label: "Istanbul (TRT)" },
   { value: "Europe/Moscow", label: "Moscow (MSK)" },
-  
+
   // Asia-Pacific
   { value: "Asia/Tokyo", label: "Tokyo (JST)" },
   { value: "Asia/Seoul", label: "Seoul (KST)" },
@@ -136,7 +145,7 @@ const timezoneOptions = [
   { value: "Australia/Melbourne", label: "Melbourne (AEDT)" },
   { value: "Australia/Perth", label: "Perth (AWST)" },
   { value: "Pacific/Auckland", label: "Auckland (NZDT)" },
-  
+
   // Africa
   { value: "Africa/Cairo", label: "Cairo (EET)" },
   { value: "Africa/Johannesburg", label: "Johannesburg (SAST)" },
@@ -151,11 +160,15 @@ export function ProfileEditClient() {
   const [hasInitialized, setHasInitialized] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  
-  // Check if user came from an event page
-  const referrerEventId = searchParams.get('from-event');
 
-  const { data: currentProfile, isLoading, refetch: refetchProfile } = api.profile.getMyProfile.useQuery();
+  // Check if user came from an event page
+  const referrerEventId = searchParams.get("from-event");
+
+  const {
+    data: currentProfile,
+    isLoading,
+    refetch: refetchProfile,
+  } = api.profile.getMyProfile.useQuery();
   const updateProfile = api.profile.updateProfile.useMutation({
     onSuccess: () => {
       notifications.show({
@@ -236,7 +249,8 @@ export function ProfileEditClient() {
         interests: currentProfile.interests ?? [],
         availableForMentoring: currentProfile.availableForMentoring ?? false,
         availableForHiring: currentProfile.availableForHiring ?? false,
-        availableForOfficeHours: currentProfile.availableForOfficeHours ?? false,
+        availableForOfficeHours:
+          currentProfile.availableForOfficeHours ?? false,
         timezone: currentProfile.timezone ?? "",
         languages: currentProfile.languages ?? [],
         yearsOfExperience: currentProfile.yearsOfExperience ?? undefined,
@@ -248,17 +262,19 @@ export function ProfileEditClient() {
         speakerTalkFormat: currentProfile.speakerTalkFormat ?? "",
         speakerTalkDuration: currentProfile.speakerTalkDuration ?? "",
         speakerTalkTopic: currentProfile.speakerTalkTopic ?? "",
-        speakerPreviousExperience: currentProfile.speakerPreviousExperience ?? "",
+        speakerPreviousExperience:
+          currentProfile.speakerPreviousExperience ?? "",
         speakerPastTalkUrl: currentProfile.speakerPastTalkUrl ?? "",
         speakerEntityName: currentProfile.speakerEntityName ?? "",
-        speakerOtherFloorsTopicTheme: currentProfile.speakerOtherFloorsTopicTheme ?? "",
+        speakerOtherFloorsTopicTheme:
+          currentProfile.speakerOtherFloorsTopicTheme ?? "",
         speakerDisplayPreference: currentProfile.speakerDisplayPreference ?? "",
         speakerCoHostInfo: currentProfile.speakerCoHostInfo ?? "",
       });
       setHasInitialized(true);
     }
-  // ESLint disabled: intentionally using only primitive dependencies to prevent infinite re-renders
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // ESLint disabled: intentionally using only primitive dependencies to prevent infinite re-renders
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentProfile?.id, hasInitialized]); // Only primitive dependencies
 
   const handleAvatarUpload = async (file: File | null) => {
@@ -269,15 +285,15 @@ export function ProfileEditClient() {
 
     try {
       const formData = new FormData();
-      formData.append('avatar', file);
+      formData.append("avatar", file);
 
       // Simulate progress for better UX
       const progressInterval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 10, 90));
+        setUploadProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
-      const response = await fetch('/api/upload/avatar', {
-        method: 'POST',
+      const response = await fetch("/api/upload/avatar", {
+        method: "POST",
         body: formData,
       });
 
@@ -285,15 +301,15 @@ export function ProfileEditClient() {
       setUploadProgress(100);
 
       if (!response.ok) {
-        const error = await response.json() as { error?: string };
-        throw new Error(error.error ?? 'Upload failed');
+        const error = (await response.json()) as { error?: string };
+        throw new Error(error.error ?? "Upload failed");
       }
 
-      const result = await response.json() as { avatarUrl: string };
-      
+      const result = (await response.json()) as { avatarUrl: string };
+
       // Update form with new avatar URL
-      form.setFieldValue('avatarUrl', result.avatarUrl);
-      
+      form.setFieldValue("avatarUrl", result.avatarUrl);
+
       notifications.show({
         title: "Avatar Uploaded",
         message: "Your profile picture has been uploaded successfully",
@@ -303,12 +319,12 @@ export function ProfileEditClient() {
 
       // Trigger a profile refetch to update the UI
       void refetchProfile();
-
     } catch (error) {
-      console.error('Avatar upload error:', error);
+      console.error("Avatar upload error:", error);
       notifications.show({
         title: "Upload Failed",
-        message: error instanceof Error ? error.message : "Failed to upload avatar",
+        message:
+          error instanceof Error ? error.message : "Failed to upload avatar",
         color: "red",
         icon: <IconX size={16} />,
       });
@@ -324,7 +340,7 @@ export function ProfileEditClient() {
       Object.entries(values).map(([key, value]) => [
         key,
         value === "" ? undefined : value,
-      ])
+      ]),
     ) as ProfileFormData;
 
     updateProfile.mutate(cleanedValues);
@@ -349,10 +365,10 @@ export function ProfileEditClient() {
         mb="xl"
         component={Link}
         href={
-          referrerEventId 
+          referrerEventId
             ? `/events/${referrerEventId}`
-            : currentProfile?.user?.id 
-              ? `/profiles/${currentProfile.user.id}` 
+            : currentProfile?.user?.id
+              ? `/profiles/${currentProfile.user.id}`
               : "/profile"
         }
       >
@@ -371,14 +387,14 @@ export function ProfileEditClient() {
               Profile Picture
             </Title>
             <Group gap="md" align="flex-start">
-              <Avatar 
+              <Avatar
                 src={getAvatarUrl({
                   customAvatarUrl: form.values.avatarUrl,
                   oauthImageUrl: currentProfile?.user?.image,
                   name: currentProfile?.user?.name,
                   email: currentProfile?.user?.email,
                 })}
-                size="xl" 
+                size="xl"
                 radius="md"
               >
                 {getAvatarInitials({
@@ -397,12 +413,19 @@ export function ProfileEditClient() {
                 />
                 {isUploading && (
                   <Box>
-                    <Text size="sm" mb="xs">Uploading...</Text>
+                    <Text size="sm" mb="xs">
+                      Uploading...
+                    </Text>
                     <Progress value={uploadProgress} size="sm" />
                   </Box>
                 )}
                 <Text size="xs" c="dimmed">
-                  Current: {form.values.avatarUrl ? "Custom avatar" : currentProfile?.user?.image ? "OAuth provider image" : "No image set"}
+                  Current:{" "}
+                  {form.values.avatarUrl
+                    ? "Custom avatar"
+                    : currentProfile?.user?.image
+                      ? "OAuth provider image"
+                      : "No image set"}
                 </Text>
               </Stack>
             </Group>
@@ -666,17 +689,23 @@ export function ProfileEditClient() {
               <Switch
                 label="Available for Mentoring"
                 description="I'm open to mentoring others in my areas of expertise"
-                {...form.getInputProps("availableForMentoring", { type: "checkbox" })}
+                {...form.getInputProps("availableForMentoring", {
+                  type: "checkbox",
+                })}
               />
               <Switch
                 label="Open to Opportunities"
                 description="I'm open to hearing about new job opportunities"
-                {...form.getInputProps("availableForHiring", { type: "checkbox" })}
+                {...form.getInputProps("availableForHiring", {
+                  type: "checkbox",
+                })}
               />
               <Switch
                 label="Office Hours Available"
                 description="I offer regular office hours for community members"
-                {...form.getInputProps("availableForOfficeHours", { type: "checkbox" })}
+                {...form.getInputProps("availableForOfficeHours", {
+                  type: "checkbox",
+                })}
               />
             </Stack>
           </Card>
@@ -696,11 +725,13 @@ export function ProfileEditClient() {
           </Card>
 
           {/* Application Import Section */}
-          <ApplicationImportSection onImportComplete={() => {
-            void refetchProfile();
-            // Force re-initialization after import
-            setHasInitialized(false);
-          }} />
+          <ApplicationImportSection
+            onImportComplete={() => {
+              void refetchProfile();
+              // Force re-initialization after import
+              setHasInitialized(false);
+            }}
+          />
 
           {/* Wallet Addresses Section */}
           <WalletAddressManager />
@@ -719,10 +750,10 @@ export function ProfileEditClient() {
               variant="light"
               component={Link}
               href={
-                referrerEventId 
+                referrerEventId
                   ? `/events/${referrerEventId}`
-                  : currentProfile?.user?.id 
-                    ? `/profiles/${currentProfile.user.id}` 
+                  : currentProfile?.user?.id
+                    ? `/profiles/${currentProfile.user.id}`
                     : "/profile"
               }
             >
@@ -746,16 +777,20 @@ interface ApplicationImportSectionProps {
   onImportComplete: () => void;
 }
 
-function ApplicationImportSection({ onImportComplete }: ApplicationImportSectionProps) {
+function ApplicationImportSection({
+  onImportComplete,
+}: ApplicationImportSectionProps) {
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
 
-  const { data: applications, isLoading } = api.profile.getUserApplicationsForSync.useQuery();
-  const { data: previewData, isLoading: previewLoading } = api.profile.previewApplicationSync.useQuery(
-    { applicationId: selectedAppId! },
-    { enabled: !!selectedAppId }
-  );
+  const { data: applications, isLoading } =
+    api.profile.getUserApplicationsForSync.useQuery();
+  const { data: previewData, isLoading: previewLoading } =
+    api.profile.previewApplicationSync.useQuery(
+      { applicationId: selectedAppId! },
+      { enabled: !!selectedAppId },
+    );
 
   const syncMutation = api.profile.syncFromApplication.useMutation({
     onSuccess: (data) => {
@@ -787,7 +822,7 @@ function ApplicationImportSection({ onImportComplete }: ApplicationImportSection
 
   const handleImport = () => {
     if (!selectedAppId || selectedFields.length === 0) return;
-    
+
     syncMutation.mutate({
       applicationId: selectedAppId,
       fieldsToSync: selectedFields,
@@ -795,10 +830,10 @@ function ApplicationImportSection({ onImportComplete }: ApplicationImportSection
   };
 
   const toggleField = (fieldName: string) => {
-    setSelectedFields(prev => 
-      prev.includes(fieldName) 
-        ? prev.filter(f => f !== fieldName)
-        : [...prev, fieldName]
+    setSelectedFields((prev) =>
+      prev.includes(fieldName)
+        ? prev.filter((f) => f !== fieldName)
+        : [...prev, fieldName],
     );
   };
 
@@ -826,7 +861,8 @@ function ApplicationImportSection({ onImportComplete }: ApplicationImportSection
           Import from Applications
         </Title>
         <Text c="dimmed">
-          No applications available for import. Submit an application to an event to import application data.
+          No applications available for import. Submit an application to an
+          event to import application data.
         </Text>
       </Card>
     );
@@ -839,30 +875,44 @@ function ApplicationImportSection({ onImportComplete }: ApplicationImportSection
           Import from Applications
         </Title>
         <Text size="sm" c="dimmed" mb="md">
-          Import data from any of your submitted applications to automatically fill your profile fields.
-          Each application can only be imported once to prevent data conflicts.
+          Import data from any of your submitted applications to automatically
+          fill your profile fields. Each application can only be imported once
+          to prevent data conflicts.
         </Text>
 
         <Stack gap="sm">
           {applications.map((app) => (
-            <Box key={app.id} p="sm" style={{ border: "1px solid var(--mantine-color-gray-3)", borderRadius: 8 }}>
+            <Box
+              key={app.id}
+              p="sm"
+              style={{
+                border: "1px solid var(--mantine-color-gray-3)",
+                borderRadius: 8,
+              }}
+            >
               <Group justify="space-between" align="center">
                 <div>
                   <Text fw={500}>{app.event?.name}</Text>
                   <Group gap="xs">
                     <Text size="sm" c="dimmed">
-                      Submitted: {app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : "N/A"}
+                      Submitted:{" "}
+                      {app.submittedAt
+                        ? new Date(app.submittedAt).toLocaleDateString()
+                        : "N/A"}
                     </Text>
-                    <Badge 
-                      size="sm" 
+                    <Badge
+                      size="sm"
                       color={
-                        app.status === "ACCEPTED" ? "green" :
-                        app.status === "REJECTED" ? "red" :
-                        app.status === "WAITLISTED" ? "orange" :
-                        "blue"
+                        app.status === "ACCEPTED"
+                          ? "green"
+                          : app.status === "REJECTED"
+                            ? "red"
+                            : app.status === "WAITLISTED"
+                              ? "orange"
+                              : "blue"
                       }
                     >
-                      {app.status.replace('_', ' ')}
+                      {app.status.replace("_", " ")}
                     </Badge>
                     {app.profileSyncs.length > 0 && (
                       <Badge size="sm" color="blue" variant="light">
@@ -878,7 +928,9 @@ function ApplicationImportSection({ onImportComplete }: ApplicationImportSection
                   onClick={() => handlePreview(app.id)}
                   disabled={app.profileSyncs.length > 0}
                 >
-                  {app.profileSyncs.length > 0 ? "Already Imported" : "Preview Import"}
+                  {app.profileSyncs.length > 0
+                    ? "Already Imported"
+                    : "Preview Import"}
                 </Button>
               </Group>
             </Box>
@@ -909,10 +961,16 @@ function ApplicationImportSection({ onImportComplete }: ApplicationImportSection
         ) : previewData ? (
           <Stack gap="md">
             <Box>
-              <Text fw={500} mb="xs">{previewData.application.eventName}</Text>
+              <Text fw={500} mb="xs">
+                {previewData.application.eventName}
+              </Text>
               <Text size="sm" c="dimmed">
-                Submitted: {previewData.application.submittedAt ? 
-                  new Date(previewData.application.submittedAt).toLocaleDateString() : "N/A"}
+                Submitted:{" "}
+                {previewData.application.submittedAt
+                  ? new Date(
+                      previewData.application.submittedAt,
+                    ).toLocaleDateString()
+                  : "N/A"}
               </Text>
               {previewData.hasBeenSynced && (
                 <Badge color="blue" size="sm" mt="xs">
@@ -930,52 +988,72 @@ function ApplicationImportSection({ onImportComplete }: ApplicationImportSection
                   size="xs"
                   variant="light"
                   onClick={selectAllSyncableFields}
-                  disabled={!Object.values(previewData.syncableData).some(d => d.willSync)}
+                  disabled={
+                    !Object.values(previewData.syncableData).some(
+                      (d) => d.willSync,
+                    )
+                  }
                 >
                   Select All Syncable
                 </Button>
               </Group>
 
               <Stack gap="xs">
-                {Object.entries(previewData.syncableData).map(([fieldName, data]) => (
-                  <Box key={fieldName} p="xs" bg={data.willSync ? "gray.0" : "gray.1"} style={{ borderRadius: 4 }}>
-                    <Group align="flex-start" gap="sm">
-                      <Checkbox
-                        checked={selectedFields.includes(fieldName)}
-                        onChange={() => toggleField(fieldName)}
-                        disabled={!data.willSync}
-                        mt={2}
-                      />
-                      <div style={{ flex: 1 }}>
-                        <Group gap="xs" mb="xs">
-                          <Text fw={500} size="sm">
-                            {fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace(/([A-Z])/g, ' $1')}
+                {Object.entries(previewData.syncableData).map(
+                  ([fieldName, data]) => (
+                    <Box
+                      key={fieldName}
+                      p="xs"
+                      bg={data.willSync ? "gray.0" : "gray.1"}
+                      style={{ borderRadius: 4 }}
+                    >
+                      <Group align="flex-start" gap="sm">
+                        <Checkbox
+                          checked={selectedFields.includes(fieldName)}
+                          onChange={() => toggleField(fieldName)}
+                          disabled={!data.willSync}
+                          mt={2}
+                        />
+                        <div style={{ flex: 1 }}>
+                          <Group gap="xs" mb="xs">
+                            <Text fw={500} size="sm">
+                              {fieldName.charAt(0).toUpperCase() +
+                                fieldName.slice(1).replace(/([A-Z])/g, " $1")}
+                            </Text>
+                            {data.willSync ? (
+                              <Badge size="xs" color="green">
+                                Will Sync
+                              </Badge>
+                            ) : (
+                              <Badge size="xs" color="gray">
+                                Won&apos;t Sync
+                              </Badge>
+                            )}
+                          </Group>
+                          <Text size="xs" c="dimmed" mb="xs">
+                            {data.reason}
                           </Text>
-                          {data.willSync ? (
-                            <Badge size="xs" color="green">Will Sync</Badge>
-                          ) : (
-                            <Badge size="xs" color="gray">Won&apos;t Sync</Badge>
+                          {data.applicationValue && (
+                            <Text size="xs">
+                              <strong>From Application:</strong>{" "}
+                              {Array.isArray(data.applicationValue)
+                                ? data.applicationValue.join(", ")
+                                : data.applicationValue}
+                            </Text>
                           )}
-                        </Group>
-                        <Text size="xs" c="dimmed" mb="xs">{data.reason}</Text>
-                        {data.applicationValue && (
-                          <Text size="xs">
-                            <strong>From Application:</strong> {Array.isArray(data.applicationValue) 
-                              ? data.applicationValue.join(", ") 
-                              : data.applicationValue}
-                          </Text>
-                        )}
-                        {data.profileValue && (
-                          <Text size="xs" c="dimmed">
-                            <strong>Current Profile:</strong> {Array.isArray(data.profileValue) 
-                              ? data.profileValue.join(", ") 
-                              : String(data.profileValue)}
-                          </Text>
-                        )}
-                      </div>
-                    </Group>
-                  </Box>
-                ))}
+                          {data.profileValue && (
+                            <Text size="xs" c="dimmed">
+                              <strong>Current Profile:</strong>{" "}
+                              {Array.isArray(data.profileValue)
+                                ? data.profileValue.join(", ")
+                                : String(data.profileValue)}
+                            </Text>
+                          )}
+                        </div>
+                      </Group>
+                    </Box>
+                  ),
+                )}
               </Stack>
             </div>
 
@@ -995,7 +1073,8 @@ function ApplicationImportSection({ onImportComplete }: ApplicationImportSection
                 loading={syncMutation.isPending}
                 leftSection={<IconDownload size={16} />}
               >
-                Import {selectedFields.length} Field{selectedFields.length !== 1 ? 's' : ''}
+                Import {selectedFields.length} Field
+                {selectedFields.length !== 1 ? "s" : ""}
               </Button>
             </Group>
           </Stack>
@@ -1014,7 +1093,8 @@ function WalletAddressManager() {
     isPrimary: false,
   });
 
-  const { data: wallets, refetch: refetchWallets } = api.profile.getMyWalletAddresses.useQuery();
+  const { data: wallets, refetch: refetchWallets } =
+    api.profile.getMyWalletAddresses.useQuery();
 
   const addWalletMutation = api.profile.addWalletAddress.useMutation({
     onSuccess: () => {
@@ -1142,7 +1222,8 @@ function WalletAddressManager() {
 
         {!wallets || wallets.length === 0 ? (
           <Text c="dimmed" size="sm">
-            No wallet addresses added yet. Add your wallet addresses to display them on your profile.
+            No wallet addresses added yet. Add your wallet addresses to display
+            them on your profile.
           </Text>
         ) : (
           <Stack gap="sm">
@@ -1153,7 +1234,9 @@ function WalletAddressManager() {
                 style={{
                   border: "1px solid var(--mantine-color-gray-3)",
                   borderRadius: 8,
-                  backgroundColor: wallet.isPrimary ? "var(--mantine-color-blue-0)" : undefined,
+                  backgroundColor: wallet.isPrimary
+                    ? "var(--mantine-color-blue-0)"
+                    : undefined,
                 }}
               >
                 <Group justify="space-between" align="flex-start">
@@ -1163,7 +1246,11 @@ function WalletAddressManager() {
                         {wallet.chain}
                       </Text>
                       {wallet.isPrimary && (
-                        <Badge size="sm" color="blue" leftSection={<IconStar size={12} />}>
+                        <Badge
+                          size="sm"
+                          color="blue"
+                          leftSection={<IconStar size={12} />}
+                        >
                           Primary
                         </Badge>
                       )}
@@ -1173,7 +1260,13 @@ function WalletAddressManager() {
                         </Badge>
                       )}
                     </Group>
-                    <Text size="sm" style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
+                    <Text
+                      size="sm"
+                      style={{
+                        fontFamily: "monospace",
+                        wordBreak: "break-all",
+                      }}
+                    >
                       {wallet.address}
                     </Text>
                   </div>
@@ -1231,7 +1324,9 @@ function WalletAddressManager() {
             label="Wallet Address"
             placeholder="0x... or solana address"
             value={newWallet.address}
-            onChange={(e) => setNewWallet({ ...newWallet, address: e.target.value })}
+            onChange={(e) =>
+              setNewWallet({ ...newWallet, address: e.target.value })
+            }
             required
           />
 
@@ -1240,7 +1335,10 @@ function WalletAddressManager() {
             data={chainOptions}
             value={newWallet.chain}
             onChange={(value) =>
-              setNewWallet({ ...newWallet, chain: value as typeof newWallet.chain })
+              setNewWallet({
+                ...newWallet,
+                chain: value as typeof newWallet.chain,
+              })
             }
             required
           />
@@ -1249,13 +1347,17 @@ function WalletAddressManager() {
             label="Label (Optional)"
             placeholder="Main Wallet, Governance, etc."
             value={newWallet.label}
-            onChange={(e) => setNewWallet({ ...newWallet, label: e.target.value })}
+            onChange={(e) =>
+              setNewWallet({ ...newWallet, label: e.target.value })
+            }
           />
 
           <Checkbox
             label="Set as primary wallet"
             checked={newWallet.isPrimary}
-            onChange={(e) => setNewWallet({ ...newWallet, isPrimary: e.target.checked })}
+            onChange={(e) =>
+              setNewWallet({ ...newWallet, isPrimary: e.target.checked })
+            }
           />
 
           <Group justify="flex-end" mt="md">

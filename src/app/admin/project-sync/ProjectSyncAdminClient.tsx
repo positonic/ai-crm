@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Container,
   Title,
@@ -17,7 +17,7 @@ import {
   ActionIcon,
   Tooltip,
   Modal,
-} from '@mantine/core';
+} from "@mantine/core";
 import {
   IconRefresh,
   IconCheck,
@@ -27,10 +27,10 @@ import {
   IconDatabase,
   IconBrandGithub,
   IconExternalLink,
-} from '@tabler/icons-react';
-import { useDisclosure } from '@mantine/hooks';
-import { notifications } from '@mantine/notifications';
-import { api } from '~/trpc/react';
+} from "@tabler/icons-react";
+import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { api } from "~/trpc/react";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface ProjectSyncAdminClientProps {}
@@ -38,13 +38,12 @@ interface ProjectSyncAdminClientProps {}
 export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
   const [isManualSyncRunning, setIsManualSyncRunning] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
-  const [forceResyncModal, { open: openForceResync, close: closeForceResync }] = useDisclosure(false);
+  const [forceResyncModal, { open: openForceResync, close: closeForceResync }] =
+    useDisclosure(false);
 
   // API queries
-  const {
-    data: syncStatus,
-    refetch: refetchSyncStatus,
-  } = api.projectIdea.getSyncStatus.useQuery();
+  const { data: syncStatus, refetch: refetchSyncStatus } =
+    api.projectIdea.getSyncStatus.useQuery();
 
   const {
     data: adminProjects,
@@ -52,18 +51,16 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
     refetch: refetchProjects,
   } = api.projectIdea.getAllForAdmin.useQuery();
 
-  const {
-    data: projectStats,
-    refetch: refetchStats,
-  } = api.projectIdea.getStats.useQuery();
+  const { data: projectStats, refetch: refetchStats } =
+    api.projectIdea.getStats.useQuery();
 
   // Mutations
   const syncFromGitHubMutation = api.projectIdea.syncFromGitHub.useMutation({
     onSuccess: (data) => {
       notifications.show({
-        title: 'Sync completed',
+        title: "Sync completed",
         message: data.message,
-        color: 'green',
+        color: "green",
         icon: <IconCheck size={16} />,
       });
       setIsManualSyncRunning(false);
@@ -73,9 +70,9 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
     },
     onError: (error) => {
       notifications.show({
-        title: 'Sync failed',
+        title: "Sync failed",
         message: error.message,
-        color: 'red',
+        color: "red",
         icon: <IconX size={16} />,
       });
       setIsManualSyncRunning(false);
@@ -86,9 +83,9 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
   const forceResyncMutation = api.projectIdea.forceResyncProject.useMutation({
     onSuccess: (data) => {
       notifications.show({
-        title: 'Project resynced',
+        title: "Project resynced",
         message: data.message,
-        color: 'green',
+        color: "green",
         icon: <IconCheck size={16} />,
       });
       closeForceResync();
@@ -98,9 +95,9 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
     },
     onError: (error) => {
       notifications.show({
-        title: 'Resync failed',
+        title: "Resync failed",
         message: error.message,
-        color: 'red',
+        color: "red",
         icon: <IconX size={16} />,
       });
     },
@@ -124,28 +121,28 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
 
   const getSyncStatusColor = (status: string) => {
     switch (status) {
-      case 'SUCCESS':
-        return 'green';
-      case 'FAILED':
-        return 'red';
-      case 'SYNCING':
-        return 'blue';
-      case 'PENDING':
-        return 'yellow';
+      case "SUCCESS":
+        return "green";
+      case "FAILED":
+        return "red";
+      case "SYNCING":
+        return "blue";
+      case "PENDING":
+        return "yellow";
       default:
-        return 'gray';
+        return "gray";
     }
   };
 
   const getSyncStatusIcon = (status: string) => {
     switch (status) {
-      case 'SUCCESS':
+      case "SUCCESS":
         return <IconCheck size={16} />;
-      case 'FAILED':
+      case "FAILED":
         return <IconX size={16} />;
-      case 'SYNCING':
+      case "SYNCING":
         return <Loader size={16} />;
-      case 'PENDING':
+      case "PENDING":
         return <IconClock size={16} />;
       default:
         return <IconAlertTriangle size={16} />;
@@ -170,9 +167,11 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
           <Card withBorder>
             <Group justify="space-between">
               <div>
-                <Text size="sm" c="dimmed">Total Projects</Text>
+                <Text size="sm" c="dimmed">
+                  Total Projects
+                </Text>
                 <Text size="xl" fw={700}>
-                  {projectStats?.totalProjects ?? '-'}
+                  {projectStats?.totalProjects ?? "-"}
                 </Text>
               </div>
               <IconDatabase size={24} color="var(--mantine-color-blue-6)" />
@@ -182,9 +181,11 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
           <Card withBorder>
             <Group justify="space-between">
               <div>
-                <Text size="sm" c="dimmed">Successful</Text>
+                <Text size="sm" c="dimmed">
+                  Successful
+                </Text>
                 <Text size="xl" fw={700} c="green">
-                  {projectStats?.successfulProjects ?? '-'}
+                  {projectStats?.successfulProjects ?? "-"}
                 </Text>
               </div>
               <IconCheck size={24} color="var(--mantine-color-green-6)" />
@@ -194,9 +195,11 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
           <Card withBorder>
             <Group justify="space-between">
               <div>
-                <Text size="sm" c="dimmed">Failed</Text>
+                <Text size="sm" c="dimmed">
+                  Failed
+                </Text>
                 <Text size="xl" fw={700} c="red">
-                  {projectStats?.failedProjects ?? '-'}
+                  {projectStats?.failedProjects ?? "-"}
                 </Text>
               </div>
               <IconX size={24} color="var(--mantine-color-red-6)" />
@@ -206,12 +209,13 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
           <Card withBorder>
             <Group justify="space-between">
               <div>
-                <Text size="sm" c="dimmed">Last Sync</Text>
+                <Text size="sm" c="dimmed">
+                  Last Sync
+                </Text>
                 <Text size="sm" fw={500}>
-                  {projectStats?.lastSync ? 
-                    new Date(projectStats.lastSync.startedAt).toLocaleString() : 
-                    'Never'
-                  }
+                  {projectStats?.lastSync
+                    ? new Date(projectStats.lastSync.startedAt).toLocaleString()
+                    : "Never"}
                 </Text>
               </div>
               <IconBrandGithub size={24} color="var(--mantine-color-gray-6)" />
@@ -224,9 +228,12 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
           <Stack gap="md">
             <Group justify="space-between" align="center">
               <div>
-                <Text size="lg" fw={600}>GitHub Synchronization</Text>
+                <Text size="lg" fw={600}>
+                  GitHub Synchronization
+                </Text>
                 <Text size="sm" c="dimmed">
-                  Sync project ideas from fundingthecommons/project-ideas repository
+                  Sync project ideas from fundingthecommons/project-ideas
+                  repository
                 </Text>
               </div>
 
@@ -246,7 +253,9 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
                 <Button
                   leftSection={<IconBrandGithub size={16} />}
                   onClick={handleManualSync}
-                  loading={isManualSyncRunning || syncFromGitHubMutation.isPending}
+                  loading={
+                    isManualSyncRunning || syncFromGitHubMutation.isPending
+                  }
                 >
                   Sync Now
                 </Button>
@@ -265,26 +274,41 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
                       Latest sync: {syncStatus.latestSync.status}
                     </Text>
                     <Text size="xs" c="dimmed">
-                      Started: {new Date(syncStatus.latestSync.startedAt).toLocaleString()}
+                      Started:{" "}
+                      {new Date(
+                        syncStatus.latestSync.startedAt,
+                      ).toLocaleString()}
                       {syncStatus.latestSync.completedAt && (
-                        <> • Completed: {new Date(syncStatus.latestSync.completedAt).toLocaleString()}</>
+                        <>
+                          {" "}
+                          • Completed:{" "}
+                          {new Date(
+                            syncStatus.latestSync.completedAt,
+                          ).toLocaleString()}
+                        </>
                       )}
                     </Text>
                   </div>
-                  {syncStatus.latestSync.status === 'SUCCESS' && (
+                  {syncStatus.latestSync.status === "SUCCESS" && (
                     <Text size="sm">
-                      {syncStatus.latestSync.syncedCount} / {syncStatus.latestSync.totalProjects} synced
+                      {syncStatus.latestSync.syncedCount} /{" "}
+                      {syncStatus.latestSync.totalProjects} synced
                     </Text>
                   )}
                 </Group>
-                {syncStatus.latestSync.status === 'SUCCESS' && syncStatus.latestSync.totalProjects > 0 && (
-                  <Progress
-                    value={(syncStatus.latestSync.syncedCount / syncStatus.latestSync.totalProjects) * 100}
-                    size="sm"
-                    mt="xs"
-                    color={getSyncStatusColor(syncStatus.latestSync.status)}
-                  />
-                )}
+                {syncStatus.latestSync.status === "SUCCESS" &&
+                  syncStatus.latestSync.totalProjects > 0 && (
+                    <Progress
+                      value={
+                        (syncStatus.latestSync.syncedCount /
+                          syncStatus.latestSync.totalProjects) *
+                        100
+                      }
+                      size="sm"
+                      mt="xs"
+                      color={getSyncStatusColor(syncStatus.latestSync.status)}
+                    />
+                  )}
               </Alert>
             )}
           </Stack>
@@ -294,7 +318,9 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
         <Card withBorder>
           <Stack gap="md">
             <Group justify="space-between" align="center">
-              <Text size="lg" fw={600}>Project Status</Text>
+              <Text size="lg" fw={600}>
+                Project Status
+              </Text>
               <Text size="sm" c="dimmed">
                 {adminProjects?.length ?? 0} projects
               </Text>
@@ -337,7 +363,9 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
                             {project.category}
                           </Badge>
                         ) : (
-                          <Text size="xs" c="dimmed">-</Text>
+                          <Text size="xs" c="dimmed">
+                            -
+                          </Text>
                         )}
                       </Table.Td>
                       <Table.Td>
@@ -380,7 +408,7 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
                               <IconExternalLink size={16} />
                             </ActionIcon>
                           </Tooltip>
-                          
+
                           <Tooltip label="View on GitHub">
                             <ActionIcon
                               variant="subtle"
@@ -396,7 +424,10 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
                             <ActionIcon
                               variant="subtle"
                               onClick={() => handleForceResync(project.id)}
-                              loading={forceResyncMutation.isPending && selectedProject === project.id}
+                              loading={
+                                forceResyncMutation.isPending &&
+                                selectedProject === project.id
+                              }
                             >
                               <IconRefresh size={16} />
                             </ActionIcon>
@@ -415,8 +446,10 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
         {syncStatus?.recentSyncs && syncStatus.recentSyncs.length > 0 && (
           <Card withBorder>
             <Stack gap="md">
-              <Text size="lg" fw={600}>Recent Sync History</Text>
-              
+              <Text size="lg" fw={600}>
+                Recent Sync History
+              </Text>
+
               <Table>
                 <Table.Thead>
                   <Table.Tr>
@@ -448,28 +481,42 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
                         <Text size="sm">{sync.totalProjects}</Text>
                       </Table.Td>
                       <Table.Td>
-                        {sync.status === 'SUCCESS' ? (
+                        {sync.status === "SUCCESS" ? (
                           <Group gap="xs" align="center">
                             <Text size="sm">
                               {sync.syncedCount} / {sync.totalProjects}
                             </Text>
                             <Progress
-                              value={sync.totalProjects > 0 ? (sync.syncedCount / sync.totalProjects) * 100 : 0}
+                              value={
+                                sync.totalProjects > 0
+                                  ? (sync.syncedCount / sync.totalProjects) *
+                                    100
+                                  : 0
+                              }
                               size="xs"
                               w={60}
                             />
                           </Group>
                         ) : (
-                          <Text size="sm" c="dimmed">-</Text>
+                          <Text size="sm" c="dimmed">
+                            -
+                          </Text>
                         )}
                       </Table.Td>
                       <Table.Td>
                         {sync.completedAt ? (
                           <Text size="sm">
-                            {Math.round((new Date(sync.completedAt).getTime() - new Date(sync.startedAt).getTime()) / 1000)}s
+                            {Math.round(
+                              (new Date(sync.completedAt).getTime() -
+                                new Date(sync.startedAt).getTime()) /
+                                1000,
+                            )}
+                            s
                           </Text>
                         ) : (
-                          <Text size="sm" c="dimmed">-</Text>
+                          <Text size="sm" c="dimmed">
+                            -
+                          </Text>
                         )}
                       </Table.Td>
                     </Table.Tr>
@@ -490,9 +537,10 @@ export function ProjectSyncAdminClient(_props: ProjectSyncAdminClientProps) {
       >
         <Stack gap="md">
           <Text size="sm">
-            Are you sure you want to force resync this project? This will refetch the content from GitHub and overwrite any local changes.
+            Are you sure you want to force resync this project? This will
+            refetch the content from GitHub and overwrite any local changes.
           </Text>
-          
+
           <Group justify="flex-end" gap="sm">
             <Button variant="subtle" onClick={closeForceResync}>
               Cancel

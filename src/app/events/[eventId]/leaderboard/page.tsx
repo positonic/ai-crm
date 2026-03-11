@@ -23,7 +23,13 @@ interface LeaderboardPageProps {
   params: Promise<{ eventId: string }>;
 }
 
-type SortField = "projects" | "projectsWithMetrics" | "updates" | "praiseSent" | "praiseReceived" | "kudos";
+type SortField =
+  | "projects"
+  | "projectsWithMetrics"
+  | "updates"
+  | "praiseSent"
+  | "praiseReceived"
+  | "kudos";
 type SortDirection = "asc" | "desc";
 
 export default function LeaderboardPage({ params }: LeaderboardPageProps) {
@@ -43,75 +49,75 @@ export default function LeaderboardPage({ params }: LeaderboardPageProps) {
   // Get event details
   const { isLoading: eventLoading } = api.event.getEvent.useQuery(
     { id: eventId },
-    { enabled: !!eventId }
+    { enabled: !!eventId },
   );
 
   // Get resident projects
-  const { data: residentProjects } = api.application.getResidentProjects.useQuery(
-    { eventId },
-    { enabled: !!eventId }
-  );
+  const { data: residentProjects } =
+    api.application.getResidentProjects.useQuery(
+      { eventId },
+      { enabled: !!eventId },
+    );
 
   // Get accepted residents
   const { data: residentsData } = api.application.getAcceptedResidents.useQuery(
     { eventId },
-    { enabled: !!eventId }
+    { enabled: !!eventId },
   );
 
   // Build resident statistics
   const residentStats = useMemo(() => {
     if (!residentsData?.residents) return [];
 
-    return residentsData.residents.map((resident) => {
-      const userId = resident.user?.id;
-      if (!userId) return null;
+    return residentsData.residents
+      .map((resident) => {
+        const userId = resident.user?.id;
+        if (!userId) return null;
 
-      // Count projects
-      const userProjects = residentProjects?.filter(
-        (p) => p.profile?.user?.id === userId
-      ) ?? [];
+        // Count projects
+        const userProjects =
+          residentProjects?.filter((p) => p.profile?.user?.id === userId) ?? [];
 
-      const totalProjects = userProjects.length;
+        const totalProjects = userProjects.length;
 
-      // Count projects with at least one metric selected
-      const projectsWithMetrics = userProjects.filter(
-        (p) => p.metrics && p.metrics.length > 0
-      ).length;
+        // Count projects with at least one metric selected
+        const projectsWithMetrics = userProjects.filter(
+          (p) => p.metrics && p.metrics.length > 0,
+        ).length;
 
-      // Count updates across all user's projects
-      const updateCount = userProjects.reduce(
-        (sum: number, p) => sum + (p.updates?.length ?? 0),
-        0
-      );
+        // Count updates across all user's projects
+        const updateCount = userProjects.reduce(
+          (sum: number, p) => sum + (p.updates?.length ?? 0),
+          0,
+        );
 
-      // Count praise sent and received
-      const praiseSentCount = transactions?.filter(
-        (t) => t.senderId === userId
-      ).length ?? 0;
+        // Count praise sent and received
+        const praiseSentCount =
+          transactions?.filter((t) => t.senderId === userId).length ?? 0;
 
-      const praiseReceivedCount = transactions?.filter(
-        (t) => t.recipientId === userId
-      ).length ?? 0;
+        const praiseReceivedCount =
+          transactions?.filter((t) => t.recipientId === userId).length ?? 0;
 
-      // Get user's actual kudos from database
-      // This includes all dynamic transfers (likes, comment likes, praise with actual transfer amounts)
-      const actualKudos = resident.user?.kudos ?? KUDOS_CONSTANTS.BASE_KUDOS;
+        // Get user's actual kudos from database
+        // This includes all dynamic transfers (likes, comment likes, praise with actual transfer amounts)
+        const actualKudos = resident.user?.kudos ?? KUDOS_CONSTANTS.BASE_KUDOS;
 
-      return {
-        userId,
-        name: resident.user?.name,
-        image: resident.user?.image,
-        customAvatarUrl: resident.user?.profile?.avatarUrl,
-        firstName: resident.user?.firstName,
-        surname: resident.user?.surname,
-        projects: totalProjects,
-        projectsWithMetrics,
-        updates: updateCount,
-        praiseSent: praiseSentCount,
-        praiseReceived: praiseReceivedCount,
-        kudos: actualKudos,
-      };
-    }).filter(Boolean);
+        return {
+          userId,
+          name: resident.user?.name,
+          image: resident.user?.image,
+          customAvatarUrl: resident.user?.profile?.avatarUrl,
+          firstName: resident.user?.firstName,
+          surname: resident.user?.surname,
+          projects: totalProjects,
+          projectsWithMetrics,
+          updates: updateCount,
+          praiseSent: praiseSentCount,
+          praiseReceived: praiseReceivedCount,
+          kudos: actualKudos,
+        };
+      })
+      .filter(Boolean);
   }, [residentsData, residentProjects, transactions]);
 
   // Sort resident stats
@@ -134,7 +140,11 @@ export default function LeaderboardPage({ params }: LeaderboardPageProps) {
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return null;
-    return sortDirection === "asc" ? <IconArrowUp size={14} /> : <IconArrowDown size={14} />;
+    return sortDirection === "asc" ? (
+      <IconArrowUp size={14} />
+    ) : (
+      <IconArrowDown size={14} />
+    );
   };
 
   if (eventLoading || !eventId) {
@@ -149,7 +159,9 @@ export default function LeaderboardPage({ params }: LeaderboardPageProps) {
 
   return (
     <Container size="xl" py="xl">
-      <Title order={1} mb="xl">Residency Leaderboard</Title>
+      <Title order={1} mb="xl">
+        Residency Leaderboard
+      </Title>
 
       <Card withBorder>
         <Table>
@@ -249,10 +261,14 @@ export default function LeaderboardPage({ params }: LeaderboardPageProps) {
                   <Badge variant="light">{resident!.updates}</Badge>
                 </Table.Td>
                 <Table.Td>
-                  <Badge variant="light" color="blue">{resident!.praiseSent}</Badge>
+                  <Badge variant="light" color="blue">
+                    {resident!.praiseSent}
+                  </Badge>
                 </Table.Td>
                 <Table.Td>
-                  <Badge variant="light" color="green">{resident!.praiseReceived}</Badge>
+                  <Badge variant="light" color="green">
+                    {resident!.praiseReceived}
+                  </Badge>
                 </Table.Td>
                 <Table.Td>
                   <Badge

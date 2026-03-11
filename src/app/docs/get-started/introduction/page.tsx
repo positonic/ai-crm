@@ -19,8 +19,8 @@ export default function IntroductionPage() {
         Impactful Events is a purpose-built platform for running conferences,
         residencies, and community gatherings. Whether you are an attendee
         exploring the schedule, a speaker preparing a session, or an organiser
-        coordinating multiple venues, this platform gives you everything you need
-        in one place.
+        coordinating multiple venues, this platform gives you everything you
+        need in one place.
       </p>
       <p className="docs-text">
         This documentation will walk you through every part of the platform so
@@ -50,8 +50,8 @@ export default function IntroductionPage() {
                 </strong>
               </td>
               <td>
-                Browse upcoming conferences, view details, and join the ones that
-                interest you.
+                Browse upcoming conferences, view details, and join the ones
+                that interest you.
               </td>
             </tr>
             <tr>
@@ -66,8 +66,8 @@ export default function IntroductionPage() {
                 </strong>
               </td>
               <td>
-                Apply to participate in events with a simple form that saves your
-                progress automatically.
+                Apply to participate in events with a simple form that saves
+                your progress automatically.
               </td>
             </tr>
             <tr>

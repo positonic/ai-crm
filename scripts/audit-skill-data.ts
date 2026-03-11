@@ -17,7 +17,7 @@
  *   bun run scripts/audit-skill-data.ts --format json > audit.json
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -43,7 +43,11 @@ interface AuditResults {
     skillsWithCategories: number;
     skillsWithoutCategories: number;
     averagePopularity: number;
-    topSkills: Array<{ name: string; popularity: number; category: string | null }>;
+    topSkills: Array<{
+      name: string;
+      popularity: number;
+      category: string | null;
+    }>;
   };
   dataQuality: {
     duplicateVariations: Array<{ variations: string[]; count: number }>;
@@ -62,18 +66,14 @@ interface AuditResults {
 
 // Normalize skill name for comparison (for grouping similar skills)
 function normalizeSkillName(skill: string): string {
-  return skill
-    .toLowerCase()
-    .trim()
-    .replace(/[._-]/g, ' ')
-    .replace(/\s+/g, ' ');
+  return skill.toLowerCase().trim().replace(/[._-]/g, " ").replace(/\s+/g, " ");
 }
 
 // Group similar skills
 function findSkillVariations(skills: string[]): Map<string, string[]> {
   const grouped = new Map<string, string[]>();
 
-  skills.forEach(skill => {
+  skills.forEach((skill) => {
     const normalized = normalizeSkillName(skill);
     if (!grouped.has(normalized)) {
       grouped.set(normalized, []);
@@ -85,12 +85,12 @@ function findSkillVariations(skills: string[]): Map<string, string[]> {
 }
 
 async function runAudit(): Promise<AuditResults> {
-  console.log('🔍 Starting Skills Data Audit...\n');
+  console.log("🔍 Starting Skills Data Audit...\n");
 
   // ============================================
   // SECTION 1: User & Profile Statistics
   // ============================================
-  console.log('📊 Collecting user statistics...');
+  console.log("📊 Collecting user statistics...");
 
   const totalUsers = await prisma.user.count();
   const usersWithProfiles = await prisma.userProfile.count();
@@ -98,31 +98,33 @@ async function runAudit(): Promise<AuditResults> {
   const usersWithLegacySkills = await prisma.userProfile.count({
     where: {
       skills: {
-        isEmpty: false
-      }
-    }
+        isEmpty: false,
+      },
+    },
   });
 
-  const usersWithNormalizedSkills = await prisma.userSkills.groupBy({
-    by: ['userId'],
-  }).then(result => result.length);
+  const usersWithNormalizedSkills = await prisma.userSkills
+    .groupBy({
+      by: ["userId"],
+    })
+    .then((result) => result.length);
 
   const totalApplications = await prisma.application.count();
   const acceptedApplications = await prisma.application.count({
-    where: { status: 'ACCEPTED' }
+    where: { status: "ACCEPTED" },
   });
 
   // ============================================
   // SECTION 2: Data Loss Analysis
   // ============================================
-  console.log('🔍 Analyzing data loss gaps...');
+  console.log("🔍 Analyzing data loss gaps...");
 
   // Find applications with skill_rating answers
   const skillRatingResponses = await prisma.applicationResponse.findMany({
     where: {
       question: {
-        questionKey: 'skill_rating'
-      }
+        questionKey: "skill_rating",
+      },
     },
     include: {
       application: {
@@ -131,28 +133,30 @@ async function runAudit(): Promise<AuditResults> {
           status: true,
           event: {
             select: {
-              name: true
-            }
-          }
-        }
-      }
-    }
+              name: true,
+            },
+          },
+        },
+      },
+    },
   });
 
   // Find how many of those users have UserSkills with experienceLevel set
   const usersWithRatings = new Set(
     skillRatingResponses
-      .map(r => r.application.userId)
-      .filter((id): id is string => id !== null)
+      .map((r) => r.application.userId)
+      .filter((id): id is string => id !== null),
   );
   const userSkillsWithExperience = await prisma.userSkills.findMany({
     where: {
       userId: { in: Array.from(usersWithRatings) },
-      experienceLevel: { not: null }
+      experienceLevel: { not: null },
     },
-    select: { userId: true }
+    select: { userId: true },
   });
-  const usersWithSyncedRatings = new Set(userSkillsWithExperience.map(us => us.userId));
+  const usersWithSyncedRatings = new Set(
+    userSkillsWithExperience.map((us) => us.userId),
+  );
 
   const skillRatingsLost = usersWithRatings.size - usersWithSyncedRatings.size;
   const skillRatingsSynced = usersWithSyncedRatings.size;
@@ -161,88 +165,93 @@ async function runAudit(): Promise<AuditResults> {
   const priorExperienceResponses = await prisma.applicationResponse.findMany({
     where: {
       question: {
-        questionKey: 'prior_experience'
+        questionKey: "prior_experience",
       },
       answer: {
-        not: ''
-      }
+        not: "",
+      },
     },
     include: {
       application: {
         select: {
           userId: true,
-          status: true
-        }
-      }
-    }
+          status: true,
+        },
+      },
+    },
   });
 
   // Find how many have it synced to profile
   const usersWithPriorExp = new Set(
     priorExperienceResponses
-      .map(r => r.application.userId)
-      .filter((id): id is string => id !== null)
+      .map((r) => r.application.userId)
+      .filter((id): id is string => id !== null),
   );
   const priorExpUserIds = Array.from(usersWithPriorExp);
-  const profilesWithPriorExp = priorExpUserIds.length > 0
-    ? await prisma.userProfile.findMany({
-        where: {
-          userId: { in: priorExpUserIds },
-          OR: [
-            { priorExperience: { not: null } },
-            { bio: { not: null } }
-          ]
-        },
-        select: { userId: true, priorExperience: true, bio: true }
-      })
-    : [];
+  const profilesWithPriorExp =
+    priorExpUserIds.length > 0
+      ? await prisma.userProfile.findMany({
+          where: {
+            userId: { in: priorExpUserIds },
+            OR: [{ priorExperience: { not: null } }, { bio: { not: null } }],
+          },
+          select: { userId: true, priorExperience: true, bio: true },
+        })
+      : [];
 
   // Check the new priorExperience field (added by migration)
-  const profilesWithNewField = profilesWithPriorExp.filter(p => p.priorExperience);
+  const profilesWithNewField = profilesWithPriorExp.filter(
+    (p) => p.priorExperience,
+  );
   const priorExperienceSynced = profilesWithNewField.length;
   const priorExperienceLost = usersWithPriorExp.size - priorExperienceSynced;
 
   // Accepted applicants without profiles
   const acceptedApplicants = await prisma.application.findMany({
-    where: { status: 'ACCEPTED' },
-    select: { userId: true }
+    where: { status: "ACCEPTED" },
+    select: { userId: true },
   });
   const acceptedUserIds = new Set(
     acceptedApplicants
-      .map(a => a.userId)
-      .filter((id): id is string => id !== null)
+      .map((a) => a.userId)
+      .filter((id): id is string => id !== null),
   );
   const acceptedUserIdArray = Array.from(acceptedUserIds);
-  const profileUserIds = acceptedUserIdArray.length > 0
-    ? await prisma.userProfile.findMany({
-        where: { userId: { in: acceptedUserIdArray } },
-        select: { userId: true }
-      }).then(profiles => new Set(profiles.map(p => p.userId)))
-    : new Set<string>();
+  const profileUserIds =
+    acceptedUserIdArray.length > 0
+      ? await prisma.userProfile
+          .findMany({
+            where: { userId: { in: acceptedUserIdArray } },
+            select: { userId: true },
+          })
+          .then((profiles) => new Set(profiles.map((p) => p.userId)))
+      : new Set<string>();
 
   const applicantsWithoutProfiles = acceptedUserIds.size - profileUserIds.size;
 
   // Accepted applicants with profiles but no skills
-  const profilesWithSkills = acceptedUserIdArray.length > 0
-    ? await prisma.userProfile.findMany({
-        where: {
-          userId: { in: acceptedUserIdArray },
-          skills: { isEmpty: false }
-        },
-        select: { userId: true }
-      })
-    : [];
+  const profilesWithSkills =
+    acceptedUserIdArray.length > 0
+      ? await prisma.userProfile.findMany({
+          where: {
+            userId: { in: acceptedUserIdArray },
+            skills: { isEmpty: false },
+          },
+          select: { userId: true },
+        })
+      : [];
 
-  const applicantsWithoutSkills = acceptedUserIds.size - profilesWithSkills.length;
+  const applicantsWithoutSkills =
+    acceptedUserIds.size - profilesWithSkills.length;
 
   // ============================================
   // SECTION 3: Skill Catalog Analysis
   // ============================================
-  console.log('📚 Analyzing skill catalog...');
+  console.log("📚 Analyzing skill catalog...");
 
   const totalSkills = await prisma.skills.count();
   const skillsWithCategories = await prisma.skills.count({
-    where: { category: { not: null } }
+    where: { category: { not: null } },
   });
   const skillsWithoutCategories = totalSkills - skillsWithCategories;
 
@@ -250,38 +259,39 @@ async function runAudit(): Promise<AuditResults> {
     select: {
       name: true,
       popularity: true,
-      category: true
-    }
+      category: true,
+    },
   });
 
-  const averagePopularity = allSkills.length > 0
-    ? allSkills.reduce((sum, s) => sum + s.popularity, 0) / allSkills.length
-    : 0;
+  const averagePopularity =
+    allSkills.length > 0
+      ? allSkills.reduce((sum, s) => sum + s.popularity, 0) / allSkills.length
+      : 0;
 
   const topSkills = allSkills
     .sort((a, b) => b.popularity - a.popularity)
     .slice(0, 10)
-    .map(s => ({
+    .map((s) => ({
       name: s.name,
       popularity: s.popularity,
-      category: s.category
+      category: s.category,
     }));
 
   // ============================================
   // SECTION 4: Data Quality Issues
   // ============================================
-  console.log('🔍 Checking data quality...');
+  console.log("🔍 Checking data quality...");
 
   // Find skill duplicates/variations in UserProfile.skills
   const allProfileSkills = await prisma.userProfile.findMany({
     where: {
-      skills: { isEmpty: false }
+      skills: { isEmpty: false },
     },
-    select: { skills: true }
+    select: { skills: true },
   });
 
   const uniqueSkillStrings = new Set<string>();
-  allProfileSkills.forEach(profile => {
+  allProfileSkills.forEach((profile) => {
     profile.skills.forEach((skill: string) => uniqueSkillStrings.add(skill));
   });
 
@@ -290,7 +300,7 @@ async function runAudit(): Promise<AuditResults> {
     .filter(([, variations]) => variations.length > 1)
     .map(([, variations]) => ({
       variations: variations.sort(),
-      count: variations.length
+      count: variations.length,
     }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 20); // Top 20 problematic duplicates
@@ -302,24 +312,25 @@ async function runAudit(): Promise<AuditResults> {
   // Profiles that need migration (have legacy skills but no UserSkills)
   const profilesWithLegacySkills = await prisma.userProfile.findMany({
     where: {
-      skills: { isEmpty: false }
+      skills: { isEmpty: false },
     },
-    select: { userId: true }
+    select: { userId: true },
   });
 
   const profilesWithUserSkills = await prisma.userSkills.groupBy({
-    by: ['userId'],
+    by: ["userId"],
     where: {
-      userId: { in: profilesWithLegacySkills.map(p => p.userId) }
-    }
+      userId: { in: profilesWithLegacySkills.map((p) => p.userId) },
+    },
   });
 
-  const profilesNeedingMigration = profilesWithLegacySkills.length - profilesWithUserSkills.length;
+  const profilesNeedingMigration =
+    profilesWithLegacySkills.length - profilesWithUserSkills.length;
 
   // ============================================
   // SECTION 5: Event Breakdown
   // ============================================
-  console.log('📅 Analyzing by event...');
+  console.log("📅 Analyzing by event...");
 
   const events = await prisma.event.findMany({
     include: {
@@ -327,39 +338,49 @@ async function runAudit(): Promise<AuditResults> {
         include: {
           responses: {
             include: {
-              question: true
-            }
-          }
-        }
-      }
-    }
+              question: true,
+            },
+          },
+        },
+      },
+    },
   });
 
-  const eventBreakdown = events.map(event => {
-    const applications = event.applications.length;
-    const accepted = event.applications.filter(a => a.status === 'ACCEPTED').length;
+  const eventBreakdown = events
+    .map((event) => {
+      const applications = event.applications.length;
+      const accepted = event.applications.filter(
+        (a) => a.status === "ACCEPTED",
+      ).length;
 
-    const withSkills = event.applications.filter(a =>
-      a.responses.some(r => r.question.questionKey === 'technical_skills' && r.answer)
-    ).length;
+      const withSkills = event.applications.filter((a) =>
+        a.responses.some(
+          (r) => r.question.questionKey === "technical_skills" && r.answer,
+        ),
+      ).length;
 
-    const withRatings = event.applications.filter(a =>
-      a.responses.some(r => r.question.questionKey === 'skill_rating' && r.answer)
-    ).length;
+      const withRatings = event.applications.filter((a) =>
+        a.responses.some(
+          (r) => r.question.questionKey === "skill_rating" && r.answer,
+        ),
+      ).length;
 
-    const withExperience = event.applications.filter(a =>
-      a.responses.some(r => r.question.questionKey === 'prior_experience' && r.answer)
-    ).length;
+      const withExperience = event.applications.filter((a) =>
+        a.responses.some(
+          (r) => r.question.questionKey === "prior_experience" && r.answer,
+        ),
+      ).length;
 
-    return {
-      eventName: event.name,
-      applications,
-      accepted,
-      withSkills,
-      withRatings,
-      withExperience
-    };
-  }).filter(e => e.applications > 0);
+      return {
+        eventName: event.name,
+        applications,
+        accepted,
+        withSkills,
+        withRatings,
+        withExperience,
+      };
+    })
+    .filter((e) => e.applications > 0);
 
   // ============================================
   // Compile Results
@@ -371,7 +392,7 @@ async function runAudit(): Promise<AuditResults> {
       usersWithLegacySkills,
       usersWithNormalizedSkills,
       totalApplications,
-      acceptedApplications
+      acceptedApplications,
     },
     dataLoss: {
       skillRatingsLost,
@@ -379,177 +400,238 @@ async function runAudit(): Promise<AuditResults> {
       priorExperienceLost,
       priorExperienceSynced,
       applicantsWithoutProfiles,
-      applicantsWithoutSkills
+      applicantsWithoutSkills,
     },
     skillCatalog: {
       totalSkills,
       skillsWithCategories,
       skillsWithoutCategories,
       averagePopularity,
-      topSkills
+      topSkills,
     },
     dataQuality: {
       duplicateVariations,
       orphanedUserSkills,
-      profilesNeedingMigration
+      profilesNeedingMigration,
     },
-    eventBreakdown
+    eventBreakdown,
   };
 }
 
 function formatReport(results: AuditResults): string {
   const lines: string[] = [];
 
-  lines.push('');
-  lines.push('═══════════════════════════════════════════════════════════');
-  lines.push('  SKILLS DATA AUDIT REPORT');
-  lines.push('  Generated: ' + new Date().toISOString());
-  lines.push('═══════════════════════════════════════════════════════════');
-  lines.push('');
+  lines.push("");
+  lines.push("═══════════════════════════════════════════════════════════");
+  lines.push("  SKILLS DATA AUDIT REPORT");
+  lines.push("  Generated: " + new Date().toISOString());
+  lines.push("═══════════════════════════════════════════════════════════");
+  lines.push("");
 
   // Summary Section
-  lines.push('📊 SUMMARY STATISTICS');
-  lines.push('─────────────────────────────────────────────────────────');
+  lines.push("📊 SUMMARY STATISTICS");
+  lines.push("─────────────────────────────────────────────────────────");
   lines.push(`Total Users:                    ${results.summary.totalUsers}`);
-  lines.push(`Users with Profiles:            ${results.summary.usersWithProfiles} (${Math.round(results.summary.usersWithProfiles / results.summary.totalUsers * 100)}%)`);
-  lines.push(`Users with Legacy Skills:       ${results.summary.usersWithLegacySkills}`);
-  lines.push(`Users with Normalized Skills:   ${results.summary.usersWithNormalizedSkills}`);
-  lines.push(`Total Applications:             ${results.summary.totalApplications}`);
-  lines.push(`Accepted Applications:          ${results.summary.acceptedApplications}`);
-  lines.push('');
+  lines.push(
+    `Users with Profiles:            ${results.summary.usersWithProfiles} (${Math.round((results.summary.usersWithProfiles / results.summary.totalUsers) * 100)}%)`,
+  );
+  lines.push(
+    `Users with Legacy Skills:       ${results.summary.usersWithLegacySkills}`,
+  );
+  lines.push(
+    `Users with Normalized Skills:   ${results.summary.usersWithNormalizedSkills}`,
+  );
+  lines.push(
+    `Total Applications:             ${results.summary.totalApplications}`,
+  );
+  lines.push(
+    `Accepted Applications:          ${results.summary.acceptedApplications}`,
+  );
+  lines.push("");
 
   // Data Loss Section
-  lines.push('🔴 DATA LOSS ANALYSIS');
-  lines.push('─────────────────────────────────────────────────────────');
-  lines.push('');
-  lines.push('Skill Ratings:');
-  lines.push(`  ❌ Lost (not synced):          ${results.dataLoss.skillRatingsLost}`);
-  lines.push(`  ✅ Synced:                     ${results.dataLoss.skillRatingsSynced}`);
-  lines.push(`  📊 Loss Rate:                  ${Math.round(results.dataLoss.skillRatingsLost / (results.dataLoss.skillRatingsLost + results.dataLoss.skillRatingsSynced) * 100)}%`);
-  lines.push('');
-  lines.push('Prior Experience:');
-  lines.push(`  ❌ Lost (not synced):          ${results.dataLoss.priorExperienceLost}`);
-  lines.push(`  ✅ Synced:                     ${results.dataLoss.priorExperienceSynced}`);
-  lines.push(`  📊 Loss Rate:                  ${Math.round((results.dataLoss.priorExperienceLost / (results.dataLoss.priorExperienceLost + results.dataLoss.priorExperienceSynced)) * 100)}%`);
-  lines.push('');
-  lines.push('Profile Completeness:');
-  lines.push(`  ❌ Accepted without profiles:  ${results.dataLoss.applicantsWithoutProfiles}`);
-  lines.push(`  ❌ Profiles without skills:    ${results.dataLoss.applicantsWithoutSkills}`);
-  lines.push('');
+  lines.push("🔴 DATA LOSS ANALYSIS");
+  lines.push("─────────────────────────────────────────────────────────");
+  lines.push("");
+  lines.push("Skill Ratings:");
+  lines.push(
+    `  ❌ Lost (not synced):          ${results.dataLoss.skillRatingsLost}`,
+  );
+  lines.push(
+    `  ✅ Synced:                     ${results.dataLoss.skillRatingsSynced}`,
+  );
+  lines.push(
+    `  📊 Loss Rate:                  ${Math.round((results.dataLoss.skillRatingsLost / (results.dataLoss.skillRatingsLost + results.dataLoss.skillRatingsSynced)) * 100)}%`,
+  );
+  lines.push("");
+  lines.push("Prior Experience:");
+  lines.push(
+    `  ❌ Lost (not synced):          ${results.dataLoss.priorExperienceLost}`,
+  );
+  lines.push(
+    `  ✅ Synced:                     ${results.dataLoss.priorExperienceSynced}`,
+  );
+  lines.push(
+    `  📊 Loss Rate:                  ${Math.round((results.dataLoss.priorExperienceLost / (results.dataLoss.priorExperienceLost + results.dataLoss.priorExperienceSynced)) * 100)}%`,
+  );
+  lines.push("");
+  lines.push("Profile Completeness:");
+  lines.push(
+    `  ❌ Accepted without profiles:  ${results.dataLoss.applicantsWithoutProfiles}`,
+  );
+  lines.push(
+    `  ❌ Profiles without skills:    ${results.dataLoss.applicantsWithoutSkills}`,
+  );
+  lines.push("");
 
   // Skill Catalog Section
-  lines.push('📚 SKILL CATALOG STATUS');
-  lines.push('─────────────────────────────────────────────────────────');
-  lines.push(`Total Skills in Catalog:        ${results.skillCatalog.totalSkills}`);
-  lines.push(`Skills with Categories:         ${results.skillCatalog.skillsWithCategories} (${Math.round(results.skillCatalog.skillsWithCategories / results.skillCatalog.totalSkills * 100)}%)`);
-  lines.push(`Skills without Categories:      ${results.skillCatalog.skillsWithoutCategories}`);
-  lines.push(`Average Popularity:             ${results.skillCatalog.averagePopularity.toFixed(1)}`);
-  lines.push('');
-  lines.push('Top 10 Most Popular Skills:');
+  lines.push("📚 SKILL CATALOG STATUS");
+  lines.push("─────────────────────────────────────────────────────────");
+  lines.push(
+    `Total Skills in Catalog:        ${results.skillCatalog.totalSkills}`,
+  );
+  lines.push(
+    `Skills with Categories:         ${results.skillCatalog.skillsWithCategories} (${Math.round((results.skillCatalog.skillsWithCategories / results.skillCatalog.totalSkills) * 100)}%)`,
+  );
+  lines.push(
+    `Skills without Categories:      ${results.skillCatalog.skillsWithoutCategories}`,
+  );
+  lines.push(
+    `Average Popularity:             ${results.skillCatalog.averagePopularity.toFixed(1)}`,
+  );
+  lines.push("");
+  lines.push("Top 10 Most Popular Skills:");
   results.skillCatalog.topSkills.forEach((skill, idx) => {
-    const category = skill.category ?? 'Uncategorized';
-    lines.push(`  ${idx + 1}. ${skill.name.padEnd(25)} (${skill.popularity} users) [${category}]`);
+    const category = skill.category ?? "Uncategorized";
+    lines.push(
+      `  ${idx + 1}. ${skill.name.padEnd(25)} (${skill.popularity} users) [${category}]`,
+    );
   });
-  lines.push('');
+  lines.push("");
 
   // Data Quality Section
-  lines.push('⚠️  DATA QUALITY ISSUES');
-  lines.push('─────────────────────────────────────────────────────────');
-  lines.push(`Orphaned UserSkills records:    ${results.dataQuality.orphanedUserSkills}`);
-  lines.push(`Profiles needing migration:     ${results.dataQuality.profilesNeedingMigration}`);
-  lines.push('');
+  lines.push("⚠️  DATA QUALITY ISSUES");
+  lines.push("─────────────────────────────────────────────────────────");
+  lines.push(
+    `Orphaned UserSkills records:    ${results.dataQuality.orphanedUserSkills}`,
+  );
+  lines.push(
+    `Profiles needing migration:     ${results.dataQuality.profilesNeedingMigration}`,
+  );
+  lines.push("");
 
   if (results.dataQuality.duplicateVariations.length > 0) {
-    lines.push('Skill Duplicates/Variations (Top 20):');
+    lines.push("Skill Duplicates/Variations (Top 20):");
     results.dataQuality.duplicateVariations.forEach((dup, idx) => {
-      lines.push(`  ${idx + 1}. ${dup.variations.join(', ')}`);
+      lines.push(`  ${idx + 1}. ${dup.variations.join(", ")}`);
       lines.push(`     (${dup.count} variations)`);
     });
   } else {
-    lines.push('No duplicate variations found ✅');
+    lines.push("No duplicate variations found ✅");
   }
-  lines.push('');
+  lines.push("");
 
   // Event Breakdown Section
-  lines.push('📅 BREAKDOWN BY EVENT');
-  lines.push('─────────────────────────────────────────────────────────');
+  lines.push("📅 BREAKDOWN BY EVENT");
+  lines.push("─────────────────────────────────────────────────────────");
   if (results.eventBreakdown.length > 0) {
-    results.eventBreakdown.forEach(event => {
+    results.eventBreakdown.forEach((event) => {
       lines.push(`\n${event.eventName}:`);
       lines.push(`  Applications:          ${event.applications}`);
       lines.push(`  Accepted:              ${event.accepted}`);
-      lines.push(`  With Skills:           ${event.withSkills} (${Math.round(event.withSkills / event.applications * 100)}%)`);
-      lines.push(`  With Ratings:          ${event.withRatings} (${Math.round(event.withRatings / event.applications * 100)}%)`);
-      lines.push(`  With Prior Experience: ${event.withExperience} (${Math.round(event.withExperience / event.applications * 100)}%)`);
+      lines.push(
+        `  With Skills:           ${event.withSkills} (${Math.round((event.withSkills / event.applications) * 100)}%)`,
+      );
+      lines.push(
+        `  With Ratings:          ${event.withRatings} (${Math.round((event.withRatings / event.applications) * 100)}%)`,
+      );
+      lines.push(
+        `  With Prior Experience: ${event.withExperience} (${Math.round((event.withExperience / event.applications) * 100)}%)`,
+      );
     });
   } else {
-    lines.push('No events found');
+    lines.push("No events found");
   }
-  lines.push('');
+  lines.push("");
 
   // Recommendations Section
-  lines.push('💡 RECOMMENDATIONS');
-  lines.push('─────────────────────────────────────────────────────────');
+  lines.push("💡 RECOMMENDATIONS");
+  lines.push("─────────────────────────────────────────────────────────");
 
   const recommendations: string[] = [];
 
   if (results.dataLoss.skillRatingsLost > 0) {
-    recommendations.push(`🔴 CRITICAL: ${results.dataLoss.skillRatingsLost} skill ratings are lost. Run migrate-skill-ratings.ts`);
+    recommendations.push(
+      `🔴 CRITICAL: ${results.dataLoss.skillRatingsLost} skill ratings are lost. Run migrate-skill-ratings.ts`,
+    );
   }
 
   if (results.dataLoss.priorExperienceLost > 10) {
-    recommendations.push(`🔴 CRITICAL: ${results.dataLoss.priorExperienceLost} prior experience entries may be lost. Run migrate-prior-experience.ts`);
+    recommendations.push(
+      `🔴 CRITICAL: ${results.dataLoss.priorExperienceLost} prior experience entries may be lost. Run migrate-prior-experience.ts`,
+    );
   }
 
   if (results.dataLoss.applicantsWithoutProfiles > 0) {
-    recommendations.push(`⚠️  WARNING: ${results.dataLoss.applicantsWithoutProfiles} accepted applicants have no profiles`);
+    recommendations.push(
+      `⚠️  WARNING: ${results.dataLoss.applicantsWithoutProfiles} accepted applicants have no profiles`,
+    );
   }
 
   if (results.dataQuality.profilesNeedingMigration > 0) {
-    recommendations.push(`📊 INFO: ${results.dataQuality.profilesNeedingMigration} profiles need migration to normalized skills. Run normalize-all-skills.ts`);
+    recommendations.push(
+      `📊 INFO: ${results.dataQuality.profilesNeedingMigration} profiles need migration to normalized skills. Run normalize-all-skills.ts`,
+    );
   }
 
   if (results.skillCatalog.skillsWithoutCategories > 5) {
-    recommendations.push(`📊 INFO: ${results.skillCatalog.skillsWithoutCategories} skills need categorization. Run categorize-skills.ts`);
+    recommendations.push(
+      `📊 INFO: ${results.skillCatalog.skillsWithoutCategories} skills need categorization. Run categorize-skills.ts`,
+    );
   }
 
   if (results.dataQuality.duplicateVariations.length > 0) {
-    recommendations.push(`⚠️  WARNING: ${results.dataQuality.duplicateVariations.length} skill duplicates found. Review and merge manually`);
+    recommendations.push(
+      `⚠️  WARNING: ${results.dataQuality.duplicateVariations.length} skill duplicates found. Review and merge manually`,
+    );
   }
 
   if (recommendations.length > 0) {
-    recommendations.forEach(rec => lines.push(rec));
+    recommendations.forEach((rec) => lines.push(rec));
   } else {
-    lines.push('✅ All systems healthy! No immediate actions needed.');
+    lines.push("✅ All systems healthy! No immediate actions needed.");
   }
 
-  lines.push('');
-  lines.push('═══════════════════════════════════════════════════════════');
-  lines.push('');
+  lines.push("");
+  lines.push("═══════════════════════════════════════════════════════════");
+  lines.push("");
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 // Main execution
 async function main() {
   try {
     const args = process.argv.slice(2);
-    const format = args.includes('--format') ? args[args.indexOf('--format') + 1] : 'text';
+    const format = args.includes("--format")
+      ? args[args.indexOf("--format") + 1]
+      : "text";
 
     const results = await runAudit();
 
-    if (format === 'json') {
+    if (format === "json") {
       console.log(JSON.stringify(results, null, 2));
     } else {
       console.log(formatReport(results));
     }
 
     // Exit with error code if critical issues found
-    const criticalIssues = results.dataLoss.skillRatingsLost > 0 || results.dataLoss.priorExperienceLost > 10;
+    const criticalIssues =
+      results.dataLoss.skillRatingsLost > 0 ||
+      results.dataLoss.priorExperienceLost > 10;
     process.exit(criticalIssues ? 1 : 0);
-
   } catch (error) {
-    console.error('❌ Audit failed:', error);
+    console.error("❌ Audit failed:", error);
     process.exit(1);
   } finally {
     await prisma.$disconnect();

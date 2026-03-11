@@ -10,16 +10,23 @@ import {
 import {
   checkApplicationCompleteness,
   updateApplicationCompletionStatus,
-  sendSubmissionNotification
+  sendSubmissionNotification,
 } from "~/server/api/utils/applicationCompletion";
 import { captureApiError, captureEmailError } from "~/utils/errorCapture";
-import { assertAdminOrEventFloorOwner, isAdminOrStaff, getUserOwnedVenueIds } from "~/server/api/utils/scheduleAuth";
+import {
+  assertAdminOrEventFloorOwner,
+  isAdminOrStaff,
+  getUserOwnedVenueIds,
+} from "~/server/api/utils/scheduleAuth";
 
 /**
  * Resolve event identifier (ID or slug) to actual event ID.
  * Tries ID first, then slug for backward compatibility.
  */
-async function resolveEventId(db: PrismaClient, identifier: string): Promise<string | null> {
+async function resolveEventId(
+  db: PrismaClient,
+  identifier: string,
+): Promise<string | null> {
   // Try by ID first
   const eventById = await db.event.findUnique({
     where: { id: identifier },
@@ -39,7 +46,9 @@ async function resolveEventId(db: PrismaClient, identifier: string): Promise<str
 const CreateApplicationInputSchema = z.object({
   eventId: z.string(),
   language: z.string().default("en"),
-  applicationType: z.enum(["RESIDENT", "MENTOR", "SPEAKER"]).default("RESIDENT"),
+  applicationType: z
+    .enum(["RESIDENT", "MENTOR", "SPEAKER"])
+    .default("RESIDENT"),
   invitationToken: z.string().optional(),
 });
 
@@ -60,12 +69,27 @@ const SubmitApplicationSchema = z.object({
 
 const UpdateApplicationStatusSchema = z.object({
   applicationId: z.string(),
-  status: z.enum(["DRAFT", "SUBMITTED", "UNDER_REVIEW", "ACCEPTED", "REJECTED", "WAITLISTED", "CANCELLED"]),
+  status: z.enum([
+    "DRAFT",
+    "SUBMITTED",
+    "UNDER_REVIEW",
+    "ACCEPTED",
+    "REJECTED",
+    "WAITLISTED",
+    "CANCELLED",
+  ]),
 });
 
 const BulkUpdateApplicationStatusSchema = z.object({
   applicationIds: z.array(z.string()),
-  status: z.enum(["DRAFT", "UNDER_REVIEW", "ACCEPTED", "REJECTED", "WAITLISTED", "CANCELLED"]),
+  status: z.enum([
+    "DRAFT",
+    "UNDER_REVIEW",
+    "ACCEPTED",
+    "REJECTED",
+    "WAITLISTED",
+    "CANCELLED",
+  ]),
 });
 
 const BulkDeleteApplicationsSchema = z.object({
@@ -74,10 +98,12 @@ const BulkDeleteApplicationsSchema = z.object({
 
 const BulkUpdateApplicationResponsesSchema = z.object({
   applicationId: z.string(),
-  responses: z.array(z.object({
-    questionId: z.string(),
-    answer: z.string(),
-  })),
+  responses: z.array(
+    z.object({
+      questionId: z.string(),
+      answer: z.string(),
+    }),
+  ),
 });
 
 const UpdateWaitlistOrderSchema = z.object({
@@ -90,7 +116,17 @@ const CreateQuestionSchema = z.object({
   questionKey: z.string(),
   questionEn: z.string(),
   questionEs: z.string(),
-  questionType: z.enum(["TEXT", "TEXTAREA", "EMAIL", "PHONE", "URL", "SELECT", "MULTISELECT", "CHECKBOX", "NUMBER"]),
+  questionType: z.enum([
+    "TEXT",
+    "TEXTAREA",
+    "EMAIL",
+    "PHONE",
+    "URL",
+    "SELECT",
+    "MULTISELECT",
+    "CHECKBOX",
+    "NUMBER",
+  ]),
   required: z.boolean().default(true),
   options: z.array(z.string()).default([]),
   order: z.number(),
@@ -177,16 +213,20 @@ export const applicationRouter = createTRPCRouter({
 
   // Get user's application for a specific event
   getApplication: protectedProcedure
-    .input(z.object({ 
-      eventId: z.string(),
-      applicationType: z.enum(["RESIDENT", "MENTOR", "SPEAKER"]).optional(),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(),
+        applicationType: z.enum(["RESIDENT", "MENTOR", "SPEAKER"]).optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const application = await ctx.db.application.findFirst({
         where: {
           userId: ctx.session.user.id,
           eventId: input.eventId,
-          ...(input.applicationType && { applicationType: input.applicationType }),
+          ...(input.applicationType && {
+            applicationType: input.applicationType,
+          }),
         },
         include: {
           event: true,
@@ -219,7 +259,7 @@ export const applicationRouter = createTRPCRouter({
   createApplication: protectedProcedure
     .input(CreateApplicationInputSchema)
     .mutation(async ({ ctx, input }) => {
-      console.log('🔍 [Backend] createApplication called with:', {
+      console.log("🔍 [Backend] createApplication called with:", {
         userId: ctx.session.user.id,
         eventId: input.eventId,
         applicationType: input.applicationType,
@@ -228,7 +268,8 @@ export const applicationRouter = createTRPCRouter({
       });
 
       // Check if user has latePass access or is admin/mentor
-      const isAdmin = ctx.session.user.role === "admin" || ctx.session.user.role === "staff";
+      const isAdmin =
+        ctx.session.user.role === "admin" || ctx.session.user.role === "staff";
 
       // Check if user is a mentor for this event
       const mentorRole = await ctx.db.userRole.findFirst({
@@ -236,9 +277,9 @@ export const applicationRouter = createTRPCRouter({
           userId: ctx.session.user.id,
           eventId: input.eventId,
           role: {
-            name: "mentor"
-          }
-        }
+            name: "mentor",
+          },
+        },
       });
       const isMentor = !!mentorRole;
 
@@ -249,8 +290,8 @@ export const applicationRouter = createTRPCRouter({
           id: true,
           name: true,
           startDate: true,
-          endDate: true
-        }
+          endDate: true,
+        },
       });
 
       event ??= await ctx.db.event.findUnique({
@@ -259,8 +300,8 @@ export const applicationRouter = createTRPCRouter({
           id: true,
           name: true,
           startDate: true,
-          endDate: true
-        }
+          endDate: true,
+        },
       });
 
       if (!event) {
@@ -282,7 +323,7 @@ export const applicationRouter = createTRPCRouter({
             eventId: true,
             status: true,
             expiresAt: true,
-          }
+          },
         });
 
         const now = new Date();
@@ -291,23 +332,32 @@ export const applicationRouter = createTRPCRouter({
         // Allow both PENDING and ACCEPTED status (invitation may have been
         // accepted during account creation but application not yet submitted)
         // Match eventId flexibly: invitation may store CUID while input may be slug or vice versa
-        const eventIdMatches = invitation?.eventId === input.eventId ||
+        const eventIdMatches =
+          invitation?.eventId === input.eventId ||
           invitation?.eventId === event.id;
-        if (invitation &&
-            (invitation.status === "PENDING" || invitation.status === "ACCEPTED") &&
-            invitation.expiresAt > now &&
-            eventIdMatches) {
+        if (
+          invitation &&
+          (invitation.status === "PENDING" ||
+            invitation.status === "ACCEPTED") &&
+          invitation.expiresAt > now &&
+          eventIdMatches
+        ) {
           hasValidInvitation = true;
           validInvitationId = invitation.id;
-          console.log('✅ Valid invitation token found for user');
+          console.log("✅ Valid invitation token found for user");
         } else if (invitation) {
-          console.log('❌ Invalid invitation:', {
+          console.log("❌ Invalid invitation:", {
             status: invitation.status,
             expired: invitation.expiresAt <= now,
-            wrongEvent: invitation.eventId !== input.eventId && invitation.eventId !== event.id,
+            wrongEvent:
+              invitation.eventId !== input.eventId &&
+              invitation.eventId !== event.id,
           });
         } else {
-          console.log('❌ Invitation not found with token:', input.invitationToken);
+          console.log(
+            "❌ Invitation not found with token:",
+            input.invitationToken,
+          );
         }
       }
 
@@ -315,23 +365,30 @@ export const applicationRouter = createTRPCRouter({
       const now = new Date();
       const applicationsOpen = now <= event.startDate; // Applications close when event starts
 
-      console.log('🕐 Application timing check:', {
+      console.log("🕐 Application timing check:", {
         now: now.toISOString(),
         eventStart: event.startDate.toISOString(),
         applicationsOpen,
         isAdmin,
         isMentor,
-        hasValidInvitation
+        hasValidInvitation,
       });
 
       // Speaker applications bypass the deadline (speakers are recruited on a different timeline)
       const isSpeakerApplication = input.applicationType === "SPEAKER";
 
       // If applications are closed and user is not admin/mentor/invited/speaker, they cannot apply
-      if (!applicationsOpen && !isAdmin && !isMentor && !hasValidInvitation && !isSpeakerApplication) {
+      if (
+        !applicationsOpen &&
+        !isAdmin &&
+        !isMentor &&
+        !hasValidInvitation &&
+        !isSpeakerApplication
+      ) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "Applications for this event are closed. A late pass is required to apply.",
+          message:
+            "Applications for this event are closed. A late pass is required to apply.",
         });
       }
 
@@ -344,25 +401,30 @@ export const applicationRouter = createTRPCRouter({
       });
 
       if (existing) {
-        console.log('📋 Found existing application:', {
+        console.log("📋 Found existing application:", {
           id: existing.id,
           currentType: existing.applicationType,
-          requestedType: input.applicationType
+          requestedType: input.applicationType,
         });
 
         // If existing application has different type or needs invitation linkage, update it
-        const needsTypeUpdate = existing.applicationType !== input.applicationType;
+        const needsTypeUpdate =
+          existing.applicationType !== input.applicationType;
         const needsInvitationLink = validInvitationId && !existing.invitationId;
 
         if (needsTypeUpdate || needsInvitationLink) {
-          console.log('🔄 Updating application:', {
-            typeChange: needsTypeUpdate ? `${existing.applicationType} → ${input.applicationType}` : 'none',
-            invitationLink: needsInvitationLink ? validInvitationId : 'none',
+          console.log("🔄 Updating application:", {
+            typeChange: needsTypeUpdate
+              ? `${existing.applicationType} → ${input.applicationType}`
+              : "none",
+            invitationLink: needsInvitationLink ? validInvitationId : "none",
           });
           const updated = await ctx.db.application.update({
             where: { id: existing.id },
             data: {
-              ...(needsTypeUpdate && { applicationType: input.applicationType }),
+              ...(needsTypeUpdate && {
+                applicationType: input.applicationType,
+              }),
               ...(needsInvitationLink && { invitationId: validInvitationId }),
             },
             include: {
@@ -374,16 +436,18 @@ export const applicationRouter = createTRPCRouter({
               },
             },
           });
-          console.log('✅ Application updated successfully');
+          console.log("✅ Application updated successfully");
           return updated;
         }
 
-        console.log('ℹ️ Application type already matches, returning existing application');
+        console.log(
+          "ℹ️ Application type already matches, returning existing application",
+        );
         return existing;
       }
 
       // Create new application with race condition handling
-      console.log('🆕 Creating new application');
+      console.log("🆕 Creating new application");
       try {
         const application = await ctx.db.application.create({
           data: {
@@ -405,14 +469,28 @@ export const applicationRouter = createTRPCRouter({
           },
         });
 
-        console.log('✅ New application created successfully with type:', application.applicationType);
+        console.log(
+          "✅ New application created successfully with type:",
+          application.applicationType,
+        );
         return application;
       } catch (error: unknown) {
-        console.log('⚠️ Error creating application, checking for race condition:', error);
-        
+        console.log(
+          "⚠️ Error creating application, checking for race condition:",
+          error,
+        );
+
         // Handle race condition where application was created between our check and create attempt
-        if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') { // Unique constraint error
-          console.log('🏃 Race condition detected, fetching existing application');
+        if (
+          error &&
+          typeof error === "object" &&
+          "code" in error &&
+          error.code === "P2002"
+        ) {
+          // Unique constraint error
+          console.log(
+            "🏃 Race condition detected, fetching existing application",
+          );
           const existingAfterRace = await ctx.db.application.findFirst({
             where: {
               userId: ctx.session.user.id,
@@ -427,17 +505,22 @@ export const applicationRouter = createTRPCRouter({
               },
             },
           });
-          
+
           if (existingAfterRace) {
-            console.log('📋 Found application after race condition:', {
+            console.log("📋 Found application after race condition:", {
               id: existingAfterRace.id,
               currentType: existingAfterRace.applicationType,
-              requestedType: input.applicationType
+              requestedType: input.applicationType,
             });
 
             // Update the application type if different
             if (existingAfterRace.applicationType !== input.applicationType) {
-              console.log('🔄 Updating application type after race condition from', existingAfterRace.applicationType, 'to', input.applicationType);
+              console.log(
+                "🔄 Updating application type after race condition from",
+                existingAfterRace.applicationType,
+                "to",
+                input.applicationType,
+              );
               const updated = await ctx.db.application.update({
                 where: { id: existingAfterRace.id },
                 data: { applicationType: input.applicationType },
@@ -450,15 +533,17 @@ export const applicationRouter = createTRPCRouter({
                   },
                 },
               });
-              console.log('✅ Application type updated successfully after race condition');
+              console.log(
+                "✅ Application type updated successfully after race condition",
+              );
               return updated;
             }
             return existingAfterRace;
           }
         }
-        
+
         // Re-throw if it's not a race condition we can handle
-        console.log('❌ Unhandled error in createApplication:', error);
+        console.log("❌ Unhandled error in createApplication:", error);
         throw error;
       }
     }),
@@ -479,7 +564,11 @@ export const applicationRouter = createTRPCRouter({
         });
       }
 
-      const completionResult = await checkApplicationCompleteness(ctx.db, input.applicationId, application.eventId);
+      const completionResult = await checkApplicationCompleteness(
+        ctx.db,
+        input.applicationId,
+        application.eventId,
+      );
 
       return {
         ...completionResult,
@@ -507,8 +596,9 @@ export const applicationRouter = createTRPCRouter({
 
       // Allow access if user owns the application OR user is admin/staff
       const isOwner = application.userId === ctx.session.user.id;
-      const isAdmin = ctx.session.user.role === "admin" || ctx.session.user.role === "staff";
-      
+      const isAdmin =
+        ctx.session.user.role === "admin" || ctx.session.user.role === "staff";
+
       if (!isOwner && !isAdmin) {
         throw new TRPCError({
           code: "FORBIDDEN",
@@ -520,7 +610,7 @@ export const applicationRouter = createTRPCRouter({
       let response;
       let retryCount = 0;
       const maxRetries = 3;
-      
+
       while (retryCount < maxRetries) {
         try {
           response = await ctx.db.applicationResponse.upsert({
@@ -545,25 +635,33 @@ export const applicationRouter = createTRPCRouter({
           break; // Success, exit the retry loop
         } catch (error: unknown) {
           retryCount++;
-          
+
           // Check if it's a unique constraint error
-          if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
-            console.log(`Unique constraint error on attempt ${retryCount}, retrying...`);
-            
+          if (
+            error &&
+            typeof error === "object" &&
+            "code" in error &&
+            error.code === "P2002"
+          ) {
+            console.log(
+              `Unique constraint error on attempt ${retryCount}, retrying...`,
+            );
+
             if (retryCount >= maxRetries) {
               // Final attempt: just try to update existing record
-              const existingResponse = await ctx.db.applicationResponse.findUnique({
-                where: {
-                  applicationId_questionId: {
-                    applicationId: input.applicationId,
-                    questionId: input.questionId,
+              const existingResponse =
+                await ctx.db.applicationResponse.findUnique({
+                  where: {
+                    applicationId_questionId: {
+                      applicationId: input.applicationId,
+                      questionId: input.questionId,
+                    },
                   },
-                },
-                include: {
-                  question: true,
-                },
-              });
-              
+                  include: {
+                    question: true,
+                  },
+                });
+
               if (existingResponse) {
                 response = await ctx.db.applicationResponse.update({
                   where: { id: existingResponse.id },
@@ -575,16 +673,18 @@ export const applicationRouter = createTRPCRouter({
                 break;
               }
             }
-            
+
             // Wait a bit before retrying to avoid immediate conflict
-            await new Promise(resolve => setTimeout(resolve, 50 * retryCount));
+            await new Promise((resolve) =>
+              setTimeout(resolve, 50 * retryCount),
+            );
           } else {
             // Non-constraint error, don't retry
             throw error;
           }
         }
       }
-      
+
       if (!response) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -594,32 +694,48 @@ export const applicationRouter = createTRPCRouter({
 
       // Check if application completion status has changed
       try {
-        const completionResult = await checkApplicationCompleteness(ctx.db, input.applicationId, application.eventId);
+        const completionResult = await checkApplicationCompleteness(
+          ctx.db,
+          input.applicationId,
+          application.eventId,
+        );
 
         // Update completion status in database (may also revert SUBMITTED to DRAFT)
         // For auto-save updates, don't treat as intentional edits to prevent aggressive reversion
-        const updateResult = await updateApplicationCompletionStatus(ctx.db, input.applicationId, completionResult, {
-          isUserIntentionalEdit: false // This is an auto-save update, not an intentional edit
-        });
-        
+        const updateResult = await updateApplicationCompletionStatus(
+          ctx.db,
+          input.applicationId,
+          completionResult,
+          {
+            isUserIntentionalEdit: false, // This is an auto-save update, not an intentional edit
+          },
+        );
+
         // Log status reversion for debugging
         if (updateResult.statusReverted) {
-          console.log(`✏️ Application ${input.applicationId} status reverted from SUBMITTED to DRAFT due to field edit`);
+          console.log(
+            `✏️ Application ${input.applicationId} status reverted from SUBMITTED to DRAFT due to field edit`,
+          );
         }
-        
+
         // Note: We don't send emails just for field completion anymore
         // Users should only get emails for actual submission, not just filling fields
         if (completionResult.wasJustCompleted) {
-          console.log(`✅ Application ${input.applicationId} became complete - in-browser notification will show, no email sent`);
+          console.log(
+            `✅ Application ${input.applicationId} became complete - in-browser notification will show, no email sent`,
+          );
         }
       } catch (error) {
         // Log error but don't fail the response update
-        console.error('Error checking application completeness:', error);
+        console.error("Error checking application completeness:", error);
         captureApiError(error, {
           userId: ctx.session.user.id,
           route: "application.updateResponse",
           method: "POST",
-          input: { applicationId: input.applicationId, questionId: input.questionId }
+          input: {
+            applicationId: input.applicationId,
+            questionId: input.questionId,
+          },
         });
       }
 
@@ -659,7 +775,9 @@ export const applicationRouter = createTRPCRouter({
             application.status === "WAITLISTED");
 
         if (!isOnBehalfSpeakerUpdate) {
-          console.log(`Submit attempt on non-DRAFT application: ${input.applicationId}, current status: ${application.status}, user: ${ctx.session.user.id}`);
+          console.log(
+            `Submit attempt on non-DRAFT application: ${input.applicationId}, current status: ${application.status}, user: ${ctx.session.user.id}`,
+          );
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: `Application has already been submitted (current status: ${application.status})`,
@@ -667,7 +785,9 @@ export const applicationRouter = createTRPCRouter({
         }
 
         // Update venue associations if provided
-        console.log(`Speaker updating on-behalf application: ${input.applicationId}, preserving status: ${application.status}`);
+        console.log(
+          `Speaker updating on-behalf application: ${input.applicationId}, preserving status: ${application.status}`,
+        );
         if (input.venueIds && input.venueIds.length > 0) {
           await ctx.db.applicationVenue.deleteMany({
             where: { applicationId: input.applicationId },
@@ -684,10 +804,15 @@ export const applicationRouter = createTRPCRouter({
         const updated = await ctx.db.application.update({
           where: { id: input.applicationId },
           data: {
-            speakerInvitedByUserId: input.speakerInvitedByUserId ?? application.speakerInvitedByUserId,
-            speakerInvitedByOther: input.speakerInvitedByOther ?? application.speakerInvitedByOther,
-            speakerPreferredDates: input.speakerPreferredDates ?? application.speakerPreferredDates,
-            speakerPreferredTimes: input.speakerPreferredTimes ?? application.speakerPreferredTimes,
+            speakerInvitedByUserId:
+              input.speakerInvitedByUserId ??
+              application.speakerInvitedByUserId,
+            speakerInvitedByOther:
+              input.speakerInvitedByOther ?? application.speakerInvitedByOther,
+            speakerPreferredDates:
+              input.speakerPreferredDates ?? application.speakerPreferredDates,
+            speakerPreferredTimes:
+              input.speakerPreferredTimes ?? application.speakerPreferredTimes,
           },
           include: {
             event: true,
@@ -713,27 +838,28 @@ export const applicationRouter = createTRPCRouter({
         });
 
         // Filter out conditional fields that shouldn't be required
-        const requiredQuestions = allRequiredQuestions.filter(question => {
+        const requiredQuestions = allRequiredQuestions.filter((question) => {
           const questionText = question.questionEn.toLowerCase();
-          const isConditionalField = questionText.includes("specify") ||
-                                     questionText.includes("if you answered") ||
-                                     questionText.includes("if you did not select") ||
-                                     questionText.includes("other") && questionText.includes("please");
+          const isConditionalField =
+            questionText.includes("specify") ||
+            questionText.includes("if you answered") ||
+            questionText.includes("if you did not select") ||
+            (questionText.includes("other") && questionText.includes("please"));
           return !isConditionalField;
         });
 
         const answeredQuestionIds = new Set(
-          application.responses.map(r => r.questionId)
+          application.responses.map((r) => r.questionId),
         );
 
         const missingRequired = requiredQuestions.filter(
-          q => !answeredQuestionIds.has(q.id)
+          (q) => !answeredQuestionIds.has(q.id),
         );
 
         if (missingRequired.length > 0) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `Please answer all required questions: ${missingRequired.map(q => q.questionKey).join(", ")}`,
+            message: `Please answer all required questions: ${missingRequired.map((q) => q.questionKey).join(", ")}`,
           });
         }
       }
@@ -776,14 +902,16 @@ export const applicationRouter = createTRPCRouter({
       // Send submission confirmation email now that application is actually submitted
       try {
         await sendSubmissionNotification(ctx.db, input.applicationId);
-        console.log(`📧 Submission confirmation email sent for application ${input.applicationId}`);
+        console.log(
+          `📧 Submission confirmation email sent for application ${input.applicationId}`,
+        );
       } catch (error) {
         // Log error but don't fail the submission
-        console.error('Failed to send submission notification email:', error);
+        console.error("Failed to send submission notification email:", error);
         captureEmailError(error, {
           userId: ctx.session.user.id,
           emailType: "application_submission",
-          templateName: "applicationSubmitted"
+          templateName: "applicationSubmitted",
         });
       }
 
@@ -809,11 +937,23 @@ export const applicationRouter = createTRPCRouter({
 
   // Admin/Floor Lead: Get all applications for an event
   getEventApplications: protectedProcedure
-    .input(z.object({
-      eventId: z.string(), // Can be ID or slug
-      status: z.enum(["DRAFT", "SUBMITTED", "UNDER_REVIEW", "ACCEPTED", "REJECTED", "WAITLISTED", "CANCELLED"]).optional(),
-      applicationType: z.enum(["RESIDENT", "MENTOR", "SPEAKER"]).optional(),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(), // Can be ID or slug
+        status: z
+          .enum([
+            "DRAFT",
+            "SUBMITTED",
+            "UNDER_REVIEW",
+            "ACCEPTED",
+            "REJECTED",
+            "WAITLISTED",
+            "CANCELLED",
+          ])
+          .optional(),
+        applicationType: z.enum(["RESIDENT", "MENTOR", "SPEAKER"]).optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       // Resolve eventId (supports both ID and slug)
       const resolvedEventId = await resolveEventId(ctx.db, input.eventId);
@@ -833,7 +973,11 @@ export const applicationRouter = createTRPCRouter({
       // OR applications shared across all floors
       let venueFilter: Prisma.ApplicationWhereInput | undefined;
       if (!isAdminOrStaff(ctx.session.user.role)) {
-        const ownedVenueIds = await getUserOwnedVenueIds(ctx.db, ctx.session.user.id, resolvedEventId);
+        const ownedVenueIds = await getUserOwnedVenueIds(
+          ctx.db,
+          ctx.session.user.id,
+          resolvedEventId,
+        );
         venueFilter = {
           OR: [
             {
@@ -854,7 +998,9 @@ export const applicationRouter = createTRPCRouter({
         where: {
           eventId: resolvedEventId,
           ...(input.status && { status: input.status }),
-          ...(input.applicationType && { applicationType: input.applicationType }),
+          ...(input.applicationType && {
+            applicationType: input.applicationType,
+          }),
           ...venueFilter,
         },
         include: {
@@ -916,7 +1062,7 @@ export const applicationRouter = createTRPCRouter({
               },
             },
             orderBy: {
-              assignedAt: 'desc',
+              assignedAt: "desc",
             },
           },
         },
@@ -927,9 +1073,11 @@ export const applicationRouter = createTRPCRouter({
 
   // Admin: Get consensus applications (applications with evaluations and scores)
   getConsensusApplications: protectedProcedure
-    .input(z.object({
-      eventId: z.string(), // Can be ID or slug
-    }))
+    .input(
+      z.object({
+        eventId: z.string(), // Can be ID or slug
+      }),
+    )
     .query(async ({ ctx, input }) => {
       checkAdminAccess(ctx.session.user.role);
 
@@ -984,7 +1132,7 @@ export const applicationRouter = createTRPCRouter({
               },
             },
             orderBy: {
-              assignedAt: 'desc',
+              assignedAt: "desc",
             },
           },
           venues: {
@@ -1029,7 +1177,7 @@ export const applicationRouter = createTRPCRouter({
               },
             },
             orderBy: {
-              completedAt: 'desc',
+              completedAt: "desc",
             },
           },
         },
@@ -1037,12 +1185,18 @@ export const applicationRouter = createTRPCRouter({
       });
 
       // Calculate average scores and sort by average (highest first)
-      const applicationsWithScores = applications.map(app => {
-        const validEvaluations = app.evaluations.filter(evaluation => evaluation.overallScore !== null);
-        const averageScore = validEvaluations.length > 0 
-          ? validEvaluations.reduce((sum, evaluation) => sum + evaluation.overallScore!, 0) / validEvaluations.length
-          : 0;
-        
+      const applicationsWithScores = applications.map((app) => {
+        const validEvaluations = app.evaluations.filter(
+          (evaluation) => evaluation.overallScore !== null,
+        );
+        const averageScore =
+          validEvaluations.length > 0
+            ? validEvaluations.reduce(
+                (sum, evaluation) => sum + evaluation.overallScore!,
+                0,
+              ) / validEvaluations.length
+            : 0;
+
         return {
           ...app,
           averageScore,
@@ -1066,7 +1220,10 @@ export const applicationRouter = createTRPCRouter({
         select: { eventId: true },
       });
       if (!appForAuth) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Application not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Application not found",
+        });
       }
       await assertAdminOrEventFloorOwner(
         ctx.db,
@@ -1098,34 +1255,40 @@ export const applicationRouter = createTRPCRouter({
       });
 
       // Send notification email when status changes to accepted, rejected, or waitlisted
-      if (['ACCEPTED', 'REJECTED', 'WAITLISTED'].includes(input.status)) {
+      if (["ACCEPTED", "REJECTED", "WAITLISTED"].includes(input.status)) {
         try {
-          const { getEmailService } = await import('~/server/email/emailService');
+          const { getEmailService } = await import(
+            "~/server/email/emailService"
+          );
           const emailService = getEmailService(ctx.db);
-          
+
           const result = await emailService.sendApplicationStatusEmail(
             application,
-            input.status as 'ACCEPTED' | 'REJECTED' | 'WAITLISTED'
+            input.status as "ACCEPTED" | "REJECTED" | "WAITLISTED",
           );
-          
+
           if (result.success) {
-            console.log(`Status change email sent for application ${input.applicationId} (${input.status})`);
+            console.log(
+              `Status change email sent for application ${input.applicationId} (${input.status})`,
+            );
           } else {
-            console.error(`Failed to send status change email: ${result.error}`);
+            console.error(
+              `Failed to send status change email: ${result.error}`,
+            );
           }
         } catch (error) {
-          console.error('Error sending status change email:', error);
+          console.error("Error sending status change email:", error);
           captureEmailError(error, {
             userId: application.userId ?? undefined,
             emailType: "status_change",
-            templateName: `application${input.status.toLowerCase().charAt(0).toUpperCase() + input.status.toLowerCase().slice(1)}`
+            templateName: `application${input.status.toLowerCase().charAt(0).toUpperCase() + input.status.toLowerCase().slice(1)}`,
           });
           // Don't fail the status update if email fails
         }
       }
 
       // Auto-sync profile data when application is accepted
-      if (input.status === 'ACCEPTED' && application.userId) {
+      if (input.status === "ACCEPTED" && application.userId) {
         try {
           // Check if this application has already been synced
           const existingSync = await ctx.db.profileSync.findUnique({
@@ -1165,7 +1328,10 @@ export const applicationRouter = createTRPCRouter({
               });
               // Map responses
               const responseMap = new Map(
-                appWithResponses.responses.map(r => [r.question.questionKey, r.answer])
+                appWithResponses.responses.map((r) => [
+                  r.question.questionKey,
+                  r.answer,
+                ]),
               );
 
               const updateData: Partial<{
@@ -1182,11 +1348,15 @@ export const applicationRouter = createTRPCRouter({
               // Sync skills (merge with existing)
               if (responseMap.has("technical_skills")) {
                 try {
-                  const appSkills = JSON.parse(responseMap.get("technical_skills")!) as string[];
+                  const appSkills = JSON.parse(
+                    responseMap.get("technical_skills")!,
+                  ) as string[];
                   const existingSkills = profile.skills ?? [];
-                  const mergedSkills = Array.from(new Set([...existingSkills, ...appSkills]));
+                  const mergedSkills = Array.from(
+                    new Set([...existingSkills, ...appSkills]),
+                  );
                   updateData.skills = mergedSkills;
-                  syncedFields.push('skills');
+                  syncedFields.push("skills");
                 } catch {
                   // Skip if parsing fails
                 }
@@ -1197,7 +1367,7 @@ export const applicationRouter = createTRPCRouter({
                 const appBio = responseMap.get("bio")!;
                 if (appBio.trim()) {
                   updateData.bio = appBio.trim();
-                  syncedFields.push('bio');
+                  syncedFields.push("bio");
                 }
               }
 
@@ -1205,7 +1375,7 @@ export const applicationRouter = createTRPCRouter({
                 const appLocation = responseMap.get("location")!;
                 if (appLocation.trim()) {
                   updateData.location = appLocation.trim();
-                  syncedFields.push('location');
+                  syncedFields.push("location");
                 }
               }
 
@@ -1213,7 +1383,7 @@ export const applicationRouter = createTRPCRouter({
                 const appCompany = responseMap.get("company")!;
                 if (appCompany.trim()) {
                   updateData.company = appCompany.trim();
-                  syncedFields.push('company');
+                  syncedFields.push("company");
                 }
               }
 
@@ -1221,7 +1391,7 @@ export const applicationRouter = createTRPCRouter({
                 const appLinkedIn = responseMap.get("linkedin_url")!;
                 if (appLinkedIn.trim()) {
                   updateData.linkedinUrl = appLinkedIn.trim();
-                  syncedFields.push('linkedinUrl');
+                  syncedFields.push("linkedinUrl");
                 }
               }
 
@@ -1229,7 +1399,7 @@ export const applicationRouter = createTRPCRouter({
                 const appGitHub = responseMap.get("github_url")!;
                 if (appGitHub.trim()) {
                   updateData.githubUrl = appGitHub.trim();
-                  syncedFields.push('githubUrl');
+                  syncedFields.push("githubUrl");
                 }
               }
 
@@ -1250,16 +1420,18 @@ export const applicationRouter = createTRPCRouter({
                 },
               });
 
-              console.log(`Auto-synced ${syncedFields.length} fields to profile for application ${input.applicationId}`);
+              console.log(
+                `Auto-synced ${syncedFields.length} fields to profile for application ${input.applicationId}`,
+              );
             }
           }
         } catch (error) {
-          console.error('Error auto-syncing profile:', error);
+          console.error("Error auto-syncing profile:", error);
           captureApiError(error, {
             userId: application.userId,
             route: "application.updateStatus.profileSync",
             method: "POST",
-            input: { applicationId: input.applicationId, status: input.status }
+            input: { applicationId: input.applicationId, status: input.status },
           });
           // Don't fail the status update if profile sync fails
         }
@@ -1278,7 +1450,10 @@ export const applicationRouter = createTRPCRouter({
         select: { eventId: true },
       });
       if (!firstApp) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "No applications found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No applications found",
+        });
       }
       await assertAdminOrEventFloorOwner(
         ctx.db,
@@ -1299,11 +1474,13 @@ export const applicationRouter = createTRPCRouter({
       });
 
       // Send notification emails for status changes
-      if (['ACCEPTED', 'REJECTED', 'WAITLISTED'].includes(input.status)) {
+      if (["ACCEPTED", "REJECTED", "WAITLISTED"].includes(input.status)) {
         try {
-          const { getEmailService } = await import('~/server/email/emailService');
+          const { getEmailService } = await import(
+            "~/server/email/emailService"
+          );
           const emailService = getEmailService(ctx.db);
-          
+
           // Fetch full application data for emails
           const fullApplications = await ctx.db.application.findMany({
             where: {
@@ -1313,44 +1490,57 @@ export const applicationRouter = createTRPCRouter({
             },
             include: {
               user: {
-            select: {
-              id: true,
-              firstName: true,
-              surname: true,
-              name: true,
-              email: true,
-              adminNotes: true,
-              adminWorkExperience: true,
-              adminLabels: true,
-              adminUpdatedAt: true,
-              profile: true,
-            },
-          },
+                select: {
+                  id: true,
+                  firstName: true,
+                  surname: true,
+                  name: true,
+                  email: true,
+                  adminNotes: true,
+                  adminWorkExperience: true,
+                  adminLabels: true,
+                  adminUpdatedAt: true,
+                  profile: true,
+                },
+              },
               event: true,
             },
           });
 
           // Send emails in parallel
-          const emailPromises = fullApplications.map(app => 
-            emailService.sendApplicationStatusEmail(
-              app,
-              input.status as 'ACCEPTED' | 'REJECTED' | 'WAITLISTED'
-            ).catch(error => {
-              console.error(`Failed to send email for application ${app.id}:`, error);
-              return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-            })
+          const emailPromises = fullApplications.map((app) =>
+            emailService
+              .sendApplicationStatusEmail(
+                app,
+                input.status as "ACCEPTED" | "REJECTED" | "WAITLISTED",
+              )
+              .catch((error) => {
+                console.error(
+                  `Failed to send email for application ${app.id}:`,
+                  error,
+                );
+                return {
+                  success: false,
+                  error:
+                    error instanceof Error ? error.message : "Unknown error",
+                };
+              }),
           );
 
           const results = await Promise.allSettled(emailPromises);
-          const successCount = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
-          
-          console.log(`Bulk status emails: ${successCount}/${fullApplications.length} sent successfully`);
+          const successCount = results.filter(
+            (r) => r.status === "fulfilled" && r.value.success,
+          ).length;
+
+          console.log(
+            `Bulk status emails: ${successCount}/${fullApplications.length} sent successfully`,
+          );
         } catch (error) {
-          console.error('Error sending bulk status change emails:', error);
+          console.error("Error sending bulk status change emails:", error);
           captureEmailError(error, {
             emailType: "bulk_status_change",
             templateName: `application${input.status.toLowerCase().charAt(0).toUpperCase() + input.status.toLowerCase().slice(1)}`,
-            recipient: `${input.applicationIds.length} applications`
+            recipient: `${input.applicationIds.length} applications`,
           });
           // Don't fail the status update if emails fail
         }
@@ -1369,7 +1559,10 @@ export const applicationRouter = createTRPCRouter({
         select: { eventId: true },
       });
       if (!firstApp) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "No applications found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No applications found",
+        });
       }
       await assertAdminOrEventFloorOwner(
         ctx.db,
@@ -1393,25 +1586,39 @@ export const applicationRouter = createTRPCRouter({
 
   // Floor Lead/Admin: Toggle cross-floor sharing for a single application
   toggleShareAcrossFloors: protectedProcedure
-    .input(z.object({
-      applicationId: z.string(),
-      shared: z.boolean(),
-    }))
+    .input(
+      z.object({
+        applicationId: z.string(),
+        shared: z.boolean(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const application = await ctx.db.application.findUnique({
         where: { id: input.applicationId },
         select: { eventId: true, venues: { select: { venueId: true } } },
       });
       if (!application) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Application not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Application not found",
+        });
       }
 
       // Authorize: admin/staff OR floor lead who owns a venue the application is linked to
       if (!isAdminOrStaff(ctx.session.user.role)) {
-        const ownedVenueIds = await getUserOwnedVenueIds(ctx.db, ctx.session.user.id, application.eventId);
-        const hasAccess = application.venues.some(v => ownedVenueIds.includes(v.venueId));
+        const ownedVenueIds = await getUserOwnedVenueIds(
+          ctx.db,
+          ctx.session.user.id,
+          application.eventId,
+        );
+        const hasAccess = application.venues.some((v) =>
+          ownedVenueIds.includes(v.venueId),
+        );
         if (!hasAccess) {
-          throw new TRPCError({ code: "FORBIDDEN", message: "You can only share applications linked to your floor(s)" });
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You can only share applications linked to your floor(s)",
+          });
         }
       }
 
@@ -1427,17 +1634,22 @@ export const applicationRouter = createTRPCRouter({
 
   // Floor Lead/Admin: Bulk toggle cross-floor sharing
   bulkShareAcrossFloors: protectedProcedure
-    .input(z.object({
-      applicationIds: z.array(z.string()),
-      shared: z.boolean(),
-    }))
+    .input(
+      z.object({
+        applicationIds: z.array(z.string()),
+        shared: z.boolean(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const firstApp = await ctx.db.application.findFirst({
         where: { id: { in: input.applicationIds } },
         select: { eventId: true },
       });
       if (!firstApp) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "No applications found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No applications found",
+        });
       }
       await assertAdminOrEventFloorOwner(
         ctx.db,
@@ -1495,12 +1707,14 @@ export const applicationRouter = createTRPCRouter({
           email: input.email,
           status: "SUBMITTED",
           submittedAt: new Date(),
-          ...(input.source === "google_form" && input.sourceId && {
-            googleFormId: input.sourceId,
-          }),
-          ...(input.source === "notion_form" && input.sourceId && {
-            notionPageId: input.sourceId,
-          }),
+          ...(input.source === "google_form" &&
+            input.sourceId && {
+              googleFormId: input.sourceId,
+            }),
+          ...(input.source === "notion_form" &&
+            input.sourceId && {
+              notionPageId: input.sourceId,
+            }),
         },
       });
 
@@ -1510,7 +1724,7 @@ export const applicationRouter = createTRPCRouter({
       });
 
       // Create responses for matching questions
-      const questionMap = new Map(questions.map(q => [q.questionKey, q]));
+      const questionMap = new Map(questions.map((q) => [q.questionKey, q]));
       const responses = [];
 
       for (const [questionKey, answer] of Object.entries(input.responses)) {
@@ -1530,8 +1744,8 @@ export const applicationRouter = createTRPCRouter({
         });
       }
 
-      return { 
-        skipped: false, 
+      return {
+        skipped: false,
         application: await ctx.db.application.findUnique({
           where: { id: application.id },
           include: {
@@ -1558,15 +1772,21 @@ export const applicationRouter = createTRPCRouter({
         },
       });
 
-      return { canApply: !existing, hasApplication: !!existing, application: existing };
+      return {
+        canApply: !existing,
+        hasApplication: !!existing,
+        application: existing,
+      };
     }),
 
   // Admin: Delete application responses (for testing missing fields)
   deleteApplicationResponse: protectedProcedure
-    .input(z.object({
-      applicationId: z.string(),
-      questionKeys: z.array(z.string()), // Array of question keys to delete responses for
-    }))
+    .input(
+      z.object({
+        applicationId: z.string(),
+        questionKeys: z.array(z.string()), // Array of question keys to delete responses for
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       checkAdminAccess(ctx.session.user.role);
 
@@ -1597,23 +1817,25 @@ export const applicationRouter = createTRPCRouter({
         where: {
           applicationId: input.applicationId,
           questionId: {
-            in: questions.map(q => q.id),
+            in: questions.map((q) => q.id),
           },
         },
       });
 
       return {
         deletedCount: deletedResponses.count,
-        deletedQuestions: questions.map(q => q.questionKey),
+        deletedQuestions: questions.map((q) => q.questionKey),
       };
     }),
 
   // Admin/Floor Lead: Update user name for an application
   updateApplicationUserName: protectedProcedure
-    .input(z.object({
-      applicationId: z.string(),
-      name: z.string(),
-    }))
+    .input(
+      z.object({
+        applicationId: z.string(),
+        name: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // Get the application to find the user and eventId for auth
       const application = await ctx.db.application.findUnique({
@@ -1629,7 +1851,10 @@ export const applicationRouter = createTRPCRouter({
       }
 
       await assertAdminOrEventFloorOwner(
-        ctx.db, ctx.session.user.id, ctx.session.user.role, application.eventId
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        application.eventId,
       );
 
       if (application.user) {
@@ -1669,10 +1894,12 @@ export const applicationRouter = createTRPCRouter({
 
   // Admin/Floor Lead: Update application affiliation
   updateApplicationAffiliation: protectedProcedure
-    .input(z.object({
-      applicationId: z.string(),
-      affiliation: z.string().nullable(),
-    }))
+    .input(
+      z.object({
+        applicationId: z.string(),
+        affiliation: z.string().nullable(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // Fetch eventId for auth check
       const appForAuth = await ctx.db.application.findUnique({
@@ -1686,7 +1913,10 @@ export const applicationRouter = createTRPCRouter({
         });
       }
       await assertAdminOrEventFloorOwner(
-        ctx.db, ctx.session.user.id, ctx.session.user.role, appForAuth.eventId
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        appForAuth.eventId,
       );
 
       // Update the application's affiliation field directly
@@ -1721,18 +1951,20 @@ export const applicationRouter = createTRPCRouter({
 
   // Admin/Floor Lead: Update user profile fields for an application
   updateApplicationUserProfile: protectedProcedure
-    .input(z.object({
-      applicationId: z.string(),
-      email: z.string().email().optional(),
-      firstName: z.string().min(1).optional(),
-      surname: z.string().optional().nullable(),
-      bio: z.string().max(1000).optional().nullable(),
-      jobTitle: z.string().max(100).optional().nullable(),
-      company: z.string().max(100).optional().nullable(),
-      website: z.string().url().optional().nullable().or(z.literal("")),
-      linkedinUrl: z.string().url().optional().nullable().or(z.literal("")),
-      twitterUrl: z.string().url().optional().nullable().or(z.literal("")),
-    }))
+    .input(
+      z.object({
+        applicationId: z.string(),
+        email: z.string().email().optional(),
+        firstName: z.string().min(1).optional(),
+        surname: z.string().optional().nullable(),
+        bio: z.string().max(1000).optional().nullable(),
+        jobTitle: z.string().max(100).optional().nullable(),
+        company: z.string().max(100).optional().nullable(),
+        website: z.string().url().optional().nullable().or(z.literal("")),
+        linkedinUrl: z.string().url().optional().nullable().or(z.literal("")),
+        twitterUrl: z.string().url().optional().nullable().or(z.literal("")),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const application = await ctx.db.application.findUnique({
         where: { id: input.applicationId },
@@ -1740,19 +1972,31 @@ export const applicationRouter = createTRPCRouter({
       });
 
       if (!application) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Application not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Application not found",
+        });
       }
 
       await assertAdminOrEventFloorOwner(
-        ctx.db, ctx.session.user.id, ctx.session.user.role, application.eventId
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        application.eventId,
       );
 
       if (!application.user) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Application has no linked user" });
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Application has no linked user",
+        });
       }
 
       // Email uniqueness check
-      if (input.email && input.email.toLowerCase() !== application.user.email?.toLowerCase()) {
+      if (
+        input.email &&
+        input.email.toLowerCase() !== application.user.email?.toLowerCase()
+      ) {
         const existingUser = await ctx.db.user.findFirst({
           where: {
             email: { equals: input.email.toLowerCase(), mode: "insensitive" },
@@ -1774,7 +2018,10 @@ export const applicationRouter = createTRPCRouter({
       }
       if (input.firstName !== undefined) {
         userUpdateData.firstName = input.firstName;
-        const sn = input.surname !== undefined ? input.surname : (application.user.surname ?? "");
+        const sn =
+          input.surname !== undefined
+            ? input.surname
+            : (application.user.surname ?? "");
         userUpdateData.name = sn ? `${input.firstName} ${sn}` : input.firstName;
       }
       if (input.surname !== undefined) {
@@ -1786,11 +2033,16 @@ export const applicationRouter = createTRPCRouter({
       // Build UserProfile update data
       const profileFields: Record<string, string | null> = {};
       if (input.bio !== undefined) profileFields.bio = input.bio ?? null;
-      if (input.jobTitle !== undefined) profileFields.jobTitle = input.jobTitle ?? null;
-      if (input.company !== undefined) profileFields.company = input.company ?? null;
-      if (input.website !== undefined) profileFields.website = input.website ?? null;
-      if (input.linkedinUrl !== undefined) profileFields.linkedinUrl = input.linkedinUrl ?? null;
-      if (input.twitterUrl !== undefined) profileFields.twitterUrl = input.twitterUrl ?? null;
+      if (input.jobTitle !== undefined)
+        profileFields.jobTitle = input.jobTitle ?? null;
+      if (input.company !== undefined)
+        profileFields.company = input.company ?? null;
+      if (input.website !== undefined)
+        profileFields.website = input.website ?? null;
+      if (input.linkedinUrl !== undefined)
+        profileFields.linkedinUrl = input.linkedinUrl ?? null;
+      if (input.twitterUrl !== undefined)
+        profileFields.twitterUrl = input.twitterUrl ?? null;
 
       // Execute updates in a transaction
       await ctx.db.$transaction(async (tx) => {
@@ -1863,8 +2115,9 @@ export const applicationRouter = createTRPCRouter({
 
       // Allow access if user owns the application OR user is admin/staff
       const isOwner = application.userId === ctx.session.user.id;
-      const isAdmin = ctx.session.user.role === "admin" || ctx.session.user.role === "staff";
-      
+      const isAdmin =
+        ctx.session.user.role === "admin" || ctx.session.user.role === "staff";
+
       if (!isOwner && !isAdmin) {
         throw new TRPCError({
           code: "FORBIDDEN",
@@ -1874,7 +2127,7 @@ export const applicationRouter = createTRPCRouter({
 
       // Use transaction to update all responses atomically
       const updatedResponses = await ctx.db.$transaction(
-        input.responses.map(response =>
+        input.responses.map((response) =>
           ctx.db.applicationResponse.upsert({
             where: {
               applicationId_questionId: {
@@ -1890,15 +2143,24 @@ export const applicationRouter = createTRPCRouter({
               questionId: response.questionId,
               answer: response.answer,
             },
-          })
-        )
+          }),
+        ),
       );
 
       // Auto-check and update completion status (pass eventId to parallelize queries)
-      const completionResult = await checkApplicationCompleteness(ctx.db, input.applicationId, application.eventId);
-      await updateApplicationCompletionStatus(ctx.db, input.applicationId, completionResult, {
-        isUserIntentionalEdit: true // This is a bulk save, treat as intentional edit
-      });
+      const completionResult = await checkApplicationCompleteness(
+        ctx.db,
+        input.applicationId,
+        application.eventId,
+      );
+      await updateApplicationCompletionStatus(
+        ctx.db,
+        input.applicationId,
+        completionResult,
+        {
+          isUserIntentionalEdit: true, // This is a bulk save, treat as intentional edit
+        },
+      );
 
       return {
         success: true,
@@ -1908,10 +2170,22 @@ export const applicationRouter = createTRPCRouter({
 
   // Admin: Get application statistics for demographics
   getApplicationStats: protectedProcedure
-    .input(z.object({
-      eventId: z.string(), // Can be ID or slug
-      status: z.enum(["DRAFT", "SUBMITTED", "UNDER_REVIEW", "ACCEPTED", "REJECTED", "WAITLISTED", "CANCELLED"]).optional(),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(), // Can be ID or slug
+        status: z
+          .enum([
+            "DRAFT",
+            "SUBMITTED",
+            "UNDER_REVIEW",
+            "ACCEPTED",
+            "REJECTED",
+            "WAITLISTED",
+            "CANCELLED",
+          ])
+          .optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       checkAdminAccess(ctx.session.user.role);
 
@@ -1922,7 +2196,8 @@ export const applicationRouter = createTRPCRouter({
       }
 
       // Import demographics utilities
-      const { isLatamCountry, normalizeGender, calculatePercentage } = await import("~/utils/demographics");
+      const { isLatamCountry, normalizeGender, calculatePercentage } =
+        await import("~/utils/demographics");
 
       // Get applications with their responses, filtering by status if provided
       const applications = await ctx.db.application.findMany({
@@ -1957,34 +2232,36 @@ export const applicationRouter = createTRPCRouter({
 
       for (const application of applications) {
         const responseMap = new Map(
-          application.responses.map(r => [r.question.questionKey, r.answer])
+          application.responses.map((r) => [r.question.questionKey, r.answer]),
         );
 
         // Process gender data
-        const genderResponse = responseMap.get('gender') ?? responseMap.get('sex') ?? '';
+        const genderResponse =
+          responseMap.get("gender") ?? responseMap.get("sex") ?? "";
         const normalizedGender = normalizeGender(genderResponse);
-        
+
         switch (normalizedGender) {
-          case 'male':
+          case "male":
             maleCount++;
             break;
-          case 'female':
+          case "female":
             femaleCount++;
             break;
-          case 'other':
+          case "other":
             otherGenderCount++;
             break;
-          case 'prefer_not_to_say':
+          case "prefer_not_to_say":
             preferNotToSayCount++;
             break;
-          case 'unspecified':
+          case "unspecified":
             unspecifiedGenderCount++;
             break;
         }
 
         // Process nationality/region data
-        const nationalityResponse = responseMap.get('nationality') ?? responseMap.get('country') ?? '';
-        
+        const nationalityResponse =
+          responseMap.get("nationality") ?? responseMap.get("country") ?? "";
+
         if (!nationalityResponse) {
           unspecifiedRegionCount++;
         } else if (isLatamCountry(nationalityResponse)) {
@@ -2043,7 +2320,8 @@ export const applicationRouter = createTRPCRouter({
       if (existingApplication) {
         throw new TRPCError({
           code: "CONFLICT",
-          message: "An application already exists for this email address and event",
+          message:
+            "An application already exists for this email address and event",
         });
       }
 
@@ -2077,19 +2355,25 @@ export const applicationRouter = createTRPCRouter({
           applicationQuestions: {
             where: {
               questionKey: {
-                in: ["name", "full_name", "organization", "notes", "internal_notes"]
-              }
-            }
-          }
-        }
+                in: [
+                  "name",
+                  "full_name",
+                  "organization",
+                  "notes",
+                  "internal_notes",
+                ],
+              },
+            },
+          },
+        },
       });
 
       if (event?.applicationQuestions) {
         const responsesToCreate = [];
-        
+
         // Find and populate name field
-        const nameQuestion = event.applicationQuestions.find((q) => 
-          q.questionKey === "name" || q.questionKey === "full_name"
+        const nameQuestion = event.applicationQuestions.find(
+          (q) => q.questionKey === "name" || q.questionKey === "full_name",
         );
         if (nameQuestion) {
           responsesToCreate.push({
@@ -2101,7 +2385,9 @@ export const applicationRouter = createTRPCRouter({
 
         // Find and populate organization field
         if (input.organization) {
-          const orgQuestion = event.applicationQuestions.find((q) => q.questionKey === "organization");
+          const orgQuestion = event.applicationQuestions.find(
+            (q) => q.questionKey === "organization",
+          );
           if (orgQuestion) {
             responsesToCreate.push({
               applicationId: application.id,
@@ -2113,8 +2399,9 @@ export const applicationRouter = createTRPCRouter({
 
         // Find and populate notes field
         if (input.notes) {
-          const notesQuestion = event.applicationQuestions.find((q) => 
-            q.questionKey === "notes" || q.questionKey === "internal_notes"
+          const notesQuestion = event.applicationQuestions.find(
+            (q) =>
+              q.questionKey === "notes" || q.questionKey === "internal_notes",
           );
           if (notesQuestion) {
             responsesToCreate.push({
@@ -2147,7 +2434,7 @@ export const applicationRouter = createTRPCRouter({
         // Get the application's event to scope the reordering
         const application = await ctx.db.application.findUnique({
           where: { id: input.applicationId },
-          select: { eventId: true, waitlistOrder: true }
+          select: { eventId: true, waitlistOrder: true },
         });
 
         if (!application) {
@@ -2162,17 +2449,17 @@ export const applicationRouter = createTRPCRouter({
           where: {
             eventId: application.eventId,
             waitlistOrder: { gte: input.position },
-            id: { not: input.applicationId } // Don't update the current application
+            id: { not: input.applicationId }, // Don't update the current application
           },
           data: {
-            waitlistOrder: { increment: 1 }
-          }
+            waitlistOrder: { increment: 1 },
+          },
         });
 
         // Update the current application
         const updatedApplication = await ctx.db.application.update({
           where: { id: input.applicationId },
-          data: { waitlistOrder: input.position }
+          data: { waitlistOrder: input.position },
         });
 
         return updatedApplication;
@@ -2180,7 +2467,7 @@ export const applicationRouter = createTRPCRouter({
         // Clear manual override - set waitlistOrder to null
         const updatedApplication = await ctx.db.application.update({
           where: { id: input.applicationId },
-          data: { waitlistOrder: null }
+          data: { waitlistOrder: null },
         });
 
         return updatedApplication;
@@ -2189,15 +2476,22 @@ export const applicationRouter = createTRPCRouter({
 
   // Get accepted residents for an event
   getAcceptedResidents: publicProcedure
-    .input(z.object({
-      eventId: z.string(),
-      minProfileCompletion: z.number().min(0).max(100).optional().default(70),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(),
+        minProfileCompletion: z.number().min(0).max(100).optional().default(70),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       // Resolve eventId (could be slug or ID)
       const resolvedEventId = await resolveEventId(ctx.db, input.eventId);
       if (!resolvedEventId) {
-        return { residents: [], totalAccepted: 0, visibleResidents: 0, hiddenCount: 0 };
+        return {
+          residents: [],
+          totalAccepted: 0,
+          visibleResidents: 0,
+          hiddenCount: 0,
+        };
       }
 
       const acceptedApplications = await ctx.db.application.findMany({
@@ -2240,10 +2534,10 @@ export const applicationRouter = createTRPCRouter({
 
       // Filter residents by profile completion percentage
       const residentsWithCompletion = acceptedApplications
-        .map(app => {
+        .map((app) => {
           const user = app.user;
           const profile = user?.profile;
-          
+
           // Calculate profile completion
           const fields = {
             name: !!user?.name,
@@ -2268,13 +2562,14 @@ export const applicationRouter = createTRPCRouter({
             meetsThreshold: percentage >= input.minProfileCompletion,
           };
         })
-        .filter(resident => resident.meetsThreshold);
+        .filter((resident) => resident.meetsThreshold);
 
       return {
         residents: residentsWithCompletion,
         totalAccepted: acceptedApplications.length,
         visibleResidents: residentsWithCompletion.length,
-        hiddenCount: acceptedApplications.length - residentsWithCompletion.length,
+        hiddenCount:
+          acceptedApplications.length - residentsWithCompletion.length,
       };
     }),
 
@@ -2342,19 +2637,18 @@ export const applicationRouter = createTRPCRouter({
         },
       });
 
-      const projects = acceptedApplications
-        .flatMap(app => {
-          const userProfile = app.user?.profile;
-          if (!userProfile) return [];
-          
-          return userProfile.projects.map(project => ({
-            ...project,
-            profile: {
-              ...userProfile,
-              user: app.user,
-            },
-          }));
-        });
+      const projects = acceptedApplications.flatMap((app) => {
+        const userProfile = app.user?.profile;
+        if (!userProfile) return [];
+
+        return userProfile.projects.map((project) => ({
+          ...project,
+          profile: {
+            ...userProfile,
+            user: app.user,
+          },
+        }));
+      });
 
       return projects;
     }),
@@ -2401,7 +2695,7 @@ export const applicationRouter = createTRPCRouter({
                   availableForHiring: true,
                   availableForMentoring: true,
                   availableForOfficeHours: true,
-                }
+                },
               },
               userSkills: {
                 select: {
@@ -2412,20 +2706,20 @@ export const applicationRouter = createTRPCRouter({
                       id: true,
                       name: true,
                       category: true,
-                    }
-                  }
+                    },
+                  },
                 },
                 orderBy: {
                   experienceLevel: "desc",
                 },
                 take: 10,
-              }
-            }
-          }
+              },
+            },
+          },
         },
         orderBy: {
           submittedAt: "asc", // Show earlier applicants first
-        }
+        },
       });
 
       return participants;
@@ -2433,14 +2727,16 @@ export const applicationRouter = createTRPCRouter({
 
   // Search event participants with filters
   searchEventParticipants: publicProcedure
-    .input(z.object({
-      eventId: z.string(),
-      search: z.string().optional(),
-      skillCategories: z.array(z.string()).optional(),
-      availableForHiring: z.boolean().optional(),
-      availableForMentoring: z.boolean().optional(),
-      availableForOfficeHours: z.boolean().optional(),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(),
+        search: z.string().optional(),
+        skillCategories: z.array(z.string()).optional(),
+        availableForHiring: z.boolean().optional(),
+        availableForMentoring: z.boolean().optional(),
+        availableForOfficeHours: z.boolean().optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const {
         eventId,
@@ -2463,24 +2759,33 @@ export const applicationRouter = createTRPCRouter({
         andConditions.push({
           OR: [
             { user: { name: { contains: search, mode: "insensitive" } } },
-            { user: {
-              profile: {
-                OR: [
-                  { bio: { contains: search, mode: "insensitive" } },
-                  { jobTitle: { contains: search, mode: "insensitive" } },
-                  { company: { contains: search, mode: "insensitive" } },
-                  { priorExperience: { contains: search, mode: "insensitive" } },
-                ]
-              }
-            } },
-            { user: {
-              userSkills: {
-                some: {
-                  skill: { name: { contains: search, mode: "insensitive" } }
-                }
-              }
-            } },
-          ]
+            {
+              user: {
+                profile: {
+                  OR: [
+                    { bio: { contains: search, mode: "insensitive" } },
+                    { jobTitle: { contains: search, mode: "insensitive" } },
+                    { company: { contains: search, mode: "insensitive" } },
+                    {
+                      priorExperience: {
+                        contains: search,
+                        mode: "insensitive",
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              user: {
+                userSkills: {
+                  some: {
+                    skill: { name: { contains: search, mode: "insensitive" } },
+                  },
+                },
+              },
+            },
+          ],
         });
       }
 
@@ -2491,28 +2796,28 @@ export const applicationRouter = createTRPCRouter({
             userSkills: {
               some: {
                 skill: {
-                  category: { in: skillCategories }
-                }
-              }
-            }
-          }
+                  category: { in: skillCategories },
+                },
+              },
+            },
+          },
         });
       }
 
       // Availability filters
       if (availableForHiring !== undefined) {
         andConditions.push({
-          user: { profile: { availableForHiring } }
+          user: { profile: { availableForHiring } },
         });
       }
       if (availableForMentoring !== undefined) {
         andConditions.push({
-          user: { profile: { availableForMentoring } }
+          user: { profile: { availableForMentoring } },
         });
       }
       if (availableForOfficeHours !== undefined) {
         andConditions.push({
-          user: { profile: { availableForOfficeHours } }
+          user: { profile: { availableForOfficeHours } },
         });
       }
 
@@ -2546,7 +2851,7 @@ export const applicationRouter = createTRPCRouter({
                   availableForHiring: true,
                   availableForMentoring: true,
                   availableForOfficeHours: true,
-                }
+                },
               },
               userSkills: {
                 select: {
@@ -2557,20 +2862,20 @@ export const applicationRouter = createTRPCRouter({
                       id: true,
                       name: true,
                       category: true,
-                    }
-                  }
+                    },
+                  },
                 },
                 orderBy: {
                   experienceLevel: "desc",
                 },
                 take: 10,
-              }
-            }
-          }
+              },
+            },
+          },
         },
         orderBy: {
           submittedAt: "asc",
-        }
+        },
       });
 
       return {
@@ -2589,7 +2894,10 @@ export const applicationRouter = createTRPCRouter({
         select: { eventId: true },
       });
       if (!appForAuth) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Application not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Application not found",
+        });
       }
       await assertAdminOrEventFloorOwner(
         ctx.db,
@@ -2649,7 +2957,7 @@ export const applicationRouter = createTRPCRouter({
               },
             },
             orderBy: {
-              assignedAt: 'desc',
+              assignedAt: "desc",
             },
           },
         },
@@ -2699,12 +3007,13 @@ export const applicationRouter = createTRPCRouter({
       });
 
       return acceptedApplications
-        .filter(app => app.user)
+        .filter((app) => app.user)
         .map((app) => {
           const user = app.user!;
-          const displayName = user.firstName && user.surname
-            ? `${user.firstName} ${user.surname}`
-            : user.name ?? 'Unknown Resident';
+          const displayName =
+            user.firstName && user.surname
+              ? `${user.firstName} ${user.surname}`
+              : (user.name ?? "Unknown Resident");
 
           return {
             type: "resident",
@@ -2752,12 +3061,13 @@ export const applicationRouter = createTRPCRouter({
       });
 
       return acceptedApplications
-        .filter(app => app.user)
+        .filter((app) => app.user)
         .map((app) => {
           const user = app.user!;
-          const displayName = user.firstName && user.surname
-            ? `${user.firstName} ${user.surname}`
-            : user.name ?? 'Unknown Resident';
+          const displayName =
+            user.firstName && user.surname
+              ? `${user.firstName} ${user.surname}`
+              : (user.name ?? "Unknown Resident");
 
           return {
             type: "resident",
@@ -2808,8 +3118,8 @@ export const applicationRouter = createTRPCRouter({
       });
 
       const projects = acceptedApplications
-        .flatMap(app => app.user?.profile?.projects ?? [])
-        .filter(project => project.id);
+        .flatMap((app) => app.user?.profile?.projects ?? [])
+        .filter((project) => project.id);
 
       return projects.map((project) => ({
         type: "project",
@@ -2848,12 +3158,12 @@ export const applicationRouter = createTRPCRouter({
       // Sponsor funding amounts (in thousands)
       const sponsorFunding: Record<string, number> = {
         "Protocol Labs": 35,
-        "NEAR": 20,
-        "Stellar": 17,
-        "Octant": 17,
+        NEAR: 20,
+        Stellar: 17,
+        Octant: 17,
         "Human Tech": 10,
-        "Logos": 7,
-        "Drips": 5,
+        Logos: 7,
+        Drips: 5,
       };
 
       // Fetch accepted residents
@@ -2897,12 +3207,13 @@ export const applicationRouter = createTRPCRouter({
 
       // Transform residents
       const residentEntries = acceptedApplications
-        .filter(app => app.user)
+        .filter((app) => app.user)
         .map((app) => {
           const user = app.user!;
-          const displayName = user.firstName && user.surname
-            ? `${user.firstName} ${user.surname}`
-            : user.name ?? 'Unknown Resident';
+          const displayName =
+            user.firstName && user.surname
+              ? `${user.firstName} ${user.surname}`
+              : (user.name ?? "Unknown Resident");
 
           return {
             type: "resident",
@@ -2915,15 +3226,22 @@ export const applicationRouter = createTRPCRouter({
         });
 
       // Calculate scaling to achieve 64% sponsors, 36% residents
-      const totalSponsorValue = sponsorEntries.reduce((sum, s) => sum + s.value, 0);
-      const totalResidentKudos = residentEntries.reduce((sum, r) => sum + r.value, 0);
+      const totalSponsorValue = sponsorEntries.reduce(
+        (sum, s) => sum + s.value,
+        0,
+      );
+      const totalResidentKudos = residentEntries.reduce(
+        (sum, r) => sum + r.value,
+        0,
+      );
 
       // Scale resident values so they occupy 36% of total board space
       // Target: sponsors = 64%, residents = 36%
       // Formula: (totalSponsor * 0.36) / (totalResident * 0.64) = multiplier
-      const residentMultiplier = totalResidentKudos > 0
-        ? (totalSponsorValue * 0.36) / (totalResidentKudos * 0.64)
-        : 1;
+      const residentMultiplier =
+        totalResidentKudos > 0
+          ? (totalSponsorValue * 0.36) / (totalResidentKudos * 0.64)
+          : 1;
 
       // Scale resident values
       const scaledResidentEntries = residentEntries.map((r) => ({
@@ -2937,10 +3255,12 @@ export const applicationRouter = createTRPCRouter({
 
   // Get venue pre-selections for an invitation token (inviter's owned venues)
   getInviterVenues: protectedProcedure
-    .input(z.object({
-      invitationToken: z.string(),
-      eventId: z.string(),
-    }))
+    .input(
+      z.object({
+        invitationToken: z.string(),
+        eventId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const invitation = await ctx.db.invitation.findUnique({
         where: { token: input.invitationToken },
@@ -2987,12 +3307,23 @@ export const applicationRouter = createTRPCRouter({
       const userRole = ctx.session.user.role;
 
       // Authorization: must be admin/staff or floor lead for this event
-      await assertAdminOrEventFloorOwner(ctx.db, userId, userRole, input.eventId);
+      await assertAdminOrEventFloorOwner(
+        ctx.db,
+        userId,
+        userRole,
+        input.eventId,
+      );
 
       // If floor lead (not admin), verify selected venues belong to them
       if (!isAdminOrStaff(userRole) && input.venueIds?.length) {
-        const ownedVenueIds = await getUserOwnedVenueIds(ctx.db, userId, input.eventId);
-        const unauthorized = input.venueIds.filter((id) => !ownedVenueIds.includes(id));
+        const ownedVenueIds = await getUserOwnedVenueIds(
+          ctx.db,
+          userId,
+          input.eventId,
+        );
+        const unauthorized = input.venueIds.filter(
+          (id) => !ownedVenueIds.includes(id),
+        );
         if (unauthorized.length > 0) {
           throw new TRPCError({
             code: "FORBIDDEN",
@@ -3012,13 +3343,16 @@ export const applicationRouter = createTRPCRouter({
       if (existingApplication) {
         throw new TRPCError({
           code: "CONFLICT",
-          message: "An application already exists for this email address and event",
+          message:
+            "An application already exists for this email address and event",
         });
       }
 
       // Find or create user by email
       let speakerUser = await ctx.db.user.findFirst({
-        where: { email: { equals: input.email.toLowerCase(), mode: "insensitive" } },
+        where: {
+          email: { equals: input.email.toLowerCase(), mode: "insensitive" },
+        },
       });
 
       if (!speakerUser) {
@@ -3049,7 +3383,8 @@ export const applicationRouter = createTRPCRouter({
           speakerPreviousExperience: input.previousSpeakingExperience ?? null,
           speakerPastTalkUrl: input.pastTalkUrl ?? null,
           speakerEntityName: input.speakerEntityName ?? null,
-          speakerOtherFloorsTopicTheme: input.speakerOtherFloorsTopicTheme ?? null,
+          speakerOtherFloorsTopicTheme:
+            input.speakerOtherFloorsTopicTheme ?? null,
           speakerDisplayPreference: input.speakerDisplayPreference ?? null,
           bio: input.bio,
           jobTitle: input.jobTitle ?? null,
@@ -3068,7 +3403,8 @@ export const applicationRouter = createTRPCRouter({
           speakerPreviousExperience: input.previousSpeakingExperience ?? null,
           speakerPastTalkUrl: input.pastTalkUrl ?? null,
           speakerEntityName: input.speakerEntityName ?? null,
-          speakerOtherFloorsTopicTheme: input.speakerOtherFloorsTopicTheme ?? null,
+          speakerOtherFloorsTopicTheme:
+            input.speakerOtherFloorsTopicTheme ?? null,
           speakerDisplayPreference: input.speakerDisplayPreference ?? null,
           bio: input.bio,
           jobTitle: input.jobTitle ?? null,
@@ -3127,11 +3463,13 @@ export const applicationRouter = createTRPCRouter({
 
       if (speakerRole) {
         await ctx.db.userRole.createMany({
-          data: [{
-            userId: speakerUser.id,
-            eventId: input.eventId,
-            roleId: speakerRole.id,
-          }],
+          data: [
+            {
+              userId: speakerUser.id,
+              eventId: input.eventId,
+              roleId: speakerRole.id,
+            },
+          ],
           skipDuplicates: true,
         });
       }

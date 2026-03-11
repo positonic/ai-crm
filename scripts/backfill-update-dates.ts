@@ -32,7 +32,8 @@ async function main() {
     // Update each record
     for (const update of updates) {
       // Check if updateDate is different from createdAt (already has a custom date)
-      const needsUpdate = update.updateDate.getTime() !== update.createdAt.getTime();
+      const needsUpdate =
+        update.updateDate.getTime() !== update.createdAt.getTime();
 
       if (needsUpdate) {
         await prisma.projectUpdate.update({
@@ -43,12 +44,12 @@ async function main() {
         });
 
         console.log(
-          `✓ Updated: "${update.title.substring(0, 50)}${update.title.length > 50 ? "..." : ""}" - Set updateDate to ${update.createdAt.toISOString()}`
+          `✓ Updated: "${update.title.substring(0, 50)}${update.title.length > 50 ? "..." : ""}" - Set updateDate to ${update.createdAt.toISOString()}`,
         );
         updatedCount++;
       } else {
         console.log(
-          `⊘ Skipped: "${update.title.substring(0, 50)}${update.title.length > 50 ? "..." : ""}" - updateDate already matches createdAt`
+          `⊘ Skipped: "${update.title.substring(0, 50)}${update.title.length > 50 ? "..." : ""}" - updateDate already matches createdAt`,
         );
         skippedCount++;
       }
@@ -68,8 +69,7 @@ async function main() {
   }
 }
 
-main()
-  .catch((error) => {
-    console.error("Fatal error:", error);
-    process.exit(1);
-  });
+main().catch((error) => {
+  console.error("Fatal error:", error);
+  process.exit(1);
+});

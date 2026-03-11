@@ -1,23 +1,23 @@
 "use client";
 
-import { useState, useMemo } from 'react';
-import { 
-  MultiSelect, 
-  Group, 
-  Text, 
-  Badge, 
-  Button, 
-  Modal, 
-  TextInput, 
+import { useState, useMemo } from "react";
+import {
+  MultiSelect,
+  Group,
+  Text,
+  Badge,
+  Button,
+  Modal,
+  TextInput,
   Select,
   Stack,
   Alert,
-  Loader
-} from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
-import { notifications } from '@mantine/notifications';
-import { IconPlus, IconInfoCircle } from '@tabler/icons-react';
-import { api } from '~/trpc/react';
+  Loader,
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { IconPlus, IconInfoCircle } from "@tabler/icons-react";
+import { api } from "~/trpc/react";
 
 // Interface moved to be used internally
 // interface Skill {
@@ -40,26 +40,26 @@ interface SkillsMultiSelectProps {
 
 // Skill categories for the skills multiselect
 const SKILL_CATEGORIES = [
-  'Frontend',
-  'Backend', 
-  'Blockchain',
-  'Database',
-  'Design',
-  'DevOps',
-  'Mobile',
-  'Data Science',
-  'Business',
-  'Cryptography',
-  'Cybersecurity',
-  'Cloud Computing',
-  'Networking',
-  'Operating Systems',
-  'Virtualization',
-  'System Administration',
-  'System Security',
-  'System Architecture',
-  'System Design',
-  'Other'
+  "Frontend",
+  "Backend",
+  "Blockchain",
+  "Database",
+  "Design",
+  "DevOps",
+  "Mobile",
+  "Data Science",
+  "Business",
+  "Cryptography",
+  "Cybersecurity",
+  "Cloud Computing",
+  "Networking",
+  "Operating Systems",
+  "Virtualization",
+  "System Administration",
+  "System Security",
+  "System Architecture",
+  "System Design",
+  "Other",
 ];
 
 export default function SkillsMultiSelect(props: SkillsMultiSelectProps) {
@@ -75,44 +75,47 @@ export default function SkillsMultiSelect(props: SkillsMultiSelectProps) {
   } = props;
 
   // v8 requires value to be string[]
-  const safeValue = useMemo(() => Array.isArray(value) ? value : [], [value]);
-  const [searchValue, setSearchValue] = useState('');
-  const [createModalOpened, { open: openCreateModal, close: closeCreateModal }] = useDisclosure(false);
-  const [newSkillName, setNewSkillName] = useState('');
-  const [newSkillCategory, setNewSkillCategory] = useState<string>('Other');
+  const safeValue = useMemo(() => (Array.isArray(value) ? value : []), [value]);
+  const [searchValue, setSearchValue] = useState("");
+  const [
+    createModalOpened,
+    { open: openCreateModal, close: closeCreateModal },
+  ] = useDisclosure(false);
+  const [newSkillName, setNewSkillName] = useState("");
+  const [newSkillCategory, setNewSkillCategory] = useState<string>("Other");
 
   // Fetch available skills grouped by category
-  const { data: skillsByCategory, isLoading: skillsLoading } = api.skills.getSkillsByCategory.useQuery();
-  
-  
+  const { data: skillsByCategory, isLoading: skillsLoading } =
+    api.skills.getSkillsByCategory.useQuery();
+
   // Get utils at component level (fixes React Hook error)
   const utils = api.useUtils();
-  
+
   // Create new skill mutation
   const createSkillMutation = api.skills.createSkill.useMutation({
     onSuccess: (newSkill) => {
       notifications.show({
-        title: 'Skill Created',
+        title: "Skill Created",
         message: `"${newSkill.name}" has been added to the skills list.`,
-        color: 'green',
+        color: "green",
       });
-      
+
       // Invalidate skills cache first to refresh the list
       void utils.skills.getSkillsByCategory.invalidate();
-      
+
       // Add the new skill to the current selection
       onChange([...(Array.isArray(value) ? value : []), newSkill.id]);
-      
+
       // Reset form and close modal
-      setNewSkillName('');
-      setNewSkillCategory('Other');
+      setNewSkillName("");
+      setNewSkillCategory("Other");
       closeCreateModal();
     },
     onError: (error) => {
       notifications.show({
-        title: 'Error Creating Skill',
-        message: error.message ?? 'Failed to create skill. Please try again.',
-        color: 'red',
+        title: "Error Creating Skill",
+        message: error.message ?? "Failed to create skill. Please try again.",
+        color: "red",
       });
     },
   });
@@ -120,9 +123,9 @@ export default function SkillsMultiSelect(props: SkillsMultiSelectProps) {
   // Transform skills data for MultiSelect - Simple format for Mantine v8
   const skillOptions = useMemo(() => {
     if (!skillsByCategory) return [];
-    
+
     const options: Array<{ value: string; label: string }> = [];
-    
+
     Object.entries(skillsByCategory).forEach(([_category, skills]) => {
       if (Array.isArray(skills)) {
         skills.forEach((skill) => {
@@ -135,7 +138,7 @@ export default function SkillsMultiSelect(props: SkillsMultiSelectProps) {
         });
       }
     });
-    
+
     return options;
   }, [skillsByCategory]);
 
@@ -143,27 +146,29 @@ export default function SkillsMultiSelect(props: SkillsMultiSelectProps) {
   const filteredOptions = useMemo(() => {
     // Ensure skillOptions is always an array
     const safeSkillOptions = Array.isArray(skillOptions) ? skillOptions : [];
-    
+
     if (!searchValue) return safeSkillOptions;
-    
-    return safeSkillOptions.filter(option =>
-      option?.label?.toLowerCase().includes(searchValue.toLowerCase())
+
+    return safeSkillOptions.filter((option) =>
+      option?.label?.toLowerCase().includes(searchValue.toLowerCase()),
     );
   }, [skillOptions, searchValue]);
 
   // Get selected skill names for display
   const selectedSkills = useMemo(() => {
     const safeSkillOptions = Array.isArray(skillOptions) ? skillOptions : [];
-    const filtered = safeSkillOptions.filter(option => safeValue.includes(option?.value));
+    const filtered = safeSkillOptions.filter((option) =>
+      safeValue.includes(option?.value),
+    );
     return Array.isArray(filtered) ? filtered : [];
   }, [skillOptions, safeValue]);
 
   const handleCreateNewSkill = () => {
     if (!newSkillName.trim()) {
       notifications.show({
-        title: 'Invalid Skill Name',
-        message: 'Please enter a skill name.',
-        color: 'red',
+        title: "Invalid Skill Name",
+        message: "Please enter a skill name.",
+        color: "red",
       });
       return;
     }
@@ -179,19 +184,22 @@ export default function SkillsMultiSelect(props: SkillsMultiSelectProps) {
   };
 
   // Check if the current search would create a new skill
-  const wouldCreateNewSkill = searchValue && !filteredOptions.some(
-    option => option.label.toLowerCase() === searchValue.toLowerCase()
-  );
+  const wouldCreateNewSkill =
+    searchValue &&
+    !filteredOptions.some(
+      (option) => option.label.toLowerCase() === searchValue.toLowerCase(),
+    );
 
   if (skillsLoading) {
     return (
       <Group gap="xs">
         <Loader size="sm" />
-        <Text size="sm" c="dimmed">Loading skills...</Text>
+        <Text size="sm" c="dimmed">
+          Loading skills...
+        </Text>
       </Group>
     );
   }
-
 
   return (
     <div>
@@ -210,13 +218,13 @@ export default function SkillsMultiSelect(props: SkillsMultiSelectProps) {
         onSearchChange={handleSearchChange}
         maxDropdownHeight={300}
         renderOption={({ option /*, checked */ }) => (
-          <Group gap="xs" style={{ width: '100%' }}>
+          <Group gap="xs" style={{ width: "100%" }}>
             <Text size="sm">{option.label}</Text>
           </Group>
         )}
         nothingFoundMessage={
           wouldCreateNewSkill ? (
-            <Group gap="xs" style={{ padding: '8px 12px' }}>
+            <Group gap="xs" style={{ padding: "8px 12px" }}>
               <Text size="sm" c="dimmed">
                 No skills found for &quot;{searchValue}&quot;
               </Text>
@@ -255,19 +263,21 @@ export default function SkillsMultiSelect(props: SkillsMultiSelectProps) {
       {/* Display selected skills as badges */}
       {Array.isArray(selectedSkills) && selectedSkills.length > 0 && (
         <Group gap="xs" mt="xs">
-          {selectedSkills.map((skill) => (
+          {selectedSkills.map((skill) =>
             skill?.value && skill?.label ? (
               <Badge
                 key={skill.value}
                 variant="light"
                 size="sm"
-                style={{ cursor: 'pointer' }}
-                onClick={() => onChange(safeValue.filter(id => id !== skill.value))}
+                style={{ cursor: "pointer" }}
+                onClick={() =>
+                  onChange(safeValue.filter((id) => id !== skill.value))
+                }
               >
                 {skill.label} ×
               </Badge>
-            ) : null
-          ))}
+            ) : null,
+          )}
         </Group>
       )}
 
@@ -276,8 +286,8 @@ export default function SkillsMultiSelect(props: SkillsMultiSelectProps) {
         opened={createModalOpened}
         onClose={() => {
           closeCreateModal();
-          setNewSkillName('');
-          setNewSkillCategory('Other');
+          setNewSkillName("");
+          setNewSkillCategory("Other");
         }}
         title="Create New Skill"
         size="md"
@@ -288,8 +298,9 @@ export default function SkillsMultiSelect(props: SkillsMultiSelectProps) {
             title="Adding a new skill"
             color="blue"
           >
-            You&apos;re about to add a new skill that other users will also be able to select.
-            Please make sure the skill name is clear and not a duplicate of existing skills.
+            You&apos;re about to add a new skill that other users will also be
+            able to select. Please make sure the skill name is clear and not a
+            duplicate of existing skills.
           </Alert>
 
           <TextInput
@@ -305,8 +316,8 @@ export default function SkillsMultiSelect(props: SkillsMultiSelectProps) {
             label="Category"
             placeholder="Select a category"
             value={newSkillCategory}
-            onChange={(value) => setNewSkillCategory(value ?? 'Other')}
-            data={SKILL_CATEGORIES.map(cat => ({ value: cat, label: cat }))}
+            onChange={(value) => setNewSkillCategory(value ?? "Other")}
+            data={SKILL_CATEGORIES.map((cat) => ({ value: cat, label: cat }))}
             required
           />
 
@@ -315,8 +326,8 @@ export default function SkillsMultiSelect(props: SkillsMultiSelectProps) {
               variant="light"
               onClick={() => {
                 closeCreateModal();
-                setNewSkillName('');
-                setNewSkillCategory('Other');
+                setNewSkillName("");
+                setNewSkillCategory("Other");
               }}
               disabled={createSkillMutation.isPending}
             >

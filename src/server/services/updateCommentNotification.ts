@@ -43,7 +43,7 @@ export class UpdateCommentNotificationService {
    */
   async sendNotifications(
     data: UpdateCommentNotificationData,
-    senderUserId: string
+    senderUserId: string,
   ): Promise<NotificationResult[]> {
     const results: NotificationResult[] = [];
 
@@ -69,7 +69,7 @@ export class UpdateCommentNotificationService {
 
       // Filter to only members with Telegram handles
       const notifiableMembers = collaborators.filter(
-        (collab) => collab.user.profile?.telegramHandle
+        (collab) => collab.user.profile?.telegramHandle,
       );
 
       if (notifiableMembers.length === 0) {
@@ -95,7 +95,7 @@ export class UpdateCommentNotificationService {
           salt: telegramAuth.salt,
           iv: telegramAuth.iv,
         },
-        senderUserId
+        senderUserId,
       );
 
       const client = new TelegramClient(
@@ -104,7 +104,7 @@ export class UpdateCommentNotificationService {
         credentials.apiHash,
         {
           connectionRetries: 5,
-        }
+        },
       );
 
       await client.connect();
@@ -119,7 +119,7 @@ export class UpdateCommentNotificationService {
           const resolveResult = await client.invoke(
             new Api.contacts.ResolveUsername({
               username: telegramHandle,
-            })
+            }),
           );
 
           if (!resolveResult.users || resolveResult.users.length === 0) {
@@ -143,7 +143,7 @@ export class UpdateCommentNotificationService {
               peer: telegramUser,
               message,
               randomId: bigInt(Math.floor(Math.random() * 1000000000)),
-            })
+            }),
           );
 
           // Extract message ID
@@ -154,7 +154,7 @@ export class UpdateCommentNotificationService {
                 "message" in update &&
                 typeof update.message === "object" &&
                 update.message !== null &&
-                "id" in update.message
+                "id" in update.message,
             );
             if (
               messageUpdate &&
@@ -194,7 +194,7 @@ export class UpdateCommentNotificationService {
           } catch (dbError) {
             console.error(
               `Failed to track notification for user ${collaborator.userId}:`,
-              dbError
+              dbError,
             );
           }
 
@@ -206,7 +206,7 @@ export class UpdateCommentNotificationService {
           });
 
           console.log(
-            `Notification sent to @${telegramHandle} (${collaborator.user.name ?? "Unknown"})`
+            `Notification sent to @${telegramHandle} (${collaborator.user.name ?? "Unknown"})`,
           );
 
           // Rate limiting: 3 seconds between messages (20 per minute max)
@@ -229,7 +229,7 @@ export class UpdateCommentNotificationService {
 
           console.error(
             `Failed to send notification to @${telegramHandle}:`,
-            errorMessage
+            errorMessage,
           );
 
           captureApiError(error, {
@@ -271,7 +271,7 @@ export class UpdateCommentNotificationService {
    * Format the notification message text
    */
   private formatNotificationMessage(
-    data: UpdateCommentNotificationData
+    data: UpdateCommentNotificationData,
   ): string {
     // Truncate comment if too long for notification
     const commentPreview =

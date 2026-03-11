@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { type EmailResult } from "~/server/email/emailService";
 import { env } from "~/env";
@@ -9,7 +13,10 @@ import { type PrismaClient } from "@prisma/client";
  * Resolve event identifier - accepts both CUID and slug.
  * Returns the actual event ID or null if not found.
  */
-async function resolveEventId(db: PrismaClient, identifier: string): Promise<string | null> {
+async function resolveEventId(
+  db: PrismaClient,
+  identifier: string,
+): Promise<string | null> {
   // Try by ID first
   const eventById = await db.event.findUnique({
     where: { id: identifier },
@@ -38,24 +45,30 @@ async function sendProjectUpdateNotification(params: {
   const topicId = env.TELEGRAM_PROJECT_UPDATE_TOPIC_ID;
 
   if (!botToken) {
-    console.warn("TELEGRAM_BOT_TOKEN not configured, skipping project update notification");
+    console.warn(
+      "TELEGRAM_BOT_TOKEN not configured, skipping project update notification",
+    );
     return;
   }
 
   if (!chatId) {
-    console.warn("TELEGRAM_PROJECT_UPDATE_CHANNEL_ID not configured, skipping project update notification");
+    console.warn(
+      "TELEGRAM_PROJECT_UPDATE_CHANNEL_ID not configured, skipping project update notification",
+    );
     return;
   }
 
   try {
     // Truncate content preview if too long
-    const contentPreview = params.updateContent.length > 200
-      ? `${params.updateContent.substring(0, 200)}...`
-      : params.updateContent;
+    const contentPreview =
+      params.updateContent.length > 200
+        ? `${params.updateContent.substring(0, 200)}...`
+        : params.updateContent;
 
     const updateUrl = `https://platform.fundingthecommons.io/community/updates/${params.updateId}`;
     const profileUrl = `https://platform.fundingthecommons.io/profiles/${params.authorId}`;
-    const communityUpdatesUrl = "https://platform.fundingthecommons.io/community/updates";
+    const communityUpdatesUrl =
+      "https://platform.fundingthecommons.io/community/updates";
 
     const message = `🆕 *${params.projectTitle}* project update
 
@@ -92,15 +105,21 @@ ${contentPreview}
           "Content-Type": "application/json",
         },
         body: JSON.stringify(requestBody),
-      }
+      },
     );
 
     if (!response.ok) {
-      const errorData = await response.json() as { description?: string };
-      console.error("Failed to send Telegram notification:", errorData.description ?? "Unknown error");
+      const errorData = (await response.json()) as { description?: string };
+      console.error(
+        "Failed to send Telegram notification:",
+        errorData.description ?? "Unknown error",
+      );
     }
   } catch (error) {
-    console.error("Error sending Telegram notification:", error instanceof Error ? error.message : "Unknown error");
+    console.error(
+      "Error sending Telegram notification:",
+      error instanceof Error ? error.message : "Unknown error",
+    );
   }
 }
 
@@ -128,9 +147,10 @@ async function sendUpdateCommentChannelNotification(params: {
 
   try {
     // Truncate comment preview if too long
-    const commentPreview = params.commentContent.length > 200
-      ? `${params.commentContent.substring(0, 200)}...`
-      : params.commentContent;
+    const commentPreview =
+      params.commentContent.length > 200
+        ? `${params.commentContent.substring(0, 200)}...`
+        : params.commentContent;
 
     const message = `
 💬 *New Comment on Update*
@@ -172,116 +192,122 @@ ${commentPreview}
           "Content-Type": "application/json",
         },
         body: JSON.stringify(requestBody),
-      }
+      },
     );
 
     if (!response.ok) {
-      const errorData = await response.json() as { description?: string };
-      console.error("Failed to send Telegram comment notification:", errorData.description ?? "Unknown error");
+      const errorData = (await response.json()) as { description?: string };
+      console.error(
+        "Failed to send Telegram comment notification:",
+        errorData.description ?? "Unknown error",
+      );
     }
   } catch (error) {
-    console.error("Error sending Telegram comment notification:", error instanceof Error ? error.message : "Unknown error");
+    console.error(
+      "Error sending Telegram comment notification:",
+      error instanceof Error ? error.message : "Unknown error",
+    );
   }
 }
 
 export const projectRouter = createTRPCRouter({
-  getMyProjects: protectedProcedure
-    .query(async ({ ctx }) => {
-      const userId = ctx.session.user.id;
+  getMyProjects: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
 
-      // Get user's accepted applications to find their eventId
-      const acceptedApplications = await ctx.db.application.findMany({
-        where: {
-          userId,
-          status: "ACCEPTED",
+    // Get user's accepted applications to find their eventId
+    const acceptedApplications = await ctx.db.application.findMany({
+      where: {
+        userId,
+        status: "ACCEPTED",
+      },
+      select: {
+        eventId: true,
+      },
+      take: 1, // Assume user is only in one active event for now
+    });
+
+    // Default to funding-commons-residency-2025 if no accepted application
+    const eventId =
+      acceptedApplications[0]?.eventId ?? "funding-commons-residency-2025";
+
+    // Get user's profile
+    const profile = await ctx.db.userProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!profile) {
+      return [];
+    }
+
+    // Get user's own projects
+    const ownProjects = await ctx.db.userProject.findMany({
+      where: {
+        profileId: profile.id,
+      },
+      select: {
+        id: true,
+        title: true,
+        githubUrl: true,
+        repositories: {
+          select: {
+            url: true,
+            isPrimary: true,
+          },
+          orderBy: {
+            isPrimary: "desc",
+          },
+          take: 1,
         },
-        select: {
-          eventId: true,
-        },
-        take: 1, // Assume user is only in one active event for now
-      });
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-      // Default to funding-commons-residency-2025 if no accepted application
-      const eventId = acceptedApplications[0]?.eventId ?? "funding-commons-residency-2025";
-
-      // Get user's profile
-      const profile = await ctx.db.userProfile.findUnique({
-        where: { userId },
-        select: { id: true },
-      });
-
-      if (!profile) {
-        return [];
-      }
-
-      // Get user's own projects
-      const ownProjects = await ctx.db.userProject.findMany({
-        where: {
-          profileId: profile.id,
-        },
-        select: {
-          id: true,
-          title: true,
-          githubUrl: true,
-          repositories: {
-            select: {
-              url: true,
-              isPrimary: true,
-            },
-            orderBy: {
-              isPrimary: "desc",
-            },
-            take: 1,
+    // Get projects where user is a collaborator
+    const collaboratorProjects = await ctx.db.userProject.findMany({
+      where: {
+        collaborators: {
+          some: {
+            userId,
           },
         },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-
-      // Get projects where user is a collaborator
-      const collaboratorProjects = await ctx.db.userProject.findMany({
-        where: {
-          collaborators: {
-            some: {
-              userId,
-            },
+      },
+      select: {
+        id: true,
+        title: true,
+        githubUrl: true,
+        repositories: {
+          select: {
+            url: true,
+            isPrimary: true,
           },
-        },
-        select: {
-          id: true,
-          title: true,
-          githubUrl: true,
-          repositories: {
-            select: {
-              url: true,
-              isPrimary: true,
-            },
-            orderBy: {
-              isPrimary: "desc",
-            },
-            take: 1,
+          orderBy: {
+            isPrimary: "desc",
           },
+          take: 1,
         },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-      // Merge and deduplicate, add eventId to each
-      const allProjects = [...ownProjects, ...collaboratorProjects];
-      const uniqueProjects = Array.from(
-        new Map(allProjects.map(p => [p.id, p])).values()
-      ).map(p => ({
-        id: p.id,
-        title: p.title,
-        // Use primary repository URL if available, otherwise fall back to githubUrl
-        githubUrl: p.repositories[0]?.url ?? p.githubUrl,
-        eventId,
-      }));
+    // Merge and deduplicate, add eventId to each
+    const allProjects = [...ownProjects, ...collaboratorProjects];
+    const uniqueProjects = Array.from(
+      new Map(allProjects.map((p) => [p.id, p])).values(),
+    ).map((p) => ({
+      id: p.id,
+      title: p.title,
+      // Use primary repository URL if available, otherwise fall back to githubUrl
+      githubUrl: p.repositories[0]?.url ?? p.githubUrl,
+      eventId,
+    }));
 
-      return uniqueProjects;
-    }),
+    return uniqueProjects;
+  }),
 
   // Public: Get projects from event participants
   getEventProjects: publicProcedure
@@ -323,42 +349,38 @@ export const projectRouter = createTRPCRouter({
                           isPrimary: true,
                           order: true,
                         },
-                        orderBy: [
-                          { isPrimary: "desc" },
-                          { order: "asc" },
-                        ],
+                        orderBy: [{ isPrimary: "desc" }, { order: "asc" }],
                       },
                     },
-                    orderBy: [
-                      { featured: "desc" },
-                      { createdAt: "desc" }
-                    ]
-                  }
-                }
-              }
-            }
-          }
-        }
+                    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+                  },
+                },
+              },
+            },
+          },
+        },
       });
 
       // Flatten projects with user information
       const projects = acceptedApplications
-        .filter(app => app.user?.profile?.projects?.length)
-        .flatMap(app => 
-          app.user!.profile!.projects.map(project => ({
+        .filter((app) => app.user?.profile?.projects?.length)
+        .flatMap((app) =>
+          app.user!.profile!.projects.map((project) => ({
             ...project,
             author: {
               id: app.user!.id,
               name: app.user!.name,
               image: app.user!.image,
-            }
-          }))
+            },
+          })),
         )
         .sort((a, b) => {
           // Sort by featured first, then by creation date
           if (a.featured && !b.featured) return -1;
           if (!a.featured && b.featured) return 1;
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
         });
 
       return projects;
@@ -366,10 +388,12 @@ export const projectRouter = createTRPCRouter({
 
   // Public: Get detailed project information
   getProjectDetails: publicProcedure
-    .input(z.object({
-      projectId: z.string(),
-      eventId: z.string().optional()
-    }))
+    .input(
+      z.object({
+        projectId: z.string(),
+        eventId: z.string().optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       // Resolve eventId if provided (could be slug or ID)
       let resolvedEventId: string | null = null;
@@ -407,10 +431,7 @@ export const projectRouter = createTRPCRouter({
                 orderBy: { snapshotDate: "desc" },
               },
             },
-            orderBy: [
-              { isPrimary: "desc" },
-              { order: "asc" },
-            ],
+            orderBy: [{ isPrimary: "desc" }, { order: "asc" }],
           },
           profile: {
             include: {
@@ -419,16 +440,18 @@ export const projectRouter = createTRPCRouter({
                   id: true,
                   name: true,
                   image: true,
-                  applications: resolvedEventId ? {
-                    where: {
-                      eventId: resolvedEventId,
-                      status: "ACCEPTED",
-                    },
-                    take: 1,
-                  } : false
-                }
-              }
-            }
+                  applications: resolvedEventId
+                    ? {
+                        where: {
+                          eventId: resolvedEventId,
+                          status: "ACCEPTED",
+                        },
+                        take: 1,
+                      }
+                    : false,
+                },
+              },
+            },
           },
           collaborators: {
             include: {
@@ -443,21 +466,21 @@ export const projectRouter = createTRPCRouter({
                       company: true,
                       location: true,
                       bio: true,
-                    }
-                  }
-                }
-              }
+                    },
+                  },
+                },
+              },
             },
             orderBy: {
-              addedAt: "asc"
-            }
+              addedAt: "asc",
+            },
           },
           likes: {
             select: {
               userId: true,
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       if (!project) {
@@ -468,7 +491,11 @@ export const projectRouter = createTRPCRouter({
       }
 
       // Verify the project owner is an accepted participant of this event (only if eventId provided)
-      if (resolvedEventId && project.profile.user.applications && !project.profile.user.applications.length) {
+      if (
+        resolvedEventId &&
+        project.profile.user.applications &&
+        !project.profile.user.applications.length
+      ) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Project not found for this event",
@@ -501,9 +528,9 @@ export const projectRouter = createTRPCRouter({
             linkedinUrl: project.profile.linkedinUrl,
             twitterUrl: project.profile.twitterUrl,
             website: project.profile.website,
-          }
+          },
         },
-        collaborators: project.collaborators.map(collab => ({
+        collaborators: project.collaborators.map((collab) => ({
           id: collab.id,
           userId: collab.user.id,
           name: collab.user.name,
@@ -511,14 +538,16 @@ export const projectRouter = createTRPCRouter({
           role: collab.role,
           canEdit: collab.canEdit,
           addedAt: collab.addedAt,
-          profile: collab.user.profile ? {
-            jobTitle: collab.user.profile.jobTitle,
-            company: collab.user.profile.company,
-            location: collab.user.profile.location,
-            bio: collab.user.profile.bio,
-          } : null
+          profile: collab.user.profile
+            ? {
+                jobTitle: collab.user.profile.jobTitle,
+                company: collab.user.profile.company,
+                location: collab.user.profile.location,
+                bio: collab.user.profile.bio,
+              }
+            : null,
         })),
-        likes: project.likes
+        likes: project.likes,
       };
     }),
 
@@ -536,10 +565,10 @@ export const projectRouter = createTRPCRouter({
               surname: true,
               name: true,
               image: true,
-            }
-          }
+            },
+          },
         },
-        orderBy: { updateDate: "desc" }
+        orderBy: { updateDate: "desc" },
       });
 
       return updates;
@@ -553,20 +582,20 @@ export const projectRouter = createTRPCRouter({
       const ownedProjects = await ctx.db.userProject.findMany({
         where: {
           profile: {
-            userId: input.userId
-          }
+            userId: input.userId,
+          },
         },
         select: {
           id: true,
           title: true,
           imageUrl: true,
-        }
+        },
       });
 
       // Get all projects where the user is a collaborator
       const collaboratorProjects = await ctx.db.projectCollaborator.findMany({
         where: {
-          userId: input.userId
+          userId: input.userId,
         },
         select: {
           project: {
@@ -574,15 +603,15 @@ export const projectRouter = createTRPCRouter({
               id: true,
               title: true,
               imageUrl: true,
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       // Combine both lists of projects
       const allProjects = [
         ...ownedProjects,
-        ...collaboratorProjects.map(c => c.project)
+        ...collaboratorProjects.map((c) => c.project),
       ];
 
       if (allProjects.length === 0) {
@@ -593,8 +622,8 @@ export const projectRouter = createTRPCRouter({
       const updates = await ctx.db.projectUpdate.findMany({
         where: {
           projectId: {
-            in: allProjects.map(p => p.id)
-          }
+            in: allProjects.map((p) => p.id),
+          },
         },
         include: {
           author: {
@@ -604,20 +633,20 @@ export const projectRouter = createTRPCRouter({
               surname: true,
               name: true,
               image: true,
-            }
+            },
           },
           project: {
             select: {
               id: true,
               title: true,
               imageUrl: true,
-            }
+            },
           },
           likes: {
             select: {
               userId: true,
-            }
-          }
+            },
+          },
         },
         orderBy: { updateDate: "desc" },
         take: 50, // Limit to most recent 50 updates
@@ -628,17 +657,19 @@ export const projectRouter = createTRPCRouter({
 
   // Protected: Create project update (only project owner)
   createProjectUpdate: protectedProcedure
-    .input(z.object({
-      projectId: z.string(),
-      title: z.string().min(1, "Update title is required"),
-      content: z.string().min(1, "Update content is required"),
-      weekNumber: z.number().optional(),
-      updateDate: z.date().optional(),
-      imageUrls: z.array(z.string().url()).optional(),
-      githubUrls: z.array(z.string().url()).optional(),
-      demoUrls: z.array(z.string().url()).optional(),
-      tags: z.array(z.string()).optional(),
-    }))
+    .input(
+      z.object({
+        projectId: z.string(),
+        title: z.string().min(1, "Update title is required"),
+        content: z.string().min(1, "Update content is required"),
+        weekNumber: z.number().optional(),
+        updateDate: z.date().optional(),
+        imageUrls: z.array(z.string().url()).optional(),
+        githubUrls: z.array(z.string().url()).optional(),
+        demoUrls: z.array(z.string().url()).optional(),
+        tags: z.array(z.string()).optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -649,7 +680,7 @@ export const projectRouter = createTRPCRouter({
           profile: {
             select: {
               userId: true,
-            }
+            },
           },
           collaborators: {
             where: {
@@ -657,9 +688,9 @@ export const projectRouter = createTRPCRouter({
             },
             select: {
               canEdit: true,
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       if (!project) {
@@ -671,7 +702,9 @@ export const projectRouter = createTRPCRouter({
 
       // Check if user is the owner or a collaborator with edit permissions
       const isOwner = project.profile.userId === userId;
-      const isCollaboratorWithEdit = project.collaborators.some(c => c.canEdit);
+      const isCollaboratorWithEdit = project.collaborators.some(
+        (c) => c.canEdit,
+      );
 
       if (!isOwner && !isCollaboratorWithEdit) {
         throw new TRPCError({
@@ -701,9 +734,9 @@ export const projectRouter = createTRPCRouter({
               surname: true,
               name: true,
               image: true,
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       // Send Telegram notification
@@ -722,17 +755,19 @@ export const projectRouter = createTRPCRouter({
 
   // Protected: Update project update (only author)
   updateProjectUpdate: protectedProcedure
-    .input(z.object({
-      updateId: z.string(),
-      title: z.string().min(1, "Update title is required").optional(),
-      content: z.string().min(1, "Update content is required").optional(),
-      weekNumber: z.number().optional(),
-      updateDate: z.date().optional(),
-      imageUrls: z.array(z.string().url()).optional(),
-      githubUrls: z.array(z.string().url()).optional(),
-      demoUrls: z.array(z.string().url()).optional(),
-      tags: z.array(z.string()).optional(),
-    }))
+    .input(
+      z.object({
+        updateId: z.string(),
+        title: z.string().min(1, "Update title is required").optional(),
+        content: z.string().min(1, "Update content is required").optional(),
+        weekNumber: z.number().optional(),
+        updateDate: z.date().optional(),
+        imageUrls: z.array(z.string().url()).optional(),
+        githubUrls: z.array(z.string().url()).optional(),
+        demoUrls: z.array(z.string().url()).optional(),
+        tags: z.array(z.string()).optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -760,8 +795,12 @@ export const projectRouter = createTRPCRouter({
         data: {
           ...(input.title && { title: input.title }),
           ...(input.content && { content: input.content }),
-          ...(input.weekNumber !== undefined && { weekNumber: input.weekNumber }),
-          ...(input.updateDate !== undefined && { updateDate: input.updateDate }),
+          ...(input.weekNumber !== undefined && {
+            weekNumber: input.weekNumber,
+          }),
+          ...(input.updateDate !== undefined && {
+            updateDate: input.updateDate,
+          }),
           ...(input.imageUrls && { imageUrls: input.imageUrls }),
           ...(input.githubUrls && { githubUrls: input.githubUrls }),
           ...(input.demoUrls && { demoUrls: input.demoUrls }),
@@ -775,9 +814,9 @@ export const projectRouter = createTRPCRouter({
               surname: true,
               name: true,
               image: true,
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       return updatedUpdate;
@@ -798,7 +837,7 @@ export const projectRouter = createTRPCRouter({
               profile: {
                 select: {
                   userId: true,
-                }
+                },
               },
               collaborators: {
                 where: {
@@ -806,11 +845,11 @@ export const projectRouter = createTRPCRouter({
                 },
                 select: {
                   canEdit: true,
-                }
-              }
-            }
-          }
-        }
+                },
+              },
+            },
+          },
+        },
       });
 
       if (!update) {
@@ -823,7 +862,9 @@ export const projectRouter = createTRPCRouter({
       // Check if user is the update author, project owner, or collaborator with edit permissions
       const isAuthor = update.userId === userId;
       const isProjectOwner = update.project.profile.userId === userId;
-      const isCollaboratorWithEdit = update.project.collaborators.some(c => c.canEdit);
+      const isCollaboratorWithEdit = update.project.collaborators.some(
+        (c) => c.canEdit,
+      );
 
       if (!isAuthor && !isProjectOwner && !isCollaboratorWithEdit) {
         throw new TRPCError({
@@ -841,9 +882,11 @@ export const projectRouter = createTRPCRouter({
 
   // Protected: Like a project update
   likeProjectUpdate: protectedProcedure
-    .input(z.object({
-      updateId: z.string(),
-    }))
+    .input(
+      z.object({
+        updateId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -928,9 +971,11 @@ export const projectRouter = createTRPCRouter({
 
   // Protected: Unlike a project update
   unlikeProjectUpdate: protectedProcedure
-    .input(z.object({
-      updateId: z.string(),
-    }))
+    .input(
+      z.object({
+        updateId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -960,9 +1005,11 @@ export const projectRouter = createTRPCRouter({
 
   // Public: Get likes for a project update
   getUpdateLikes: publicProcedure
-    .input(z.object({
-      updateId: z.string(),
-    }))
+    .input(
+      z.object({
+        updateId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const likes = await ctx.db.projectUpdateLike.findMany({
         where: { projectUpdateId: input.updateId },
@@ -1009,20 +1056,20 @@ export const projectRouter = createTRPCRouter({
                   projects: {
                     select: {
                       id: true,
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       });
 
       // Get all project IDs from accepted residents
       const projectIds = acceptedApplications
-        .filter(app => app.user?.profile?.projects?.length)
-        .flatMap(app =>
-          app.user!.profile!.projects.map(project => project.id)
+        .filter((app) => app.user?.profile?.projects?.length)
+        .flatMap((app) =>
+          app.user!.profile!.projects.map((project) => project.id),
         );
 
       if (projectIds.length === 0) {
@@ -1033,8 +1080,8 @@ export const projectRouter = createTRPCRouter({
       const updates = await ctx.db.projectUpdate.findMany({
         where: {
           projectId: {
-            in: projectIds
-          }
+            in: projectIds,
+          },
         },
         include: {
           author: {
@@ -1047,21 +1094,21 @@ export const projectRouter = createTRPCRouter({
               profile: {
                 select: {
                   avatarUrl: true,
-                }
-              }
-            }
+                },
+              },
+            },
           },
           project: {
             select: {
               id: true,
               title: true,
               imageUrl: true,
-            }
+            },
           },
           likes: {
             select: {
               userId: true,
-            }
+            },
           },
           comments: {
             include: {
@@ -1075,24 +1122,24 @@ export const projectRouter = createTRPCRouter({
                   profile: {
                     select: {
                       avatarUrl: true,
-                    }
-                  }
-                }
+                    },
+                  },
+                },
               },
               likes: {
                 select: {
                   userId: true,
-                }
+                },
               },
               _count: {
                 select: {
                   likes: true,
-                }
-              }
+                },
+              },
             },
             orderBy: { createdAt: "desc" },
             take: 2, // Last 2 comments only
-          }
+          },
         },
         orderBy: { updateDate: "desc" },
       });
@@ -1123,55 +1170,55 @@ export const projectRouter = createTRPCRouter({
                       metrics: {
                         select: {
                           id: true,
-                        }
+                        },
                       },
                       updates: {
                         select: {
                           id: true,
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       });
 
       // Get all praise transactions with proper typing
-      const praiseTransactions = await ctx.db.praise.findMany({
+      const praiseTransactions = (await ctx.db.praise.findMany({
         select: {
           senderId: true,
           recipientId: true,
-        }
-      }) as Array<{ senderId: string; recipientId: string }>;
+        },
+      })) as Array<{ senderId: string; recipientId: string }>;
 
       // Calculate metrics for each user
       const userMetrics = acceptedApplications
-        .filter(app => app.user)
-        .map(app => {
+        .filter((app) => app.user)
+        .map((app) => {
           const userId = app.user!.id;
           const projects = app.user!.profile?.projects ?? [];
 
           // Count projects with at least one metric
           const projectsWithMetrics = projects.filter(
-            p => p.metrics && p.metrics.length > 0
+            (p) => p.metrics && p.metrics.length > 0,
           ).length;
 
           // Count total updates across all projects
           const updateCount = projects.reduce(
             (sum, p) => sum + (p.updates?.length ?? 0),
-            0
+            0,
           );
 
           // Count praise sent and received
           const praiseSent = praiseTransactions.filter(
-            t => t.senderId === userId
+            (t) => t.senderId === userId,
           ).length;
 
           const praiseReceived = praiseTransactions.filter(
-            t => t.recipientId === userId
+            (t) => t.recipientId === userId,
           ).length;
 
           // Calculate kudos using the same formula as leaderboard
@@ -1182,12 +1229,13 @@ export const projectRouter = createTRPCRouter({
             BACKFILL_PRAISE_VALUE: 5,
           };
 
-          const kudos = Math.max(0,
+          const kudos = Math.max(
+            0,
             KUDOS_CONSTANTS.BASE_KUDOS +
-            (updateCount * KUDOS_CONSTANTS.UPDATE_WEIGHT) +
-            (projectsWithMetrics * KUDOS_CONSTANTS.METRICS_WEIGHT) +
-            (praiseReceived * KUDOS_CONSTANTS.BACKFILL_PRAISE_VALUE) -
-            (praiseSent * KUDOS_CONSTANTS.BACKFILL_PRAISE_VALUE)
+              updateCount * KUDOS_CONSTANTS.UPDATE_WEIGHT +
+              projectsWithMetrics * KUDOS_CONSTANTS.METRICS_WEIGHT +
+              praiseReceived * KUDOS_CONSTANTS.BACKFILL_PRAISE_VALUE -
+              praiseSent * KUDOS_CONSTANTS.BACKFILL_PRAISE_VALUE,
           );
 
           return {
@@ -1201,25 +1249,28 @@ export const projectRouter = createTRPCRouter({
         });
 
       // Return as a map for easy lookup by userId
-      const metricsMap: Record<string, {
-        userId: string;
-        kudos: number;
-        updates: number;
-        projects: number;
-        praiseReceived: number;
-        praiseSent: number;
-      }> = Object.fromEntries(
-        userMetrics.map(m => [m.userId, m])
-      );
+      const metricsMap: Record<
+        string,
+        {
+          userId: string;
+          kudos: number;
+          updates: number;
+          projects: number;
+          praiseReceived: number;
+          praiseSent: number;
+        }
+      > = Object.fromEntries(userMetrics.map((m) => [m.userId, m]));
 
       return metricsMap;
     }),
 
   // Protected: Like a UserProject
   likeUserProject: protectedProcedure
-    .input(z.object({
-      projectId: z.string(),
-    }))
+    .input(
+      z.object({
+        projectId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -1309,9 +1360,11 @@ export const projectRouter = createTRPCRouter({
 
   // Protected: Unlike a UserProject
   unlikeUserProject: protectedProcedure
-    .input(z.object({
-      projectId: z.string(),
-    }))
+    .input(
+      z.object({
+        projectId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -1341,9 +1394,11 @@ export const projectRouter = createTRPCRouter({
 
   // Public: Get likes for a UserProject
   getUserProjectLikes: publicProcedure
-    .input(z.object({
-      projectId: z.string(),
-    }))
+    .input(
+      z.object({
+        projectId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const likes = await ctx.db.userProjectLike.findMany({
         where: { projectId: input.projectId },
@@ -1372,9 +1427,11 @@ export const projectRouter = createTRPCRouter({
 
   // Public: Get a single project update by ID
   getUpdateById: publicProcedure
-    .input(z.object({
-      updateId: z.string(),
-    }))
+    .input(
+      z.object({
+        updateId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const update = await ctx.db.projectUpdate.findUnique({
         where: { id: input.updateId },
@@ -1389,8 +1446,8 @@ export const projectRouter = createTRPCRouter({
               profile: {
                 select: {
                   avatarUrl: true,
-                }
-              }
+                },
+              },
             },
           },
           project: {
@@ -1417,8 +1474,8 @@ export const projectRouter = createTRPCRouter({
                   profile: {
                     select: {
                       avatarUrl: true,
-                    }
-                  }
+                    },
+                  },
                 },
               },
             },
@@ -1439,11 +1496,16 @@ export const projectRouter = createTRPCRouter({
 
   // Protected: Create a comment on a project update
   createUpdateComment: protectedProcedure
-    .input(z.object({
-      updateId: z.string(),
-      content: z.string().min(1, "Comment cannot be empty").max(5000, "Comment is too long"),
-      eventId: z.string(), // Required for building notification URL
-    }))
+    .input(
+      z.object({
+        updateId: z.string(),
+        content: z
+          .string()
+          .min(1, "Comment cannot be empty")
+          .max(5000, "Comment is too long"),
+        eventId: z.string(), // Required for building notification URL
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // Verify update exists and get project info
       const update = await ctx.db.projectUpdate.findUnique({
@@ -1489,7 +1551,8 @@ export const projectRouter = createTRPCRouter({
       // Use void to explicitly ignore the promise (fire-and-forget pattern)
       void (async () => {
         try {
-          const commenterName = comment.user.name ??
+          const commenterName =
+            comment.user.name ??
             `${comment.user.firstName ?? ""} ${comment.user.surname ?? ""}`.trim() ??
             "Someone";
 
@@ -1551,22 +1614,29 @@ export const projectRouter = createTRPCRouter({
           let emailFailureCount = 0;
 
           // Send Telegram notifications
-          const { BotNotificationService } = await import("~/server/services/botNotificationService");
+          const { BotNotificationService } = await import(
+            "~/server/services/botNotificationService"
+          );
           const botNotificationService = new BotNotificationService(ctx.db);
 
-          const telegramResults = await botNotificationService.sendUpdateCommentNotifications({
-            commentId: comment.id,
-            updateId: input.updateId,
-            projectId: update.project.id,
-            eventId: input.eventId,
-            commenterUserId: ctx.session.user.id,
-            commenterName,
-            commentContent: input.content,
-            updateUrl,
-          });
+          const telegramResults =
+            await botNotificationService.sendUpdateCommentNotifications({
+              commentId: comment.id,
+              updateId: input.updateId,
+              projectId: update.project.id,
+              eventId: input.eventId,
+              commenterUserId: ctx.session.user.id,
+              commenterName,
+              commentContent: input.content,
+              updateUrl,
+            });
 
-          telegramSuccessCount = telegramResults.filter(r => r.success).length;
-          telegramFailureCount = telegramResults.filter(r => !r.success).length;
+          telegramSuccessCount = telegramResults.filter(
+            (r) => r.success,
+          ).length;
+          telegramFailureCount = telegramResults.filter(
+            (r) => !r.success,
+          ).length;
 
           // Send channel notification to Telegram topic
           void sendUpdateCommentChannelNotification({
@@ -1578,13 +1648,16 @@ export const projectRouter = createTRPCRouter({
           });
 
           // Send Email notifications
-          const { getEmailService } = await import("~/server/email/emailService");
+          const { getEmailService } = await import(
+            "~/server/email/emailService"
+          );
           const emailService = getEmailService(ctx.db);
 
           const emailPromises = recipients
-            .filter(recipient => recipient?.email)
+            .filter((recipient) => recipient?.email)
             .map(async (recipient): Promise<EmailResult> => {
-              const recipientName = recipient!.name ??
+              const recipientName =
+                recipient!.name ??
                 `${recipient!.firstName ?? ""} ${recipient!.surname ?? ""}`.trim() ??
                 "Team Member";
 
@@ -1605,16 +1678,18 @@ export const projectRouter = createTRPCRouter({
           const emailResults = await Promise.allSettled(emailPromises);
 
           emailSuccessCount = emailResults.filter(
-            r => r.status === 'fulfilled' && r.value.success
+            (r) => r.status === "fulfilled" && r.value.success,
           ).length;
           emailFailureCount = emailResults.filter(
-            r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success)
+            (r) =>
+              r.status === "rejected" ||
+              (r.status === "fulfilled" && !r.value.success),
           ).length;
 
           console.log(
             `Update comment notifications for comment ${comment.id}: ` +
-            `Telegram (${telegramSuccessCount} sent, ${telegramFailureCount} failed), ` +
-            `Email (${emailSuccessCount} sent, ${emailFailureCount} failed)`
+              `Telegram (${telegramSuccessCount} sent, ${telegramFailureCount} failed), ` +
+              `Email (${emailSuccessCount} sent, ${emailFailureCount} failed)`,
           );
         } catch (error) {
           // Log error but don't fail the comment creation
@@ -1627,10 +1702,15 @@ export const projectRouter = createTRPCRouter({
 
   // Protected: Update a comment
   updateUpdateComment: protectedProcedure
-    .input(z.object({
-      commentId: z.string(),
-      content: z.string().min(1, "Comment cannot be empty").max(5000, "Comment is too long"),
-    }))
+    .input(
+      z.object({
+        commentId: z.string(),
+        content: z
+          .string()
+          .min(1, "Comment cannot be empty")
+          .max(5000, "Comment is too long"),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const comment = await ctx.db.projectUpdateComment.findUnique({
         where: { id: input.commentId },
@@ -1672,9 +1752,11 @@ export const projectRouter = createTRPCRouter({
 
   // Protected: Delete a comment
   deleteUpdateComment: protectedProcedure
-    .input(z.object({
-      commentId: z.string(),
-    }))
+    .input(
+      z.object({
+        commentId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const comment = await ctx.db.projectUpdateComment.findUnique({
         where: { id: input.commentId },
@@ -1704,9 +1786,11 @@ export const projectRouter = createTRPCRouter({
 
   // Public: Get comments for a project update
   getUpdateComments: publicProcedure
-    .input(z.object({
-      updateId: z.string(),
-    }))
+    .input(
+      z.object({
+        updateId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const comments = await ctx.db.projectUpdateComment.findMany({
         where: { projectUpdateId: input.updateId },
@@ -1723,13 +1807,13 @@ export const projectRouter = createTRPCRouter({
           likes: {
             select: {
               userId: true,
-            }
+            },
           },
           _count: {
             select: {
               likes: true,
-            }
-          }
+            },
+          },
         },
         orderBy: { createdAt: "desc" },
       });
@@ -1739,9 +1823,11 @@ export const projectRouter = createTRPCRouter({
 
   // Protected: Like a comment on a project update
   likeUpdateComment: protectedProcedure
-    .input(z.object({
-      commentId: z.string(),
-    }))
+    .input(
+      z.object({
+        commentId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -1826,9 +1912,11 @@ export const projectRouter = createTRPCRouter({
 
   // Protected: Unlike a comment on a project update
   unlikeUpdateComment: protectedProcedure
-    .input(z.object({
-      commentId: z.string(),
-    }))
+    .input(
+      z.object({
+        commentId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -1858,9 +1946,11 @@ export const projectRouter = createTRPCRouter({
 
   // Public: Get focus areas distribution for an event
   getFocusAreasDistribution: publicProcedure
-    .input(z.object({
-      eventId: z.string(),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       // Get all projects for accepted residents of this event
       const projects = await ctx.db.userProject.findMany({
@@ -1898,15 +1988,18 @@ export const projectRouter = createTRPCRouter({
       return {
         distribution,
         totalProjects: projects.length,
-        projectsWithFocusAreas: projects.filter(p => p.focusAreas.length > 0).length,
+        projectsWithFocusAreas: projects.filter((p) => p.focusAreas.length > 0)
+          .length,
       };
     }),
 
   // Public: Get event-wide GitHub activity stats
   getEventActivityStats: publicProcedure
-    .input(z.object({
-      eventId: z.string(),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       // Get all repositories for accepted residents of this event
       const repositories = await ctx.db.repository.findMany({
@@ -1932,16 +2025,21 @@ export const projectRouter = createTRPCRouter({
         },
       });
 
-      const activeProjects = repositories.filter(r => r.isActive).length;
+      const activeProjects = repositories.filter((r) => r.isActive).length;
       const totalProjects = repositories.length;
-      const percentageActive = totalProjects > 0
-        ? (activeProjects / totalProjects) * 100
-        : 0;
+      const percentageActive =
+        totalProjects > 0 ? (activeProjects / totalProjects) * 100 : 0;
 
-      const repositoriesWithWeeks = repositories.filter(r => r.weeksActive !== null);
-      const avgWeeksActive = repositoriesWithWeeks.length > 0
-        ? repositoriesWithWeeks.reduce((sum, r) => sum + (r.weeksActive ?? 0), 0) / repositoriesWithWeeks.length
-        : 0;
+      const repositoriesWithWeeks = repositories.filter(
+        (r) => r.weeksActive !== null,
+      );
+      const avgWeeksActive =
+        repositoriesWithWeeks.length > 0
+          ? repositoriesWithWeeks.reduce(
+              (sum, r) => sum + (r.weeksActive ?? 0),
+              0,
+            ) / repositoriesWithWeeks.length
+          : 0;
 
       return {
         percentageActive: percentageActive.toFixed(1),
@@ -1954,10 +2052,12 @@ export const projectRouter = createTRPCRouter({
 
   // Public: Get repository metrics (lifetime + residency-specific)
   getRepositoryMetrics: publicProcedure
-    .input(z.object({
-      repositoryId: z.string(),
-      eventId: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        repositoryId: z.string(),
+        eventId: z.string().optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const repo = await ctx.db.repository.findUnique({
         where: { id: input.repositoryId },
@@ -1973,9 +2073,11 @@ export const projectRouter = createTRPCRouter({
 
   // Public: Get all projects for an event with residency commit data
   getEventProjectsWithCommits: publicProcedure
-    .input(z.object({
-      eventId: z.string(),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       // Get all accepted residents for this event
       const acceptedApplications = await ctx.db.application.findMany({
@@ -2007,10 +2109,7 @@ export const projectRouter = createTRPCRouter({
                             },
                           },
                         },
-                        orderBy: [
-                          { isPrimary: "desc" },
-                          { order: "asc" },
-                        ],
+                        orderBy: [{ isPrimary: "desc" }, { order: "asc" }],
                       },
                     },
                     orderBy: { createdAt: "desc" },
@@ -2027,10 +2126,13 @@ export const projectRouter = createTRPCRouter({
         .filter((app) => app.user?.profile?.projects?.length)
         .flatMap((app) => app.user!.profile!.projects)
         .map((project) => {
-          const primaryRepo = project.repositories.find((r) => r.isPrimary) ?? project.repositories[0];
+          const primaryRepo =
+            project.repositories.find((r) => r.isPrimary) ??
+            project.repositories[0];
           const totalCommits = project.repositories.reduce(
-            (sum, repo) => sum + (repo.residencyMetrics[0]?.residencyCommits ?? 0),
-            0
+            (sum, repo) =>
+              sum + (repo.residencyMetrics[0]?.residencyCommits ?? 0),
+            0,
           );
 
           return {
@@ -2041,8 +2143,9 @@ export const projectRouter = createTRPCRouter({
           };
         })
         // Remove duplicates (same user might have multiple accepted applications)
-        .filter((project, index, self) =>
-          index === self.findIndex((p) => p.id === project.id)
+        .filter(
+          (project, index, self) =>
+            index === self.findIndex((p) => p.id === project.id),
         )
         // Sort by commits descending
         .sort((a, b) => b.totalCommits - a.totalCommits);
@@ -2052,9 +2155,11 @@ export const projectRouter = createTRPCRouter({
 
   // Public: Get all projects for an event with residency commit data AND metrics
   getEventProjectsWithMetrics: publicProcedure
-    .input(z.object({
-      eventId: z.string(),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       // Get all accepted residents for this event
       const acceptedApplications = await ctx.db.application.findMany({
@@ -2088,10 +2193,7 @@ export const projectRouter = createTRPCRouter({
                             },
                           },
                         },
-                        orderBy: [
-                          { isPrimary: "desc" },
-                          { order: "asc" },
-                        ],
+                        orderBy: [{ isPrimary: "desc" }, { order: "asc" }],
                       },
                       metrics: {
                         where: {
@@ -2127,10 +2229,18 @@ export const projectRouter = createTRPCRouter({
         .filter((app) => app.user?.profile?.projects?.length)
         .flatMap((app) => app.user!.profile!.projects)
         .map((project) => {
-          const primaryRepo = project.repositories.find((r: { isPrimary: boolean }) => r.isPrimary) ?? project.repositories[0];
+          const primaryRepo =
+            project.repositories.find(
+              (r: { isPrimary: boolean }) => r.isPrimary,
+            ) ?? project.repositories[0];
           const totalCommits = project.repositories.reduce(
-            (sum: number, repo: { residencyMetrics: Array<{ residencyCommits: number | null }> }) => sum + (repo.residencyMetrics[0]?.residencyCommits ?? 0),
-            0
+            (
+              sum: number,
+              repo: {
+                residencyMetrics: Array<{ residencyCommits: number | null }>;
+              },
+            ) => sum + (repo.residencyMetrics[0]?.residencyCommits ?? 0),
+            0,
           );
 
           return {
@@ -2139,20 +2249,34 @@ export const projectRouter = createTRPCRouter({
             totalCommits,
             primaryRepoId: primaryRepo?.id ?? null,
             primaryRepoUrl: primaryRepo?.url ?? null,
-            metrics: project.metrics.map((pm: { id: string; targetValue: number | null; metric: { id: string; name: string; description: string | null; metricType: string[]; unitOfMetric: string | null; collectionMethod: string | null } }) => ({
-              id: pm.id,
-              name: pm.metric.name,
-              description: pm.metric.description,
-              metricType: pm.metric.metricType,
-              unitOfMetric: pm.metric.unitOfMetric,
-              collectionMethod: pm.metric.collectionMethod,
-              targetValue: pm.targetValue,
-            })),
+            metrics: project.metrics.map(
+              (pm: {
+                id: string;
+                targetValue: number | null;
+                metric: {
+                  id: string;
+                  name: string;
+                  description: string | null;
+                  metricType: string[];
+                  unitOfMetric: string | null;
+                  collectionMethod: string | null;
+                };
+              }) => ({
+                id: pm.id,
+                name: pm.metric.name,
+                description: pm.metric.description,
+                metricType: pm.metric.metricType,
+                unitOfMetric: pm.metric.unitOfMetric,
+                collectionMethod: pm.metric.collectionMethod,
+                targetValue: pm.targetValue,
+              }),
+            ),
           };
         })
         // Remove duplicates (same user might have multiple accepted applications)
-        .filter((project, index, self) =>
-          index === self.findIndex((p) => p.id === project.id)
+        .filter(
+          (project, index, self) =>
+            index === self.findIndex((p) => p.id === project.id),
         )
         // Sort by commits descending
         .sort((a, b) => b.totalCommits - a.totalCommits);
@@ -2162,9 +2286,11 @@ export const projectRouter = createTRPCRouter({
 
   // Public: Get all metrics tracked across an event with their associated projects
   getEventMetricsWithProjects: publicProcedure
-    .input(z.object({
-      eventId: z.string(),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       // Get all accepted residents for this event
       const acceptedApplications = await ctx.db.application.findMany({
@@ -2213,20 +2339,23 @@ export const projectRouter = createTRPCRouter({
       });
 
       // Build a map of metrics to projects
-      const metricsMap = new Map<string, {
-        id: string;
-        name: string;
-        description: string | null;
-        metricType: string[];
-        unitOfMetric: string | null;
-        collectionMethod: string;
-        category: string | null;
-        projects: Array<{
+      const metricsMap = new Map<
+        string,
+        {
           id: string;
-          title: string;
-          targetValue: number | null;
-        }>;
-      }>();
+          name: string;
+          description: string | null;
+          metricType: string[];
+          unitOfMetric: string | null;
+          collectionMethod: string;
+          category: string | null;
+          projects: Array<{
+            id: string;
+            title: string;
+            targetValue: number | null;
+          }>;
+        }
+      >();
 
       // Process all projects and their metrics
       const seenProjects = new Set<string>();
@@ -2261,8 +2390,9 @@ export const projectRouter = createTRPCRouter({
       }
 
       // Convert map to array and sort by number of projects tracking the metric
-      const metrics = Array.from(metricsMap.values())
-        .sort((a, b) => b.projects.length - a.projects.length);
+      const metrics = Array.from(metricsMap.values()).sort(
+        (a, b) => b.projects.length - a.projects.length,
+      );
 
       return {
         metrics,
@@ -2272,209 +2402,207 @@ export const projectRouter = createTRPCRouter({
     }),
 
   // Protected: Get all project updates across all events (for /latest page)
-  getAllUpdates: protectedProcedure
-    .query(async ({ ctx }) => {
-      // Get all accepted resident applications
-      const acceptedApplications = await ctx.db.application.findMany({
-        where: {
-          status: "ACCEPTED",
-          applicationType: "RESIDENT",
-        },
-        select: {
-          eventId: true,
-          user: {
-            select: {
-              id: true,
-              profile: {
-                select: {
-                  projects: {
-                    select: {
-                      id: true,
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      });
-
-      // Get all project IDs from accepted residents
-      const projectIds = acceptedApplications
-        .filter(app => app.user?.profile?.projects?.length)
-        .flatMap(app =>
-          app.user!.profile!.projects.map(project => project.id)
-        );
-
-      if (projectIds.length === 0) {
-        return [];
-      }
-
-      // Get all updates for these projects
-      const updates = await ctx.db.projectUpdate.findMany({
-        where: {
-          projectId: {
-            in: projectIds
-          }
-        },
-        include: {
-          author: {
-            select: {
-              id: true,
-              firstName: true,
-              surname: true,
-              name: true,
-              image: true,
-              profile: {
-                select: {
-                  avatarUrl: true,
-                }
-              }
-            }
-          },
-          project: {
-            select: {
-              id: true,
-              title: true,
-              imageUrl: true,
-            }
-          },
-          likes: {
-            select: {
-              userId: true,
-            }
-          },
-          comments: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  firstName: true,
-                  surname: true,
-                  image: true,
-                  profile: {
-                    select: {
-                      avatarUrl: true,
-                    }
-                  }
-                }
+  getAllUpdates: protectedProcedure.query(async ({ ctx }) => {
+    // Get all accepted resident applications
+    const acceptedApplications = await ctx.db.application.findMany({
+      where: {
+        status: "ACCEPTED",
+        applicationType: "RESIDENT",
+      },
+      select: {
+        eventId: true,
+        user: {
+          select: {
+            id: true,
+            profile: {
+              select: {
+                projects: {
+                  select: {
+                    id: true,
+                  },
+                },
               },
-              likes: {
-                select: {
-                  userId: true,
-                }
-              },
-              _count: {
-                select: {
-                  likes: true,
-                }
-              }
             },
-            orderBy: { createdAt: "desc" },
-            take: 2, // Last 2 comments only
-          }
+          },
         },
-        orderBy: { updateDate: "desc" },
-        take: 50, // Limit to most recent 50 updates
-      });
+      },
+    });
 
-      return updates;
-    }),
+    // Get all project IDs from accepted residents
+    const projectIds = acceptedApplications
+      .filter((app) => app.user?.profile?.projects?.length)
+      .flatMap((app) =>
+        app.user!.profile!.projects.map((project) => project.id),
+      );
+
+    if (projectIds.length === 0) {
+      return [];
+    }
+
+    // Get all updates for these projects
+    const updates = await ctx.db.projectUpdate.findMany({
+      where: {
+        projectId: {
+          in: projectIds,
+        },
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            surname: true,
+            name: true,
+            image: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+        project: {
+          select: {
+            id: true,
+            title: true,
+            imageUrl: true,
+          },
+        },
+        likes: {
+          select: {
+            userId: true,
+          },
+        },
+        comments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                firstName: true,
+                surname: true,
+                image: true,
+                profile: {
+                  select: {
+                    avatarUrl: true,
+                  },
+                },
+              },
+            },
+            likes: {
+              select: {
+                userId: true,
+              },
+            },
+            _count: {
+              select: {
+                likes: true,
+              },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 2, // Last 2 comments only
+        },
+      },
+      orderBy: { updateDate: "desc" },
+      take: 50, // Limit to most recent 50 updates
+    });
+
+    return updates;
+  }),
 
   // Protected: Get user metrics across all events (for badges on /latest page)
-  getAllUserMetrics: protectedProcedure
-    .query(async ({ ctx }) => {
-      // Get all accepted residents
-      const acceptedApplications = await ctx.db.application.findMany({
-        where: {
-          status: "ACCEPTED",
-          applicationType: "RESIDENT",
-        },
-        select: {
-          user: {
-            select: {
-              id: true,
-              profile: {
-                select: {
-                  projects: {
-                    select: {
-                      id: true,
-                      metrics: {
-                        select: {
-                          id: true,
-                        }
+  getAllUserMetrics: protectedProcedure.query(async ({ ctx }) => {
+    // Get all accepted residents
+    const acceptedApplications = await ctx.db.application.findMany({
+      where: {
+        status: "ACCEPTED",
+        applicationType: "RESIDENT",
+      },
+      select: {
+        user: {
+          select: {
+            id: true,
+            profile: {
+              select: {
+                projects: {
+                  select: {
+                    id: true,
+                    metrics: {
+                      select: {
+                        id: true,
                       },
-                      updates: {
-                        select: {
-                          id: true,
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+                    },
+                    updates: {
+                      select: {
+                        id: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Get all praise transactions
+    const praiseTransactions = (await ctx.db.praise.findMany({
+      select: {
+        senderId: true,
+        recipientId: true,
+      },
+    })) as Array<{ senderId: string; recipientId: string }>;
+
+    // Calculate metrics for each unique user
+    const seenUsers = new Set<string>();
+    const userMetrics = acceptedApplications
+      .filter((app) => app.user && !seenUsers.has(app.user.id))
+      .map((app) => {
+        seenUsers.add(app.user!.id);
+        const userId = app.user!.id;
+        const projects = app.user!.profile?.projects ?? [];
+
+        // Count projects with at least one metric
+        const projectsWithMetrics = projects.filter(
+          (p) => p.metrics && p.metrics.length > 0,
+        ).length;
+
+        // Count total updates
+        const totalUpdates = projects.reduce(
+          (sum, p) => sum + (p.updates?.length ?? 0),
+          0,
+        );
+
+        // Count kudos sent and praise received
+        const kudosSent = praiseTransactions.filter(
+          (p) => p.senderId === userId,
+        ).length;
+        const praiseReceived = praiseTransactions.filter(
+          (p) => p.recipientId === userId,
+        ).length;
+
+        return {
+          userId,
+          projects: projectsWithMetrics,
+          updates: totalUpdates,
+          kudos: kudosSent,
+          praiseReceived,
+        };
       });
 
-      // Get all praise transactions
-      const praiseTransactions = await ctx.db.praise.findMany({
-        select: {
-          senderId: true,
-          recipientId: true,
-        }
-      }) as Array<{ senderId: string; recipientId: string }>;
-
-      // Calculate metrics for each unique user
-      const seenUsers = new Set<string>();
-      const userMetrics = acceptedApplications
-        .filter(app => app.user && !seenUsers.has(app.user.id))
-        .map(app => {
-          seenUsers.add(app.user!.id);
-          const userId = app.user!.id;
-          const projects = app.user!.profile?.projects ?? [];
-
-          // Count projects with at least one metric
-          const projectsWithMetrics = projects.filter(
-            p => p.metrics && p.metrics.length > 0
-          ).length;
-
-          // Count total updates
-          const totalUpdates = projects.reduce(
-            (sum, p) => sum + (p.updates?.length ?? 0),
-            0
-          );
-
-          // Count kudos sent and praise received
-          const kudosSent = praiseTransactions.filter(
-            p => p.senderId === userId
-          ).length;
-          const praiseReceived = praiseTransactions.filter(
-            p => p.recipientId === userId
-          ).length;
-
-          return {
-            userId,
-            projects: projectsWithMetrics,
-            updates: totalUpdates,
-            kudos: kudosSent,
-            praiseReceived,
-          };
-        });
-
-      // Return as a map keyed by userId
-      return Object.fromEntries(
-        userMetrics.map(m => [m.userId, m])
-      );
-    }),
+    // Return as a map keyed by userId
+    return Object.fromEntries(userMetrics.map((m) => [m.userId, m]));
+  }),
 
   // Get all attestations for a project's repositories
   getProjectAttestations: publicProcedure
-    .input(z.object({
-      projectId: z.string(),
-    }))
+    .input(
+      z.object({
+        projectId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const project = await ctx.db.userProject.findUnique({
         where: { id: input.projectId },
@@ -2506,7 +2634,7 @@ export const projectRouter = createTRPCRouter({
             url: repo.url,
             isPrimary: repo.isPrimary,
           },
-        }))
+        })),
       );
 
       return {

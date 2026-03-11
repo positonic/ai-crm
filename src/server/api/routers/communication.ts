@@ -1,12 +1,13 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
-import {
-  createTRPCRouter,
-  protectedProcedure,
-} from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
-import { sendEmail, generateMissingInfoEmail, isEmailSendingSafe } from "~/lib/email";
+import {
+  sendEmail,
+  generateMissingInfoEmail,
+  isEmailSendingSafe,
+} from "~/lib/email";
 
 // Input schemas
 const CheckMissingInfoSchema = z.object({
@@ -29,7 +30,9 @@ const GetApplicationCommunicationsSchema = z.object({
 const GetEventCommunicationsSchema = z.object({
   eventId: z.string(),
   status: z.enum(["DRAFT", "QUEUED", "SENT", "FAILED", "CANCELLED"]).optional(),
-  channel: z.enum(["EMAIL", "TELEGRAM", "SMS", "DISCORD", "WHATSAPP"]).optional(),
+  channel: z
+    .enum(["EMAIL", "TELEGRAM", "SMS", "DISCORD", "WHATSAPP"])
+    .optional(),
 });
 
 const UpdateCommunicationSchema = z.object({
@@ -50,13 +53,16 @@ function checkAdminAccess(userRole?: string | null) {
 }
 
 // Helper function to validate application and find missing fields
-import type { db } from '~/server/db';
+import type { db } from "~/server/db";
 
 interface ValidationContext {
   db: typeof db;
 }
 
-async function validateApplicationFields(applicationId: string, ctx: ValidationContext) {
+async function validateApplicationFields(
+  applicationId: string,
+  ctx: ValidationContext,
+) {
   // Get the application with its responses and questions
   const application = await ctx.db.application.findUnique({
     where: { id: applicationId },
@@ -88,88 +94,103 @@ async function validateApplicationFields(applicationId: string, ctx: ValidationC
   });
 
   // Filter out conditional fields that shouldn't be required
-  const requiredQuestions = allRequiredQuestions.filter(question => {
+  const requiredQuestions = allRequiredQuestions.filter((question) => {
     const questionText = question.questionEn.toLowerCase();
-    const isConditionalField = questionText.includes("specify") || 
-                               questionText.includes("if you answered") ||
-                               questionText.includes("if you did not select") ||
-                               questionText.includes("in the previous question");
-    
+    const isConditionalField =
+      questionText.includes("specify") ||
+      questionText.includes("if you answered") ||
+      questionText.includes("if you did not select") ||
+      questionText.includes("in the previous question");
+
     if (!isConditionalField) {
       return true; // Always required
     }
-    
+
     // Special handling for technical_skills_other
     if (question.questionKey === "technical_skills_other") {
-      const techSkillsResponse = application.responses.find(r => 
-        r.question.questionKey === "technical_skills"
+      const techSkillsResponse = application.responses.find(
+        (r) => r.question.questionKey === "technical_skills",
       );
-      
+
       if (techSkillsResponse?.answer) {
         try {
-          const selectedSkills = JSON.parse(techSkillsResponse.answer) as unknown;
-          const includesOther = Array.isArray(selectedSkills) && (selectedSkills as string[]).includes("Other");
+          const selectedSkills = JSON.parse(
+            techSkillsResponse.answer,
+          ) as unknown;
+          const includesOther =
+            Array.isArray(selectedSkills) &&
+            (selectedSkills as string[]).includes("Other");
           return includesOther;
         } catch {
           // If not JSON, check string contains "Other"
-          const includesOtherString = techSkillsResponse.answer.includes("Other");
+          const includesOtherString =
+            techSkillsResponse.answer.includes("Other");
           return includesOtherString;
         }
       }
-      
+
       return false; // Don't require if no technical_skills response
     }
-    
+
     return false; // Other conditional fields not required
   });
 
   // Find missing or inadequately answered required questions
   const responseMap = new Map(
-    application.responses.map(r => [r.questionId, r])
+    application.responses.map((r) => [r.questionId, r]),
   );
 
-  const missingQuestions = requiredQuestions.filter(question => {
+  const missingQuestions = requiredQuestions.filter((question) => {
     const response = responseMap.get(question.id);
-    
+
     // No response at all
     if (!response) {
       return true;
     }
-    
+
     // Empty or whitespace-only answer
     if (!response.answer || response.answer.trim() === "") {
       return true;
     }
-    
+
     // For SELECT/MULTISELECT questions, check if answer is valid
-    if (question.questionType === "SELECT" || question.questionType === "MULTISELECT") {
+    if (
+      question.questionType === "SELECT" ||
+      question.questionType === "MULTISELECT"
+    ) {
       const answer = response.answer.trim();
-      
+
       // Common invalid select values
-      if (answer === "" || 
-          answer === "Please select" || 
-          answer === "Select an option" ||
-          answer === "Choose one" ||
-          answer === "null" ||
-          answer === "undefined") {
+      if (
+        answer === "" ||
+        answer === "Please select" ||
+        answer === "Select an option" ||
+        answer === "Choose one" ||
+        answer === "null" ||
+        answer === "undefined"
+      ) {
         return true;
       }
-      
+
       // If question has options defined, check if answer is one of them
       if (question.options && question.options.length > 0) {
-        const validOptions = question.options.map(opt => opt.toLowerCase().trim());
+        const validOptions = question.options.map((opt) =>
+          opt.toLowerCase().trim(),
+        );
         const answerLower = answer.toLowerCase().trim();
-        
+
         // For MULTISELECT, check each selected option
         if (question.questionType === "MULTISELECT") {
           let selectedOptions: string[] = [];
-          
+
           // Handle JSON array format (e.g., ["Project Manager", "Developer"])
-          if (answer.startsWith('[') && answer.endsWith(']')) {
+          if (answer.startsWith("[") && answer.endsWith("]")) {
             try {
               const parsed = JSON.parse(answer) as unknown;
               if (Array.isArray(parsed)) {
-                selectedOptions = (parsed as string[]).map(opt => String(opt).toLowerCase().trim());
+                selectedOptions = (parsed as string[]).map((opt) =>
+                  String(opt).toLowerCase().trim(),
+                );
               } else {
                 return true; // Invalid JSON array
               }
@@ -178,15 +199,19 @@ async function validateApplicationFields(applicationId: string, ctx: ValidationC
             }
           } else {
             // Handle comma-separated format (e.g., "Project Manager, Developer")
-            selectedOptions = answer.split(',').map(opt => opt.toLowerCase().trim());
+            selectedOptions = answer
+              .split(",")
+              .map((opt) => opt.toLowerCase().trim());
           }
-          
-          const hasInvalidOption = selectedOptions.some(opt => !validOptions.includes(opt));
-          
+
+          const hasInvalidOption = selectedOptions.some(
+            (opt) => !validOptions.includes(opt),
+          );
+
           if (hasInvalidOption || selectedOptions.length === 0) {
             return true;
           }
-          
+
           return false;
         } else {
           // For SELECT, check if the answer is one of the valid options
@@ -196,14 +221,14 @@ async function validateApplicationFields(applicationId: string, ctx: ValidationC
         }
       }
     }
-    
+
     return false;
   });
 
   return {
     application,
     missingQuestions,
-    isComplete: missingQuestions.length === 0
+    isComplete: missingQuestions.length === 0,
   };
 }
 
@@ -214,19 +239,22 @@ export const communicationRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       checkAdminAccess(ctx.session.user.role);
 
-      const validation = await validateApplicationFields(input.applicationId, ctx);
+      const validation = await validateApplicationFields(
+        input.applicationId,
+        ctx,
+      );
 
       return {
         applicationId: input.applicationId,
         isComplete: validation.isComplete,
-        missingFields: validation.missingQuestions.map(q => ({
+        missingFields: validation.missingQuestions.map((q) => ({
           questionKey: q.questionKey,
           questionText: q.questionEn,
-          questionType: q.questionType
+          questionType: q.questionType,
         })),
-        message: validation.isComplete 
+        message: validation.isComplete
           ? "Application is complete - no missing fields found"
-          : `${validation.missingQuestions.length} required field(s) missing`
+          : `${validation.missingQuestions.length} required field(s) missing`,
       };
     }),
 
@@ -236,13 +264,16 @@ export const communicationRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       checkAdminAccess(ctx.session.user.role);
 
-      const validation = await validateApplicationFields(input.applicationId, ctx);
-      
+      const validation = await validateApplicationFields(
+        input.applicationId,
+        ctx,
+      );
+
       if (validation.isComplete) {
         return {
           message: "Application is complete - no missing fields found",
           missingFields: [],
-          isComplete: true
+          isComplete: true,
         };
       }
 
@@ -254,7 +285,7 @@ export const communicationRouter = createTRPCRouter({
         applicantName: validation.application.user?.name ?? "Applicant",
         eventName: validation.application.event.name,
         eventId: validation.application.eventId,
-        missingFields: validation.missingQuestions.map(q => q.questionKey),
+        missingFields: validation.missingQuestions.map((q) => q.questionKey),
         applicationUrl,
       });
 
@@ -276,7 +307,9 @@ export const communicationRouter = createTRPCRouter({
             subject: emailContent.subject,
             htmlContent: emailContent.htmlContent,
             textContent: emailContent.textContent,
-            missingFields: validation.missingQuestions.map(q => q.questionKey),
+            missingFields: validation.missingQuestions.map(
+              (q) => q.questionKey,
+            ),
             updatedAt: new Date(),
           },
         });
@@ -296,7 +329,7 @@ export const communicationRouter = createTRPCRouter({
           textContent: emailContent.textContent,
           type: "MISSING_INFO",
           status: "DRAFT",
-          missingFields: validation.missingQuestions.map(q => q.questionKey),
+          missingFields: validation.missingQuestions.map((q) => q.questionKey),
           createdBy: ctx.session.user.id,
         },
         include: {
@@ -349,14 +382,20 @@ export const communicationRouter = createTRPCRouter({
       if (communication.channel !== "EMAIL") {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Only email communications can be sent through this endpoint",
+          message:
+            "Only email communications can be sent through this endpoint",
         });
       }
 
-      if (!communication.toEmail || !communication.subject || !communication.textContent) {
+      if (
+        !communication.toEmail ||
+        !communication.subject ||
+        !communication.textContent
+      ) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Email communication missing required fields (toEmail, subject, textContent)",
+          message:
+            "Email communication missing required fields (toEmail, subject, textContent)",
         });
       }
 
@@ -364,7 +403,7 @@ export const communicationRouter = createTRPCRouter({
       const result = await sendEmail({
         to: communication.toEmail,
         subject: communication.subject,
-        htmlContent: communication.htmlContent ?? '',
+        htmlContent: communication.htmlContent ?? "",
         textContent: communication.textContent,
         bypassSafety: input.bypassSafety ?? false,
       });
@@ -538,13 +577,16 @@ export const communicationRouter = createTRPCRouter({
         },
       });
 
-      const channelStats = stats.reduce((acc, stat) => {
-        acc[stat.channel] ??= {};
-        if (stat.status) {
-          acc[stat.channel]![stat.status] = stat._count.id;
-        }
-        return acc;
-      }, {} as Record<string, Record<string, number>>);
+      const channelStats = stats.reduce(
+        (acc, stat) => {
+          acc[stat.channel] ??= {};
+          if (stat.status) {
+            acc[stat.channel]![stat.status] = stat._count.id;
+          }
+          return acc;
+        },
+        {} as Record<string, Record<string, number>>,
+      );
 
       return {
         byChannel: channelStats,
@@ -560,13 +602,19 @@ export const communicationRouter = createTRPCRouter({
 
   // Get all sent communications (admin only) with multi-channel search
   getAllSentCommunications: protectedProcedure
-    .input(z.object({
-      limit: z.number().min(1).max(100).optional().default(50),
-      offset: z.number().min(0).optional().default(0),
-      searchEmail: z.string().optional(),
-      searchTelegram: z.string().optional(),
-      channel: z.enum(["EMAIL", "TELEGRAM", "SMS", "DISCORD", "WHATSAPP"]).optional(),
-    }).optional())
+    .input(
+      z
+        .object({
+          limit: z.number().min(1).max(100).optional().default(50),
+          offset: z.number().min(0).optional().default(0),
+          searchEmail: z.string().optional(),
+          searchTelegram: z.string().optional(),
+          channel: z
+            .enum(["EMAIL", "TELEGRAM", "SMS", "DISCORD", "WHATSAPP"])
+            .optional(),
+        })
+        .optional(),
+    )
     .query(async ({ ctx, input }) => {
       checkAdminAccess(ctx.session.user.role);
 

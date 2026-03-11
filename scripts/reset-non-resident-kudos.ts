@@ -52,21 +52,26 @@ async function main() {
 
   // Filter to users without accepted applications
   const usersToReset = usersWithKudos.filter(
-    (user) => user.applications.length === 0
+    (user) => user.applications.length === 0,
   );
 
   console.log(
-    `❌ Found ${usersToReset.length} users with kudos but NO accepted applications:\n`
+    `❌ Found ${usersToReset.length} users with kudos but NO accepted applications:\n`,
   );
 
   if (usersToReset.length === 0) {
-    console.log("✅ No users to reset! All users with kudos have accepted applications.");
+    console.log(
+      "✅ No users to reset! All users with kudos have accepted applications.",
+    );
     return;
   }
 
   // Display users who will be reset
   usersToReset.forEach((user) => {
-    const name = user.name ?? `${user.firstName ?? ""} ${user.surname ?? ""}`.trim() ?? user.email;
+    const name =
+      user.name ??
+      `${user.firstName ?? ""} ${user.surname ?? ""}`.trim() ??
+      user.email;
     console.log(`   • ${name} - Current kudos: ${user.kudos}`);
   });
 
@@ -100,29 +105,43 @@ async function main() {
         },
       });
       return result;
-    })
+    }),
   );
 
-  console.log(`✅ Successfully reset kudos for ${updateResults.length} users\n`);
+  console.log(
+    `✅ Successfully reset kudos for ${updateResults.length} users\n`,
+  );
 
   // Show summary
-  const totalKudosReset = usersToReset.reduce((sum, user) => sum + user.kudos, 0);
+  const totalKudosReset = usersToReset.reduce(
+    (sum, user) => sum + user.kudos,
+    0,
+  );
   console.log("📊 Summary:");
   console.log(`   • Users reset: ${updateResults.length}`);
   console.log(`   • Total kudos reset: ${totalKudosReset.toFixed(2)}`);
-  console.log(`   • Users still with kudos: ${usersWithKudos.length - usersToReset.length}`);
+  console.log(
+    `   • Users still with kudos: ${usersWithKudos.length - usersToReset.length}`,
+  );
 
   // Show users who kept their kudos (have accepted applications)
   const usersWithAcceptedApps = usersWithKudos.filter(
-    (user) => user.applications.length > 0
+    (user) => user.applications.length > 0,
   );
 
   if (usersWithAcceptedApps.length > 0) {
-    console.log(`\n✅ Users with kudos who have accepted applications (${usersWithAcceptedApps.length}):`);
+    console.log(
+      `\n✅ Users with kudos who have accepted applications (${usersWithAcceptedApps.length}):`,
+    );
     usersWithAcceptedApps.forEach((user) => {
-      const name = user.name ?? `${user.firstName ?? ""} ${user.surname ?? ""}`.trim() ?? user.email;
+      const name =
+        user.name ??
+        `${user.firstName ?? ""} ${user.surname ?? ""}`.trim() ??
+        user.email;
       const events = user.applications.map((app) => app.event.name).join(", ");
-      console.log(`   • ${name} - Kudos: ${user.kudos.toFixed(2)} - Events: ${events}`);
+      console.log(
+        `   • ${name} - Kudos: ${user.kudos.toFixed(2)} - Events: ${events}`,
+      );
     });
   }
 }

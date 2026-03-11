@@ -29,6 +29,8 @@ import { forumRouter } from "~/server/api/routers/forum";
 import { scheduleRouter } from "~/server/api/routers/schedule";
 import { aiInteractionRouter } from "~/server/api/routers/aiInteraction";
 import { bugReportRouter } from "~/server/api/routers/bugReport";
+import { deliberationRouter } from "~/server/api/routers/deliberation";
+import { transcriptionRouter } from "~/server/api/routers/transcription";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
@@ -68,6 +70,8 @@ export const appRouter = createTRPCRouter({
   schedule: scheduleRouter,
   aiInteraction: aiInteractionRouter,
   bugReport: bugReportRouter,
+  deliberation: deliberationRouter,
+  transcription: transcriptionRouter,
 });
 
 // export type definition of API

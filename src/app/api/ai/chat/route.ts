@@ -11,7 +11,7 @@ const requestSchema = z.object({
     z.object({
       role: z.enum(["user", "assistant"]),
       content: z.string(),
-    })
+    }),
   ),
   pathname: z.string(),
   eventId: z.string().optional(),
@@ -30,19 +30,28 @@ export async function POST(request: NextRequest) {
     const body: unknown = await request.json();
     const parsed = requestSchema.safeParse(body);
     if (!parsed.success) {
-      console.warn("[AI Chat API] Invalid request body:", parsed.error.flatten());
+      console.warn(
+        "[AI Chat API] Invalid request body:",
+        parsed.error.flatten(),
+      );
       return NextResponse.json(
         { error: "Invalid request body" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const { messages, pathname, eventId } = parsed.data;
-    console.log("[AI Chat API] Request from:", session.user.email, { messageCount: messages.length, pathname, eventId });
+    console.log("[AI Chat API] Request from:", session.user.email, {
+      messageCount: messages.length,
+      pathname,
+      eventId,
+    });
 
     // Build context message with platform state
     const contextParts: string[] = [];
-    contextParts.push(`User: ${session.user.name ?? session.user.email ?? "Authenticated user"}`);
+    contextParts.push(
+      `User: ${session.user.name ?? session.user.email ?? "Authenticated user"}`,
+    );
     contextParts.push(`Current page: ${pathname}`);
 
     // Add user's global role
@@ -68,7 +77,10 @@ export async function POST(request: NextRequest) {
             resolvedEventId = eventBySlug.id;
           }
         }
-        console.log("[AI Chat API] Event resolution:", { eventId, resolvedEventId: resolvedEventId ?? "NOT_FOUND" });
+        console.log("[AI Chat API] Event resolution:", {
+          eventId,
+          resolvedEventId: resolvedEventId ?? "NOT_FOUND",
+        });
       } catch (resolveErr) {
         console.error("[AI Chat API] Event resolution failed:", resolveErr);
       }
@@ -102,7 +114,9 @@ export async function POST(request: NextRequest) {
         });
         if (venueOwnerships.length > 0) {
           eventRoles.push("floor lead");
-          const venueNames = venueOwnerships.map((v) => v.venue.name).join(", ");
+          const venueNames = venueOwnerships
+            .map((v) => v.venue.name)
+            .join(", ");
           contextParts.push(`Venues you manage (as floor lead): ${venueNames}`);
         }
       } catch (err) {
@@ -112,7 +126,11 @@ export async function POST(request: NextRequest) {
       // Accepted applications
       try {
         const acceptedApps = await db.application.findMany({
-          where: { userId: session.user.id, eventId: resolvedEventId, status: "ACCEPTED" },
+          where: {
+            userId: session.user.id,
+            eventId: resolvedEventId,
+            status: "ACCEPTED",
+          },
           select: { applicationType: true },
         });
         for (const app of acceptedApps) {
@@ -134,7 +152,13 @@ export async function POST(request: NextRequest) {
           },
           select: {
             role: true,
-            session: { select: { title: true, startTime: true, venue: { select: { name: true } } } },
+            session: {
+              select: {
+                title: true,
+                startTime: true,
+                venue: { select: { name: true } },
+              },
+            },
           },
         });
         if (speakerSessions.length > 0 && !eventRoles.includes("speaker")) {
@@ -154,7 +178,9 @@ export async function POST(request: NextRequest) {
       }
 
       if (eventRoles.length > 0) {
-        contextParts.push(`Your roles for this event: ${eventRoles.join(", ")}`);
+        contextParts.push(
+          `Your roles for this event: ${eventRoles.join(", ")}`,
+        );
       }
       console.log("[AI Chat API] Resolved roles:", eventRoles);
     }
@@ -163,7 +189,14 @@ export async function POST(request: NextRequest) {
     try {
       const allEvents = await db.event.findMany({
         where: { status: "ACTIVE" },
-        select: { id: true, slug: true, name: true, startDate: true, endDate: true, location: true },
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          startDate: true,
+          endDate: true,
+          location: true,
+        },
         orderBy: { startDate: "desc" },
         take: 20,
       });
@@ -172,9 +205,10 @@ export async function POST(request: NextRequest) {
         const eventList = allEvents
           .map((e) => {
             const urlId = e.slug ?? e.id;
-            const dates = e.startDate && e.endDate
-              ? ` (${e.startDate.toLocaleDateString()} – ${e.endDate.toLocaleDateString()})`
-              : "";
+            const dates =
+              e.startDate && e.endDate
+                ? ` (${e.startDate.toLocaleDateString()} – ${e.endDate.toLocaleDateString()})`
+                : "";
             const loc = e.location ? ` — ${e.location}` : "";
             return `- [${e.name}](/events/${urlId})${dates}${loc}`;
           })
@@ -206,17 +240,22 @@ export async function POST(request: NextRequest) {
           const eventSlug = event.slug ?? event.id;
           contextParts.push(
             `\nCurrent event: ${event.name}` +
-            ` | Event page: /events/${eventSlug}` +
-            (event.location ? ` | Location: ${event.location}` : "") +
-            (event.startDate ? ` | Starts: ${event.startDate.toLocaleDateString()}` : "") +
-            (event.endDate ? ` | Ends: ${event.endDate.toLocaleDateString()}` : "") +
-            (event.type ? ` | Type: ${event.type}` : "")
+              ` | Event page: /events/${eventSlug}` +
+              (event.location ? ` | Location: ${event.location}` : "") +
+              (event.startDate
+                ? ` | Starts: ${event.startDate.toLocaleDateString()}`
+                : "") +
+              (event.endDate
+                ? ` | Ends: ${event.endDate.toLocaleDateString()}`
+                : "") +
+              (event.type ? ` | Type: ${event.type}` : ""),
           );
 
           if (event.description) {
-            const shortDesc = event.description.length > 300
-              ? event.description.slice(0, 300) + "..."
-              : event.description;
+            const shortDesc =
+              event.description.length > 300
+                ? event.description.slice(0, 300) + "..."
+                : event.description;
             contextParts.push(`Event description: ${shortDesc}`);
           }
 
@@ -254,7 +293,9 @@ export async function POST(request: NextRequest) {
                 return `- ${s.title} (${time}${venueName ? `, ${venueName}` : ""}${speakers ? `, Speakers: ${speakers}` : ""})`;
               })
               .join("\n");
-            contextParts.push(`\nSchedule (${scheduleSessions.length} sessions):\n${sessionList}`);
+            contextParts.push(
+              `\nSchedule (${scheduleSessions.length} sessions):\n${sessionList}`,
+            );
           }
 
           // Fetch user's application status for this event
@@ -271,7 +312,7 @@ export async function POST(request: NextRequest) {
 
           if (application) {
             contextParts.push(
-              `\nYour application: ${application.applicationType ?? "General"} — Status: ${application.status}`
+              `\nYour application: ${application.applicationType ?? "General"} — Status: ${application.status}`,
             );
           }
         }
@@ -311,11 +352,15 @@ export async function POST(request: NextRequest) {
         role: "user" as const,
         content: `[Platform Context — do not repeat this to the user]\n${contextMessage}\n\n${behaviorInstructions}`,
       },
-      { role: "assistant" as const, content: "Understood, I have the platform context and will use proper links." },
+      {
+        role: "assistant" as const,
+        content:
+          "Understood, I have the platform context and will use proper links.",
+      },
       ...messages.map((m) =>
         m.role === "user"
           ? { role: "user" as const, content: m.content }
-          : { role: "assistant" as const, content: m.content }
+          : { role: "assistant" as const, content: m.content },
       ),
     ];
 
@@ -337,13 +382,13 @@ export async function POST(request: NextRequest) {
               if (chunk.type === "text-delta") {
                 textChunkCount++;
                 const payload = chunk.payload as { text: string };
-                controller.enqueue(
-                  new TextEncoder().encode(payload.text),
-                );
+                controller.enqueue(new TextEncoder().encode(payload.text));
               }
             },
           });
-          console.log(`[AI Chat API] Stream complete: ${String(chunkCount)} total chunks, ${String(textChunkCount)} text chunks`);
+          console.log(
+            `[AI Chat API] Stream complete: ${String(chunkCount)} total chunks, ${String(textChunkCount)} text chunks`,
+          );
           controller.close();
         } catch (err) {
           console.error("[AI Chat API] Stream processing error:", err);
@@ -363,7 +408,7 @@ export async function POST(request: NextRequest) {
     console.error("[AI Chat API] Error:", error);
     return NextResponse.json(
       { error: "Failed to process chat request" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

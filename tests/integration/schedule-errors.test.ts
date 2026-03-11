@@ -31,7 +31,10 @@ describe("Schedule Router Error Scenarios", () => {
       const db = getTestDb();
       const admin = await createTestUser({ role: "admin" }, db);
       const event = await createTestEvent({ name: "Empty Floor Event" }, db);
-      const venue = await createTestVenue({ eventId: event.id, name: "Empty Hall" }, db);
+      const venue = await createTestVenue(
+        { eventId: event.id, name: "Empty Hall" },
+        db,
+      );
 
       const caller = createTestCaller("admin", { id: admin.id });
       const result = await caller.schedule.getFloorSessions({
@@ -46,13 +49,19 @@ describe("Schedule Router Error Scenarios", () => {
     it("rejects non-owner access to floor sessions", async () => {
       const db = getTestDb();
       const owner = await createTestUser({ role: "user", name: "Owner" }, db);
-      const outsider = await createTestUser({ role: "user", name: "Outsider" }, db);
+      const outsider = await createTestUser(
+        { role: "user", name: "Outsider" },
+        db,
+      );
       const event = await createTestEvent({ name: "Access Control Event" }, db);
-      const venue = await createTestVenue({
-        eventId: event.id,
-        name: "Private Floor",
-        ownerUserId: owner.id,
-      }, db);
+      const venue = await createTestVenue(
+        {
+          eventId: event.id,
+          name: "Private Floor",
+          ownerUserId: owner.id,
+        },
+        db,
+      );
 
       const caller = createTestCaller("user", { id: outsider.id });
 
@@ -71,13 +80,22 @@ describe("Schedule Router Error Scenarios", () => {
     it("returns sessions with speaker data correctly", async () => {
       const db = getTestDb();
       const admin = await createTestUser({ role: "admin" }, db);
-      const speaker = await createTestUser({ role: "user", name: "Speaker User" }, db);
-      const event = await createTestEvent({ name: "Speaker Session Event" }, db);
-      const venue = await createTestVenue({ eventId: event.id, name: "Speaker Hall" }, db);
+      const speaker = await createTestUser(
+        { role: "user", name: "Speaker User" },
+        db,
+      );
+      const event = await createTestEvent(
+        { name: "Speaker Session Event" },
+        db,
+      );
+      const venue = await createTestVenue(
+        { eventId: event.id, name: "Speaker Hall" },
+        db,
+      );
 
       // Create a session with a linked speaker
       const adminCaller = createTestCaller("admin", { id: admin.id });
-      const startTime = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       await adminCaller.schedule.createSession({
@@ -106,7 +124,10 @@ describe("Schedule Router Error Scenarios", () => {
   describe("getMyFloors", () => {
     it("returns empty array for user with no floor ownership", async () => {
       const db = getTestDb();
-      const user = await createTestUser({ role: "user", name: "No Floors" }, db);
+      const user = await createTestUser(
+        { role: "user", name: "No Floors" },
+        db,
+      );
       const event = await createTestEvent({ name: "No Floors Event" }, db);
 
       const caller = createTestCaller("user", { id: user.id });
@@ -134,16 +155,22 @@ describe("Schedule Router Error Scenarios", () => {
       const leadB = await createTestUser({ role: "user", name: "Lead B" }, db);
       const event = await createTestEvent({ name: "Multi Floor Event" }, db);
 
-      const venueA = await createTestVenue({
-        eventId: event.id,
-        name: "Floor A",
-        ownerUserId: leadA.id,
-      }, db);
-      await createTestVenue({
-        eventId: event.id,
-        name: "Floor B",
-        ownerUserId: leadB.id,
-      }, db);
+      const venueA = await createTestVenue(
+        {
+          eventId: event.id,
+          name: "Floor A",
+          ownerUserId: leadA.id,
+        },
+        db,
+      );
+      await createTestVenue(
+        {
+          eventId: event.id,
+          name: "Floor B",
+          ownerUserId: leadB.id,
+        },
+        db,
+      );
 
       const callerA = createTestCaller("user", { id: leadA.id });
       const result = await callerA.schedule.getMyFloors({ eventId: event.id });
@@ -160,10 +187,13 @@ describe("Schedule Router Error Scenarios", () => {
       const db = getTestDb();
       const admin = await createTestUser({ role: "admin" }, db);
       const event = await createTestEvent({ name: "Admin Manage Event" }, db);
-      const venue = await createTestVenue({ eventId: event.id, name: "Admin Hall" }, db);
+      const venue = await createTestVenue(
+        { eventId: event.id, name: "Admin Hall" },
+        db,
+      );
 
       const caller = createTestCaller("admin", { id: admin.id });
-      const startTime = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       const session = await caller.schedule.createSession({
@@ -185,12 +215,18 @@ describe("Schedule Router Error Scenarios", () => {
     it("non-owner cannot manage session", async () => {
       const db = getTestDb();
       const admin = await createTestUser({ role: "admin" }, db);
-      const outsider = await createTestUser({ role: "user", name: "Outsider" }, db);
+      const outsider = await createTestUser(
+        { role: "user", name: "Outsider" },
+        db,
+      );
       const event = await createTestEvent({ name: "Non-Owner Event" }, db);
-      const venue = await createTestVenue({ eventId: event.id, name: "Locked Hall" }, db);
+      const venue = await createTestVenue(
+        { eventId: event.id, name: "Locked Hall" },
+        db,
+      );
 
       const adminCaller = createTestCaller("admin", { id: admin.id });
-      const startTime = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       const session = await adminCaller.schedule.createSession({
@@ -242,13 +278,19 @@ describe("Schedule Router Error Scenarios", () => {
 
     it("returns venues with owner data", async () => {
       const db = getTestDb();
-      const owner = await createTestUser({ role: "user", name: "Filter Owner" }, db);
+      const owner = await createTestUser(
+        { role: "user", name: "Filter Owner" },
+        db,
+      );
       const event = await createTestEvent({ name: "Filter Test Event" }, db);
-      await createTestVenue({
-        eventId: event.id,
-        name: "Filtered Hall",
-        ownerUserId: owner.id,
-      }, db);
+      await createTestVenue(
+        {
+          eventId: event.id,
+          name: "Filtered Hall",
+          ownerUserId: owner.id,
+        },
+        db,
+      );
 
       const caller = createTestCaller(null);
       const result = await caller.schedule.getEventScheduleFilters({
@@ -256,7 +298,9 @@ describe("Schedule Router Error Scenarios", () => {
       });
 
       expect(result.venues.length).toBeGreaterThanOrEqual(1);
-      const filteredVenue = result.venues.find((v) => v.name === "Filtered Hall");
+      const filteredVenue = result.venues.find(
+        (v) => v.name === "Filtered Hall",
+      );
       expect(filteredVenue).toBeDefined();
       expect(filteredVenue?.owners).toHaveLength(1);
     });

@@ -25,9 +25,10 @@ import Link from "next/link";
 import { api } from "~/trpc/react";
 
 export default function MetricsPage() {
-  const { data: metricsData, isLoading } = api.project.getEventMetricsWithProjects.useQuery({
-    eventId: "funding-commons-residency-2025",
-  });
+  const { data: metricsData, isLoading } =
+    api.project.getEventMetricsWithProjects.useQuery({
+      eventId: "funding-commons-residency-2025",
+    });
 
   return (
     <Box className="bg-theme-gradient" style={{ minHeight: "100vh" }}>
@@ -38,12 +39,19 @@ export default function MetricsPage() {
             <Text size="sm" tt="uppercase" fw={700} c="dimmed" mb="xs">
               Impact Report
             </Text>
-            <Title order={1} size={40} fw={900} mb="md" style={{ lineHeight: 1.1 }}>
+            <Title
+              order={1}
+              size={40}
+              fw={900}
+              mb="md"
+              style={{ lineHeight: 1.1 }}
+            >
               Residency Metrics
             </Title>
             <Text size="lg" c="dimmed" maw={700}>
-              All metrics tracked across projects in the Funding the Commons Residency 2025.
-              Click on a metric to see which projects are tracking it.
+              All metrics tracked across projects in the Funding the Commons
+              Residency 2025. Click on a metric to see which projects are
+              tracking it.
             </Text>
           </Box>
 
@@ -54,12 +62,18 @@ export default function MetricsPage() {
                 p="lg"
                 radius="md"
                 style={{
-                  background: "linear-gradient(135deg, var(--mantine-color-grape-0) 0%, var(--mantine-color-violet-0) 100%)",
+                  background:
+                    "linear-gradient(135deg, var(--mantine-color-grape-0) 0%, var(--mantine-color-violet-0) 100%)",
                   border: "2px solid var(--mantine-color-grape-3)",
                 }}
               >
                 <Stack gap="xs" align="center">
-                  <ThemeIcon size={48} radius="md" variant="light" color="grape">
+                  <ThemeIcon
+                    size={48}
+                    radius="md"
+                    variant="light"
+                    color="grape"
+                  >
                     <IconChartBar size={28} />
                   </ThemeIcon>
                   <Text size="2xl" fw={900} c="grape">
@@ -74,7 +88,8 @@ export default function MetricsPage() {
                 p="lg"
                 radius="md"
                 style={{
-                  background: "linear-gradient(135deg, var(--mantine-color-blue-0) 0%, var(--mantine-color-cyan-0) 100%)",
+                  background:
+                    "linear-gradient(135deg, var(--mantine-color-blue-0) 0%, var(--mantine-color-cyan-0) 100%)",
                   border: "2px solid var(--mantine-color-blue-3)",
                 }}
               >
@@ -83,7 +98,10 @@ export default function MetricsPage() {
                     <IconTarget size={28} />
                   </ThemeIcon>
                   <Text size="2xl" fw={900} c="blue">
-                    {metricsData.metrics.reduce((sum, m) => sum + m.projects.length, 0)}
+                    {metricsData.metrics.reduce(
+                      (sum, m) => sum + m.projects.length,
+                      0,
+                    )}
                   </Text>
                   <Text size="sm" fw={500}>
                     Total Trackings
@@ -107,7 +125,8 @@ export default function MetricsPage() {
           ) : (
             <>
               <Text size="sm" c="dimmed" mb="xl">
-                {metricsData.metrics.length} unique metrics tracked across residency projects
+                {metricsData.metrics.length} unique metrics tracked across
+                residency projects
               </Text>
               <Accordion variant="separated" radius="md">
                 {metricsData.metrics.map((metric) => (
@@ -126,7 +145,10 @@ export default function MetricsPage() {
                         </Box>
                         <Group gap="md" wrap="nowrap">
                           <Badge variant="light" color="grape">
-                            {metric.projects.length} {metric.projects.length === 1 ? "project" : "projects"}
+                            {metric.projects.length}{" "}
+                            {metric.projects.length === 1
+                              ? "project"
+                              : "projects"}
                           </Badge>
                           {metric.unitOfMetric && (
                             <Badge variant="outline" color="gray" size="sm">
@@ -141,12 +163,19 @@ export default function MetricsPage() {
                         {/* Metric Details */}
                         <Group gap="xs" wrap="wrap">
                           {metric.metricType.map((type) => (
-                            <Badge key={type} size="sm" variant="light" color="blue">
+                            <Badge
+                              key={type}
+                              size="sm"
+                              variant="light"
+                              color="blue"
+                            >
                               {type.toLowerCase().replace(/_/g, " ")}
                             </Badge>
                           ))}
                           <Badge size="sm" variant="light" color="teal">
-                            {metric.collectionMethod.toLowerCase().replace(/_/g, " ")}
+                            {metric.collectionMethod
+                              .toLowerCase()
+                              .replace(/_/g, " ")}
                           </Badge>
                           {metric.category && (
                             <Badge size="sm" variant="outline" color="gray">
@@ -168,15 +197,33 @@ export default function MetricsPage() {
                           </Text>
                           <Stack gap="xs">
                             {metric.projects.map((project) => (
-                              <Paper key={project.id} p="sm" withBorder radius="sm" bg="gray.0">
+                              <Paper
+                                key={project.id}
+                                p="sm"
+                                withBorder
+                                radius="sm"
+                                bg="gray.0"
+                              >
                                 <Group justify="space-between" wrap="nowrap">
-                                  <Text size="sm" fw={500} lineClamp={1} style={{ flex: 1 }}>
+                                  <Text
+                                    size="sm"
+                                    fw={500}
+                                    lineClamp={1}
+                                    style={{ flex: 1 }}
+                                  >
                                     {project.title}
                                   </Text>
                                   <Group gap="sm" wrap="nowrap">
                                     {project.targetValue !== null && (
-                                      <Badge size="xs" variant="light" color="green">
-                                        Target: {project.targetValue}{metric.unitOfMetric ? ` ${metric.unitOfMetric}` : ""}
+                                      <Badge
+                                        size="xs"
+                                        variant="light"
+                                        color="green"
+                                      >
+                                        Target: {project.targetValue}
+                                        {metric.unitOfMetric
+                                          ? ` ${metric.unitOfMetric}`
+                                          : ""}
                                       </Badge>
                                     )}
                                     <Anchor

@@ -2,7 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { Tabs, Container } from "@mantine/core";
-import { IconUsers, IconUserCircle, IconMail, IconMailOpened } from "@tabler/icons-react";
+import {
+  IconUsers,
+  IconUserCircle,
+  IconMail,
+  IconMailOpened,
+} from "@tabler/icons-react";
 import UsersClient from "./UsersClient";
 import ProfilesAdminClient from "./ProfilesAdminClient";
 import InvitationsClient from "./InvitationsClient";
@@ -40,7 +45,10 @@ export default function UsersPageClient() {
           <Tabs.Tab value="invitations" leftSection={<IconMail size={16} />}>
             Invitations
           </Tabs.Tab>
-          <Tabs.Tab value="communications" leftSection={<IconMailOpened size={16} />}>
+          <Tabs.Tab
+            value="communications"
+            leftSection={<IconMailOpened size={16} />}
+          >
             Communications
           </Tabs.Tab>
         </Tabs.List>

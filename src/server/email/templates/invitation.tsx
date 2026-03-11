@@ -1,10 +1,6 @@
-import React from 'react';
-import {
-  Section,
-  Text,
-  Button,
-} from '@react-email/components';
-import { BaseTemplate } from './base';
+import React from "react";
+import { Section, Text, Button } from "@react-email/components";
+import { BaseTemplate } from "./base";
 
 export interface InvitationProps {
   inviteeName: string;
@@ -29,13 +25,12 @@ export const InvitationTemplate: React.FC<InvitationProps> = ({
     <BaseTemplate previewText={previewText}>
       <Section style={content}>
         <Text style={heading}>You&apos;re Invited!</Text>
-        
-        <Text style={paragraph}>
-          Hi {inviteeName},
-        </Text>
+
+        <Text style={paragraph}>Hi {inviteeName},</Text>
 
         <Text style={paragraph}>
-          {inviterName} has invited you to join <strong>{eventName}</strong> as a <strong>{roleName}</strong>.
+          {inviterName} has invited you to join <strong>{eventName}</strong> as
+          a <strong>{roleName}</strong>.
         </Text>
 
         <Section style={inviteBox}>
@@ -53,11 +48,13 @@ export const InvitationTemplate: React.FC<InvitationProps> = ({
         </Section>
 
         <Text style={paragraph}>
-          This invitation will expire on {expiresAt}. Please accept it before then to secure your role.
+          This invitation will expire on {expiresAt}. Please accept it before
+          then to secure your role.
         </Text>
 
         <Text style={signature}>
-          Best regards,<br />
+          Best regards,
+          <br />
           The Funding the Commons Team
         </Text>
       </Section>
@@ -67,67 +64,67 @@ export const InvitationTemplate: React.FC<InvitationProps> = ({
 
 // Styles
 const content = {
-  padding: '0 32px',
+  padding: "0 32px",
 };
 
 const heading = {
-  fontSize: '28px',
-  fontWeight: 'bold',
-  color: '#1a1a1a',
-  textAlign: 'center' as const,
-  margin: '32px 0 24px',
+  fontSize: "28px",
+  fontWeight: "bold",
+  color: "#1a1a1a",
+  textAlign: "center" as const,
+  margin: "32px 0 24px",
 };
 
 const paragraph = {
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#404040',
-  margin: '16px 0',
+  fontSize: "16px",
+  lineHeight: "24px",
+  color: "#404040",
+  margin: "16px 0",
 };
 
 const inviteBox = {
-  backgroundColor: '#f0f9ff',
-  borderRadius: '8px',
-  padding: '24px',
-  margin: '24px 0',
-  border: '1px solid #bfdbfe',
+  backgroundColor: "#f0f9ff",
+  borderRadius: "8px",
+  padding: "24px",
+  margin: "24px 0",
+  border: "1px solid #bfdbfe",
 };
 
 const inviteHeading = {
-  fontSize: '18px',
-  fontWeight: 'bold',
-  color: '#1e40af',
-  margin: '0 0 16px',
+  fontSize: "18px",
+  fontWeight: "bold",
+  color: "#1e40af",
+  margin: "0 0 16px",
 };
 
 const inviteText = {
-  fontSize: '14px',
-  color: '#334155',
-  margin: '8px 0',
+  fontSize: "14px",
+  color: "#334155",
+  margin: "8px 0",
 };
 
 const buttonContainer = {
-  textAlign: 'center' as const,
-  margin: '32px 0',
+  textAlign: "center" as const,
+  margin: "32px 0",
 };
 
 const button = {
-  backgroundColor: '#2563eb',
-  borderRadius: '8px',
-  color: '#fff',
-  fontSize: '16px',
-  fontWeight: 'bold',
-  textDecoration: 'none',
-  textAlign: 'center' as const,
-  display: 'inline-block',
-  padding: '12px 32px',
+  backgroundColor: "#2563eb",
+  borderRadius: "8px",
+  color: "#fff",
+  fontSize: "16px",
+  fontWeight: "bold",
+  textDecoration: "none",
+  textAlign: "center" as const,
+  display: "inline-block",
+  padding: "12px 32px",
 };
 
 const signature = {
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#404040',
-  margin: '32px 0 16px',
+  fontSize: "16px",
+  lineHeight: "24px",
+  color: "#404040",
+  margin: "32px 0 16px",
 };
 
 export default InvitationTemplate;

@@ -20,10 +20,7 @@ export async function POST(request: NextRequest) {
     // Check authentication
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = (await request.json()) as RequestBody;
@@ -32,7 +29,7 @@ export async function POST(request: NextRequest) {
     if (!commits || commits.length === 0) {
       return NextResponse.json(
         { error: "No commits provided" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -41,7 +38,7 @@ export async function POST(request: NextRequest) {
       console.error("OpenAI API key is missing for commit summarization");
       return NextResponse.json(
         { error: "AI service not configured" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -81,7 +78,8 @@ Respond in JSON format:
       messages: [
         {
           role: "system",
-          content: "You are a helpful assistant that generates concise project update summaries from git commit history. Always respond with valid JSON.",
+          content:
+            "You are a helpful assistant that generates concise project update summaries from git commit history. Always respond with valid JSON.",
         },
         {
           role: "user",
@@ -98,7 +96,10 @@ Respond in JSON format:
       throw new Error("No response from AI");
     }
 
-    const result = JSON.parse(content) as { title: string; description: string };
+    const result = JSON.parse(content) as {
+      title: string;
+      description: string;
+    };
 
     return NextResponse.json({
       title: result.title,
@@ -108,7 +109,7 @@ Respond in JSON format:
     console.error("Error summarizing commits:", error);
     return NextResponse.json(
       { error: "Failed to generate summary" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

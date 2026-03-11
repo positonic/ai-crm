@@ -97,7 +97,7 @@ function AddMetricModal({
   };
 
   const availableMetrics = metricsData?.metrics.filter(
-    (m) => !existingMetricIds.includes(m.id)
+    (m) => !existingMetricIds.includes(m.id),
   );
 
   return (
@@ -201,11 +201,14 @@ function AddMetricModal({
           </Center>
         )}
 
-        {metricsData && availableMetrics && availableMetrics.length === 0 && metricsData.total > 0 && (
-          <Text size="xs" c="dimmed" ta="center">
-            All metrics from the garden have been added to this project
-          </Text>
-        )}
+        {metricsData &&
+          availableMetrics &&
+          availableMetrics.length === 0 &&
+          metricsData.total > 0 && (
+            <Text size="xs" c="dimmed" ta="center">
+              All metrics from the garden have been added to this project
+            </Text>
+          )}
       </Stack>
     </Modal>
   );
@@ -275,7 +278,11 @@ function CreateMetricModal({
   });
 
   const handleSubmit = () => {
-    if (!formData.name || formData.metricType.length === 0 || !formData.collectionMethod) {
+    if (
+      !formData.name ||
+      formData.metricType.length === 0 ||
+      !formData.collectionMethod
+    ) {
       notifications.show({
         title: "Validation Error",
         message: "Please fill in all required fields",
@@ -306,7 +313,9 @@ function CreateMetricModal({
           placeholder="e.g., Resident onboarding rate"
           required
           value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.currentTarget.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, name: e.currentTarget.value })
+          }
         />
 
         <Textarea
@@ -314,7 +323,9 @@ function CreateMetricModal({
           placeholder="How many residents actively create a project and log in at least once."
           rows={3}
           value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.currentTarget.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, description: e.currentTarget.value })
+          }
         />
 
         <MultiSelect
@@ -345,14 +356,21 @@ function CreateMetricModal({
             { value: "AUTOMATED", label: "Automated" },
           ]}
           value={formData.collectionMethod}
-          onChange={(value) => setFormData({ ...formData, collectionMethod: value as CollectionMethod })}
+          onChange={(value) =>
+            setFormData({
+              ...formData,
+              collectionMethod: value as CollectionMethod,
+            })
+          }
         />
 
         <TextInput
           label="Unit of Metric"
           placeholder="e.g., percentage, count, USD"
           value={formData.unitOfMetric}
-          onChange={(e) => setFormData({ ...formData, unitOfMetric: e.currentTarget.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, unitOfMetric: e.currentTarget.value })
+          }
         />
 
         <Group justify="flex-end" mt="md">
@@ -362,7 +380,9 @@ function CreateMetricModal({
           <Button
             leftSection={<IconPlus size={16} />}
             onClick={handleSubmit}
-            loading={createMetricMutation.isPending || addToProjectMutation.isPending}
+            loading={
+              createMetricMutation.isPending || addToProjectMutation.isPending
+            }
           >
             Create & Add to Project
           </Button>
@@ -384,8 +404,12 @@ function SuggestMetricsModal({
   projectId: string;
   onMetricsAdded: () => void;
 }) {
-  const [selectedExistingMetrics, setSelectedExistingMetrics] = useState<string[]>([]);
-  const [selectedCustomMetrics, setSelectedCustomMetrics] = useState<number[]>([]);
+  const [selectedExistingMetrics, setSelectedExistingMetrics] = useState<
+    string[]
+  >([]);
+  const [selectedCustomMetrics, setSelectedCustomMetrics] = useState<number[]>(
+    [],
+  );
 
   const suggestMetricsMutation = api.metric.suggestMetrics.useMutation({
     onError: (error) => {
@@ -416,7 +440,7 @@ function SuggestMetricsModal({
       }
       notifications.show({
         title: "Success",
-        message: `Added ${selectedExistingMetrics.length} metric${selectedExistingMetrics.length > 1 ? 's' : ''} to project`,
+        message: `Added ${selectedExistingMetrics.length} metric${selectedExistingMetrics.length > 1 ? "s" : ""} to project`,
         color: "green",
       });
       setSelectedExistingMetrics([]);
@@ -453,7 +477,7 @@ function SuggestMetricsModal({
       }
       notifications.show({
         title: "Success",
-        message: `Created and added ${selectedCustomMetrics.length} custom metric${selectedCustomMetrics.length > 1 ? 's' : ''}`,
+        message: `Created and added ${selectedCustomMetrics.length} custom metric${selectedCustomMetrics.length > 1 ? "s" : ""}`,
         color: "green",
       });
       setSelectedCustomMetrics([]);
@@ -485,14 +509,15 @@ function SuggestMetricsModal({
         {!suggestions ? (
           <Stack gap="md" align="center" py="xl">
             <Text c="dimmed" ta="center">
-              Get AI-powered metric suggestions based on your project&apos;s name, description, technologies, and updates.
+              Get AI-powered metric suggestions based on your project&apos;s
+              name, description, technologies, and updates.
             </Text>
             <Button
               size="lg"
               leftSection={<IconSparkles size={20} />}
               onClick={handleGetSuggestions}
               loading={suggestMetricsMutation.isPending}
-              gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
+              gradient={{ from: "blue", to: "cyan", deg: 90 }}
               variant="gradient"
             >
               Generate Suggestions
@@ -502,19 +527,29 @@ function SuggestMetricsModal({
           <Stack gap="lg">
             {/* Analysis Context */}
             {suggestions.analysisContext && (
-              <Alert icon={<IconInfoCircle size={16} />} title="AI Analysis" color="blue" variant="light">
+              <Alert
+                icon={<IconInfoCircle size={16} />}
+                title="AI Analysis"
+                color="blue"
+                variant="light"
+              >
                 <Stack gap="xs">
                   <Text size="sm">
-                    <strong>Project Type:</strong> {suggestions.analysisContext.projectType}
+                    <strong>Project Type:</strong>{" "}
+                    {suggestions.analysisContext.projectType}
                   </Text>
                   {suggestions.analysisContext.primaryFocus.length > 0 && (
                     <Group gap="xs">
-                      <Text size="sm"><strong>Focus Areas:</strong></Text>
-                      {suggestions.analysisContext.primaryFocus.map((focus, i) => (
-                        <Badge key={i} size="sm" variant="light">
-                          {focus}
-                        </Badge>
-                      ))}
+                      <Text size="sm">
+                        <strong>Focus Areas:</strong>
+                      </Text>
+                      {suggestions.analysisContext.primaryFocus.map(
+                        (focus, i) => (
+                          <Badge key={i} size="sm" variant="light">
+                            {focus}
+                          </Badge>
+                        ),
+                      )}
                     </Group>
                   )}
                   <Text size="xs" c="dimmed">
@@ -549,16 +584,28 @@ function SuggestMetricsModal({
                 </Group>
                 <Stack gap="xs" mah={400} style={{ overflowY: "auto" }}>
                   {suggestions.existingMetrics.map((suggestion) => (
-                    <Paper key={suggestion.metricId} p="md" withBorder bg="blue.0">
+                    <Paper
+                      key={suggestion.metricId}
+                      p="md"
+                      withBorder
+                      bg="blue.0"
+                    >
                       <Group align="flex-start" wrap="nowrap">
                         <Checkbox
-                          checked={selectedExistingMetrics.includes(suggestion.metricId)}
+                          checked={selectedExistingMetrics.includes(
+                            suggestion.metricId,
+                          )}
                           onChange={(e) => {
                             if (e.currentTarget.checked) {
-                              setSelectedExistingMetrics([...selectedExistingMetrics, suggestion.metricId]);
+                              setSelectedExistingMetrics([
+                                ...selectedExistingMetrics,
+                                suggestion.metricId,
+                              ]);
                             } else {
                               setSelectedExistingMetrics(
-                                selectedExistingMetrics.filter((id) => id !== suggestion.metricId)
+                                selectedExistingMetrics.filter(
+                                  (id) => id !== suggestion.metricId,
+                                ),
                               );
                             }
                           }}
@@ -575,19 +622,31 @@ function SuggestMetricsModal({
                           )}
                           <Box mb="xs">
                             <Group gap="xs" mb={4}>
-                              <Text size="xs" c="dimmed">Relevance:</Text>
-                              <Text size="xs" fw={600}>{suggestion.relevanceScore}/10</Text>
+                              <Text size="xs" c="dimmed">
+                                Relevance:
+                              </Text>
+                              <Text size="xs" fw={600}>
+                                {suggestion.relevanceScore}/10
+                              </Text>
                             </Group>
                             <Progress
                               value={suggestion.relevanceScore * 10}
                               size="sm"
-                              color={suggestion.relevanceScore >= 7 ? "green" : suggestion.relevanceScore >= 5 ? "yellow" : "gray"}
+                              color={
+                                suggestion.relevanceScore >= 7
+                                  ? "green"
+                                  : suggestion.relevanceScore >= 5
+                                    ? "yellow"
+                                    : "gray"
+                              }
                             />
                           </Box>
                           <Accordion variant="contained" chevronPosition="left">
                             <Accordion.Item value="reasoning">
                               <Accordion.Control>
-                                <Text size="xs" fw={500}>Why this metric?</Text>
+                                <Text size="xs" fw={500}>
+                                  Why this metric?
+                                </Text>
                               </Accordion.Control>
                               <Accordion.Panel>
                                 <Text size="xs" c="dimmed">
@@ -595,12 +654,16 @@ function SuggestMetricsModal({
                                 </Text>
                                 {suggestion.matchedKeywords.length > 0 && (
                                   <Group gap="xs" mt="xs">
-                                    <Text size="xs" c="dimmed">Matched:</Text>
-                                    {suggestion.matchedKeywords.map((keyword, i) => (
-                                      <Badge key={i} size="xs" variant="dot">
-                                        {keyword}
-                                      </Badge>
-                                    ))}
+                                    <Text size="xs" c="dimmed">
+                                      Matched:
+                                    </Text>
+                                    {suggestion.matchedKeywords.map(
+                                      (keyword, i) => (
+                                        <Badge key={i} size="xs" variant="dot">
+                                          {keyword}
+                                        </Badge>
+                                      ),
+                                    )}
                                   </Group>
                                 )}
                               </Accordion.Panel>
@@ -631,7 +694,10 @@ function SuggestMetricsModal({
                       size="xs"
                       color="teal"
                       onClick={handleCreateAndAddCustom}
-                      loading={createMetricMutation.isPending || addMetricMutation.isPending}
+                      loading={
+                        createMetricMutation.isPending ||
+                        addMetricMutation.isPending
+                      }
                       leftSection={<IconPlus size={14} />}
                     >
                       Create Selected ({selectedCustomMetrics.length})
@@ -646,10 +712,15 @@ function SuggestMetricsModal({
                           checked={selectedCustomMetrics.includes(index)}
                           onChange={(e) => {
                             if (e.currentTarget.checked) {
-                              setSelectedCustomMetrics([...selectedCustomMetrics, index]);
+                              setSelectedCustomMetrics([
+                                ...selectedCustomMetrics,
+                                index,
+                              ]);
                             } else {
                               setSelectedCustomMetrics(
-                                selectedCustomMetrics.filter((i) => i !== index)
+                                selectedCustomMetrics.filter(
+                                  (i) => i !== index,
+                                ),
                               );
                             }
                           }}
@@ -697,7 +768,9 @@ function SuggestMetricsModal({
                           <Accordion variant="contained" chevronPosition="left">
                             <Accordion.Item value="reasoning">
                               <Accordion.Control>
-                                <Text size="xs" fw={500}>Why this metric?</Text>
+                                <Text size="xs" fw={500}>
+                                  Why this metric?
+                                </Text>
                               </Accordion.Control>
                               <Accordion.Panel>
                                 <Text size="xs" c="dimmed">
@@ -705,7 +778,8 @@ function SuggestMetricsModal({
                                 </Text>
                                 {suggestion.recommendedCadence && (
                                   <Text size="xs" c="dimmed" mt="xs">
-                                    <strong>Recommended cadence:</strong> {suggestion.recommendedCadence}
+                                    <strong>Recommended cadence:</strong>{" "}
+                                    {suggestion.recommendedCadence}
                                   </Text>
                                 )}
                               </Accordion.Panel>
@@ -719,13 +793,15 @@ function SuggestMetricsModal({
               </Box>
             )}
 
-            {suggestions.existingMetrics.length === 0 && suggestions.customMetrics.length === 0 && (
-              <Center py="xl">
-                <Text c="dimmed" size="sm" ta="center">
-                  No suggestions generated. Try adding more project details or updates.
-                </Text>
-              </Center>
-            )}
+            {suggestions.existingMetrics.length === 0 &&
+              suggestions.customMetrics.length === 0 && (
+                <Center py="xl">
+                  <Text c="dimmed" size="sm" ta="center">
+                    No suggestions generated. Try adding more project details or
+                    updates.
+                  </Text>
+                </Center>
+              )}
 
             <Group justify="flex-end" mt="md">
               <Button variant="subtle" onClick={onClose}>
@@ -747,7 +823,12 @@ function SuggestMetricsModal({
   );
 }
 
-export default function MetricsTab({ projectId, canEdit, projectTitle, projectImageUrl }: MetricsTabProps) {
+export default function MetricsTab({
+  projectId,
+  canEdit,
+  projectTitle,
+  projectImageUrl,
+}: MetricsTabProps) {
   const [addModalOpened, setAddModalOpened] = useState(false);
   const [createModalOpened, setCreateModalOpened] = useState(false);
   const [suggestModalOpened, setSuggestModalOpened] = useState(false);
@@ -755,16 +836,21 @@ export default function MetricsTab({ projectId, canEdit, projectTitle, projectIm
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const [collectionFilter, setCollectionFilter] = useState<string | null>(null);
 
-  const { data: projectMetrics, isLoading, refetch } = api.metric.getProjectMetrics.useQuery({
+  const {
+    data: projectMetrics,
+    isLoading,
+    refetch,
+  } = api.metric.getProjectMetrics.useQuery({
     projectId,
   });
 
-  const { data: allMetrics, isLoading: isLoadingAllMetrics } = api.metric.list.useQuery({
-    search: searchQuery || undefined,
-    metricType: typeFilter as MetricType | undefined,
-    collectionMethod: collectionFilter as CollectionMethod | undefined,
-    limit: 100,
-  });
+  const { data: allMetrics, isLoading: isLoadingAllMetrics } =
+    api.metric.list.useQuery({
+      search: searchQuery || undefined,
+      metricType: typeFilter as MetricType | undefined,
+      collectionMethod: collectionFilter as CollectionMethod | undefined,
+      limit: 100,
+    });
 
   const addMetricMutation = api.metric.addToProject.useMutation({
     onSuccess: () => {
@@ -861,18 +947,18 @@ export default function MetricsTab({ projectId, canEdit, projectTitle, projectIm
                   width: 64,
                   height: 64,
                   borderRadius: 8,
-                  overflow: 'hidden',
+                  overflow: "hidden",
                   flexShrink: 0,
-                  border: '1px solid var(--mantine-color-gray-3)',
+                  border: "1px solid var(--mantine-color-gray-3)",
                 }}
               >
                 <Image
                   src={projectImageUrl}
-                  alt={projectTitle ?? 'Project logo'}
+                  alt={projectTitle ?? "Project logo"}
                   style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain',
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
                   }}
                 />
               </Box>
@@ -901,7 +987,8 @@ export default function MetricsTab({ projectId, canEdit, projectTitle, projectIm
                 <Title order={2}>Selected Metrics</Title>
               </Group>
               <Text c="dimmed" size="sm">
-                Browse and add metrics from the Metrics Garden ({allMetrics?.total ?? 92} available)
+                Browse and add metrics from the Metrics Garden (
+                {allMetrics?.total ?? 92} available)
               </Text>
             </Box>
             {canEdit && (
@@ -917,7 +1004,7 @@ export default function MetricsTab({ projectId, canEdit, projectTitle, projectIm
                     rightSection={<IconInfoCircle size={14} opacity={0.6} />}
                     onClick={() => setSuggestModalOpened(true)}
                     variant="gradient"
-                    gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
+                    gradient={{ from: "blue", to: "cyan", deg: 90 }}
                   >
                     Suggest metrics
                   </Button>
@@ -956,12 +1043,18 @@ export default function MetricsTab({ projectId, canEdit, projectTitle, projectIm
                           )}
                           <Group gap="xs">
                             {pm.metric.metricType.slice(0, 3).map((type) => (
-                              <Badge key={type} size="xs" color={getMetricTypeColor(type)}>
+                              <Badge
+                                key={type}
+                                size="xs"
+                                color={getMetricTypeColor(type)}
+                              >
                                 {type.toLowerCase()}
                               </Badge>
                             ))}
                             <Badge size="xs" variant="light" color="gray">
-                              {getCollectionMethodBadge(pm.metric.collectionMethod)}
+                              {getCollectionMethodBadge(
+                                pm.metric.collectionMethod,
+                              )}
                             </Badge>
                             {pm.metric.unitOfMetric && (
                               <Text size="xs" c="dimmed">
@@ -998,131 +1091,145 @@ export default function MetricsTab({ projectId, canEdit, projectTitle, projectIm
               Browse Available Metrics
             </Text>
             <Stack gap="md">
-            <TextInput
-              placeholder="Search metrics..."
-              leftSection={<IconSearch size={16} />}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.currentTarget.value)}
-            />
-
-            <Group mb="md">
-              <Select
-                placeholder="Filter by type"
-                data={[
-                  { value: "BUILDER", label: "Builder" },
-                  { value: "ENVIRONMENTAL", label: "Environmental" },
-                  { value: "GIT", label: "Git" },
-                  { value: "ONCHAIN", label: "On-chain" },
-                  { value: "OFFCHAIN", label: "Off-chain" },
-                  { value: "CUSTOM", label: "Custom" },
-                ]}
-                value={typeFilter}
-                onChange={setTypeFilter}
-                clearable
-                leftSection={<IconFilter size={16} />}
+              <TextInput
+                placeholder="Search metrics..."
+                leftSection={<IconSearch size={16} />}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.currentTarget.value)}
               />
 
-              <Select
-                placeholder="Filter by collection"
-                data={[
-                  { value: "ONCHAIN", label: "On-chain" },
-                  { value: "OFFCHAIN_API", label: "API" },
-                  { value: "SELF_REPORTING", label: "Self-reported" },
-                  { value: "MANUAL", label: "Manual" },
-                  { value: "AUTOMATED", label: "Automated" },
-                ]}
-                value={collectionFilter}
-                onChange={setCollectionFilter}
-                clearable
-                leftSection={<IconFilter size={16} />}
-              />
-            </Group>
-          </Stack>
+              <Group mb="md">
+                <Select
+                  placeholder="Filter by type"
+                  data={[
+                    { value: "BUILDER", label: "Builder" },
+                    { value: "ENVIRONMENTAL", label: "Environmental" },
+                    { value: "GIT", label: "Git" },
+                    { value: "ONCHAIN", label: "On-chain" },
+                    { value: "OFFCHAIN", label: "Off-chain" },
+                    { value: "CUSTOM", label: "Custom" },
+                  ]}
+                  value={typeFilter}
+                  onChange={setTypeFilter}
+                  clearable
+                  leftSection={<IconFilter size={16} />}
+                />
 
-          {isLoadingAllMetrics ? (
-            <Center py="xl">
-              <Loader size="md" />
-            </Center>
-          ) : allMetrics && allMetrics.metrics.length > 0 ? (
-            <Stack gap="xs" mah={600} style={{ overflowY: "auto" }}>
-              {allMetrics.metrics.map((metric) => {
-                const isAdded = existingMetricIds.includes(metric.id);
-                return (
-                  <Paper
-                    key={metric.id}
-                    p="md"
-                    withBorder
-                    bg={isAdded ? "green.0" : undefined}
-                    style={isAdded ? { borderColor: "var(--mantine-color-green-3)" } : undefined}
-                  >
-                    <Group justify="space-between" wrap="nowrap">
-                      <Box style={{ flex: 1, minWidth: 0 }}>
-                        <Group gap="xs" mb="xs">
-                          <Text fw={500} size="sm" lineClamp={1}>
-                            {metric.name}
-                          </Text>
-                          {isAdded && (
-                            <Badge size="xs" color="green" variant="light">
-                              ✓ Added
-                            </Badge>
-                          )}
-                        </Group>
-                        {metric.description && (
-                          <Text size="xs" c="dimmed" lineClamp={2} mb="xs">
-                            {metric.description}
-                          </Text>
-                        )}
-                        <Group gap="xs">
-                          {metric.metricType.slice(0, 3).map((type) => (
-                            <Badge key={type} size="xs" color={getMetricTypeColor(type)}>
-                              {type.toLowerCase()}
-                            </Badge>
-                          ))}
-                          <Badge size="xs" variant="light" color="gray">
-                            {getCollectionMethodBadge(metric.collectionMethod)}
-                          </Badge>
-                          {metric.unitOfMetric && (
-                            <Text size="xs" c="dimmed">
-                              • {metric.unitOfMetric}
+                <Select
+                  placeholder="Filter by collection"
+                  data={[
+                    { value: "ONCHAIN", label: "On-chain" },
+                    { value: "OFFCHAIN_API", label: "API" },
+                    { value: "SELF_REPORTING", label: "Self-reported" },
+                    { value: "MANUAL", label: "Manual" },
+                    { value: "AUTOMATED", label: "Automated" },
+                  ]}
+                  value={collectionFilter}
+                  onChange={setCollectionFilter}
+                  clearable
+                  leftSection={<IconFilter size={16} />}
+                />
+              </Group>
+            </Stack>
+
+            {isLoadingAllMetrics ? (
+              <Center py="xl">
+                <Loader size="md" />
+              </Center>
+            ) : allMetrics && allMetrics.metrics.length > 0 ? (
+              <Stack gap="xs" mah={600} style={{ overflowY: "auto" }}>
+                {allMetrics.metrics.map((metric) => {
+                  const isAdded = existingMetricIds.includes(metric.id);
+                  return (
+                    <Paper
+                      key={metric.id}
+                      p="md"
+                      withBorder
+                      bg={isAdded ? "green.0" : undefined}
+                      style={
+                        isAdded
+                          ? { borderColor: "var(--mantine-color-green-3)" }
+                          : undefined
+                      }
+                    >
+                      <Group justify="space-between" wrap="nowrap">
+                        <Box style={{ flex: 1, minWidth: 0 }}>
+                          <Group gap="xs" mb="xs">
+                            <Text fw={500} size="sm" lineClamp={1}>
+                              {metric.name}
+                            </Text>
+                            {isAdded && (
+                              <Badge size="xs" color="green" variant="light">
+                                ✓ Added
+                              </Badge>
+                            )}
+                          </Group>
+                          {metric.description && (
+                            <Text size="xs" c="dimmed" lineClamp={2} mb="xs">
+                              {metric.description}
                             </Text>
                           )}
-                        </Group>
-                      </Box>
-                      {canEdit && (
-                        <Button
-                          size="xs"
-                          variant={isAdded ? "light" : "filled"}
-                          color={isAdded ? "red" : "blue"}
-                          leftSection={
-                            isAdded ? <IconTrash size={14} /> : <IconPlus size={14} />
-                          }
-                          onClick={() =>
-                            isAdded
-                              ? handleRemoveMetric(metric.id)
-                              : handleAddMetric(metric.id)
-                          }
-                          loading={
-                            addMetricMutation.isPending ||
-                            removeMetricMutation.isPending
-                          }
-                        >
-                          {isAdded ? "Remove" : "Add"}
-                        </Button>
-                      )}
-                    </Group>
-                  </Paper>
-                );
-              })}
-            </Stack>
-          ) : (
-            <Center py="xl">
-              <Text c="dimmed" size="sm">
-                {searchQuery || typeFilter || collectionFilter
-                  ? "No metrics found matching your filters"
-                  : "No metrics available"}
-              </Text>
-            </Center>
-          )}
+                          <Group gap="xs">
+                            {metric.metricType.slice(0, 3).map((type) => (
+                              <Badge
+                                key={type}
+                                size="xs"
+                                color={getMetricTypeColor(type)}
+                              >
+                                {type.toLowerCase()}
+                              </Badge>
+                            ))}
+                            <Badge size="xs" variant="light" color="gray">
+                              {getCollectionMethodBadge(
+                                metric.collectionMethod,
+                              )}
+                            </Badge>
+                            {metric.unitOfMetric && (
+                              <Text size="xs" c="dimmed">
+                                • {metric.unitOfMetric}
+                              </Text>
+                            )}
+                          </Group>
+                        </Box>
+                        {canEdit && (
+                          <Button
+                            size="xs"
+                            variant={isAdded ? "light" : "filled"}
+                            color={isAdded ? "red" : "blue"}
+                            leftSection={
+                              isAdded ? (
+                                <IconTrash size={14} />
+                              ) : (
+                                <IconPlus size={14} />
+                              )
+                            }
+                            onClick={() =>
+                              isAdded
+                                ? handleRemoveMetric(metric.id)
+                                : handleAddMetric(metric.id)
+                            }
+                            loading={
+                              addMetricMutation.isPending ||
+                              removeMetricMutation.isPending
+                            }
+                          >
+                            {isAdded ? "Remove" : "Add"}
+                          </Button>
+                        )}
+                      </Group>
+                    </Paper>
+                  );
+                })}
+              </Stack>
+            ) : (
+              <Center py="xl">
+                <Text c="dimmed" size="sm">
+                  {searchQuery || typeFilter || collectionFilter
+                    ? "No metrics found matching your filters"
+                    : "No metrics available"}
+                </Text>
+              </Center>
+            )}
           </Box>
         </Stack>
       </Paper>

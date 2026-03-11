@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Modal,
-  TextInput,
-  Stack,
-  Group,
-  Button,
-  Text,
-} from "@mantine/core";
+import { Modal, TextInput, Stack, Group, Button, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { api } from "~/trpc/react";
 import { getDisplayName } from "~/utils/userDisplay";
@@ -98,7 +91,12 @@ export function QuickAddSpeakerModal({
   };
 
   return (
-    <Modal opened={opened} onClose={handleClose} title="Quick Add Speaker" size="sm">
+    <Modal
+      opened={opened}
+      onClose={handleClose}
+      title="Quick Add Speaker"
+      size="sm"
+    >
       <Stack gap="sm">
         <Text size="sm" c="dimmed">
           Add a person who doesn&apos;t have an account yet. They&apos;ll be

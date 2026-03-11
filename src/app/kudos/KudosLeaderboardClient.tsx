@@ -76,118 +76,118 @@ export function KudosLeaderboardClient() {
 
         {/* Leaderboard Content */}
         <div>
-            {leaderboardLoading ? (
-              <Center py="xl">
-                <Loader />
-              </Center>
-            ) : (
-              <Stack gap="md">
-                {leaderboard?.map((entry, index) => {
-                  const tier = getKudosTier(entry.kudos);
-                  const displayName =
-                    entry.user.firstName && entry.user.surname
-                      ? `${entry.user.firstName} ${entry.user.surname}`
-                      : entry.user.name ?? entry.user.email;
+          {leaderboardLoading ? (
+            <Center py="xl">
+              <Loader />
+            </Center>
+          ) : (
+            <Stack gap="md">
+              {leaderboard?.map((entry, index) => {
+                const tier = getKudosTier(entry.kudos);
+                const displayName =
+                  entry.user.firstName && entry.user.surname
+                    ? `${entry.user.firstName} ${entry.user.surname}`
+                    : (entry.user.name ?? entry.user.email);
 
-                  return (
-                    <Paper key={entry.user.id} withBorder p="lg" radius="md">
-                      <Group justify="space-between" wrap="nowrap">
-                        <Group gap="lg" wrap="nowrap">
-                          {/* Rank Badge */}
-                          <Box style={{ minWidth: 40, textAlign: "center" }}>
-                            {index < 3 ? (
-                              <ThemeIcon
-                                size="xl"
-                                variant="gradient"
-                                gradient={
-                                  index === 0
-                                    ? { from: "yellow", to: "orange" }
-                                    : index === 1
-                                      ? { from: "gray", to: "dark" }
-                                      : { from: "orange", to: "red" }
-                                }
-                              >
-                                <IconTrophy size={24} />
-                              </ThemeIcon>
-                            ) : (
-                              <Text size="xl" fw={700} c="dimmed">
-                                #{index + 1}
-                              </Text>
-                            )}
-                          </Box>
+                return (
+                  <Paper key={entry.user.id} withBorder p="lg" radius="md">
+                    <Group justify="space-between" wrap="nowrap">
+                      <Group gap="lg" wrap="nowrap">
+                        {/* Rank Badge */}
+                        <Box style={{ minWidth: 40, textAlign: "center" }}>
+                          {index < 3 ? (
+                            <ThemeIcon
+                              size="xl"
+                              variant="gradient"
+                              gradient={
+                                index === 0
+                                  ? { from: "yellow", to: "orange" }
+                                  : index === 1
+                                    ? { from: "gray", to: "dark" }
+                                    : { from: "orange", to: "red" }
+                              }
+                            >
+                              <IconTrophy size={24} />
+                            </ThemeIcon>
+                          ) : (
+                            <Text size="xl" fw={700} c="dimmed">
+                              #{index + 1}
+                            </Text>
+                          )}
+                        </Box>
 
-                          {/* User Info */}
-                          <Group gap="md" wrap="nowrap">
-                            <UserAvatar
-                              user={{
-                                customAvatarUrl: entry.user.profile?.avatarUrl,
-                                oauthImageUrl: entry.user.image,
-                                name: entry.user.name,
-                                email: entry.user.email,
-                                firstName: entry.user.firstName,
-                                surname: entry.user.surname,
-                              }}
-                              size="lg"
-                              radius="xl"
-                            />
-                            <div>
-                              <Text fw={600} size="lg">
-                                {displayName}
-                              </Text>
-                              <Group gap="xs" mt={4}>
-                                <Tooltip label="Project Updates">
-                                  <Badge
-                                    size="sm"
-                                    variant="light"
-                                    leftSection={<IconFileText size={12} />}
-                                  >
-                                    {entry.breakdown.updateCount} updates
-                                  </Badge>
-                                </Tooltip>
-                                <Tooltip label="Praise Received">
-                                  <Badge
-                                    size="sm"
-                                    variant="light"
-                                    color="pink"
-                                    leftSection={<IconMessage size={12} />}
-                                  >
-                                    {entry.breakdown.praiseReceivedCount} praise
-                                  </Badge>
-                                </Tooltip>
-                                <Tooltip label="Likes Received">
-                                  <Badge
-                                    size="sm"
-                                    variant="light"
-                                    color="grape"
-                                    leftSection={<IconThumbUp size={16} />}
-                                  >
-                                    {entry.breakdown.likesReceivedCount} likes
-                                  </Badge>
-                                </Tooltip>
-                              </Group>
-                            </div>
-                          </Group>
+                        {/* User Info */}
+                        <Group gap="md" wrap="nowrap">
+                          <UserAvatar
+                            user={{
+                              customAvatarUrl: entry.user.profile?.avatarUrl,
+                              oauthImageUrl: entry.user.image,
+                              name: entry.user.name,
+                              email: entry.user.email,
+                              firstName: entry.user.firstName,
+                              surname: entry.user.surname,
+                            }}
+                            size="lg"
+                            radius="xl"
+                          />
+                          <div>
+                            <Text fw={600} size="lg">
+                              {displayName}
+                            </Text>
+                            <Group gap="xs" mt={4}>
+                              <Tooltip label="Project Updates">
+                                <Badge
+                                  size="sm"
+                                  variant="light"
+                                  leftSection={<IconFileText size={12} />}
+                                >
+                                  {entry.breakdown.updateCount} updates
+                                </Badge>
+                              </Tooltip>
+                              <Tooltip label="Praise Received">
+                                <Badge
+                                  size="sm"
+                                  variant="light"
+                                  color="pink"
+                                  leftSection={<IconMessage size={12} />}
+                                >
+                                  {entry.breakdown.praiseReceivedCount} praise
+                                </Badge>
+                              </Tooltip>
+                              <Tooltip label="Likes Received">
+                                <Badge
+                                  size="sm"
+                                  variant="light"
+                                  color="grape"
+                                  leftSection={<IconThumbUp size={16} />}
+                                >
+                                  {entry.breakdown.likesReceivedCount} likes
+                                </Badge>
+                              </Tooltip>
+                            </Group>
+                          </div>
                         </Group>
-
-                        {/* Kudos Score */}
-                        <Stack gap={4} align="flex-end">
-                          <Badge
-                            size="xl"
-                            variant="gradient"
-                            gradient={{ from: tier.color, to: "blue" }}
-                          >
-                            {entry.kudos.toFixed(1)} kudos
-                          </Badge>
-                          <Text size="xs" c="dimmed">
-                            {tier.label}
-                          </Text>
-                        </Stack>
                       </Group>
-                    </Paper>
-                  );
-                })}
-              </Stack>
-            )}
+
+                      {/* Kudos Score */}
+                      <Stack gap={4} align="flex-end">
+                        <Badge
+                          size="xl"
+                          variant="gradient"
+                          gradient={{ from: tier.color, to: "blue" }}
+                        >
+                          {entry.kudos.toFixed(1)} kudos
+                        </Badge>
+                        <Text size="xs" c="dimmed">
+                          {tier.label}
+                        </Text>
+                      </Stack>
+                    </Group>
+                  </Paper>
+                );
+              })}
+            </Stack>
+          )}
         </div>
       </Stack>
     </Container>

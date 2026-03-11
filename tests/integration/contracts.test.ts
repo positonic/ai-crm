@@ -29,14 +29,19 @@ describe("API Response Shape Contracts", () => {
   describe("event.getEvent", () => {
     it("response has required fields", async () => {
       const db = getTestDb();
-      await createTestEvent({
-        name: "Contract Test Event",
-        slug: "contract-test-event",
-        type: "CONFERENCE",
-      }, db);
+      await createTestEvent(
+        {
+          name: "Contract Test Event",
+          slug: "contract-test-event",
+          type: "CONFERENCE",
+        },
+        db,
+      );
 
       const caller = createTestCaller(null);
-      const result = await caller.event.getEvent({ slug: "contract-test-event" });
+      const result = await caller.event.getEvent({
+        slug: "contract-test-event",
+      });
 
       expect(result).toMatchObject({
         id: expect.any(String),
@@ -66,13 +71,22 @@ describe("API Response Shape Contracts", () => {
     it("session objects have required fields", async () => {
       const db = getTestDb();
       const admin = await createTestUser({ role: "admin" }, db);
-      const speaker = await createTestUser({ role: "user", name: "Contract Speaker" }, db);
-      const event = await createTestEvent({ name: "Schedule Contract Event" }, db);
-      const venue = await createTestVenue({ eventId: event.id, name: "Contract Hall" }, db);
+      const speaker = await createTestUser(
+        { role: "user", name: "Contract Speaker" },
+        db,
+      );
+      const event = await createTestEvent(
+        { name: "Schedule Contract Event" },
+        db,
+      );
+      const venue = await createTestVenue(
+        { eventId: event.id, name: "Contract Hall" },
+        db,
+      );
 
       // Create a session with a linked speaker
       const adminCaller = createTestCaller("admin", { id: admin.id });
-      const startTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       await adminCaller.schedule.createSession({
@@ -136,22 +150,34 @@ describe("API Response Shape Contracts", () => {
   describe("application.getApplication", () => {
     it("response has required fields", async () => {
       const db = getTestDb();
-      const user = await createTestUser({ role: "user", email: "contract-app@test.com" }, db);
+      const user = await createTestUser(
+        { role: "user", email: "contract-app@test.com" },
+        db,
+      );
       const event = await createTestEvent({ name: "App Contract Event" }, db);
-      const question = await createTestQuestion({
-        eventId: event.id,
-        questionKey: "test_field",
-        questionEn: "Test question?",
-        required: true,
-      }, db);
-      const application = await createTestApplication({
-        userId: user.id,
-        eventId: event.id,
-        email: "contract-app@test.com",
-      }, db);
+      const question = await createTestQuestion(
+        {
+          eventId: event.id,
+          questionKey: "test_field",
+          questionEn: "Test question?",
+          required: true,
+        },
+        db,
+      );
+      const application = await createTestApplication(
+        {
+          userId: user.id,
+          eventId: event.id,
+          email: "contract-app@test.com",
+        },
+        db,
+      );
       await createTestResponse(application.id, question.id, "My answer", db);
 
-      const caller = createTestCaller("user", { id: user.id, email: "contract-app@test.com" });
+      const caller = createTestCaller("user", {
+        id: user.id,
+        email: "contract-app@test.com",
+      });
       const result = await caller.application.getApplication({
         eventId: event.id,
       });

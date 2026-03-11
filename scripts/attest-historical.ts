@@ -36,10 +36,16 @@ const eventIdIndex = args.indexOf("--event-id");
 const eventIdArg = eventIdIndex !== -1 ? args[eventIdIndex + 1] : undefined;
 
 if (!eventIdArg) {
-  console.error("Usage: bunx tsx scripts/attest-historical.ts --event-id <eventId> [--dry-run]");
+  console.error(
+    "Usage: bunx tsx scripts/attest-historical.ts --event-id <eventId> [--dry-run]",
+  );
   console.error("\nExamples:");
-  console.error("  bunx tsx scripts/attest-historical.ts --event-id funding-commons-residency-2025 --dry-run");
-  console.error("  bunx tsx scripts/attest-historical.ts --event-id chiang-mai-residency-2024");
+  console.error(
+    "  bunx tsx scripts/attest-historical.ts --event-id funding-commons-residency-2025 --dry-run",
+  );
+  console.error(
+    "  bunx tsx scripts/attest-historical.ts --event-id chiang-mai-residency-2024",
+  );
   process.exit(1);
 }
 
@@ -75,11 +81,11 @@ interface AttestationRecord {
 function reconstructWeeklySnapshots(
   commitsData: CommitDataPoint[],
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): WeeklySnapshot[] {
   // Sort commits by date
   const sorted = [...commitsData].sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
 
   const snapshots: WeeklySnapshot[] = [];
@@ -129,14 +135,20 @@ async function main() {
   // Validate EAS configuration for live runs
   if (!dryRun) {
     if (!process.env.EAS_PRIVATE_KEY) {
-      console.error("Error: EAS_PRIVATE_KEY environment variable is required for live runs");
-      console.error("   Add it to your .env.local file or use --dry-run to preview");
+      console.error(
+        "Error: EAS_PRIVATE_KEY environment variable is required for live runs",
+      );
+      console.error(
+        "   Add it to your .env.local file or use --dry-run to preview",
+      );
       process.exit(1);
     }
 
     if (!process.env.EAS_SCHEMA_UID) {
       console.error("Error: EAS_SCHEMA_UID environment variable is required");
-      console.error("   Register a schema first or set the existing schema UID");
+      console.error(
+        "   Register a schema first or set the existing schema UID",
+      );
       process.exit(1);
     }
   }
@@ -154,7 +166,7 @@ async function main() {
 
   console.log(`Event: ${event.name}`);
   console.log(
-    `Period: ${event.startDate.toISOString().split("T")[0]} to ${event.endDate.toISOString().split("T")[0]}`
+    `Period: ${event.startDate.toISOString().split("T")[0]} to ${event.endDate.toISOString().split("T")[0]}`,
   );
   console.log(`Network: ${chainName} (${isMainnet ? "MAINNET" : "TESTNET"})`);
 
@@ -173,11 +185,15 @@ async function main() {
     },
   });
 
-  console.log(`\nFound ${residencyMetrics.length} repositories with residency metrics\n`);
+  console.log(
+    `\nFound ${residencyMetrics.length} repositories with residency metrics\n`,
+  );
 
   if (residencyMetrics.length === 0) {
     console.log("No repositories found for this event.");
-    console.log("Run sync-github-activity.ts first to populate residency metrics.");
+    console.log(
+      "Run sync-github-activity.ts first to populate residency metrics.",
+    );
     await db.$disconnect();
     process.exit(0);
   }
@@ -201,7 +217,9 @@ async function main() {
   for (const metrics of residencyMetrics) {
     const repo = metrics.repository;
     // Use residency-specific commits data, fall back to repository lifetime data
-    const commitsData = (metrics.commitsData ?? repo.commitsData) as CommitDataPoint[] | null;
+    const commitsData = (metrics.commitsData ?? repo.commitsData) as
+      | CommitDataPoint[]
+      | null;
 
     console.log(`\n${"─".repeat(50)}`);
     console.log(`Project: ${repo.project.title}`);
@@ -213,38 +231,47 @@ async function main() {
     }
 
     // Check existing retroactive attestations for THIS event period
-    const existingRetroactive = repo.attestations.filter(a => {
+    const existingRetroactive = repo.attestations.filter((a) => {
       if (!a.isRetroactive) return false;
       // Check if attestation is within this event's date range
       const snapshotTime = a.snapshotDate.getTime();
-      return snapshotTime >= event.startDate.getTime() && snapshotTime <= event.endDate.getTime();
+      return (
+        snapshotTime >= event.startDate.getTime() &&
+        snapshotTime <= event.endDate.getTime()
+      );
     });
 
     // Get the week start dates of existing attestations to skip duplicates
     const existingWeekStarts = new Set(
-      existingRetroactive.map(a => {
+      existingRetroactive.map((a) => {
         // Round snapshot date to start of week to match with snapshots
         const date = new Date(a.snapshotDate);
         const dayOfWeek = date.getUTCDay();
         const diff = date.getUTCDate() - dayOfWeek;
-        const weekStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), diff));
+        const weekStart = new Date(
+          Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), diff),
+        );
         return weekStart.toISOString().split("T")[0];
-      })
+      }),
     );
 
     // Check if we have all 4 weekly attestations
     if (existingRetroactive.length >= 4) {
-      console.log(`  Skipping: Already has ${existingRetroactive.length} retroactive attestations`);
+      console.log(
+        `  Skipping: Already has ${existingRetroactive.length} retroactive attestations`,
+      );
       continue;
     } else if (existingRetroactive.length > 0) {
-      console.log(`  Partial: Has ${existingRetroactive.length} retroactive attestations, completing remaining...`);
+      console.log(
+        `  Partial: Has ${existingRetroactive.length} retroactive attestations, completing remaining...`,
+      );
     }
 
     // Reconstruct weekly snapshots
     const snapshots = reconstructWeeklySnapshots(
       commitsData,
       event.startDate,
-      event.endDate
+      event.endDate,
     );
     console.log(`  Reconstructed ${snapshots.length} weekly snapshots`);
 
@@ -260,7 +287,7 @@ async function main() {
       if (dryRun) {
         console.log(
           `  [DRY RUN] Week ${weekLabel}: ${snapshot.cumulativeCommits} total commits, ` +
-            `${snapshot.weeklyCommits} this week, ${snapshot.weeksActive} weeks active`
+            `${snapshot.weeklyCommits} this week, ${snapshot.weeksActive} weeks active`,
         );
         totalAttestations++;
         results.push({
@@ -319,7 +346,8 @@ async function main() {
         // Small delay to avoid rate limiting
         await new Promise((r) => setTimeout(r, 100));
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         console.error(`  Week ${weekLabel} failed: ${errorMessage}`);
         totalErrors++;
         results.push({
@@ -337,7 +365,9 @@ async function main() {
   console.log(`\n${"=".repeat(60)}`);
   console.log("SUMMARY");
   console.log("=".repeat(60));
-  console.log(`${dryRun ? "Would create" : "Created"}: ${totalAttestations} attestations`);
+  console.log(
+    `${dryRun ? "Would create" : "Created"}: ${totalAttestations} attestations`,
+  );
   if (totalErrors > 0) {
     console.log(`Errors: ${totalErrors}`);
   }

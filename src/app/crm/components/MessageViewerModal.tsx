@@ -56,14 +56,14 @@ export default function MessageViewerModal({
   const senderName = message.contact
     ? `${message.contact.firstName} ${message.contact.lastName}`
     : isTelegram
-    ? `@${message.fromTelegram}`
-    : message.fromEmail ?? "Unknown";
+      ? `@${message.fromTelegram}`
+      : (message.fromEmail ?? "Unknown");
 
   const recipient = isTelegram
     ? message.toTelegram
       ? `@${message.toTelegram}`
       : "Unknown"
-    : message.toEmail ?? "Unknown";
+    : (message.toEmail ?? "Unknown");
 
   const timestamp = message.sentAt ?? message.createdAt;
   const formattedDate = new Date(timestamp).toLocaleDateString("en-US", {
@@ -127,7 +127,8 @@ export default function MessageViewerModal({
       >
         <Group justify="space-between">
           <Text size="lg" fw={500}>
-            {message.subject ?? (isTelegram ? "Telegram Message" : "No subject")}
+            {message.subject ??
+              (isTelegram ? "Telegram Message" : "No subject")}
           </Text>
           <Button
             variant="subtle"

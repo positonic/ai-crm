@@ -44,28 +44,28 @@ import { CreateUpdateModal } from "~/app/_components/CreateUpdateModal";
 
 // Extract static styles to prevent inline object creation
 const PROJECT_TITLE_STYLE = {
-  textDecoration: 'none',
-  whiteSpace: 'nowrap' as const,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
+  textDecoration: "none",
+  whiteSpace: "nowrap" as const,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
 };
 
-const AUTHOR_NAME_STYLE = { whiteSpace: 'nowrap' as const };
+const AUTHOR_NAME_STYLE = { whiteSpace: "nowrap" as const };
 
 const AUTHOR_CONTAINER_STYLE = { flex: 1, minWidth: 0 };
 
 // Layout styles for image rendering
 const SINGLE_IMAGE_LAYOUT_STYLE = {
-  flexDirection: 'row' as const,
+  flexDirection: "row" as const,
 };
 
 const SINGLE_IMAGE_PAPER_STYLE = {
-  overflow: 'hidden',
-  cursor: 'pointer',
-  transition: 'transform 0.2s ease',
+  overflow: "hidden",
+  cursor: "pointer",
+  transition: "transform 0.2s ease",
   flexShrink: 0,
-  width: 'calc(100% / 3)',
-  minWidth: 'calc(100% / 3)',
+  width: "calc(100% / 3)",
+  minWidth: "calc(100% / 3)",
 };
 
 const SINGLE_IMAGE_STYLE = {
@@ -77,10 +77,10 @@ const SINGLE_IMAGE_STYLE = {
 const TEXT_CONTENT_CONTAINER_STYLE = { flex: 1, minWidth: 0 };
 
 const MULTI_IMAGE_PAPER_STYLE = {
-  overflow: 'hidden',
-  cursor: 'pointer',
-  transition: 'transform 0.2s ease',
-  aspectRatio: '16/9',
+  overflow: "hidden",
+  cursor: "pointer",
+  transition: "transform 0.2s ease",
+  aspectRatio: "16/9",
 };
 
 const MULTI_IMAGE_STYLE = {
@@ -93,34 +93,38 @@ export default function UpdatesClient() {
   const { data: session } = useSession();
   const router = useRouter();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
-  const [showCommentInput, setShowCommentInput] = useState<Record<string, boolean>>({});
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>(
+    {},
+  );
+  const [showCommentInput, setShowCommentInput] = useState<
+    Record<string, boolean>
+  >({});
 
   // State for create update flow
   const [projectSelectModalOpen, setProjectSelectModalOpen] = useState(false);
   const [createUpdateModalOpen, setCreateUpdateModalOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<{ id: string; name: string; githubUrl?: string | null } | null>(null);
+  const [selectedProject, setSelectedProject] = useState<{
+    id: string;
+    name: string;
+    githubUrl?: string | null;
+  } | null>(null);
 
   const utils = api.useUtils();
 
   // Fetch user's projects for the dropdown
-  const { data: myProjects, isLoading: loadingProjects } = api.project.getMyProjects.useQuery(
-    undefined,
-    {
+  const { data: myProjects, isLoading: loadingProjects } =
+    api.project.getMyProjects.useQuery(undefined, {
       enabled: !!session?.user,
       refetchOnWindowFocus: false,
-    }
-  );
+    });
 
   // Fetch all updates
-  const { data: updates, isLoading: updatesLoading } = api.project.getAllUpdates.useQuery(
-    undefined,
-    {
+  const { data: updates, isLoading: updatesLoading } =
+    api.project.getAllUpdates.useQuery(undefined, {
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       staleTime: 30000,
-    }
-  );
+    });
 
   // Fetch user metrics for badges
   const { data: userMetrics } = api.project.getAllUserMetrics.useQuery(
@@ -129,7 +133,7 @@ export default function UpdatesClient() {
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       staleTime: 60000,
-    }
+    },
   );
 
   // Create comment mutation
@@ -181,7 +185,7 @@ export default function UpdatesClient() {
               };
             }
             return update;
-          })
+          }),
         );
       }
 
@@ -201,13 +205,18 @@ export default function UpdatesClient() {
 
   const getRelativeTime = useCallback((date: Date) => {
     const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - new Date(date).getTime()) / 1000);
+    const diffInSeconds = Math.floor(
+      (now.getTime() - new Date(date).getTime()) / 1000,
+    );
 
-    if (diffInSeconds < 60) return 'just now';
+    if (diffInSeconds < 60) return "just now";
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w ago`;
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800)
+      return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    if (diffInSeconds < 2592000)
+      return `${Math.floor(diffInSeconds / 604800)}w ago`;
     return new Date(date).toLocaleDateString();
   }, []);
 
@@ -215,16 +224,19 @@ export default function UpdatesClient() {
     setSelectedImage(url);
   }, []);
 
-  const handlePostComment = useCallback((updateId: string, eventId: string) => {
-    const content = commentInputs[updateId];
-    if (!content?.trim()) return;
+  const handlePostComment = useCallback(
+    (updateId: string, eventId: string) => {
+      const content = commentInputs[updateId];
+      if (!content?.trim()) return;
 
-    createComment.mutate({
-      eventId,
-      updateId,
-      content: content.trim(),
-    });
-  }, [commentInputs, createComment]);
+      createComment.mutate({
+        eventId,
+        updateId,
+        content: content.trim(),
+      });
+    },
+    [commentInputs, createComment],
+  );
 
   const toggleCommentInput = useCallback((updateId: string) => {
     setShowCommentInput((prev) => ({ ...prev, [updateId]: !prev[updateId] }));
@@ -247,7 +259,11 @@ export default function UpdatesClient() {
     if (projectId && myProjects) {
       const project = myProjects.find((p) => p.id === projectId);
       if (project) {
-        setSelectedProject({ id: project.id, name: project.title, githubUrl: project.githubUrl });
+        setSelectedProject({
+          id: project.id,
+          name: project.title,
+          githubUrl: project.githubUrl,
+        });
         setProjectSelectModalOpen(false);
         setCreateUpdateModalOpen(true);
       }
@@ -264,10 +280,11 @@ export default function UpdatesClient() {
   };
 
   // Format projects for the select dropdown
-  const projectOptions = myProjects?.map((project) => ({
-    value: project.id,
-    label: project.title,
-  })) ?? [];
+  const projectOptions =
+    myProjects?.map((project) => ({
+      value: project.id,
+      label: project.title,
+    })) ?? [];
 
   if (updatesLoading) {
     return (
@@ -313,7 +330,8 @@ export default function UpdatesClient() {
           <Timeline active={updates.length} bulletSize={24} lineWidth={2}>
             {updates.map((update) => {
               const updateCommentInput = commentInputs[update.id] ?? "";
-              const updateShowCommentInput = showCommentInput[update.id] ?? false;
+              const updateShowCommentInput =
+                showCommentInput[update.id] ?? false;
 
               return (
                 <Timeline.Item
@@ -321,7 +339,9 @@ export default function UpdatesClient() {
                   bullet={<IconCalendarEvent size={12} />}
                   title={
                     <Group justify="space-between" wrap="nowrap" mb="xs">
-                      <Text fw={600} size="lg">{update.title}</Text>
+                      <Text fw={600} size="lg">
+                        {update.title}
+                      </Text>
                       {update.weekNumber && (
                         <Badge size="sm" variant="outline">
                           Week {update.weekNumber}
@@ -336,7 +356,9 @@ export default function UpdatesClient() {
                     p="lg"
                     shadow="sm"
                     style={{ cursor: "pointer" }}
-                    onClick={() => router.push(`/community/updates/${update.id}`)}
+                    onClick={() =>
+                      router.push(`/community/updates/${update.id}`)
+                    }
                   >
                     <Stack gap="md">
                       {/* Header with project and author info */}
@@ -355,8 +377,12 @@ export default function UpdatesClient() {
                           />
                           <div style={AUTHOR_CONTAINER_STYLE}>
                             <Group gap="xs">
-                              <Text fw={500} size="sm" style={AUTHOR_NAME_STYLE}>
-                                {update.author.name ?? 'Anonymous'}
+                              <Text
+                                fw={500}
+                                size="sm"
+                                style={AUTHOR_NAME_STYLE}
+                              >
+                                {update.author.name ?? "Anonymous"}
                               </Text>
                               <Text c="dimmed" size="sm">
                                 •
@@ -375,9 +401,16 @@ export default function UpdatesClient() {
                               <Box mt={4}>
                                 <UserMetricsBadges
                                   kudos={userMetrics[update.author.id]!.kudos}
-                                  updates={userMetrics[update.author.id]!.updates}
-                                  projects={userMetrics[update.author.id]!.projects}
-                                  praiseReceived={userMetrics[update.author.id]!.praiseReceived}
+                                  updates={
+                                    userMetrics[update.author.id]!.updates
+                                  }
+                                  projects={
+                                    userMetrics[update.author.id]!.projects
+                                  }
+                                  praiseReceived={
+                                    userMetrics[update.author.id]!
+                                      .praiseReceived
+                                  }
                                   size="xs"
                                 />
                               </Box>
@@ -390,7 +423,8 @@ export default function UpdatesClient() {
                       </Group>
 
                       {/* Content layout */}
-                      {update.imageUrls.length > 0 && update.imageUrls.length === 1 ? (
+                      {update.imageUrls.length > 0 &&
+                      update.imageUrls.length === 1 ? (
                         <Group
                           mt="xs"
                           align="flex-start"
@@ -423,7 +457,11 @@ export default function UpdatesClient() {
                         <>
                           <Box mt="xs">
                             <SimpleGrid
-                              cols={{ base: 1, sm: 2, md: update.imageUrls.length >= 3 ? 3 : 2 }}
+                              cols={{
+                                base: 1,
+                                sm: 2,
+                                md: update.imageUrls.length >= 3 ? 3 : 2,
+                              }}
                               spacing="md"
                             >
                               {update.imageUrls.map((url, imgIndex) => (
@@ -457,10 +495,17 @@ export default function UpdatesClient() {
                       )}
 
                       {/* Links */}
-                      {(update.githubUrls.length > 0 || update.demoUrls.length > 0) && (
+                      {(update.githubUrls.length > 0 ||
+                        update.demoUrls.length > 0) && (
                         <Group gap="xs">
                           {update.githubUrls.map((url, urlIndex) => (
-                            <Anchor key={urlIndex} href={url} target="_blank" size="sm" onClick={(e) => e.stopPropagation()}>
+                            <Anchor
+                              key={urlIndex}
+                              href={url}
+                              target="_blank"
+                              size="sm"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <Group gap={4}>
                                 <IconBrandGithub size={14} />
                                 GitHub
@@ -468,7 +513,13 @@ export default function UpdatesClient() {
                             </Anchor>
                           ))}
                           {update.demoUrls.map((url, urlIndex) => (
-                            <Anchor key={urlIndex} href={url} target="_blank" size="sm" onClick={(e) => e.stopPropagation()}>
+                            <Anchor
+                              key={urlIndex}
+                              href={url}
+                              target="_blank"
+                              size="sm"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <Group gap={4}>
                                 <IconExternalLink size={14} />
                                 Demo
@@ -494,7 +545,10 @@ export default function UpdatesClient() {
                         <Group gap="md">
                           {update.comments.length > 0 && (
                             <Group gap={4}>
-                              <IconMessageCircle size={16} style={{ color: "var(--mantine-color-gray-6)" }} />
+                              <IconMessageCircle
+                                size={16}
+                                style={{ color: "var(--mantine-color-gray-6)" }}
+                              />
                               <Text size="sm" c="dimmed" fw={500}>
                                 {update.comments.length}
                               </Text>
@@ -504,7 +558,13 @@ export default function UpdatesClient() {
                             <LikeButton
                               updateId={update.id}
                               initialLikeCount={update.likes.length}
-                              initialHasLiked={session?.user ? update.likes.some(like => like.userId === session.user.id) : false}
+                              initialHasLiked={
+                                session?.user
+                                  ? update.likes.some(
+                                      (like) => like.userId === session.user.id,
+                                    )
+                                  : false
+                              }
                               userId={session?.user.id}
                             />
                           </div>
@@ -521,7 +581,9 @@ export default function UpdatesClient() {
                                 size="sm"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  router.push(`/community/updates/${update.id}`);
+                                  router.push(
+                                    `/community/updates/${update.id}`,
+                                  );
                                 }}
                               >
                                 View all {update.comments.length} comments
@@ -553,7 +615,9 @@ export default function UpdatesClient() {
                                   <Stack gap="xs">
                                     <MentionTextarea
                                       value={updateCommentInput}
-                                      onChange={(value) => handleCommentChange(update.id, value)}
+                                      onChange={(value) =>
+                                        handleCommentChange(update.id, value)
+                                      }
                                       placeholder="Write your comment... (Use @ to mention users)"
                                       description="Supports Markdown formatting: **bold**, *italic*, [links](url)"
                                       minRows={2}
@@ -642,7 +706,8 @@ export default function UpdatesClient() {
           />
           {projectOptions.length === 0 && !loadingProjects && (
             <Text size="sm" c="dimmed" ta="center">
-              You need to have a project to add updates. Create a project first from your profile.
+              You need to have a project to add updates. Create a project first
+              from your profile.
             </Text>
           )}
         </Stack>

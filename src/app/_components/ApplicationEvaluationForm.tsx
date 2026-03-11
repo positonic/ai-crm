@@ -41,39 +41,42 @@ import {
 } from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import { notifications } from "@mantine/notifications";
-import type { 
-  EvaluationCriteria, 
+import type {
+  EvaluationCriteria,
   EvaluationScore,
   Application,
-  User 
+  User,
 } from "@prisma/client";
 
 // Helper functions for each social media platform
-function renderTelegramLink(answer: string, application?: {
-  responses: Array<{
-    answer: string;
-    question: {
-      questionKey: string;
-      questionEn: string;
-      order: number;
-    };
-  }>;
-  user: {
-    name: string | null;
-    email: string | null;
-  } | null;
-}) {
+function renderTelegramLink(
+  answer: string,
+  application?: {
+    responses: Array<{
+      answer: string;
+      question: {
+        questionKey: string;
+        questionEn: string;
+        order: number;
+      };
+    }>;
+    user: {
+      name: string | null;
+      email: string | null;
+    } | null;
+  },
+) {
   // Extract telegram handle
   let handle = answer;
-  if (handle.includes('t.me/')) {
+  if (handle.includes("t.me/")) {
     const regex = /t\.me\/([^/?]+)/;
     const match = regex.exec(handle);
     if (match?.[1]) {
       handle = match[1];
     }
   }
-  handle = handle.replace(/^@/, '');
-  
+  handle = handle.replace(/^@/, "");
+
   return (
     <Group gap="xs">
       <IconBrandTelegram size={16} />
@@ -93,15 +96,15 @@ function renderTelegramLink(answer: string, application?: {
 
 function renderTwitterLink(answer: string) {
   let url = answer;
-  if (answer.startsWith('@')) {
+  if (answer.startsWith("@")) {
     url = `https://x.com/${answer.substring(1)}`;
-  } else if (answer.startsWith('http')) {
+  } else if (answer.startsWith("http")) {
     // Convert twitter.com URLs to x.com
-    url = answer.replace(/twitter\.com/g, 'x.com');
-  } else if (!answer.startsWith('http')) {
+    url = answer.replace(/twitter\.com/g, "x.com");
+  } else if (!answer.startsWith("http")) {
     url = `https://x.com/${answer}`;
   }
-  
+
   return (
     <Anchor href={url} target="_blank" rel="noopener noreferrer">
       <Group gap="xs">
@@ -115,14 +118,14 @@ function renderTwitterLink(answer: string) {
 
 function renderGitHubLink(answer: string) {
   let url = answer;
-  if (answer.startsWith('@')) {
+  if (answer.startsWith("@")) {
     url = `https://github.com/${answer.substring(1)}`;
-  } else if (answer.startsWith('http')) {
+  } else if (answer.startsWith("http")) {
     url = answer;
   } else {
     url = `https://github.com/${answer}`;
   }
-  
+
   return (
     <Anchor href={url} target="_blank" rel="noopener noreferrer">
       <Group gap="xs">
@@ -136,12 +139,12 @@ function renderGitHubLink(answer: string) {
 
 function renderLinkedInLink(answer: string) {
   let url = answer;
-  if (answer.startsWith('http')) {
+  if (answer.startsWith("http")) {
     url = answer;
   } else {
     url = `https://linkedin.com/in/${answer}`;
   }
-  
+
   return (
     <Anchor href={url} target="_blank" rel="noopener noreferrer">
       <Group gap="xs">
@@ -155,8 +158,8 @@ function renderLinkedInLink(answer: string) {
 
 // Main function to render social media links based on questionKey
 function renderSocialMediaLink(
-  answer: string, 
-  questionKey: string, 
+  answer: string,
+  questionKey: string,
   application?: {
     responses: Array<{
       answer: string;
@@ -170,26 +173,26 @@ function renderSocialMediaLink(
       name: string | null;
       email: string | null;
     } | null;
-  }
+  },
 ) {
   const trimmedAnswer = answer.trim();
   if (!trimmedAnswer) return null;
-  
+
   // Use exact questionKey matching for deterministic rendering
   switch (questionKey.toLowerCase()) {
-    case 'telegram':
+    case "telegram":
       return renderTelegramLink(trimmedAnswer, application);
-      
-    case 'twitter':
-    case 'x':
+
+    case "twitter":
+    case "x":
       return renderTwitterLink(trimmedAnswer);
-      
-    case 'github':
+
+    case "github":
       return renderGitHubLink(trimmedAnswer);
-      
-    case 'linkedin':
+
+    case "linkedin":
       return renderLinkedInLink(trimmedAnswer);
-      
+
     default:
       // Not a social media question key, return null
       return null;
@@ -198,40 +201,51 @@ function renderSocialMediaLink(
 
 interface SelfAssignmentPromptProps {
   applicationId: string;
-  stage: 'SCREENING' | 'DETAILED_REVIEW' | 'VIDEO_REVIEW' | 'CONSENSUS' | 'FINAL_DECISION';
+  stage:
+    | "SCREENING"
+    | "DETAILED_REVIEW"
+    | "VIDEO_REVIEW"
+    | "CONSENSUS"
+    | "FINAL_DECISION";
 }
 
-function SelfAssignmentPrompt({ applicationId, stage }: SelfAssignmentPromptProps) {
+function SelfAssignmentPrompt({
+  applicationId,
+  stage,
+}: SelfAssignmentPromptProps) {
   const [isAssigning, setIsAssigning] = useState(false);
 
   // Self-assign mutation
-  const selfAssignMutation = api.evaluation.selfAssignToApplication.useMutation({
-    onSuccess: () => {
-      notifications.show({
-        title: 'Application Assigned',
-        message: `Successfully assigned to application. You can now begin your review.`,
-        color: 'green'
-      });
-      // Reload the page to show the evaluation form
-      window.location.reload();
+  const selfAssignMutation = api.evaluation.selfAssignToApplication.useMutation(
+    {
+      onSuccess: () => {
+        notifications.show({
+          title: "Application Assigned",
+          message: `Successfully assigned to application. You can now begin your review.`,
+          color: "green",
+        });
+        // Reload the page to show the evaluation form
+        window.location.reload();
+      },
+      onError: (error) => {
+        notifications.show({
+          title: "Assignment Failed",
+          message:
+            error.message || "Failed to assign application. Please try again.",
+          color: "red",
+        });
+        setIsAssigning(false);
+      },
     },
-    onError: (error) => {
-      notifications.show({
-        title: 'Assignment Failed',
-        message: error.message || 'Failed to assign application. Please try again.',
-        color: 'red'
-      });
-      setIsAssigning(false);
-    }
-  });
+  );
 
   const handleSelfAssign = async () => {
     setIsAssigning(true);
     await selfAssignMutation.mutateAsync({
       applicationId,
-      stage: stage as 'SCREENING' | 'DETAILED_REVIEW' | 'VIDEO_REVIEW',
+      stage: stage as "SCREENING" | "DETAILED_REVIEW" | "VIDEO_REVIEW",
       priority: 0,
-      notes: `Self-assigned via evaluation form`
+      notes: `Self-assigned via evaluation form`,
     });
   };
 
@@ -239,12 +253,15 @@ function SelfAssignmentPrompt({ applicationId, stage }: SelfAssignmentPromptProp
     <Paper p="xl" className="text-center">
       <Stack align="center" gap="md">
         <Alert color="blue" icon={<IconUsers size="1rem" />}>
-          <Text fw={500}>No evaluation found for this application and stage</Text>
+          <Text fw={500}>
+            No evaluation found for this application and stage
+          </Text>
           <Text size="sm" mt="xs">
-            You can assign yourself to review this application, or wait for an admin to assign it to you.
+            You can assign yourself to review this application, or wait for an
+            admin to assign it to you.
           </Text>
         </Alert>
-        
+
         <Group gap="md">
           <Button
             onClick={handleSelfAssign}
@@ -254,9 +271,9 @@ function SelfAssignmentPrompt({ applicationId, stage }: SelfAssignmentPromptProp
             color="blue"
             leftSection={<IconCheck size="1rem" />}
           >
-            {isAssigning ? 'Assigning...' : 'Assign to Me'}
+            {isAssigning ? "Assigning..." : "Assign to Me"}
           </Button>
-          
+
           <Button
             onClick={() => window.history.back()}
             variant="outline"
@@ -271,7 +288,15 @@ function SelfAssignmentPrompt({ applicationId, stage }: SelfAssignmentPromptProp
 }
 
 interface ApplicationWithDetails extends Application {
-  user: Pick<User, 'id' | 'name' | 'email' | 'adminNotes' | 'adminWorkExperience' | 'adminLabels'> | null;
+  user: Pick<
+    User,
+    | "id"
+    | "name"
+    | "email"
+    | "adminNotes"
+    | "adminWorkExperience"
+    | "adminLabels"
+  > | null;
   responses: Array<{
     answer: string;
     question: {
@@ -284,7 +309,12 @@ interface ApplicationWithDetails extends Application {
 
 interface EvaluationFormProps {
   applicationId: string;
-  stage: 'SCREENING' | 'DETAILED_REVIEW' | 'VIDEO_REVIEW' | 'CONSENSUS' | 'FINAL_DECISION';
+  stage:
+    | "SCREENING"
+    | "DETAILED_REVIEW"
+    | "VIDEO_REVIEW"
+    | "CONSENSUS"
+    | "FINAL_DECISION";
   onEvaluationComplete?: () => void;
 }
 
@@ -302,23 +332,29 @@ function extractYouTubeVideoId(url: string): string | null {
     // Legacy URL: youtube.com/v/VIDEO_ID
     /youtube\.com\/v\/([^&\n?#]+)/,
     // Watch URL with additional parameters: youtube.com/watch?.*v=VIDEO_ID
-    /youtube\.com\/watch\?.*v=([^&\n?#]+)/
+    /youtube\.com\/watch\?.*v=([^&\n?#]+)/,
   ];
-  
+
   for (const pattern of patterns) {
     const match = url.match(pattern);
     if (match?.[1]) {
       return match[1];
     }
   }
-  
+
   return null;
 }
 
 // Component to render YouTube embed or regular link
-function VideoLinkRenderer({ url, questionText }: { url: string; questionText: string }) {
+function VideoLinkRenderer({
+  url,
+  questionText,
+}: {
+  url: string;
+  questionText: string;
+}) {
   const videoId = extractYouTubeVideoId(url);
-  
+
   if (videoId) {
     return (
       <Stack gap="md">
@@ -329,25 +365,25 @@ function VideoLinkRenderer({ url, questionText }: { url: string; questionText: s
         </Text>
         <Box
           style={{
-            position: 'relative',
-            width: '100%',
+            position: "relative",
+            width: "100%",
             height: 0,
-            paddingBottom: '56.25%', // 16:9 aspect ratio
-            overflow: 'hidden',
-            borderRadius: '8px',
-            border: '1px solid var(--mantine-color-gray-3)'
+            paddingBottom: "56.25%", // 16:9 aspect ratio
+            overflow: "hidden",
+            borderRadius: "8px",
+            border: "1px solid var(--mantine-color-gray-3)",
           }}
         >
           <iframe
             src={`https://www.youtube.com/embed/${videoId}`}
             title={questionText}
             style={{
-              position: 'absolute',
+              position: "absolute",
               top: 0,
               left: 0,
-              width: '100%',
-              height: '100%',
-              border: 0
+              width: "100%",
+              height: "100%",
+              border: 0,
             }}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
@@ -356,7 +392,7 @@ function VideoLinkRenderer({ url, questionText }: { url: string; questionText: s
       </Stack>
     );
   }
-  
+
   // For non-YouTube links, show as regular link
   return (
     <Text>
@@ -370,12 +406,22 @@ function VideoLinkRenderer({ url, questionText }: { url: string; questionText: s
 interface CriteriaScoreProps {
   criteria: EvaluationCriteria;
   score?: EvaluationScore;
-  onScoreChange: (criteriaId: string, score: number, reasoning?: string) => void;
+  onScoreChange: (
+    criteriaId: string,
+    score: number,
+    reasoning?: string,
+  ) => void;
   readonly?: boolean;
   application?: ApplicationWithDetails;
 }
 
-function CriteriaScore({ criteria, score, onScoreChange, readonly = false, application }: CriteriaScoreProps) {
+function CriteriaScore({
+  criteria,
+  score,
+  onScoreChange,
+  readonly = false,
+  application,
+}: CriteriaScoreProps) {
   const [currentScore, setCurrentScore] = useState(score?.score ?? 0);
   const [reasoning, setReasoning] = useState(score?.reasoning ?? "");
   const [showReasoning, setShowReasoning] = useState(false);
@@ -410,26 +456,36 @@ function CriteriaScore({ criteria, score, onScoreChange, readonly = false, appli
           <Box style={{ flex: 1 }}>
             <Group gap="xs" mb="xs">
               <Badge
-                color={criteria.category === 'TECHNICAL' ? 'blue' : 
-                       criteria.category === 'PROJECT' ? 'green' : 
-                       criteria.category === 'COMMUNITY_FIT' ? 'purple' : 
-                       criteria.category === 'VIDEO' ? 'orange' : 
-                       criteria.category === 'ENTREPRENEURIAL' ? 'teal' : 'gray'}
+                color={
+                  criteria.category === "TECHNICAL"
+                    ? "blue"
+                    : criteria.category === "PROJECT"
+                      ? "green"
+                      : criteria.category === "COMMUNITY_FIT"
+                        ? "purple"
+                        : criteria.category === "VIDEO"
+                          ? "orange"
+                          : criteria.category === "ENTREPRENEURIAL"
+                            ? "teal"
+                            : "gray"
+                }
                 size="sm"
               >
-                {criteria.category.replace('_', ' ')}
+                {criteria.category.replace("_", " ")}
               </Badge>
               <Text size="sm" c="dimmed">
                 Weight: {(criteria.weight * 100).toFixed(1)}%
               </Text>
             </Group>
-            
-            <Title order={5} mb="xs">{criteria.name}</Title>
+
+            <Title order={5} mb="xs">
+              {criteria.name}
+            </Title>
             <Text size="sm" c="dimmed" mb="md">
               {criteria.description}
             </Text>
           </Box>
-          
+
           <Box ta="center">
             <Text size="xl" fw={700} c={getScoreColor(currentScore)}>
               {currentScore.toFixed(1)}
@@ -442,18 +498,24 @@ function CriteriaScore({ criteria, score, onScoreChange, readonly = false, appli
 
         {/* Star Rating */}
         <Group gap="xs" justify="center">
-          {Array.from({ length: criteria.maxScore }, (_, i) => i + 1).map((star) => (
-            <ActionIcon
-              key={star}
-              variant={currentScore >= star ? "filled" : "outline"}
-              color={getScoreColor(currentScore)}
-              size="sm"
-              disabled={readonly}
-              onClick={() => !readonly && handleScoreChange(star)}
-            >
-              {currentScore >= star ? <IconStarFilled size={16} /> : <IconStar size={16} />}
-            </ActionIcon>
-          ))}
+          {Array.from({ length: criteria.maxScore }, (_, i) => i + 1).map(
+            (star) => (
+              <ActionIcon
+                key={star}
+                variant={currentScore >= star ? "filled" : "outline"}
+                color={getScoreColor(currentScore)}
+                size="sm"
+                disabled={readonly}
+                onClick={() => !readonly && handleScoreChange(star)}
+              >
+                {currentScore >= star ? (
+                  <IconStarFilled size={16} />
+                ) : (
+                  <IconStar size={16} />
+                )}
+              </ActionIcon>
+            ),
+          )}
         </Group>
 
         {/* Number Input for precise scoring */}
@@ -464,7 +526,9 @@ function CriteriaScore({ criteria, score, onScoreChange, readonly = false, appli
           step={0.1}
           decimalScale={1}
           value={currentScore}
-          onChange={(value) => !readonly && handleScoreChange(Number(value) || 0)}
+          onChange={(value) =>
+            !readonly && handleScoreChange(Number(value) || 0)
+          }
           disabled={readonly}
           size="sm"
         />
@@ -477,9 +541,9 @@ function CriteriaScore({ criteria, score, onScoreChange, readonly = false, appli
             leftSection={<IconNotes size={14} />}
             onClick={() => setShowReasoning(!showReasoning)}
           >
-            {showReasoning ? 'Hide' : 'Add'} Reasoning
+            {showReasoning ? "Hide" : "Add"} Reasoning
           </Button>
-          
+
           {/* Telegram message button */}
           {application && (
             <TelegramMessageButton
@@ -519,32 +583,37 @@ export default function ApplicationEvaluationForm({
   const [confidence, setConfidence] = useState<number>(3);
   const [timeSpent, setTimeSpent] = useState<number>(0);
   const [startTime] = useState(Date.now());
-  
+
   // Edit mode state management for completed evaluations
   const [editMode, setEditMode] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  
+
   // Optimistic local state for scores to handle async updates
-  const [localCompletedScores, setLocalCompletedScores] = useState<Set<string>>(new Set());
-  
+  const [localCompletedScores, setLocalCompletedScores] = useState<Set<string>>(
+    new Set(),
+  );
+
   // Track pending score updates to prevent race conditions
-  const [pendingScoreUpdates, setPendingScoreUpdates] = useState<Set<string>>(new Set());
-  
+  const [pendingScoreUpdates, setPendingScoreUpdates] = useState<Set<string>>(
+    new Set(),
+  );
+
   // Edit application drawer state
   const [drawerOpened, setDrawerOpened] = useState(false);
-
 
   // tRPC queries and utils
   const utils = api.useUtils();
   const { data: criteria } = api.evaluation.getCriteria.useQuery();
-  const { data: evaluation, refetch: refetchEvaluation } = api.evaluation.getEvaluation.useQuery({
-    applicationId,
-    stage,
-  });
+  const { data: evaluation, refetch: refetchEvaluation } =
+    api.evaluation.getEvaluation.useQuery({
+      applicationId,
+      stage,
+    });
 
   // Mutations
   const upsertScoreMutation = api.evaluation.upsertScore.useMutation();
-  const updateEvaluationMutation = api.evaluation.updateEvaluation.useMutation();
+  const updateEvaluationMutation =
+    api.evaluation.updateEvaluation.useMutation();
   const autoScoreMutation = api.evaluation.autoScoreApplication.useMutation();
 
   // Calculate progress using both server data and optimistic local state (safe for hooks)
@@ -552,8 +621,9 @@ export default function ApplicationEvaluationForm({
   const localCompletedCount = localCompletedScores.size;
   const completedScores = Math.max(serverCompletedCount, localCompletedCount);
   const totalCriteria = criteria?.length ?? 0;
-  const progress = totalCriteria > 0 ? (completedScores / totalCriteria) * 100 : 0;
-  const isCompleted = evaluation?.status === 'COMPLETED';
+  const progress =
+    totalCriteria > 0 ? (completedScores / totalCriteria) * 100 : 0;
+  const isCompleted = evaluation?.status === "COMPLETED";
   const isReadonly = isCompleted && !editMode;
 
   // Robust button validation logic (moved before early returns)
@@ -561,11 +631,23 @@ export default function ApplicationEvaluationForm({
     if (!evaluation || !criteria) return false;
     const hasAllScores = progress >= 100;
     const hasRecommendation = !!recommendation && recommendation.length > 0;
-    const notSaving = !upsertScoreMutation.isPending && !updateEvaluationMutation.isPending;
+    const notSaving =
+      !upsertScoreMutation.isPending && !updateEvaluationMutation.isPending;
     const notAlreadyCompleted = !isCompleted || editMode;
-    
-    return hasAllScores && hasRecommendation && notSaving && notAlreadyCompleted;
-  }, [evaluation, criteria, progress, recommendation, upsertScoreMutation.isPending, updateEvaluationMutation.isPending, isCompleted, editMode]);
+
+    return (
+      hasAllScores && hasRecommendation && notSaving && notAlreadyCompleted
+    );
+  }, [
+    evaluation,
+    criteria,
+    progress,
+    recommendation,
+    upsertScoreMutation.isPending,
+    updateEvaluationMutation.isPending,
+    isCompleted,
+    editMode,
+  ]);
 
   // ✅ Unconditional useEffect - conditional logic inside is fine
   useEffect(() => {
@@ -575,18 +657,22 @@ export default function ApplicationEvaluationForm({
       setRecommendation(evaluation.recommendation ?? "");
       setConfidence(evaluation.confidence ?? 3);
       setTimeSpent(evaluation.timeSpentMinutes ?? 0);
-      
+
       // Initialize local completed scores from server data
       const completedCriteriaIds = new Set(
-        evaluation.scores?.map(score => score.criteriaId) ?? []
+        evaluation.scores?.map((score) => score.criteriaId) ?? [],
       );
       setLocalCompletedScores(completedCriteriaIds);
     }
   }, [evaluation]);
 
-  const handleScoreChange = async (criteriaId: string, score: number, reasoning?: string) => {
+  const handleScoreChange = async (
+    criteriaId: string,
+    score: number,
+    reasoning?: string,
+  ) => {
     if (!evaluation) return;
-    
+
     // Prevent duplicate submissions for the same criteria
     if (pendingScoreUpdates.has(criteriaId)) {
       return;
@@ -599,18 +685,18 @@ export default function ApplicationEvaluationForm({
 
     try {
       // Mark this criteria as having a pending update
-      setPendingScoreUpdates(prev => new Set([...prev, criteriaId]));
-      
+      setPendingScoreUpdates((prev) => new Set([...prev, criteriaId]));
+
       // Optimistic update - immediately mark criteria as completed locally
-      setLocalCompletedScores(prev => new Set([...prev, criteriaId]));
-      
+      setLocalCompletedScores((prev) => new Set([...prev, criteriaId]));
+
       await upsertScoreMutation.mutateAsync({
         evaluationId: evaluation.id,
         criteriaId,
         score,
         reasoning,
       });
-      
+
       // Invalidate and refetch the evaluation query for proper cache management
       await utils.evaluation.getEvaluation.invalidate({
         applicationId,
@@ -618,12 +704,12 @@ export default function ApplicationEvaluationForm({
       });
     } catch {
       // Revert optimistic update on error
-      setLocalCompletedScores(prev => {
+      setLocalCompletedScores((prev) => {
         const newSet = new Set(prev);
         newSet.delete(criteriaId);
         return newSet;
       });
-      
+
       notifications.show({
         title: "Error",
         message: "Failed to save score",
@@ -631,7 +717,7 @@ export default function ApplicationEvaluationForm({
       });
     } finally {
       // Always remove from pending updates when done
-      setPendingScoreUpdates(prev => {
+      setPendingScoreUpdates((prev) => {
         const newSet = new Set(prev);
         newSet.delete(criteriaId);
         return newSet;
@@ -639,36 +725,42 @@ export default function ApplicationEvaluationForm({
     }
   };
 
-  const handleSaveEvaluation = async (status: 'IN_PROGRESS' | 'COMPLETED') => {
+  const handleSaveEvaluation = async (status: "IN_PROGRESS" | "COMPLETED") => {
     if (!evaluation) return;
 
-    const currentTimeSpent = Math.round((Date.now() - startTime) / 60000) + timeSpent;
+    const currentTimeSpent =
+      Math.round((Date.now() - startTime) / 60000) + timeSpent;
 
     try {
       await updateEvaluationMutation.mutateAsync({
         evaluationId: evaluation.id,
         status,
         overallComments,
-        recommendation: recommendation as 'ACCEPT' | 'REJECT' | 'WAITLIST' | 'NEEDS_MORE_INFO' | undefined,
+        recommendation: recommendation as
+          | "ACCEPT"
+          | "REJECT"
+          | "WAITLIST"
+          | "NEEDS_MORE_INFO"
+          | undefined,
         confidence,
         timeSpentMinutes: currentTimeSpent,
       });
 
       await refetchEvaluation();
-      
+
       // Reset edit mode and unsaved changes state
-      if (editMode && status === 'COMPLETED') {
+      if (editMode && status === "COMPLETED") {
         setEditMode(false);
         setHasUnsavedChanges(false);
       }
 
       notifications.show({
         title: "Success",
-        message: `Evaluation ${status === 'COMPLETED' ? 'completed' : 'saved'}`,
+        message: `Evaluation ${status === "COMPLETED" ? "completed" : "saved"}`,
         color: "green",
       });
 
-      if (status === 'COMPLETED' && onEvaluationComplete) {
+      if (status === "COMPLETED" && onEvaluationComplete) {
         onEvaluationComplete();
       }
     } catch {
@@ -683,9 +775,11 @@ export default function ApplicationEvaluationForm({
   const handleEditToggle = () => {
     if (editMode && hasUnsavedChanges) {
       // Show confirmation dialog for unsaved changes
-      const confirmed = window.confirm("You have unsaved changes. Are you sure you want to cancel editing?");
+      const confirmed = window.confirm(
+        "You have unsaved changes. Are you sure you want to cancel editing?",
+      );
       if (!confirmed) return;
-      
+
       // Reset form to original values
       if (evaluation) {
         setOverallComments(evaluation.overallComments ?? "");
@@ -694,7 +788,7 @@ export default function ApplicationEvaluationForm({
         setHasUnsavedChanges(false);
       }
     }
-    
+
     setEditMode(!editMode);
   };
 
@@ -729,7 +823,7 @@ export default function ApplicationEvaluationForm({
 
       // Show progress notification
       notifications.show({
-        id: 'autoscore-progress',
+        id: "autoscore-progress",
         title: "Populating Scores",
         message: `Applying AI scores to ${autoScoreResult.scores.length} criteria...`,
         color: "blue",
@@ -740,26 +834,34 @@ export default function ApplicationEvaluationForm({
       // Pre-populate individual criteria scores with visual feedback
       for (let i = 0; i < autoScoreResult.scores.length; i++) {
         const aiScore = autoScoreResult.scores[i];
-        
+
         // Update progress notification
         notifications.update({
-          id: 'autoscore-progress',
+          id: "autoscore-progress",
           title: "Populating Scores",
           message: `Applying score ${i + 1} of ${autoScoreResult.scores.length}...`,
           color: "blue",
           loading: true,
         });
 
-        if (aiScore?.criteriaId && aiScore?.score !== undefined && aiScore?.reasoning) {
-          await handleScoreChange(aiScore.criteriaId, aiScore.score, aiScore.reasoning);
+        if (
+          aiScore?.criteriaId &&
+          aiScore?.score !== undefined &&
+          aiScore?.reasoning
+        ) {
+          await handleScoreChange(
+            aiScore.criteriaId,
+            aiScore.score,
+            aiScore.reasoning,
+          );
         }
-        
+
         // Small delay to make the visual feedback visible
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 300));
       }
 
       // Clear progress notification
-      notifications.hide('autoscore-progress');
+      notifications.hide("autoscore-progress");
 
       // Re-apply Overall Assessment values after all score changes complete
       // This prevents them from being reset by the database refetches
@@ -774,18 +876,19 @@ export default function ApplicationEvaluationForm({
 
       notifications.show({
         title: "AutoScore Complete",
-        message: "AI evaluation has been applied. Please review and adjust as needed before saving.",
+        message:
+          "AI evaluation has been applied. Please review and adjust as needed before saving.",
         color: "blue",
       });
-
     } catch {
       notifications.show({
         title: "AutoScore Failed",
-        message: "Failed to generate AI evaluation. Please try again or evaluate manually.",
+        message:
+          "Failed to generate AI evaluation. Please try again or evaluate manually.",
         color: "red",
       });
     }
-  };;
+  };
 
   // ✅ Early returns only AFTER all hooks are declared
   if (!criteria) {
@@ -798,11 +901,14 @@ export default function ApplicationEvaluationForm({
 
   const application = evaluation.application as ApplicationWithDetails;
   // Group criteria by category
-  const criteriaByCategory = criteria.reduce((acc, criteria) => {
-    acc[criteria.category] ??= [];
-    acc[criteria.category]!.push(criteria);
-    return acc;
-  }, {} as Record<string, EvaluationCriteria[]>);
+  const criteriaByCategory = criteria.reduce(
+    (acc, criteria) => {
+      acc[criteria.category] ??= [];
+      acc[criteria.category]!.push(criteria);
+      return acc;
+    },
+    {} as Record<string, EvaluationCriteria[]>,
+  );
 
   return (
     <Stack gap="lg">
@@ -811,7 +917,11 @@ export default function ApplicationEvaluationForm({
         <Group justify="space-between" mb="md">
           <div>
             <Title order={3}>
-              {stage.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())} Evaluation
+              {stage
+                .replace("_", " ")
+                .toLowerCase()
+                .replace(/\b\w/g, (l) => l.toUpperCase())}{" "}
+              Evaluation
             </Title>
             <Group gap="sm" align="center">
               <Text c="dimmed">
@@ -827,7 +937,7 @@ export default function ApplicationEvaluationForm({
               </Button>
             </Group>
           </div>
-          
+
           <Group>
             {isCompleted && (
               <Badge color={editMode ? "orange" : "green"} variant="filled">
@@ -835,10 +945,10 @@ export default function ApplicationEvaluationForm({
               </Badge>
             )}
             {!isCompleted && (
-              <Badge 
-                color={evaluation.status === 'IN_PROGRESS' ? 'blue' : 'gray'}
+              <Badge
+                color={evaluation.status === "IN_PROGRESS" ? "blue" : "gray"}
               >
-                {evaluation.status.replace('_', ' ')}
+                {evaluation.status.replace("_", " ")}
               </Badge>
             )}
             {evaluation.overallScore && (
@@ -851,9 +961,10 @@ export default function ApplicationEvaluationForm({
 
         <Progress value={progress} mb="sm" />
         <Text size="sm" c="dimmed">
-          {completedScores}/{totalCriteria} criteria evaluated ({progress.toFixed(0)}% complete)
+          {completedScores}/{totalCriteria} criteria evaluated (
+          {progress.toFixed(0)}% complete)
         </Text>
-        
+
         {hasUnsavedChanges && editMode && (
           <Alert color="orange" mt="sm">
             You have unsaved changes. Remember to save your evaluation.
@@ -869,7 +980,7 @@ export default function ApplicationEvaluationForm({
               <IconUsers size={20} />
               <Title order={4}>Application Details</Title>
             </Group>
-            <Box style={{ flex: 1, overflowY: 'auto', maxHeight: '70vh' }}>
+            <Box style={{ flex: 1, overflowY: "auto", maxHeight: "70vh" }}>
               <Stack gap="md">
                 {application.responses
                   ?.sort((a, b) => a.question.order - b.question.order)
@@ -880,19 +991,28 @@ export default function ApplicationEvaluationForm({
                       </Title>
                       {response.answer ? (
                         // Check if this is a video link question and the answer looks like a URL
-                        (response.question.questionKey === 'intro_video_link' || 
-                         response.question.questionEn.toLowerCase().includes('video')) &&
-                        (response.answer.startsWith('http://') || response.answer.startsWith('https://')) ? (
-                          <VideoLinkRenderer 
-                            url={response.answer} 
+                        (response.question.questionKey === "intro_video_link" ||
+                          response.question.questionEn
+                            .toLowerCase()
+                            .includes("video")) &&
+                        (response.answer.startsWith("http://") ||
+                          response.answer.startsWith("https://")) ? (
+                          <VideoLinkRenderer
+                            url={response.answer}
                             questionText={response.question.questionEn}
                           />
                         ) : (
                           // Check if this is a social media link
-                          renderSocialMediaLink(response.answer, response.question.questionKey, application) ?? <Text>{response.answer}</Text>
+                          (renderSocialMediaLink(
+                            response.answer,
+                            response.question.questionKey,
+                            application,
+                          ) ?? <Text>{response.answer}</Text>)
                         )
                       ) : (
-                        <Text c="dimmed" fs="italic">No answer provided</Text>
+                        <Text c="dimmed" fs="italic">
+                          No answer provided
+                        </Text>
                       )}
                     </Card>
                   ))}
@@ -907,44 +1027,58 @@ export default function ApplicationEvaluationForm({
             <Stack gap="lg" h="100%">
               <Group>
                 <IconStarFilled size={20} />
-                <Title order={4}>Evaluation ({completedScores}/{totalCriteria})</Title>
+                <Title order={4}>
+                  Evaluation ({completedScores}/{totalCriteria})
+                </Title>
               </Group>
-              
-              <Box style={{ flex: 1, overflowY: 'auto', maxHeight: '70vh' }}>
+
+              <Box style={{ flex: 1, overflowY: "auto", maxHeight: "70vh" }}>
                 <Stack gap="lg">
-                  {Object.entries(criteriaByCategory).map(([category, categoryItems]) => (
-                    <div key={category}>
-                      <Title order={5} mb="md" c="blue">
-                        {category.replace('_', ' ')} Criteria
-                      </Title>
-                      <Stack gap="md">
-                        {categoryItems.map((criteria) => {
-                          const existingScore = evaluation.scores?.find(
-                            (s) => s.criteriaId === criteria.id
-                          );
-                          return (
-                            <CriteriaScore
-                              key={criteria.id}
-                              criteria={criteria}
-                              score={existingScore}
-                              onScoreChange={(criteriaId, score, reasoning) => {
-                                void handleScoreChange(criteriaId, score, reasoning);
-                                handleFormChange();
-                              }}
-                              readonly={isReadonly}
-                              application={application}
-                            />
-                          );
-                        })}
-                      </Stack>
-                    </div>
-                  ))}
+                  {Object.entries(criteriaByCategory).map(
+                    ([category, categoryItems]) => (
+                      <div key={category}>
+                        <Title order={5} mb="md" c="blue">
+                          {category.replace("_", " ")} Criteria
+                        </Title>
+                        <Stack gap="md">
+                          {categoryItems.map((criteria) => {
+                            const existingScore = evaluation.scores?.find(
+                              (s) => s.criteriaId === criteria.id,
+                            );
+                            return (
+                              <CriteriaScore
+                                key={criteria.id}
+                                criteria={criteria}
+                                score={existingScore}
+                                onScoreChange={(
+                                  criteriaId,
+                                  score,
+                                  reasoning,
+                                ) => {
+                                  void handleScoreChange(
+                                    criteriaId,
+                                    score,
+                                    reasoning,
+                                  );
+                                  handleFormChange();
+                                }}
+                                readonly={isReadonly}
+                                application={application}
+                              />
+                            );
+                          })}
+                        </Stack>
+                      </div>
+                    ),
+                  )}
 
                   <Divider />
 
                   {/* Overall Assessment */}
                   <Card withBorder p="md">
-                    <Title order={5} mb="md">Overall Assessment</Title>
+                    <Title order={5} mb="md">
+                      Overall Assessment
+                    </Title>
                     <Stack gap="md">
                       <Textarea
                         label="Overall Comments"
@@ -971,10 +1105,13 @@ export default function ApplicationEvaluationForm({
                           }}
                           disabled={isReadonly}
                           data={[
-                            { value: 'ACCEPT', label: 'Accept' },
-                            { value: 'REJECT', label: 'Reject' },
-                            { value: 'WAITLIST', label: 'Waitlist' },
-                            { value: 'NEEDS_MORE_INFO', label: 'Needs More Info' },
+                            { value: "ACCEPT", label: "Accept" },
+                            { value: "REJECT", label: "Reject" },
+                            { value: "WAITLIST", label: "Waitlist" },
+                            {
+                              value: "NEEDS_MORE_INFO",
+                              label: "Needs More Info",
+                            },
                           ]}
                         />
 
@@ -1004,25 +1141,34 @@ export default function ApplicationEvaluationForm({
                         leftSection={<IconRobot size={16} />}
                         onClick={handleAutoScore}
                         loading={autoScoreMutation.isPending}
-                        disabled={upsertScoreMutation.isPending || updateEvaluationMutation.isPending}
+                        disabled={
+                          upsertScoreMutation.isPending ||
+                          updateEvaluationMutation.isPending
+                        }
                         fullWidth
                       >
-                        {autoScoreMutation.isPending ? 'Generating AI Evaluation...' : completedScores > 0 ? 'Re-run AutoScore' : 'AutoScore with AI'}
+                        {autoScoreMutation.isPending
+                          ? "Generating AI Evaluation..."
+                          : completedScores > 0
+                            ? "Re-run AutoScore"
+                            : "AutoScore with AI"}
                       </Button>
-                      
+
                       <Group justify="flex-end">
                         <Button
                           variant="outline"
                           leftSection={<IconClock size={16} />}
-                          onClick={() => handleSaveEvaluation('IN_PROGRESS')}
+                          onClick={() => handleSaveEvaluation("IN_PROGRESS")}
                           loading={updateEvaluationMutation.isPending}
                           disabled={upsertScoreMutation.isPending}
                         >
-                          {upsertScoreMutation.isPending ? 'Saving Score...' : 'Save Progress'}
+                          {upsertScoreMutation.isPending
+                            ? "Saving Score..."
+                            : "Save Progress"}
                         </Button>
                         <Button
                           leftSection={<IconCheck size={16} />}
-                          onClick={() => handleSaveEvaluation('COMPLETED')}
+                          onClick={() => handleSaveEvaluation("COMPLETED")}
                           loading={updateEvaluationMutation.isPending}
                           disabled={!isCompleteEvaluationReady}
                         >
@@ -1031,15 +1177,12 @@ export default function ApplicationEvaluationForm({
                       </Group>
                     </Stack>
                   )}
-                  
+
                   {/* Edit mode action buttons for completed evaluations */}
                   {isCompleted && (
                     <Group justify="flex-end">
                       {!editMode ? (
-                        <Button
-                          variant="outline"
-                          onClick={handleEditToggle}
-                        >
+                        <Button variant="outline" onClick={handleEditToggle}>
                           Edit Evaluation
                         </Button>
                       ) : (
@@ -1053,7 +1196,7 @@ export default function ApplicationEvaluationForm({
                           </Button>
                           <Button
                             leftSection={<IconCheck size={16} />}
-                            onClick={() => handleSaveEvaluation('COMPLETED')}
+                            onClick={() => handleSaveEvaluation("COMPLETED")}
                             loading={updateEvaluationMutation.isPending}
                             disabled={!isCompleteEvaluationReady}
                           >
@@ -1063,40 +1206,52 @@ export default function ApplicationEvaluationForm({
                       )}
                     </Group>
                   )}
-                  
+
                   {/* Enhanced feedback for button state */}
                   {!isCompleted && !isCompleteEvaluationReady && (
                     <Alert color="blue" variant="light">
                       <Text size="sm">
                         To complete the evaluation, please ensure:
                         {progress < 100 && (
-                          <Text component="div" size="sm">• All {totalCriteria} criteria are evaluated ({completedScores}/{totalCriteria} completed)</Text>
+                          <Text component="div" size="sm">
+                            • All {totalCriteria} criteria are evaluated (
+                            {completedScores}/{totalCriteria} completed)
+                          </Text>
                         )}
                         {(!recommendation || recommendation.length === 0) && (
-                          <Text component="div" size="sm">• A recommendation is selected</Text>
+                          <Text component="div" size="sm">
+                            • A recommendation is selected
+                          </Text>
                         )}
-                        {(upsertScoreMutation.isPending || updateEvaluationMutation.isPending) && (
-                          <Text component="div" size="sm">• Current save operation completes</Text>
+                        {(upsertScoreMutation.isPending ||
+                          updateEvaluationMutation.isPending) && (
+                          <Text component="div" size="sm">
+                            • Current save operation completes
+                          </Text>
                         )}
                       </Text>
                     </Alert>
                   )}
 
                   {isCompleted && !editMode && (
-                    <Alert 
-                      icon={<IconCheck size={16} />} 
+                    <Alert
+                      icon={<IconCheck size={16} />}
                       color="green"
                       title="Evaluation Completed"
                     >
-                      This evaluation was completed on {evaluation.completedAt ? new Date(evaluation.completedAt).toLocaleDateString() : 'Unknown date'}.
-                      Time spent: {evaluation.timeSpentMinutes ?? 0} minutes.
+                      This evaluation was completed on{" "}
+                      {evaluation.completedAt
+                        ? new Date(evaluation.completedAt).toLocaleDateString()
+                        : "Unknown date"}
+                      . Time spent: {evaluation.timeSpentMinutes ?? 0} minutes.
                     </Alert>
                   )}
-                  
+
                   {editMode && isCompleteEvaluationReady && (
                     <Alert color="blue" variant="light">
                       <Text size="sm">
-                        You can now save your changes to update this completed evaluation.
+                        You can now save your changes to update this completed
+                        evaluation.
                       </Text>
                     </Alert>
                   )}
@@ -1107,7 +1262,7 @@ export default function ApplicationEvaluationForm({
         </Grid.Col>
 
         {/* Video Review Section - Full Width when applicable */}
-        {stage === 'VIDEO_REVIEW' && (
+        {stage === "VIDEO_REVIEW" && (
           <Grid.Col span={12}>
             <Card withBorder p="md">
               <Group mb="md">
@@ -1115,19 +1270,20 @@ export default function ApplicationEvaluationForm({
                 <Title order={4}>Video Review</Title>
               </Group>
               <Text c="dimmed" mb="md">
-                Review the applicant&apos;s 1-minute introduction video and assess their communication skills,
-                passion, and presentation quality.
+                Review the applicant&apos;s 1-minute introduction video and
+                assess their communication skills, passion, and presentation
+                quality.
               </Text>
-              
+
               {/* Video URL from application */}
               {(() => {
                 const videoResponse = application.responses?.find(
-                  r => r.question.questionKey === 'intro_video_link'
+                  (r) => r.question.questionKey === "intro_video_link",
                 );
                 return videoResponse?.answer ? (
                   <Box mb="md">
-                    <VideoLinkRenderer 
-                      url={videoResponse.answer} 
+                    <VideoLinkRenderer
+                      url={videoResponse.answer}
                       questionText="Introduction Video"
                     />
                   </Box>
@@ -1158,17 +1314,20 @@ export default function ApplicationEvaluationForm({
       <EditApplicationDrawer
         opened={drawerOpened}
         onClose={() => setDrawerOpened(false)}
-        user={application.user ? {
-          id: application.user.id,
-          name: application.user.name,
-          email: application.user.email,
-          adminNotes: application.user.adminNotes,
-          adminWorkExperience: application.user.adminWorkExperience,
-          adminLabels: application.user.adminLabels ?? [],
-        } : null}
+        user={
+          application.user
+            ? {
+                id: application.user.id,
+                name: application.user.name,
+                email: application.user.email,
+                adminNotes: application.user.adminNotes,
+                adminWorkExperience: application.user.adminWorkExperience,
+                adminLabels: application.user.adminLabels ?? [],
+              }
+            : null
+        }
         eventId={application.eventId}
       />
     </Stack>
   );
 }
-

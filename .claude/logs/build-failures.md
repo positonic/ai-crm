@@ -81,6 +81,22 @@ function CommunicatePageContent() {
 
 ---
 
+## 2026-03-10 - Bun-Only Scripts Included in Next.js Build - [Project: impactful-events]
+
+**Build Command**: `vercel build`
+**Error**: `Cannot find name 'Bun'. Do you need to install type definitions for Bun?` in `scripts/batch-transcribe.ts:77`
+**Root Cause**: The `scripts/` directory contains Bun-specific code (`Bun.spawn`, etc.) but was included in the TypeScript compilation via `**/*.ts` in tsconfig.json. Next.js build compiles all included TS files.
+**Files Affected**: `tsconfig.json`, `eslint.config.js`
+**Fix Applied**:
+1. Added `"scripts"` to `tsconfig.json` `exclude` array
+2. Added `"scripts"` to `eslint.config.js` `ignores` array (ESLint's `projectService` requires files to be in tsconfig)
+**Prevention**:
+1. When adding new `scripts/` files that use Bun-specific APIs, ensure the `scripts` directory is excluded from both tsconfig and eslint config
+2. If scripts need type-checking, create a separate `tsconfig.scripts.json` that extends the base config and includes Bun types
+3. ESLint with `projectService: true` requires all linted files to be included in the tsconfig project - excluding from one requires excluding from both
+
+---
+
 ## Usage
 
 This log is referenced by CLAUDE.md to help Claude Code generate code that builds successfully on the first try by learning from actual build failures in this specific codebase.

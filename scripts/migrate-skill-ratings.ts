@@ -18,69 +18,190 @@
  *   bun run scripts/migrate-skill-ratings.ts --event-id <id>  # Specific event only
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 // Command line options
 const args = process.argv.slice(2);
-const DRY_RUN = !args.includes('--execute');
-const EVENT_ID = args.includes('--event-id') ? args[args.indexOf('--event-id') + 1] : undefined;
+const DRY_RUN = !args.includes("--execute");
+const EVENT_ID = args.includes("--event-id")
+  ? args[args.indexOf("--event-id") + 1]
+  : undefined;
 
 // Skill categorization mapping (from migrate-skills.ts)
 const SKILL_CATEGORIES: Record<string, string[]> = {
-  'Frontend': [
-    'react', 'vue', 'angular', 'typescript', 'javascript', 'html', 'css',
-    'nextjs', 'next.js', 'svelte', 'gatsby', 'nuxt', 'webpack', 'vite',
-    'tailwind', 'bootstrap', 'sass', 'scss', 'redux', 'mobx', 'zustand'
+  Frontend: [
+    "react",
+    "vue",
+    "angular",
+    "typescript",
+    "javascript",
+    "html",
+    "css",
+    "nextjs",
+    "next.js",
+    "svelte",
+    "gatsby",
+    "nuxt",
+    "webpack",
+    "vite",
+    "tailwind",
+    "bootstrap",
+    "sass",
+    "scss",
+    "redux",
+    "mobx",
+    "zustand",
   ],
-  'Backend': [
-    'nodejs', 'node.js', 'node', 'python', 'rust', 'go', 'golang', 'java',
-    'php', 'ruby', 'rails', 'django', 'flask', 'express', 'fastapi',
-    'spring', 'laravel', 'nestjs', 'deno', 'bun'
+  Backend: [
+    "nodejs",
+    "node.js",
+    "node",
+    "python",
+    "rust",
+    "go",
+    "golang",
+    "java",
+    "php",
+    "ruby",
+    "rails",
+    "django",
+    "flask",
+    "express",
+    "fastapi",
+    "spring",
+    "laravel",
+    "nestjs",
+    "deno",
+    "bun",
   ],
-  'Blockchain': [
-    'solidity', 'smart contracts', 'smart-contracts', 'defi', 'web3',
-    'ethereum', 'bitcoin', 'crypto', 'blockchain', 'nft', 'dao',
-    'hardhat', 'truffle', 'foundry', 'metamask', 'ethers', 'web3.js'
+  Blockchain: [
+    "solidity",
+    "smart contracts",
+    "smart-contracts",
+    "defi",
+    "web3",
+    "ethereum",
+    "bitcoin",
+    "crypto",
+    "blockchain",
+    "nft",
+    "dao",
+    "hardhat",
+    "truffle",
+    "foundry",
+    "metamask",
+    "ethers",
+    "web3.js",
   ],
-  'Database': [
-    'postgresql', 'postgres', 'mysql', 'mongodb', 'redis', 'sqlite',
-    'prisma', 'typeorm', 'sequelize', 'drizzle', 'supabase', 'firebase'
+  Database: [
+    "postgresql",
+    "postgres",
+    "mysql",
+    "mongodb",
+    "redis",
+    "sqlite",
+    "prisma",
+    "typeorm",
+    "sequelize",
+    "drizzle",
+    "supabase",
+    "firebase",
   ],
-  'Design': [
-    'figma', 'ui/ux', 'uiux', 'ui', 'ux', 'product design', 'graphic design',
-    'adobe', 'photoshop', 'illustrator', 'sketch', 'design systems',
-    'prototyping', 'wireframing', 'user research'
+  Design: [
+    "figma",
+    "ui/ux",
+    "uiux",
+    "ui",
+    "ux",
+    "product design",
+    "graphic design",
+    "adobe",
+    "photoshop",
+    "illustrator",
+    "sketch",
+    "design systems",
+    "prototyping",
+    "wireframing",
+    "user research",
   ],
-  'DevOps': [
-    'docker', 'kubernetes', 'aws', 'gcp', 'azure', 'terraform', 'ansible',
-    'jenkins', 'gitlab', 'github actions', 'ci/cd', 'nginx', 'apache',
-    'linux', 'bash', 'shell', 'monitoring', 'logging'
+  DevOps: [
+    "docker",
+    "kubernetes",
+    "aws",
+    "gcp",
+    "azure",
+    "terraform",
+    "ansible",
+    "jenkins",
+    "gitlab",
+    "github actions",
+    "ci/cd",
+    "nginx",
+    "apache",
+    "linux",
+    "bash",
+    "shell",
+    "monitoring",
+    "logging",
   ],
-  'Mobile': [
-    'react native', 'react-native', 'flutter', 'swift', 'kotlin', 'ios',
-    'android', 'xamarin', 'ionic', 'cordova', 'mobile development'
+  Mobile: [
+    "react native",
+    "react-native",
+    "flutter",
+    "swift",
+    "kotlin",
+    "ios",
+    "android",
+    "xamarin",
+    "ionic",
+    "cordova",
+    "mobile development",
   ],
-  'Data Science': [
-    'machine learning', 'ml', 'ai', 'artificial intelligence', 'data analysis',
-    'pandas', 'numpy', 'tensorflow', 'pytorch', 'scikit-learn', 'jupyter',
-    'r', 'matlab', 'statistics', 'data visualization'
+  "Data Science": [
+    "machine learning",
+    "ml",
+    "ai",
+    "artificial intelligence",
+    "data analysis",
+    "pandas",
+    "numpy",
+    "tensorflow",
+    "pytorch",
+    "scikit-learn",
+    "jupyter",
+    "r",
+    "matlab",
+    "statistics",
+    "data visualization",
   ],
-  'Business': [
-    'project management', 'product management', 'strategy', 'business development',
-    'marketing', 'sales', 'research', 'analytics', 'consulting', 'entrepreneurship',
-    'leadership', 'team management', 'agile', 'scrum', 'kanban'
-  ]
+  Business: [
+    "project management",
+    "product management",
+    "strategy",
+    "business development",
+    "marketing",
+    "sales",
+    "research",
+    "analytics",
+    "consulting",
+    "entrepreneurship",
+    "leadership",
+    "team management",
+    "agile",
+    "scrum",
+    "kanban",
+  ],
 };
 
 // Skill normalization mapping
 const SKILL_NORMALIZATIONS: Record<string, string> = {
-  'developer': 'Developer',
-  'designer': 'Designer',
-  'project manager': 'Project Manager',
-  'researcher': 'Researcher',
-  'other': 'Other',
+  developer: "Developer",
+  designer: "Designer",
+  "project manager": "Project Manager",
+  researcher: "Researcher",
+  other: "Other",
 };
 
 // Infer category from skill name
@@ -88,16 +209,22 @@ function inferCategory(skillName: string): string | null {
   const normalized = skillName.toLowerCase();
 
   for (const [category, keywords] of Object.entries(SKILL_CATEGORIES)) {
-    if (keywords.some(keyword => normalized.includes(keyword) || keyword.includes(normalized))) {
+    if (
+      keywords.some(
+        (keyword) =>
+          normalized.includes(keyword) || keyword.includes(normalized),
+      )
+    ) {
       return category;
     }
   }
 
   // Default categories based on common patterns
-  if (normalized.includes('developer') || normalized.includes('engineer')) return 'Backend';
-  if (normalized.includes('designer')) return 'Design';
-  if (normalized.includes('manager')) return 'Business';
-  if (normalized.includes('research')) return 'Data Science';
+  if (normalized.includes("developer") || normalized.includes("engineer"))
+    return "Backend";
+  if (normalized.includes("designer")) return "Design";
+  if (normalized.includes("manager")) return "Business";
+  if (normalized.includes("research")) return "Data Science";
 
   return null; // Will use default category from schema
 }
@@ -114,13 +241,15 @@ function normalizeSkillName(skillName: string): string {
 
   // Capitalize first letter of each word
   return trimmed
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 }
 
 // Find or create skill in catalog
-async function findOrCreateSkill(skillName: string): Promise<{ id: string; name: string; isNew: boolean }> {
+async function findOrCreateSkill(
+  skillName: string,
+): Promise<{ id: string; name: string; isNew: boolean }> {
   const normalized = normalizeSkillName(skillName);
 
   // Try to find existing skill (case-insensitive)
@@ -128,9 +257,9 @@ async function findOrCreateSkill(skillName: string): Promise<{ id: string; name:
     where: {
       name: {
         equals: normalized,
-        mode: 'insensitive'
-      }
-    }
+        mode: "insensitive",
+      },
+    },
   });
 
   if (existingSkill) {
@@ -146,8 +275,8 @@ async function findOrCreateSkill(skillName: string): Promise<{ id: string; name:
     data: {
       name: normalized,
       category: inferCategory(normalized),
-      popularity: 0
-    }
+      popularity: 0,
+    },
   });
 
   return { id: newSkill.id, name: newSkill.name, isNew: true };
@@ -174,50 +303,50 @@ interface UserSkillRating {
 }
 
 async function collectData(): Promise<UserSkillRating[]> {
-  console.log('📊 Collecting skill ratings from applications...\n');
+  console.log("📊 Collecting skill ratings from applications...\n");
 
   // Find all skill_rating responses
   const ratingResponses = await prisma.applicationResponse.findMany({
     where: {
       question: {
-        questionKey: 'skill_rating'
+        questionKey: "skill_rating",
       },
       answer: {
-        not: ''
+        not: "",
       },
       ...(EVENT_ID && {
         application: {
-          eventId: EVENT_ID
-        }
-      })
+          eventId: EVENT_ID,
+        },
+      }),
     },
     include: {
       application: {
         include: {
           event: {
             select: {
-              name: true
-            }
+              name: true,
+            },
           },
           user: {
             select: {
               id: true,
-              name: true
-            }
+              name: true,
+            },
           },
           responses: {
             include: {
-              question: true
-            }
-          }
-        }
-      }
+              question: true,
+            },
+          },
+        },
+      },
     },
     orderBy: {
       application: {
-        createdAt: 'desc'
-      }
-    }
+        createdAt: "desc",
+      },
+    },
   });
 
   const userRatings: UserSkillRating[] = [];
@@ -240,17 +369,21 @@ async function collectData(): Promise<UserSkillRating[]> {
     // Parse rating
     const ratingValue = parseInt(ratingResponse.answer);
     if (isNaN(ratingValue) || ratingValue < 1 || ratingValue > 10) {
-      console.log(`⚠️  Invalid rating for user ${application.user?.name ?? application.userId}: ${ratingResponse.answer}`);
+      console.log(
+        `⚠️  Invalid rating for user ${application.user?.name ?? application.userId}: ${ratingResponse.answer}`,
+      );
       continue;
     }
 
     // Find technical_skills response from same application
     const skillsResponse = application.responses.find(
-      r => r.question.questionKey === 'technical_skills'
+      (r) => r.question.questionKey === "technical_skills",
     );
 
     if (!skillsResponse || !skillsResponse.answer) {
-      console.log(`⚠️  No technical_skills for user ${application.user?.name ?? application.userId}`);
+      console.log(
+        `⚠️  No technical_skills for user ${application.user?.name ?? application.userId}`,
+      );
       continue;
     }
 
@@ -259,11 +392,15 @@ async function collectData(): Promise<UserSkillRating[]> {
     try {
       skills = JSON.parse(skillsResponse.answer) as string[];
       if (!Array.isArray(skills) || skills.length === 0) {
-        console.log(`⚠️  Empty skills array for user ${application.user?.name ?? application.userId}`);
+        console.log(
+          `⚠️  Empty skills array for user ${application.user?.name ?? application.userId}`,
+        );
         continue;
       }
     } catch {
-      console.log(`⚠️  Invalid skills JSON for user ${application.user?.name ?? application.userId}: ${skillsResponse.answer}`);
+      console.log(
+        `⚠️  Invalid skills JSON for user ${application.user?.name ?? application.userId}: ${skillsResponse.answer}`,
+      );
       continue;
     }
 
@@ -274,19 +411,22 @@ async function collectData(): Promise<UserSkillRating[]> {
       skills,
       applicationId: application.id,
       eventName: application.event.name,
-      applicationDate: application.createdAt
+      applicationDate: application.createdAt,
     });
   }
 
   return userRatings;
 }
 
-async function migrateUserSkills(userRating: UserSkillRating, stats: MigrationStats): Promise<void> {
+async function migrateUserSkills(
+  userRating: UserSkillRating,
+  stats: MigrationStats,
+): Promise<void> {
   const { userId, userName, rating, skills } = userRating;
 
   console.log(`\n👤 User: ${userName ?? userId}`);
   console.log(`   Rating: ${rating}/10`);
-  console.log(`   Skills: ${skills.join(', ')}`);
+  console.log(`   Skills: ${skills.join(", ")}`);
   console.log(`   Actions:`);
 
   for (const skillName of skills) {
@@ -306,9 +446,9 @@ async function migrateUserSkills(userRating: UserSkillRating, stats: MigrationSt
         where: {
           userId_skillId: {
             userId: userId,
-            skillId: skill.id
-          }
-        }
+            skillId: skill.id,
+          },
+        },
       });
 
       if (existingUserSkill) {
@@ -318,10 +458,12 @@ async function migrateUserSkills(userRating: UserSkillRating, stats: MigrationSt
             where: { id: existingUserSkill.id },
             data: {
               experienceLevel: rating,
-            }
+            },
           });
         }
-        console.log(`   ✓ Updated UserSkills(${userId}, ${skill.name}, level=${rating})`);
+        console.log(
+          `   ✓ Updated UserSkills(${userId}, ${skill.name}, level=${rating})`,
+        );
         stats.userSkillsUpdated++;
       } else {
         // Create new record
@@ -330,11 +472,13 @@ async function migrateUserSkills(userRating: UserSkillRating, stats: MigrationSt
             data: {
               userId: userId,
               skillId: skill.id,
-              experienceLevel: rating
-            }
+              experienceLevel: rating,
+            },
           });
         }
-        console.log(`   ✓ Created UserSkills(${userId}, ${skill.name}, level=${rating})`);
+        console.log(
+          `   ✓ Created UserSkills(${userId}, ${skill.name}, level=${rating})`,
+        );
         stats.userSkillsCreated++;
       }
 
@@ -343,13 +487,14 @@ async function migrateUserSkills(userRating: UserSkillRating, stats: MigrationSt
         await prisma.skills.update({
           where: { id: skill.id },
           data: {
-            popularity: { increment: 1 }
-          }
+            popularity: { increment: 1 },
+          },
         });
       }
-
     } catch (error) {
-      console.log(`   ❌ Error processing skill "${skillName}": ${error instanceof Error ? error.message : String(error)}`);
+      console.log(
+        `   ❌ Error processing skill "${skillName}": ${error instanceof Error ? error.message : String(error)}`,
+      );
       stats.errors++;
     }
   }
@@ -365,17 +510,17 @@ async function main() {
     userSkillsUpdated: 0,
     errors: 0,
     warnings: 0,
-    skipped: 0
+    skipped: 0,
   };
 
-  console.log('🔄 Skill Ratings Migration');
-  console.log('═══════════════════════════════════════\n');
+  console.log("🔄 Skill Ratings Migration");
+  console.log("═══════════════════════════════════════\n");
 
   if (DRY_RUN) {
-    console.log('⚠️  DRY RUN MODE - No changes will be made');
-    console.log('   Use --execute flag to actually migrate data\n');
+    console.log("⚠️  DRY RUN MODE - No changes will be made");
+    console.log("   Use --execute flag to actually migrate data\n");
   } else {
-    console.log('🚀 EXECUTE MODE - Changes will be saved to database\n');
+    console.log("🚀 EXECUTE MODE - Changes will be saved to database\n");
   }
 
   if (EVENT_ID) {
@@ -387,10 +532,10 @@ async function main() {
     const userRatings = await collectData();
 
     console.log(`\nFound ${userRatings.length} users with skill ratings\n`);
-    console.log('─────────────────────────────────────────\n');
+    console.log("─────────────────────────────────────────\n");
 
     if (userRatings.length === 0) {
-      console.log('✅ No ratings to migrate\n');
+      console.log("✅ No ratings to migrate\n");
       return;
     }
 
@@ -400,10 +545,10 @@ async function main() {
     }
 
     // Print summary
-    console.log('\n');
-    console.log('═══════════════════════════════════════');
-    console.log('📊 MIGRATION SUMMARY');
-    console.log('═══════════════════════════════════════\n');
+    console.log("\n");
+    console.log("═══════════════════════════════════════");
+    console.log("📊 MIGRATION SUMMARY");
+    console.log("═══════════════════════════════════════\n");
     console.log(`Users processed:        ${stats.usersProcessed}`);
     console.log(`Skills created:         ${stats.skillsCreated}`);
     console.log(`UserSkills created:     ${stats.userSkillsCreated}`);
@@ -411,23 +556,24 @@ async function main() {
     console.log(`Errors:                 ${stats.errors}`);
     console.log(`Warnings:               ${stats.warnings}`);
     console.log(`Skipped:                ${stats.skipped}`);
-    console.log('');
+    console.log("");
 
     if (DRY_RUN) {
-      console.log('⚠️  This was a DRY RUN - no changes were made');
-      console.log('   Run with --execute flag to apply changes\n');
+      console.log("⚠️  This was a DRY RUN - no changes were made");
+      console.log("   Run with --execute flag to apply changes\n");
     } else {
-      console.log('✅ Migration completed successfully!\n');
+      console.log("✅ Migration completed successfully!\n");
 
       // Run verification query
       const totalWithLevels = await prisma.userSkills.count({
-        where: { experienceLevel: { not: null } }
+        where: { experienceLevel: { not: null } },
       });
-      console.log(`✓ Verified: ${totalWithLevels} UserSkills records now have experience levels\n`);
+      console.log(
+        `✓ Verified: ${totalWithLevels} UserSkills records now have experience levels\n`,
+      );
     }
-
   } catch (error) {
-    console.error('\n❌ Migration failed:', error);
+    console.error("\n❌ Migration failed:", error);
     process.exit(1);
   } finally {
     await prisma.$disconnect();

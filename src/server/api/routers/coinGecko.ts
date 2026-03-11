@@ -1,15 +1,14 @@
 import { z } from "zod";
-import {
-  createTRPCRouter,
-  publicProcedure,
-} from "~/server/api/trpc";
+import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 // TypeScript types based on CoinGecko API response
-const RoiSchema = z.object({
-  times: z.number(),
-  currency: z.string(),
-  percentage: z.number(),
-}).nullable();
+const RoiSchema = z
+  .object({
+    times: z.number(),
+    currency: z.string(),
+    percentage: z.number(),
+  })
+  .nullable();
 
 const CoinGeckoApiResponseSchema = z.object({
   id: z.string(),
@@ -42,23 +41,25 @@ const CoinGeckoApiResponseSchema = z.object({
 
 export const coinGeckoRouter = createTRPCRouter({
   fetchAndStoreCategoryCoins: publicProcedure
-    .input(z.object({
-      category: z.string(),
-      vsCurrency: z.string().default("usd"),
-      order: z.string().default("market_cap_desc"),
-      perPage: z.number().min(1).max(250).default(250),
-      page: z.number().min(1).default(1),
-      sparkline: z.boolean().default(false),
-      locale: z.string().default("en"),
-    }))
+    .input(
+      z.object({
+        category: z.string(),
+        vsCurrency: z.string().default("usd"),
+        order: z.string().default("market_cap_desc"),
+        perPage: z.number().min(1).max(250).default(250),
+        page: z.number().min(1).default(1),
+        sparkline: z.boolean().default(false),
+        locale: z.string().default("en"),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const apiKey = process.env.COIN_GEKCO_CAP_API_KEY;
       if (!apiKey) {
         throw new Error("CoinGecko API key is not configured");
       }
-      
+
       const baseUrl = "https://api.coingecko.com/api/v3/coins/markets";
-      
+
       const url = new URL(baseUrl);
       url.searchParams.append("vs_currency", input.vsCurrency);
       url.searchParams.append("category", input.category);
@@ -71,16 +72,18 @@ export const coinGeckoRouter = createTRPCRouter({
       try {
         const response = await fetch(url.toString(), {
           headers: {
-            'accept': 'application/json',
-            'x-cg-demo-api-key': apiKey,
+            accept: "application/json",
+            "x-cg-demo-api-key": apiKey,
           } as HeadersInit,
         });
 
         if (!response.ok) {
-          throw new Error(`CoinGecko API error: ${response.status} ${response.statusText}`);
+          throw new Error(
+            `CoinGecko API error: ${response.status} ${response.statusText}`,
+          );
         }
 
-        const data = await response.json() as unknown;
+        const data = (await response.json()) as unknown;
         const coins = z.array(CoinGeckoApiResponseSchema).parse(data);
 
         // Create or get the category
@@ -126,7 +129,8 @@ export const coinGeckoRouter = createTRPCRouter({
               priceChange24h: coin.price_change_24h,
               priceChangePercentage24h: coin.price_change_percentage_24h,
               marketCapChange24h: coin.market_cap_change_24h,
-              marketCapChangePercentage24h: coin.market_cap_change_percentage_24h,
+              marketCapChangePercentage24h:
+                coin.market_cap_change_percentage_24h,
               circulatingSupply: coin.circulating_supply,
               totalSupply: coin.total_supply,
               maxSupply: coin.max_supply,
@@ -157,7 +161,8 @@ export const coinGeckoRouter = createTRPCRouter({
               priceChange24h: coin.price_change_24h,
               priceChangePercentage24h: coin.price_change_percentage_24h,
               marketCapChange24h: coin.market_cap_change_24h,
-              marketCapChangePercentage24h: coin.market_cap_change_percentage_24h,
+              marketCapChangePercentage24h:
+                coin.market_cap_change_percentage_24h,
               circulatingSupply: coin.circulating_supply,
               totalSupply: coin.total_supply,
               maxSupply: coin.max_supply,
@@ -201,16 +206,20 @@ export const coinGeckoRouter = createTRPCRouter({
         };
       } catch (error) {
         console.error("Error fetching CoinGecko data:", error);
-        throw new Error(`Failed to fetch and store CoinGecko data: ${String(error)}`);
+        throw new Error(
+          `Failed to fetch and store CoinGecko data: ${String(error)}`,
+        );
       }
     }),
 
   getGeckoCoins: publicProcedure
-    .input(z.object({
-      categoryName: z.string().optional(),
-      limit: z.number().min(1).max(1000).default(100),
-      offset: z.number().min(0).default(0),
-    }))
+    .input(
+      z.object({
+        categoryName: z.string().optional(),
+        limit: z.number().min(1).max(1000).default(100),
+        offset: z.number().min(0).default(0),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const where = input.categoryName
         ? {
@@ -235,7 +244,7 @@ export const coinGeckoRouter = createTRPCRouter({
           sponsor: true,
         },
         orderBy: {
-          marketCapRank: 'asc',
+          marketCapRank: "asc",
         },
         take: input.limit,
         skip: input.offset,
@@ -245,10 +254,12 @@ export const coinGeckoRouter = createTRPCRouter({
     }),
 
   linkSponsorToCategory: publicProcedure
-    .input(z.object({
-      sponsorId: z.string(),
-      categoryId: z.string(),
-    }))
+    .input(
+      z.object({
+        sponsorId: z.string(),
+        categoryId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const sponsorCategory = await ctx.db.sponsorCategory.upsert({
         where: {
@@ -282,10 +293,10 @@ export const coinGeckoRouter = createTRPCRouter({
         },
       },
       orderBy: {
-        name: 'asc',
+        name: "asc",
       },
     });
 
     return categories;
   }),
-}); 
+});

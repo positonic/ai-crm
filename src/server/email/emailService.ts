@@ -1,8 +1,13 @@
-import { render } from '@react-email/render';
-import type { PrismaClient, EmailType, EmailStatus, Prisma } from '@prisma/client';
-import { sendEmail as sendViaPostmark } from '~/lib/email';
-import { templates, type TemplateName, templateToEmailType } from './templates';
-import { captureEmailError } from '~/utils/errorCapture';
+import { render } from "@react-email/render";
+import type {
+  PrismaClient,
+  EmailType,
+  EmailStatus,
+  Prisma,
+} from "@prisma/client";
+import { sendEmail as sendViaPostmark } from "~/lib/email";
+import { templates, type TemplateName, templateToEmailType } from "./templates";
+import { captureEmailError } from "~/utils/errorCapture";
 import type {
   ApplicationAcceptedProps,
   ApplicationRejectedProps,
@@ -18,7 +23,7 @@ import type {
   FloorOwnerAssignedProps,
   SpeakerInvitedProps,
   SlidesReminderProps,
-} from './templates';
+} from "./templates";
 
 type TemplateProps =
   | ApplicationAcceptedProps
@@ -87,7 +92,8 @@ export class EmailService {
    * Send an email using a template
    */
   async sendEmail(params: SendEmailParams): Promise<EmailResult> {
-    const { to, templateName, templateData, applicationId, eventId, userId } = params;
+    const { to, templateName, templateData, applicationId, eventId, userId } =
+      params;
 
     try {
       // 1. Render the template
@@ -99,7 +105,7 @@ export class EmailService {
       // @ts-expect-error - React Email component typing
       const html = await render(Template(templateData));
       const subject = this.getSubjectForTemplate(templateName, templateData);
-      
+
       // Simple text version (you could enhance this)
       const text = this.htmlToText(html);
 
@@ -111,12 +117,12 @@ export class EmailService {
           htmlContent: html,
           textContent: text,
           type: templateToEmailType[templateName] as EmailType,
-          status: 'QUEUED',
+          status: "QUEUED",
           applicationId,
           eventId,
-          createdBy: userId ?? 'system',
+          createdBy: userId ?? "system",
           templateName,
-          templateVersion: '1.0.0',
+          templateVersion: "1.0.0",
           templateData: templateData as unknown as Prisma.InputJsonValue,
         },
       });
@@ -133,7 +139,7 @@ export class EmailService {
       await this.db.email.update({
         where: { id: emailRecord.id },
         data: {
-          status: result.success ? 'SENT' : 'FAILED',
+          status: result.success ? "SENT" : "FAILED",
           postmarkId: result.messageId,
           sentAt: result.success ? new Date() : null,
           failureReason: result.error,
@@ -146,38 +152,39 @@ export class EmailService {
         error: result.error,
       };
     } catch (error) {
-      console.error('Error sending email:', error);
+      console.error("Error sending email:", error);
       captureEmailError(error, {
         userId: userId,
         emailType: templateName,
         recipient: to,
-        templateName: templateName
+        templateName: templateName,
       });
-      
+
       // Try to save the failure to database
       try {
         await this.db.email.create({
           data: {
             toEmail: to,
-            subject: 'Failed to render',
-            htmlContent: '',
+            subject: "Failed to render",
+            htmlContent: "",
             type: templateToEmailType[templateName] as EmailType,
-            status: 'FAILED',
-            failureReason: error instanceof Error ? error.message : 'Unknown error',
+            status: "FAILED",
+            failureReason:
+              error instanceof Error ? error.message : "Unknown error",
             applicationId,
             eventId,
-            createdBy: userId ?? 'system',
+            createdBy: userId ?? "system",
             templateName,
             templateData: templateData as unknown as Prisma.InputJsonValue,
           },
         });
       } catch (dbError) {
-        console.error('Failed to save email error to database:', dbError);
+        console.error("Failed to save email error to database:", dbError);
       }
 
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -187,38 +194,47 @@ export class EmailService {
    */
   async sendApplicationStatusEmail(
     application: ApplicationWithUserAndEvent,
-    status: 'ACCEPTED' | 'REJECTED' | 'WAITLISTED' | 'UNDER_REVIEW'
+    status: "ACCEPTED" | "REJECTED" | "WAITLISTED" | "UNDER_REVIEW",
   ) {
-    const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000';
+    const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
     let templateName: TemplateName;
     let templateData: TemplateProps;
 
     const applicantName =
       (application.user?.firstName ?? application.user?.surname)
-        ? `${application.user.firstName ?? ''} ${application.user.surname ?? ''}`.trim()
-        : application.user?.name ?? application.user?.email ?? 'Applicant';
+        ? `${application.user.firstName ?? ""} ${application.user.surname ?? ""}`.trim()
+        : (application.user?.name ?? application.user?.email ?? "Applicant");
     const applicantFirstName =
-      application.user?.firstName
-        ?? application.user?.name?.split(' ')[0]
-        ?? undefined;
+      application.user?.firstName ??
+      application.user?.name?.split(" ")[0] ??
+      undefined;
     const applicantEmail = application.user?.email ?? application.email;
 
     switch (status) {
-      case 'ACCEPTED': {
+      case "ACCEPTED": {
         const eventSlug = application.event.slug ?? application.eventId;
-        const startStr = application.event.startDate.toLocaleDateString('en-US', {
-          month: 'long', day: 'numeric', year: 'numeric',
-        });
-        const endStr = application.event.endDate.toLocaleDateString('en-US', {
-          month: 'long', day: 'numeric', year: 'numeric',
+        const startStr = application.event.startDate.toLocaleDateString(
+          "en-US",
+          {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          },
+        );
+        const endStr = application.event.endDate.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
         });
 
         // Create Luma coupon code if the event has a Luma event ID
         let speakerCouponCode: string | undefined;
         if (application.event.lumaEventId) {
           try {
-            const { getLumaService, generateSpeakerCouponCode } = await import('~/server/services/luma');
+            const { getLumaService, generateSpeakerCouponCode } = await import(
+              "~/server/services/luma"
+            );
             const lumaService = getLumaService();
             if (lumaService) {
               const couponCode = generateSpeakerCouponCode(
@@ -234,11 +250,13 @@ export class EmailService {
               if (couponResult.success) {
                 speakerCouponCode = couponResult.code;
               } else {
-                console.error(`Luma coupon creation failed for application ${application.id}: ${couponResult.error}`);
+                console.error(
+                  `Luma coupon creation failed for application ${application.id}: ${couponResult.error}`,
+                );
               }
             }
           } catch (error) {
-            console.error('Error creating Luma coupon:', error);
+            console.error("Error creating Luma coupon:", error);
           }
         }
 
@@ -262,15 +280,15 @@ export class EmailService {
           }
         }
 
-        templateName = 'applicationAccepted';
+        templateName = "applicationAccepted";
         templateData = {
           applicantName,
           applicantFirstName,
           eventName: application.event.name,
           programDates: `${startStr} – ${endStr}`,
-          location: application.event.location ?? 'TBD',
+          location: application.event.location ?? "TBD",
           dashboardUrl: `${baseUrl}/events/${eventSlug}`,
-          contactEmail: process.env.ADMIN_EMAIL ?? 'beth@fundingthecommons.io',
+          contactEmail: process.env.ADMIN_EMAIL ?? "beth@fundingthecommons.io",
           registrationUrl: application.event.registrationUrl ?? undefined,
           speakerCouponCode,
           sessions,
@@ -279,21 +297,21 @@ export class EmailService {
         break;
       }
 
-      case 'REJECTED':
-        templateName = 'applicationRejected';
+      case "REJECTED":
+        templateName = "applicationRejected";
         templateData = {
           applicantName,
           applicantFirstName,
           eventName: application.event.name,
-          contactEmail: process.env.ADMIN_EMAIL ?? 'beth@fundingthecommons.io',
+          contactEmail: process.env.ADMIN_EMAIL ?? "beth@fundingthecommons.io",
           discountCode: application.event.discountCode ?? undefined,
           registrationUrl: application.event.registrationUrl ?? undefined,
           location: application.event.location ?? undefined,
         } satisfies ApplicationRejectedProps;
         break;
 
-      case 'WAITLISTED':
-        templateName = 'applicationWaitlisted';
+      case "WAITLISTED":
+        templateName = "applicationWaitlisted";
         templateData = {
           applicantName,
           eventName: application.event.name,
@@ -301,7 +319,7 @@ export class EmailService {
         break;
 
       default:
-        return { success: false, error: 'Unsupported status for email' };
+        return { success: false, error: "Unsupported status for email" };
     }
 
     return this.sendEmail({
@@ -332,7 +350,7 @@ export class EmailService {
     // Truncate comment for preview
     const commentPreview =
       params.commentContent.length > 150
-        ? params.commentContent.substring(0, 150) + '...'
+        ? params.commentContent.substring(0, 150) + "..."
         : params.commentContent;
 
     const templateData: UpdateCommentNotificationProps = {
@@ -345,7 +363,7 @@ export class EmailService {
 
     return this.sendEmail({
       to: params.recipientEmail,
-      templateName: 'updateCommentNotification',
+      templateName: "updateCommentNotification",
       templateData,
       eventId: params.eventId,
       userId: undefined, // No specific user ID for this type
@@ -368,7 +386,7 @@ export class EmailService {
   }): Promise<EmailResult> {
     const commentPreview =
       params.commentContent.length > 150
-        ? params.commentContent.substring(0, 150) + '...'
+        ? params.commentContent.substring(0, 150) + "..."
         : params.commentContent;
 
     const templateData: ForumCommentNotificationProps = {
@@ -382,9 +400,9 @@ export class EmailService {
 
     return this.sendEmail({
       to: params.recipientEmail,
-      templateName: 'forumCommentNotification',
+      templateName: "forumCommentNotification",
       templateData,
-      eventId: 'community', // Forum is community-wide
+      eventId: "community", // Forum is community-wide
       userId: undefined,
     });
   }
@@ -399,7 +417,7 @@ export class EmailService {
     commentContent: string;
     askOfferUrl: string;
     askOfferTitle: string;
-    askOfferType: 'ASK' | 'OFFER';
+    askOfferType: "ASK" | "OFFER";
     isReply: boolean;
     eventId?: string;
     askOfferId: string;
@@ -407,7 +425,7 @@ export class EmailService {
   }): Promise<EmailResult> {
     const commentPreview =
       params.commentContent.length > 150
-        ? params.commentContent.substring(0, 150) + '...'
+        ? params.commentContent.substring(0, 150) + "..."
         : params.commentContent;
 
     const templateData: AskOfferCommentNotificationProps = {
@@ -422,9 +440,9 @@ export class EmailService {
 
     return this.sendEmail({
       to: params.recipientEmail,
-      templateName: 'askOfferCommentNotification',
+      templateName: "askOfferCommentNotification",
       templateData,
-      eventId: params.eventId ?? 'community',
+      eventId: params.eventId ?? "community",
       userId: undefined,
     });
   }
@@ -432,47 +450,50 @@ export class EmailService {
   /**
    * Get subject line for a template
    */
-  private getSubjectForTemplate(templateName: TemplateName, data: TemplateProps): string {
+  private getSubjectForTemplate(
+    templateName: TemplateName,
+    data: TemplateProps,
+  ): string {
     switch (templateName) {
-      case 'applicationAccepted':
+      case "applicationAccepted":
         return `🎉 You're Confirmed as a Presenter – ${(data as ApplicationAcceptedProps).eventName}`;
-      case 'applicationRejected':
+      case "applicationRejected":
         return `Update on Your Speaker Application – ${(data as ApplicationRejectedProps).eventName}`;
-      case 'applicationWaitlisted':
+      case "applicationWaitlisted":
         return `You're on the waitlist for ${(data as ApplicationWaitlistedProps).eventName}`;
-      case 'applicationSubmitted':
+      case "applicationSubmitted":
         return `We've Received Your Speaker Application – ${(data as ApplicationSubmittedProps).eventName}`;
-      case 'applicationMissingInfo':
+      case "applicationMissingInfo":
         return `Action required: Complete your ${(data as ApplicationMissingInfoProps).eventName} application`;
-      case 'invitation':
+      case "invitation":
         return `You're invited to join ${(data as InvitationProps).eventName}`;
-      case 'passwordReset':
-        return 'Reset your Funding the Commons password';
-      case 'magicLink':
-        return 'Sign in to Funding the Commons';
-      case 'updateCommentNotification':
+      case "passwordReset":
+        return "Reset your Funding the Commons password";
+      case "magicLink":
+        return "Sign in to Funding the Commons";
+      case "updateCommentNotification":
         return `💬 New comment from ${(data as UpdateCommentNotificationProps).commenterName}`;
-      case 'forumCommentNotification': {
+      case "forumCommentNotification": {
         const forumData = data as ForumCommentNotificationProps;
         return forumData.isReply
           ? `💬 ${forumData.commenterName} replied to your comment`
           : `💬 New comment on "${forumData.threadTitle}"`;
       }
-      case 'askOfferCommentNotification': {
+      case "askOfferCommentNotification": {
         const askOfferData = data as AskOfferCommentNotificationProps;
-        const typeLabel = askOfferData.askOfferType === 'ASK' ? 'Ask' : 'Offer';
+        const typeLabel = askOfferData.askOfferType === "ASK" ? "Ask" : "Offer";
         return askOfferData.isReply
           ? `💬 ${askOfferData.commenterName} replied to your comment`
           : `💬 Someone responded to your ${typeLabel}`;
       }
-      case 'floorOwnerAssigned':
+      case "floorOwnerAssigned":
         return `You've been assigned as a Floor Lead for ${(data as FloorOwnerAssignedProps).eventName}`;
-      case 'speakerInvited':
+      case "speakerInvited":
         return `You've been added as a speaker at ${(data as SpeakerInvitedProps).eventName}`;
-      case 'slidesReminder':
+      case "slidesReminder":
         return `Reminder: Please upload your slides for ${(data as SlidesReminderProps).eventName}`;
       default:
-        return 'Notification from Funding the Commons';
+        return "Notification from Funding the Commons";
     }
   }
 
@@ -481,10 +502,10 @@ export class EmailService {
    */
   private htmlToText(html: string): string {
     return html
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
       .trim();
   }
 
@@ -526,7 +547,7 @@ export class EmailService {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: filters?.limit ?? 100,
     });
   }
@@ -540,7 +561,7 @@ export class EmailService {
     });
 
     if (!email) {
-      return { success: false, error: 'Email not found' };
+      return { success: false, error: "Email not found" };
     }
 
     if (!email.templateName || !email.templateData) {
@@ -555,7 +576,7 @@ export class EmailService {
       await this.db.email.update({
         where: { id: emailId },
         data: {
-          status: result.success ? 'SENT' : 'FAILED',
+          status: result.success ? "SENT" : "FAILED",
           postmarkId: result.messageId,
           sentAt: result.success ? new Date() : null,
           failureReason: result.error,

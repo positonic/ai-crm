@@ -48,7 +48,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch commits from GitHub API with optional date range
-    const since = sinceParam ? new Date(sinceParam) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const since = sinceParam
+      ? new Date(sinceParam)
+      : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const until = untilParam ? new Date(untilParam) : new Date();
 
     let githubApiUrl = `https://api.github.com/repos/${parsed.owner}/${parsed.repo}/commits?since=${since.toISOString()}&per_page=100`;
@@ -77,7 +79,7 @@ export async function GET(request: NextRequest) {
       throw new Error(`GitHub API error: ${response.status}`);
     }
 
-    const data = await response.json() as Array<{
+    const data = (await response.json()) as Array<{
       sha: string;
       commit: {
         message: string;
@@ -90,13 +92,13 @@ export async function GET(request: NextRequest) {
     // Transform GitHub API response to our format
     const commits = data.map((item) => {
       const date = new Date(item.commit.author.date);
-      const formattedDate = date.toISOString().split('T')[0];
-      const formattedTime = date.toTimeString().split(' ')[0];
+      const formattedDate = date.toISOString().split("T")[0];
+      const formattedTime = date.toTimeString().split(" ")[0];
 
       return {
         hash: item.sha.substring(0, 7),
-        datetime: `${formattedDate ?? ''} ${formattedTime ?? ''}`,
-        message: item.commit.message.split('\n')[0] ?? '', // First line only
+        datetime: `${formattedDate ?? ""} ${formattedTime ?? ""}`,
+        message: item.commit.message.split("\n")[0] ?? "", // First line only
       };
     });
 

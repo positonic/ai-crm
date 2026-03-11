@@ -29,7 +29,9 @@ const getPostmarkClient = (): ServerClient | null => {
     case "staging":
     case "production":
       if (!serverToken) {
-        console.log("📧 Email disabled: POSTMARK_SERVER_TOKEN required for staging/production");
+        console.log(
+          "📧 Email disabled: POSTMARK_SERVER_TOKEN required for staging/production",
+        );
         return null;
       }
       return new ServerClient(serverToken);
@@ -64,21 +66,23 @@ export interface SendEmailResult {
 
 /**
  * Enhanced email sending with multiple safety layers
- * 
+ *
  * Development: Uses sandbox server (black-hole) or redirects to test email
- * Staging: Redirects all emails to test email with clear labeling  
+ * Staging: Redirects all emails to test email with clear labeling
  * Production: Sends to actual recipients with safety checks
  */
-export async function sendEmail(params: SendEmailParams & {
-  bypassSafety?: boolean; // Admin override for production
-}): Promise<SendEmailResult> {
+export async function sendEmail(
+  params: SendEmailParams & {
+    bypassSafety?: boolean; // Admin override for production
+  },
+): Promise<SendEmailResult> {
   try {
     // Check if email is configured
     if (!postmarkClient) {
       console.log("📧 Email skipped (not configured):", {
         to: params.to,
         subject: params.subject,
-        reason: "No Postmark token available - likely preview/test environment"
+        reason: "No Postmark token available - likely preview/test environment",
       });
       return {
         success: true, // Return success to not break application flow
@@ -88,13 +92,13 @@ export async function sendEmail(params: SendEmailParams & {
 
     const emailMode: "development" | "staging" | "production" = EMAIL_MODE;
     const recipient = params.to;
-    
+
     // Determine email handling strategy
     let finalRecipient: string;
     let subjectPrefix: string;
     let shouldAddWarningBanner: boolean;
     let warningType: string;
-    
+
     switch (emailMode) {
       case "development":
         if (EMAIL_SAFETY_CONFIG.useSandboxInDev) {
@@ -113,7 +117,7 @@ export async function sendEmail(params: SendEmailParams & {
           // No test email configured - skip sending
           console.log("📧 Email skipped (dev mode, no TEST_EMAIL_OVERRIDE):", {
             to: params.to,
-            subject: params.subject
+            subject: params.subject,
           });
           return {
             success: true,
@@ -125,10 +129,13 @@ export async function sendEmail(params: SendEmailParams & {
       case "staging":
         // Always redirect to test email in staging
         if (!TEST_EMAIL) {
-          console.log("📧 Email skipped (staging mode, no TEST_EMAIL_OVERRIDE):", {
-            to: params.to,
-            subject: params.subject
-          });
+          console.log(
+            "📧 Email skipped (staging mode, no TEST_EMAIL_OVERRIDE):",
+            {
+              to: params.to,
+              subject: params.subject,
+            },
+          );
           return {
             success: true,
             messageId: "email-disabled-no-test-email",
@@ -151,10 +158,13 @@ export async function sendEmail(params: SendEmailParams & {
       default:
         // Fallback to safe mode - skip if no test email
         if (!TEST_EMAIL) {
-          console.log("📧 Email skipped (unknown mode, no TEST_EMAIL_OVERRIDE):", {
-            to: params.to,
-            subject: params.subject
-          });
+          console.log(
+            "📧 Email skipped (unknown mode, no TEST_EMAIL_OVERRIDE):",
+            {
+              to: params.to,
+              subject: params.subject,
+            },
+          );
           return {
             success: true,
             messageId: "email-disabled-no-test-email",
@@ -165,7 +175,7 @@ export async function sendEmail(params: SendEmailParams & {
         shouldAddWarningBanner = true;
         warningType = "fallback";
     }
-    
+
     // Log email routing for debugging
     console.log("📧 Email routing:", {
       mode: emailMode,
@@ -173,27 +183,31 @@ export async function sendEmail(params: SendEmailParams & {
       finalRecipient,
       subjectPrefix,
       warningType,
-      usingSandbox: EMAIL_SAFETY_CONFIG.useSandboxInDev && emailMode === "development"
+      usingSandbox:
+        EMAIL_SAFETY_CONFIG.useSandboxInDev && emailMode === "development",
     });
-    
+
     // Prepare final content
-    const finalSubject = subjectPrefix 
+    const finalSubject = subjectPrefix
       ? `${subjectPrefix} ${params.subject} - Original: ${recipient}`
       : params.subject;
-      
-    const finalHtmlContent = shouldAddWarningBanner ? `
+
+    const finalHtmlContent = shouldAddWarningBanner
+      ? `
       <div style="border: 2px solid #${getWarningColor(warningType)}; padding: 16px; margin-bottom: 16px; background-color: #${getWarningBgColor(warningType)}; border-radius: 4px;">
         <strong>⚠️ ${getWarningTitle(warningType)}:</strong> This email was originally intended for <strong>${recipient}</strong> but has been redirected ${getWarningReason(warningType)}.
         ${getWarningDetails(warningType)}
       </div>
       ${params.htmlContent}
-    ` : params.htmlContent;
-    
-    const finalTextContent = params.textContent ?? (shouldAddWarningBanner 
-      ? `${getWarningTitle(warningType)}: This email was originally intended for ${recipient} but has been redirected ${getWarningReason(warningType)}.\n\n${stripHtml(params.htmlContent)}`
-      : stripHtml(params.htmlContent)
-    );
-    
+    `
+      : params.htmlContent;
+
+    const finalTextContent =
+      params.textContent ??
+      (shouldAddWarningBanner
+        ? `${getWarningTitle(warningType)}: This email was originally intended for ${recipient} but has been redirected ${getWarningReason(warningType)}.\n\n${stripHtml(params.htmlContent)}`
+        : stripHtml(params.htmlContent));
+
     const response = await postmarkClient.sendEmail({
       From: `Funding the Commons <${env.ADMIN_EMAIL}>`,
       To: finalRecipient,
@@ -221,55 +235,75 @@ export async function sendEmail(params: SendEmailParams & {
  */
 function getWarningColor(warningType: string): string {
   switch (warningType) {
-    case "development": return "ff6b6b";
-    case "staging": return "ffa500";
-    case "production-redirect": return "ff9800";
-    case "sandbox": return "2196f3";
-    default: return "666666";
+    case "development":
+      return "ff6b6b";
+    case "staging":
+      return "ffa500";
+    case "production-redirect":
+      return "ff9800";
+    case "sandbox":
+      return "2196f3";
+    default:
+      return "666666";
   }
 }
 
 function getWarningBgColor(warningType: string): string {
   switch (warningType) {
-    case "development": return "ffe6e6";
-    case "staging": return "fff3cd";
-    case "production-redirect": return "fff8e1";
-    case "sandbox": return "e3f2fd";
-    default: return "f5f5f5";
+    case "development":
+      return "ffe6e6";
+    case "staging":
+      return "fff3cd";
+    case "production-redirect":
+      return "fff8e1";
+    case "sandbox":
+      return "e3f2fd";
+    default:
+      return "f5f5f5";
   }
 }
 
 function getWarningTitle(warningType: string): string {
   switch (warningType) {
-    case "development": return "DEVELOPMENT MODE";
-    case "staging": return "STAGING MODE";
-    case "production-redirect": return "PRODUCTION REDIRECT";
-    case "sandbox": return "SANDBOX MODE";
-    default: return "TEST MODE";
+    case "development":
+      return "DEVELOPMENT MODE";
+    case "staging":
+      return "STAGING MODE";
+    case "production-redirect":
+      return "PRODUCTION REDIRECT";
+    case "sandbox":
+      return "SANDBOX MODE";
+    default:
+      return "TEST MODE";
   }
 }
 
 function getWarningReason(warningType: string): string {
   switch (warningType) {
-    case "development": return "for safe development testing";
-    case "staging": return "for staging environment testing";
-    case "production-redirect": return "due to external domain safety restrictions";
-    case "sandbox": return "via Postmark sandbox server";
-    default: return "for testing purposes";
+    case "development":
+      return "for safe development testing";
+    case "staging":
+      return "for staging environment testing";
+    case "production-redirect":
+      return "due to external domain safety restrictions";
+    case "sandbox":
+      return "via Postmark sandbox server";
+    default:
+      return "for testing purposes";
   }
 }
 
 function getWarningDetails(warningType: string): string {
   switch (warningType) {
-    case "development": 
+    case "development":
       return "<br><br><strong>Safe Testing:</strong> This is your development environment - no real emails will be sent.";
-    case "staging": 
+    case "staging":
       return "<br><br><strong>Staging Test:</strong> This is your staging environment for testing before production.";
-    case "production-redirect": 
+    case "production-redirect":
       return "<br><br><strong>Safety First:</strong> External domain emails are redirected until Postmark account approval.";
-    case "sandbox": 
+    case "sandbox":
       return "<br><br><strong>Sandbox Server:</strong> Using Postmark sandbox - emails are safely black-holed.";
-    default: 
+    default:
       return "";
   }
 }
@@ -299,7 +333,12 @@ export function isEmailEnabled(): boolean {
 /**
  * Check if email sending is safe for the current environment
  */
-export function isEmailSendingSafe(): { safe: boolean; reason: string; mode: string; enabled: boolean } {
+export function isEmailSendingSafe(): {
+  safe: boolean;
+  reason: string;
+  mode: string;
+  enabled: boolean;
+} {
   const mode: "development" | "staging" | "production" = EMAIL_MODE;
   const enabled = isEmailConfigured();
 
@@ -308,7 +347,7 @@ export function isEmailSendingSafe(): { safe: boolean; reason: string; mode: str
       safe: true,
       reason: "Email disabled - no Postmark token configured",
       mode,
-      enabled: false
+      enabled: false,
     };
   }
 
@@ -322,7 +361,7 @@ export function isEmailSendingSafe(): { safe: boolean; reason: string; mode: str
             ? "Redirecting to test email"
             : "Email disabled - no test email configured",
         mode: "development",
-        enabled
+        enabled,
       };
     case "staging":
       return {
@@ -331,21 +370,21 @@ export function isEmailSendingSafe(): { safe: boolean; reason: string; mode: str
           ? "All emails redirected to test address"
           : "Email disabled - no test email configured",
         mode: "staging",
-        enabled
+        enabled,
       };
     case "production":
       return {
         safe: false,
         reason: "Production mode - emails go to real recipients",
         mode: "production",
-        enabled
+        enabled,
       };
     default:
       return {
         safe: true,
         reason: "Unknown mode - defaulting to safe redirection",
         mode: "unknown",
-        enabled
+        enabled,
       };
   }
 }
@@ -360,10 +399,11 @@ export function generateMissingInfoEmail(params: {
   missingFields: string[];
   applicationUrl: string;
 }): { subject: string; htmlContent: string; textContent: string } {
-  const { applicantName, eventName, eventId, missingFields, applicationUrl } = params;
-  
+  const { applicantName, eventName, eventId, missingFields, applicationUrl } =
+    params;
+
   const subject = `Complete Your Application for ${eventName}`;
-  
+
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.6;">
       <h2 style="color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px;">
@@ -379,7 +419,7 @@ export function generateMissingInfoEmail(params: {
       <div style="background-color: #f8f9fa; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
         <h3 style="color: #856404; margin-top: 0;">Missing Information:</h3>
         <ul style="margin-bottom: 0;">
-          ${missingFields.map(field => `<li><strong>${formatFieldName(field)}</strong></li>`).join("")}
+          ${missingFields.map((field) => `<li><strong>${formatFieldName(field)}</strong></li>`).join("")}
         </ul>
       </div>
       
@@ -408,7 +448,7 @@ export function generateMissingInfoEmail(params: {
       </p>
     </div>
   `;
-  
+
   const textContent = `
 Complete Your Application for ${eventName}
 
@@ -419,7 +459,7 @@ Thank you for your interest in ${eventName}. We've reviewed your application and
 Please note that the application process has been evolving so it may be that some of these fields were missing from the original application form. We apologise for any inconvenience and thank you for your patience in processing your application.
 
 Missing Information:
-${missingFields.map(field => `- ${formatFieldName(field)}`).join("\n")}
+${missingFields.map((field) => `- ${formatFieldName(field)}`).join("\n")}
 
 To complete your application, please:
 1. Visit: ${applicationUrl}
@@ -435,7 +475,7 @@ The ${eventName} Team
 You received this email because you started an application for ${eventName}. 
 If you no longer wish to receive these emails, please contact us.
   `;
-  
+
   return { subject, htmlContent, textContent };
 }
 
@@ -443,9 +483,7 @@ If you no longer wish to receive these emails, please contact us.
  * Format field names for display in emails
  */
 function formatFieldName(fieldKey: string): string {
-  return fieldKey
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, l => l.toUpperCase());
+  return fieldKey.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
 /**
@@ -462,25 +500,25 @@ export function generateInvitationEmail(params: {
   invitationToken: string;
   expiresAt: Date;
 }): { subject: string; htmlContent: string; textContent: string } {
-  const { 
-    inviteeName, 
-    email, 
-    eventName, 
-    eventDescription, 
-    roleName, 
-    inviterName, 
-    signupUrl, 
+  const {
+    inviteeName,
+    email,
+    eventName,
+    eventDescription,
+    roleName,
+    inviterName,
+    signupUrl,
     invitationToken,
-    expiresAt 
+    expiresAt,
   } = params;
-  
-  const tokenSeparator = signupUrl.includes('?') ? '&' : '?';
+
+  const tokenSeparator = signupUrl.includes("?") ? "&" : "?";
   const signupWithTokenUrl = `${signupUrl}${tokenSeparator}invitation=${invitationToken}`;
-  const displayName = inviteeName ?? email.split('@')[0];
+  const displayName = inviteeName ?? email.split("@")[0];
   const expirationDate = expiresAt.toLocaleDateString();
 
   const subject = `You're Invited: Join ${eventName} as ${roleName}`;
-  
+
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.6;">
       <div style="text-align: center; margin-bottom: 30px;">
@@ -539,7 +577,7 @@ export function generateInvitationEmail(params: {
       </p>
     </div>
   `;
-  
+
   const textContent = `
 You're Invited: Join ${eventName} as ${roleName}
 
@@ -577,7 +615,7 @@ If you believe this was sent in error, please ignore this email.
 
 Invitation link: ${signupWithTokenUrl}
   `;
-  
+
   return { subject, htmlContent, textContent };
 }
 
@@ -593,24 +631,25 @@ export function generateGlobalAdminInvitationEmail(params: {
   invitationToken: string;
   expiresAt: Date;
 }): { subject: string; htmlContent: string; textContent: string } {
-  const { 
-    inviteeName, 
-    email, 
-    globalRole, 
-    inviterName, 
-    signupUrl, 
+  const {
+    inviteeName,
+    email,
+    globalRole,
+    inviterName,
+    signupUrl,
     invitationToken,
-    expiresAt 
+    expiresAt,
   } = params;
-  
-  const tokenSeparator = signupUrl.includes('?') ? '&' : '?';
+
+  const tokenSeparator = signupUrl.includes("?") ? "&" : "?";
   const signupWithTokenUrl = `${signupUrl}${tokenSeparator}invitation=${invitationToken}`;
-  const displayName = inviteeName ?? email.split('@')[0];
+  const displayName = inviteeName ?? email.split("@")[0];
   const expirationDate = expiresAt.toLocaleDateString();
-  const roleDisplayName = globalRole === "admin" ? "Administrator" : "Staff Member";
-  
+  const roleDisplayName =
+    globalRole === "admin" ? "Administrator" : "Staff Member";
+
   const subject = `Platform Admin Invitation - Join as ${roleDisplayName}`;
-  
+
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.6;">
       <div style="text-align: center; margin-bottom: 30px;">
@@ -625,18 +664,20 @@ export function generateGlobalAdminInvitationEmail(params: {
       <div style="background: linear-gradient(135deg, #fef2f2, #fee2e2); border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin: 25px 0;">
         <h3 style="color: #991b1b; margin-top: 0; margin-bottom: 15px;">🛡️ ${roleDisplayName} Access</h3>
         <p style="color: #7f1d1d; margin-bottom: 0;">
-          ${globalRole === "admin" 
-            ? "You'll have full administrative access to the entire platform, including user management, event creation, and system configuration."
-            : "You'll have staff-level access to manage events, applications, and user interactions across the platform."
+          ${
+            globalRole === "admin"
+              ? "You'll have full administrative access to the entire platform, including user management, event creation, and system configuration."
+              : "You'll have staff-level access to manage events, applications, and user interactions across the platform."
           }
         </p>
       </div>
       
       <p><strong>Your responsibilities will include:</strong></p>
       <ul style="color: #555;">
-        ${globalRole === "admin" 
-          ? "<li>Managing platform users and permissions</li><li>Creating and configuring events</li><li>Overseeing all platform operations</li><li>System administration and settings</li>"
-          : "<li>Managing event applications and participants</li><li>Coordinating with sponsors and mentors</li><li>Supporting event operations</li><li>Assisting with user inquiries</li>"
+        ${
+          globalRole === "admin"
+            ? "<li>Managing platform users and permissions</li><li>Creating and configuring events</li><li>Overseeing all platform operations</li><li>System administration and settings</li>"
+            : "<li>Managing event applications and participants</li><li>Coordinating with sponsors and mentors</li><li>Supporting event operations</li><li>Assisting with user inquiries</li>"
         }
       </ul>
       
@@ -671,7 +712,7 @@ export function generateGlobalAdminInvitationEmail(params: {
       </p>
     </div>
   `;
-  
+
   const textContent = `
 Platform Admin Invitation - Join as ${roleDisplayName}
 
@@ -680,15 +721,17 @@ Hi ${displayName},
 ${inviterName} has invited you to join Funding the Commons as a Platform ${roleDisplayName}.
 
 ${roleDisplayName} Access:
-${globalRole === "admin" 
-  ? "You'll have full administrative access to the entire platform, including user management, event creation, and system configuration."
-  : "You'll have staff-level access to manage events, applications, and user interactions across the platform."
+${
+  globalRole === "admin"
+    ? "You'll have full administrative access to the entire platform, including user management, event creation, and system configuration."
+    : "You'll have staff-level access to manage events, applications, and user interactions across the platform."
 }
 
 Your responsibilities will include:
-${globalRole === "admin" 
-  ? "- Managing platform users and permissions\n- Creating and configuring events\n- Overseeing all platform operations\n- System administration and settings"
-  : "- Managing event applications and participants\n- Coordinating with sponsors and mentors\n- Supporting event operations\n- Assisting with user inquiries"
+${
+  globalRole === "admin"
+    ? "- Managing platform users and permissions\n- Creating and configuring events\n- Overseeing all platform operations\n- System administration and settings"
+    : "- Managing event applications and participants\n- Coordinating with sponsors and mentors\n- Supporting event operations\n- Assisting with user inquiries"
 }
 
 Accept your admin invitation:
@@ -710,7 +753,7 @@ This invitation grants privileged access - please keep your account secure.
 
 Invitation link: ${signupWithTokenUrl}
   `;
-  
+
   return { subject, htmlContent, textContent };
 }
 
@@ -732,12 +775,14 @@ export async function sendInvitationEmail(params: {
   signupUrl?: string;
 }): Promise<SendEmailResult> {
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-  const signupUrl = params.signupUrl ?? (params.eventId
-    ? `${baseUrl}/events/${params.eventId}/${params.roleName.toLowerCase()}`
-    : `${baseUrl}/auth/register`);
-  
+  const signupUrl =
+    params.signupUrl ??
+    (params.eventId
+      ? `${baseUrl}/events/${params.eventId}/${params.roleName.toLowerCase()}`
+      : `${baseUrl}/auth/register`);
+
   let emailContent;
-  
+
   if (params.isGlobalRole && params.globalRole) {
     emailContent = generateGlobalAdminInvitationEmail({
       ...params,
@@ -750,7 +795,7 @@ export async function sendInvitationEmail(params: {
       signupUrl,
     });
   }
-  
+
   return sendEmail({
     to: params.email,
     subject: emailContent.subject,
@@ -767,7 +812,8 @@ export async function testEmailConnection(): Promise<boolean> {
     const result = await sendEmail({
       to: "test@example.com",
       subject: "Test Email Connection",
-      htmlContent: "<p>This is a test email to verify Postmark configuration.</p>",
+      htmlContent:
+        "<p>This is a test email to verify Postmark configuration.</p>",
     });
     return result.success;
   } catch (error) {

@@ -15,7 +15,12 @@ import {
   Table,
   ThemeIcon,
 } from "@mantine/core";
-import { IconChartLine, IconGitCommit, IconLink, IconExternalLink } from "@tabler/icons-react";
+import {
+  IconChartLine,
+  IconGitCommit,
+  IconLink,
+  IconExternalLink,
+} from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import { type MetricType, type CollectionMethod } from "@prisma/client";
 import { CommitsTimelineChart } from "~/app/_components/CommitsTimelineChart";
@@ -26,14 +31,20 @@ interface ImpactTabProps {
   repositoryId?: string;
 }
 
-export default function ImpactTab({ projectId, eventId, repositoryId }: ImpactTabProps) {
-  const { data: projectMetrics, isLoading } = api.metric.getProjectMetrics.useQuery({
-    projectId,
-  });
+export default function ImpactTab({
+  projectId,
+  eventId,
+  repositoryId,
+}: ImpactTabProps) {
+  const { data: projectMetrics, isLoading } =
+    api.metric.getProjectMetrics.useQuery({
+      projectId,
+    });
 
-  const { data: attestationsData, isLoading: attestationsLoading } = api.project.getProjectAttestations.useQuery({
-    projectId,
-  });
+  const { data: attestationsData, isLoading: attestationsLoading } =
+    api.project.getProjectAttestations.useQuery({
+      projectId,
+    });
 
   if (isLoading) {
     return (
@@ -56,20 +67,24 @@ export default function ImpactTab({ projectId, eventId, repositoryId }: ImpactTa
 
   // Format attestation date
   const formatAttestationDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     }).format(new Date(date));
   };
 
   // Parse attestation data to extract metrics
-  const parseAttestationData = (data: unknown): { totalCommits?: number; weeksActive?: number } => {
-    if (typeof data === 'object' && data !== null) {
+  const parseAttestationData = (
+    data: unknown,
+  ): { totalCommits?: number; weeksActive?: number } => {
+    if (typeof data === "object" && data !== null) {
       const d = data as Record<string, unknown>;
       return {
-        totalCommits: typeof d.totalCommits === 'number' ? d.totalCommits : undefined,
-        weeksActive: typeof d.weeksActive === 'number' ? d.weeksActive : undefined,
+        totalCommits:
+          typeof d.totalCommits === "number" ? d.totalCommits : undefined,
+        weeksActive:
+          typeof d.weeksActive === "number" ? d.weeksActive : undefined,
       };
     }
     return {};
@@ -152,7 +167,8 @@ export default function ImpactTab({ projectId, eventId, repositoryId }: ImpactTa
                           </Badge>
                         </Group>
                         <Text size="sm" c="dimmed">
-                          Verified activity records on Ethereum Attestation Service
+                          Verified activity records on Ethereum Attestation
+                          Service
                         </Text>
                       </Box>
                     </Group>
@@ -165,8 +181,9 @@ export default function ImpactTab({ projectId, eventId, repositoryId }: ImpactTa
                     ) : (
                       <Stack gap="md">
                         <Text size="sm" c="dimmed">
-                          These attestations are immutable on-chain records of this project&apos;s GitHub activity,
-                          created using the Ethereum Attestation Service (EAS) on Optimism.
+                          These attestations are immutable on-chain records of
+                          this project&apos;s GitHub activity, created using the
+                          Ethereum Attestation Service (EAS) on Optimism.
                         </Text>
                         <Table striped highlightOnHover>
                           <Table.Thead>
@@ -180,60 +197,93 @@ export default function ImpactTab({ projectId, eventId, repositoryId }: ImpactTa
                             </Table.Tr>
                           </Table.Thead>
                           <Table.Tbody>
-                            {attestationsData.attestations.map((attestation) => {
-                              const parsedData = parseAttestationData(attestation.data);
-                              return (
-                                <Table.Tr key={attestation.id}>
-                                  <Table.Td>
-                                    <Text size="sm">
-                                      {formatAttestationDate(attestation.snapshotDate)}
-                                    </Text>
-                                  </Table.Td>
-                                  <Table.Td>
-                                    <Text size="sm" fw={500}>
-                                      {attestation.repository.name ?? 'Repository'}
-                                    </Text>
-                                  </Table.Td>
-                                  <Table.Td>
-                                    {parsedData.totalCommits !== undefined ? (
-                                      <Badge color="blue" variant="light" size="sm">
-                                        {parsedData.totalCommits}
+                            {attestationsData.attestations.map(
+                              (attestation) => {
+                                const parsedData = parseAttestationData(
+                                  attestation.data,
+                                );
+                                return (
+                                  <Table.Tr key={attestation.id}>
+                                    <Table.Td>
+                                      <Text size="sm">
+                                        {formatAttestationDate(
+                                          attestation.snapshotDate,
+                                        )}
+                                      </Text>
+                                    </Table.Td>
+                                    <Table.Td>
+                                      <Text size="sm" fw={500}>
+                                        {attestation.repository.name ??
+                                          "Repository"}
+                                      </Text>
+                                    </Table.Td>
+                                    <Table.Td>
+                                      {parsedData.totalCommits !== undefined ? (
+                                        <Badge
+                                          color="blue"
+                                          variant="light"
+                                          size="sm"
+                                        >
+                                          {parsedData.totalCommits}
+                                        </Badge>
+                                      ) : (
+                                        <Text size="sm" c="dimmed">
+                                          —
+                                        </Text>
+                                      )}
+                                    </Table.Td>
+                                    <Table.Td>
+                                      {parsedData.weeksActive !== undefined ? (
+                                        <Text size="sm">
+                                          {parsedData.weeksActive}
+                                        </Text>
+                                      ) : (
+                                        <Text size="sm" c="dimmed">
+                                          —
+                                        </Text>
+                                      )}
+                                    </Table.Td>
+                                    <Table.Td>
+                                      <Badge
+                                        size="xs"
+                                        color={
+                                          attestation.isRetroactive
+                                            ? "orange"
+                                            : "green"
+                                        }
+                                        variant="light"
+                                      >
+                                        {attestation.isRetroactive
+                                          ? "Historical"
+                                          : "Live"}
                                       </Badge>
-                                    ) : (
-                                      <Text size="sm" c="dimmed">—</Text>
-                                    )}
-                                  </Table.Td>
-                                  <Table.Td>
-                                    {parsedData.weeksActive !== undefined ? (
-                                      <Text size="sm">{parsedData.weeksActive}</Text>
-                                    ) : (
-                                      <Text size="sm" c="dimmed">—</Text>
-                                    )}
-                                  </Table.Td>
-                                  <Table.Td>
-                                    <Badge
-                                      size="xs"
-                                      color={attestation.isRetroactive ? "orange" : "green"}
-                                      variant="light"
-                                    >
-                                      {attestation.isRetroactive ? "Historical" : "Live"}
-                                    </Badge>
-                                  </Table.Td>
-                                  <Table.Td>
-                                    <Anchor
-                                      href={getEASExplorerUrl(attestation.uid, attestation.chain)}
-                                      target="_blank"
-                                      size="xs"
-                                      c="violet"
-                                      style={{ whiteSpace: 'nowrap' }}
-                                    >
-                                      {attestation.uid.slice(0, 8)}...{attestation.uid.slice(-6)}
-                                      <IconExternalLink size={12} style={{ marginLeft: 4, verticalAlign: 'middle' }} />
-                                    </Anchor>
-                                  </Table.Td>
-                                </Table.Tr>
-                              );
-                            })}
+                                    </Table.Td>
+                                    <Table.Td>
+                                      <Anchor
+                                        href={getEASExplorerUrl(
+                                          attestation.uid,
+                                          attestation.chain,
+                                        )}
+                                        target="_blank"
+                                        size="xs"
+                                        c="violet"
+                                        style={{ whiteSpace: "nowrap" }}
+                                      >
+                                        {attestation.uid.slice(0, 8)}...
+                                        {attestation.uid.slice(-6)}
+                                        <IconExternalLink
+                                          size={12}
+                                          style={{
+                                            marginLeft: 4,
+                                            verticalAlign: "middle",
+                                          }}
+                                        />
+                                      </Anchor>
+                                    </Table.Td>
+                                  </Table.Tr>
+                                );
+                              },
+                            )}
                           </Table.Tbody>
                         </Table>
                         <Group gap="xs">
@@ -246,7 +296,10 @@ export default function ImpactTab({ projectId, eventId, repositoryId }: ImpactTa
                             size="xs"
                           >
                             EAS Explorer
-                            <IconExternalLink size={10} style={{ marginLeft: 2, verticalAlign: 'middle' }} />
+                            <IconExternalLink
+                              size={10}
+                              style={{ marginLeft: 2, verticalAlign: "middle" }}
+                            />
                           </Anchor>
                         </Group>
                       </Stack>
@@ -267,7 +320,8 @@ export default function ImpactTab({ projectId, eventId, repositoryId }: ImpactTa
               <Title order={2}>Project Impact Metrics</Title>
             </Group>
             <Text c="dimmed" size="sm">
-              Tracking {projectMetrics?.length ?? 0} impact metrics for this project
+              Tracking {projectMetrics?.length ?? 0} impact metrics for this
+              project
             </Text>
           </Box>
 
@@ -286,7 +340,11 @@ export default function ImpactTab({ projectId, eventId, repositoryId }: ImpactTa
                     )}
                     <Group gap="xs">
                       {pm.metric.metricType.slice(0, 3).map((type) => (
-                        <Badge key={type} size="xs" color={getMetricTypeColor(type)}>
+                        <Badge
+                          key={type}
+                          size="xs"
+                          color={getMetricTypeColor(type)}
+                        >
                           {type.toLowerCase()}
                         </Badge>
                       ))}
@@ -311,7 +369,8 @@ export default function ImpactTab({ projectId, eventId, repositoryId }: ImpactTa
                   No impact metrics have been added to this project yet.
                 </Text>
                 <Text c="dimmed" size="xs" ta="center">
-                  Visit the &quot;Manage metrics&quot; tab to add metrics to track your project&apos;s impact.
+                  Visit the &quot;Manage metrics&quot; tab to add metrics to
+                  track your project&apos;s impact.
                 </Text>
               </Stack>
             </Center>

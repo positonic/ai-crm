@@ -19,7 +19,12 @@ import {
   Collapse,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import { IconPlus, IconX, IconGitCommit, IconSparkles } from "@tabler/icons-react";
+import {
+  IconPlus,
+  IconX,
+  IconGitCommit,
+  IconSparkles,
+} from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
 import { api } from "~/trpc/react";
 import { notifications } from "@mantine/notifications";
@@ -51,7 +56,9 @@ export function CreateUpdateModal({
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showCommitGenerator, setShowCommitGenerator] = useState(false);
-  const [commitDateRange, setCommitDateRange] = useState<[Date | null, Date | null]>([
+  const [commitDateRange, setCommitDateRange] = useState<
+    [Date | null, Date | null]
+  >([
     new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
     new Date(),
   ]);
@@ -136,7 +143,9 @@ export function CreateUpdateModal({
   };
 
   // Parse GitHub URL to extract owner and repo for constructing commit URLs
-  const parseGitHubUrl = (url: string): { owner: string; repo: string } | null => {
+  const parseGitHubUrl = (
+    url: string,
+  ): { owner: string; repo: string } | null => {
     const regex = /github\.com[/:]([\\w-]+)\/([\\w-]+?)(?:\.git)?$/;
     const match = regex.exec(url);
     if (!match) return null;
@@ -169,7 +178,10 @@ export function CreateUpdateModal({
         throw new Error("Failed to generate content");
       }
 
-      const data = (await response.json()) as { title: string; description: string };
+      const data = (await response.json()) as {
+        title: string;
+        description: string;
+      };
 
       form.setFieldValue("title", data.title);
       form.setFieldValue("content", data.description);
@@ -179,7 +191,8 @@ export function CreateUpdateModal({
         const parsed = parseGitHubUrl(githubUrl);
         if (parsed) {
           const commitUrls = commits.map(
-            (commit) => `https://github.com/${parsed.owner}/${parsed.repo}/commit/${commit.hash}`
+            (commit) =>
+              `https://github.com/${parsed.owner}/${parsed.repo}/commit/${commit.hash}`,
           );
           form.setFieldValue("githubUrls", commitUrls);
         }
@@ -187,7 +200,8 @@ export function CreateUpdateModal({
 
       notifications.show({
         title: "Content generated",
-        message: "Title, description, and GitHub URLs have been auto-filled from commits",
+        message:
+          "Title, description, and GitHub URLs have been auto-filled from commits",
         color: "green",
       });
 
@@ -272,7 +286,10 @@ export function CreateUpdateModal({
       const result = (await response.json()) as { imageUrl: string };
 
       // Add the uploaded image URL to the form's imageUrls array
-      form.setFieldValue("imageUrls", [...form.values.imageUrls, result.imageUrl]);
+      form.setFieldValue("imageUrls", [
+        ...form.values.imageUrls,
+        result.imageUrl,
+      ]);
 
       notifications.show({
         title: "Image uploaded",
@@ -282,7 +299,8 @@ export function CreateUpdateModal({
     } catch (error) {
       notifications.show({
         title: "Upload failed",
-        message: error instanceof Error ? error.message : "Failed to upload image",
+        message:
+          error instanceof Error ? error.message : "Failed to upload image",
         color: "red",
       });
     } finally {
@@ -335,7 +353,10 @@ export function CreateUpdateModal({
           {/* Auto-generate from Commits Section */}
           {githubUrl && (
             <Paper withBorder p="sm" radius="md">
-              <Group justify="space-between" mb={showCommitGenerator ? "sm" : 0}>
+              <Group
+                justify="space-between"
+                mb={showCommitGenerator ? "sm" : 0}
+              >
                 <Group gap="xs">
                   <IconGitCommit size={18} />
                   <Text size="sm" fw={500}>
@@ -354,10 +375,15 @@ export function CreateUpdateModal({
               <Collapse in={showCommitGenerator}>
                 <Stack gap="sm">
                   <Text size="xs" c="dimmed">
-                    Select a date range to fetch commits and auto-generate update content using AI.
+                    Select a date range to fetch commits and auto-generate
+                    update content using AI.
                   </Text>
 
-                  <Paper p="sm" radius="sm" bg="var(--mantine-color-blue-light)">
+                  <Paper
+                    p="sm"
+                    radius="sm"
+                    bg="var(--mantine-color-blue-light)"
+                  >
                     <Stack gap="sm">
                       <Group grow>
                         <DatePickerInput
@@ -433,7 +459,12 @@ export function CreateUpdateModal({
                       </Text>
                       <Stack gap={4}>
                         {commits.slice(0, 5).map((commit) => (
-                          <Text key={commit.hash} size="xs" c="dimmed" lineClamp={1}>
+                          <Text
+                            key={commit.hash}
+                            size="xs"
+                            c="dimmed"
+                            lineClamp={1}
+                          >
                             <Text span ff="monospace" size="xs">
                               {commit.hash}
                             </Text>{" "}
@@ -488,7 +519,7 @@ export function CreateUpdateModal({
                       }}
                       onClick={() => {
                         const newUrls = form.values.imageUrls.filter(
-                          (_, i) => i !== index
+                          (_, i) => i !== index,
                         );
                         form.setFieldValue("imageUrls", newUrls);
                       }}
@@ -570,7 +601,9 @@ export function CreateUpdateModal({
             placeholder="https://github.com/user/repo/commit/abc123, https://github.com/user/repo/pull/5"
             value={form.values.githubUrls.join(", ")}
             onChange={(event) => {
-              const urls = event.target.value.split(",").map((url) => url.trim());
+              const urls = event.target.value
+                .split(",")
+                .map((url) => url.trim());
               form.setFieldValue("githubUrls", urls);
             }}
           />
@@ -579,7 +612,9 @@ export function CreateUpdateModal({
             label="Demo URLs (comma-separated)"
             placeholder="https://myproject.vercel.app, https://demo.example.com"
             onChange={(event) => {
-              const urls = event.target.value.split(",").map((url) => url.trim());
+              const urls = event.target.value
+                .split(",")
+                .map((url) => url.trim());
               form.setFieldValue("demoUrls", urls);
             }}
           />
@@ -588,7 +623,9 @@ export function CreateUpdateModal({
             label="Tags (comma-separated)"
             placeholder="milestone, frontend, demo, challenge"
             onChange={(event) => {
-              const tags = event.target.value.split(",").map((tag) => tag.trim());
+              const tags = event.target.value
+                .split(",")
+                .map((tag) => tag.trim());
               form.setFieldValue("tags", tags);
             }}
           />

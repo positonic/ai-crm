@@ -36,7 +36,8 @@ const MOCK_PRAISE_INSTANCES: PraiseInstance[] = [
     recipientName: "Jane Doe",
     recipientEmail: "jane@example.com",
     recipientImage: null,
-    message: "Amazing presentation on AI ethics! Really opened my eyes to new perspectives.",
+    message:
+      "Amazing presentation on AI ethics! Really opened my eyes to new perspectives.",
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
   },
   {
@@ -99,7 +100,8 @@ const MOCK_PRAISE_INSTANCES: PraiseInstance[] = [
     recipientName: "Bob Wilson",
     recipientEmail: "bob@example.com",
     recipientImage: null,
-    message: "Really appreciate you organizing those social events. Makes the team feel connected!",
+    message:
+      "Really appreciate you organizing those social events. Makes the team feel connected!",
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 18), // 18 days ago
   },
 ];
@@ -125,7 +127,7 @@ export function PraiseInstanceQuantifyPanel() {
   // Calculate total allocated points
   const totalAllocated = Object.values(allocations).reduce(
     (sum, value) => sum + value,
-    0
+    0,
   );
   const isValid = totalAllocated === TOTAL_POINTS;
 
@@ -140,7 +142,7 @@ export function PraiseInstanceQuantifyPanel() {
     const otherInstances = instances.filter((i) => i.id !== instanceId);
     const otherTotal = otherInstances.reduce(
       (sum, i) => sum + (allocations[i.id] ?? 0),
-      0
+      0,
     );
 
     const newAllocations: Record<string, number> = { ...allocations };

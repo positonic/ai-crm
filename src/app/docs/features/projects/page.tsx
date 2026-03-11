@@ -27,8 +27,8 @@ export default function ProjectsPage() {
       <p className="docs-text">
         From the event page, navigate to the Projects section and click
         &ldquo;Create Project&rdquo;. You will be asked to give your project a
-        name and description. You can also link a code repository if your project
-        involves software.
+        name and description. You can also link a code repository if your
+        project involves software.
       </p>
 
       <h2 id="tracking-progress" className="docs-heading-h2">
@@ -54,8 +54,8 @@ export default function ProjectsPage() {
       </h2>
       <p className="docs-text">
         All projects are visible to other event participants, making it easy to
-        discover what others are working on and find opportunities to collaborate
-        or offer help.
+        discover what others are working on and find opportunities to
+        collaborate or offer help.
       </p>
 
       <hr className="docs-divider" />

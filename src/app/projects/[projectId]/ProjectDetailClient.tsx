@@ -73,7 +73,7 @@ const urlSchema = z.string().refine(
     const urlPattern = /^(https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/\S*)?$/i;
     return urlPattern.test(val);
   },
-  { message: "Invalid URL" }
+  { message: "Invalid URL" },
 );
 
 const projectSchema = z.object({
@@ -183,9 +183,12 @@ export default function ProjectDetailClient({
 
   // Check if current user can edit the project (owner, admin, or collaborator with edit permissions)
   const isAdmin = session?.user?.role === "admin";
-  const canEdit = isOwner || isAdmin || project.collaborators.some(
-    collab => collab.userId === userId && collab.canEdit
-  );
+  const canEdit =
+    isOwner ||
+    isAdmin ||
+    project.collaborators.some(
+      (collab) => collab.userId === userId && collab.canEdit,
+    );
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [updateToDelete, setUpdateToDelete] = useState<string | null>(null);
@@ -195,7 +198,9 @@ export default function ProjectDetailClient({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // Attestation expansion state
-  const [expandedAttestations, setExpandedAttestations] = useState<Set<string>>(new Set());
+  const [expandedAttestations, setExpandedAttestations] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Edit project modal state
   const [editProjectModalOpen, setEditProjectModalOpen] = useState(false);
@@ -204,15 +209,17 @@ export default function ProjectDetailClient({
   const [logoUploadProgress, setLogoUploadProgress] = useState(0);
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
   const [bannerUploadProgress, setBannerUploadProgress] = useState(0);
-  const [repositories, setRepositories] = useState<Array<{
-    id?: string;
-    url: string;
-    name: string;
-    description: string;
-    isPrimary: boolean;
-    order: number;
-    isNew?: boolean;
-  }>>([]);
+  const [repositories, setRepositories] = useState<
+    Array<{
+      id?: string;
+      url: string;
+      name: string;
+      description: string;
+      isPrimary: boolean;
+      order: number;
+      isNew?: boolean;
+    }>
+  >([]);
 
   const utils = api.useUtils();
 
@@ -233,9 +240,10 @@ export default function ProjectDetailClient({
   };
 
   // Get fresh timeline data
-  const { data: timeline = initialTimeline } = api.project.getProjectTimeline.useQuery({
-    projectId: project.id,
-  });
+  const { data: timeline = initialTimeline } =
+    api.project.getProjectTimeline.useQuery({
+      projectId: project.id,
+    });
 
   // Create project update mutation
   const createUpdate = api.project.createProjectUpdate.useMutation({
@@ -247,7 +255,9 @@ export default function ProjectDetailClient({
       });
       setUpdateModalOpen(false);
       form.reset();
-      await utils.project.getProjectTimeline.invalidate({ projectId: project.id });
+      await utils.project.getProjectTimeline.invalidate({
+        projectId: project.id,
+      });
     },
     onError: (error) => {
       notifications.show({
@@ -268,7 +278,9 @@ export default function ProjectDetailClient({
       });
       setDeleteModalOpen(false);
       setUpdateToDelete(null);
-      await utils.project.getProjectTimeline.invalidate({ projectId: project.id });
+      await utils.project.getProjectTimeline.invalidate({
+        projectId: project.id,
+      });
     },
     onError: (error) => {
       notifications.show({
@@ -309,11 +321,17 @@ export default function ProjectDetailClient({
       if (repositories.length > 0) {
         try {
           const existingRepoIds = project.repositories?.map((r) => r.id) ?? [];
-          const currentRepoIds = repositories.filter((r) => r.id).map((r) => r.id!);
+          const currentRepoIds = repositories
+            .filter((r) => r.id)
+            .map((r) => r.id!);
 
           // Delete removed repositories
-          const toDelete = existingRepoIds.filter((id) => !currentRepoIds.includes(id));
-          await Promise.all(toDelete.map((id) => removeRepository.mutateAsync({ id })));
+          const toDelete = existingRepoIds.filter(
+            (id) => !currentRepoIds.includes(id),
+          );
+          await Promise.all(
+            toDelete.map((id) => removeRepository.mutateAsync({ id })),
+          );
 
           // Add or update repositories
           await Promise.all(
@@ -339,7 +357,7 @@ export default function ProjectDetailClient({
                   order: repo.order,
                 });
               }
-            })
+            }),
           );
         } catch {
           notifications.show({
@@ -375,7 +393,7 @@ export default function ProjectDetailClient({
   const { data: projectCollaboratorsData, refetch: refetchCollaborators } =
     api.profile.getProjectCollaborators.useQuery(
       { projectId: project.id },
-      { enabled: editProjectModalOpen }
+      { enabled: editProjectModalOpen },
     );
 
   // Collaborator mutations
@@ -383,7 +401,7 @@ export default function ProjectDetailClient({
     onSuccess: (data) => {
       notifications.show({
         title: "Success",
-        message: `Added ${data.addedCount} collaborator${data.addedCount !== 1 ? 's' : ''}`,
+        message: `Added ${data.addedCount} collaborator${data.addedCount !== 1 ? "s" : ""}`,
         color: "green",
         icon: <IconCheck size={16} />,
       });
@@ -448,10 +466,10 @@ export default function ProjectDetailClient({
       content: values.content,
       weekNumber: values.weekNumber,
       updateDate: values.updateDate,
-      imageUrls: values.imageUrls.filter(url => url.trim() !== ""),
-      githubUrls: values.githubUrls.filter(url => url.trim() !== ""),
-      demoUrls: values.demoUrls.filter(url => url.trim() !== ""),
-      tags: values.tags.filter(tag => tag.trim() !== ""),
+      imageUrls: values.imageUrls.filter((url) => url.trim() !== ""),
+      githubUrls: values.githubUrls.filter((url) => url.trim() !== ""),
+      demoUrls: values.demoUrls.filter((url) => url.trim() !== ""),
+      tags: values.tags.filter((tag) => tag.trim() !== ""),
     });
   };
 
@@ -477,7 +495,7 @@ export default function ProjectDetailClient({
       Object.entries(values).map(([key, value]) => [
         key,
         value === "" ? undefined : value,
-      ])
+      ]),
     ) as ProjectFormData;
 
     updateProject.mutate({
@@ -508,7 +526,7 @@ export default function ProjectDetailClient({
         description: r.description ?? "",
         isPrimary: r.isPrimary,
         order: r.order,
-      })) ?? []
+      })) ?? [],
     );
 
     setEditProjectModalOpen(true);
@@ -523,15 +541,15 @@ export default function ProjectDetailClient({
 
     try {
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append("image", file);
 
       // Simulate progress for better UX
       const progressInterval = setInterval(() => {
-        setLogoUploadProgress(prev => Math.min(prev + 10, 90));
+        setLogoUploadProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
-      const response = await fetch('/api/upload/project-image', {
-        method: 'POST',
+      const response = await fetch("/api/upload/project-image", {
+        method: "POST",
         body: formData,
       });
 
@@ -539,27 +557,27 @@ export default function ProjectDetailClient({
       setLogoUploadProgress(100);
 
       if (!response.ok) {
-        const error = await response.json() as { error?: string };
-        throw new Error(error.error ?? 'Upload failed');
+        const error = (await response.json()) as { error?: string };
+        throw new Error(error.error ?? "Upload failed");
       }
 
-      const result = await response.json() as { imageUrl: string };
+      const result = (await response.json()) as { imageUrl: string };
 
       // Update form with new logo URL
-      projectForm.setFieldValue('imageUrl', result.imageUrl);
+      projectForm.setFieldValue("imageUrl", result.imageUrl);
 
       notifications.show({
-        title: 'Success',
-        message: 'Project logo uploaded successfully',
-        color: 'green',
+        title: "Success",
+        message: "Project logo uploaded successfully",
+        color: "green",
         icon: <IconCheck size={16} />,
       });
-
     } catch (error) {
       notifications.show({
-        title: 'Upload failed',
-        message: error instanceof Error ? error.message : 'Failed to upload logo',
-        color: 'red',
+        title: "Upload failed",
+        message:
+          error instanceof Error ? error.message : "Failed to upload logo",
+        color: "red",
         icon: <IconX size={16} />,
       });
     } finally {
@@ -577,15 +595,15 @@ export default function ProjectDetailClient({
 
     try {
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append("image", file);
 
       // Simulate progress for better UX
       const progressInterval = setInterval(() => {
-        setBannerUploadProgress(prev => Math.min(prev + 10, 90));
+        setBannerUploadProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
-      const response = await fetch('/api/upload/project-image', {
-        method: 'POST',
+      const response = await fetch("/api/upload/project-image", {
+        method: "POST",
         body: formData,
       });
 
@@ -593,27 +611,27 @@ export default function ProjectDetailClient({
       setBannerUploadProgress(100);
 
       if (!response.ok) {
-        const error = await response.json() as { error?: string };
-        throw new Error(error.error ?? 'Upload failed');
+        const error = (await response.json()) as { error?: string };
+        throw new Error(error.error ?? "Upload failed");
       }
 
-      const result = await response.json() as { imageUrl: string };
+      const result = (await response.json()) as { imageUrl: string };
 
       // Update form with new banner URL
-      projectForm.setFieldValue('bannerUrl', result.imageUrl);
+      projectForm.setFieldValue("bannerUrl", result.imageUrl);
 
       notifications.show({
-        title: 'Success',
-        message: 'Project banner uploaded successfully',
-        color: 'green',
+        title: "Success",
+        message: "Project banner uploaded successfully",
+        color: "green",
         icon: <IconCheck size={16} />,
       });
-
     } catch (error) {
       notifications.show({
-        title: 'Upload failed',
-        message: error instanceof Error ? error.message : 'Failed to upload banner',
-        color: 'red',
+        title: "Upload failed",
+        message:
+          error instanceof Error ? error.message : "Failed to upload banner",
+        color: "red",
         icon: <IconX size={16} />,
       });
     } finally {
@@ -631,15 +649,15 @@ export default function ProjectDetailClient({
 
     try {
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append("image", file);
 
       // Simulate progress for better UX
       const progressInterval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 10, 90));
+        setUploadProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
-      const response = await fetch('/api/upload/project-image', {
-        method: 'POST',
+      const response = await fetch("/api/upload/project-image", {
+        method: "POST",
         body: formData,
       });
 
@@ -647,28 +665,28 @@ export default function ProjectDetailClient({
       setUploadProgress(100);
 
       if (!response.ok) {
-        const error = await response.json() as { error?: string };
-        throw new Error(error.error ?? 'Upload failed');
+        const error = (await response.json()) as { error?: string };
+        throw new Error(error.error ?? "Upload failed");
       }
 
-      const result = await response.json() as { imageUrl: string };
+      const result = (await response.json()) as { imageUrl: string };
 
       // Add the uploaded image URL to the form's imageUrls array
       const currentUrls = form.values.imageUrls;
-      form.setFieldValue('imageUrls', [...currentUrls, result.imageUrl]);
+      form.setFieldValue("imageUrls", [...currentUrls, result.imageUrl]);
 
       notifications.show({
-        title: 'Success',
-        message: 'Image uploaded successfully',
-        color: 'green',
+        title: "Success",
+        message: "Image uploaded successfully",
+        color: "green",
         icon: <IconCheck size={16} />,
       });
-
     } catch (error) {
       notifications.show({
-        title: 'Upload failed',
-        message: error instanceof Error ? error.message : 'Failed to upload image',
-        color: 'red',
+        title: "Upload failed",
+        message:
+          error instanceof Error ? error.message : "Failed to upload image",
+        color: "red",
         icon: <IconX size={16} />,
       });
     } finally {
@@ -702,11 +720,11 @@ export default function ProjectDetailClient({
   };
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return new Intl.DateTimeFormat("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     }).format(date);
   };
 
@@ -735,7 +753,7 @@ export default function ProjectDetailClient({
 
   // Toggle attestation expansion for a repository
   const toggleAttestations = (repoId: string) => {
-    setExpandedAttestations(prev => {
+    setExpandedAttestations((prev) => {
       const next = new Set(prev);
       if (next.has(repoId)) {
         next.delete(repoId);
@@ -748,26 +766,27 @@ export default function ProjectDetailClient({
 
   // Format attestation date
   const formatAttestationDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     }).format(new Date(date));
   };
 
   // Parse attestation data to extract commits
   const getAttestationCommits = (data: unknown): number | undefined => {
-    if (typeof data === 'object' && data !== null) {
+    if (typeof data === "object" && data !== null) {
       const d = data as Record<string, unknown>;
-      return typeof d.totalCommits === 'number' ? d.totalCommits : undefined;
+      return typeof d.totalCommits === "number" ? d.totalCommits : undefined;
     }
     return undefined;
   };
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{
-        __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
           .update-hover-container {
             transition: background-color 0.2s ease;
           }
@@ -777,8 +796,9 @@ export default function ProjectDetailClient({
           [data-mantine-color-scheme="dark"] .update-hover-container:hover {
             background-color: var(--mantine-color-dark-6);
           }
-        `
-      }} />
+        `,
+        }}
+      />
       <Container size="lg" py="xl">
         <Stack gap="xl">
           {/* Back Navigation */}
@@ -796,11 +816,22 @@ export default function ProjectDetailClient({
           <Card shadow="lg" padding="xl" radius="md" withBorder>
             <Stack gap="lg">
               {project.bannerUrl && (
-                <div style={{ width: '100%', height: 300, borderRadius: 8, overflow: 'hidden' }}>
+                <div
+                  style={{
+                    width: "100%",
+                    height: 300,
+                    borderRadius: 8,
+                    overflow: "hidden",
+                  }}
+                >
                   <Image
                     src={project.bannerUrl}
                     alt={project.title}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
                   />
                 </div>
               )}
@@ -839,7 +870,11 @@ export default function ProjectDetailClient({
               <LikeButton
                 updateId={project.id}
                 initialLikeCount={project.likes.length}
-                initialHasLiked={userId ? project.likes.some(like => like.userId === userId) : false}
+                initialHasLiked={
+                  userId
+                    ? project.likes.some((like) => like.userId === userId)
+                    : false
+                }
                 userId={userId}
                 likeType="userProject"
               />
@@ -867,40 +902,38 @@ export default function ProjectDetailClient({
                   </Button>
                 )}
                 {/* Show repositories if available, otherwise fall back to githubUrl */}
-                {project.repositories && project.repositories.length > 0 ? (
-                  // Multiple repositories - show them all
-                  [...project.repositories]
-                    .sort((a, b) => {
-                      if (a.isPrimary && !b.isPrimary) return -1;
-                      if (!a.isPrimary && b.isPrimary) return 1;
-                      return a.order - b.order;
-                    })
-                    .map((repo) => (
+                {project.repositories && project.repositories.length > 0
+                  ? // Multiple repositories - show them all
+                    [...project.repositories]
+                      .sort((a, b) => {
+                        if (a.isPrimary && !b.isPrimary) return -1;
+                        if (!a.isPrimary && b.isPrimary) return 1;
+                        return a.order - b.order;
+                      })
+                      .map((repo) => (
+                        <Button
+                          key={repo.id}
+                          component="a"
+                          href={repo.url}
+                          target="_blank"
+                          leftSection={<IconBrandGithub size={16} />}
+                          variant={repo.isPrimary ? "filled" : "light"}
+                        >
+                          {repo.name ?? "View Code"}
+                        </Button>
+                      ))
+                  : // Legacy: Single githubUrl
+                    project.githubUrl && (
                       <Button
-                        key={repo.id}
                         component="a"
-                        href={repo.url}
+                        href={project.githubUrl}
                         target="_blank"
                         leftSection={<IconBrandGithub size={16} />}
-                        variant={repo.isPrimary ? "filled" : "light"}
+                        variant="light"
                       >
-                        {repo.name ?? "View Code"}
+                        View Code
                       </Button>
-                    ))
-                ) : (
-                  // Legacy: Single githubUrl
-                  project.githubUrl && (
-                    <Button
-                      component="a"
-                      href={project.githubUrl}
-                      target="_blank"
-                      leftSection={<IconBrandGithub size={16} />}
-                      variant="light"
-                    >
-                      View Code
-                    </Button>
-                  )
-                )}
+                    )}
                 {project.liveUrl && (
                   <Button
                     component="a"
@@ -954,7 +987,9 @@ export default function ProjectDetailClient({
 
                     <Stack gap="xs">
                       <Text fw={500}>Technologies</Text>
-                      <Text c="dimmed">{project.technologies.length} technologies</Text>
+                      <Text c="dimmed">
+                        {project.technologies.length} technologies
+                      </Text>
                     </Stack>
 
                     <Stack gap="xs">
@@ -968,7 +1003,7 @@ export default function ProjectDetailClient({
                       <Divider />
                       <Stack gap="md">
                         <Title order={3}>Description</Title>
-                        <Text style={{ whiteSpace: 'pre-wrap' }}>
+                        <Text style={{ whiteSpace: "pre-wrap" }}>
                           {project.description}
                         </Text>
                       </Stack>
@@ -976,7 +1011,11 @@ export default function ProjectDetailClient({
                   )}
 
                   {/* Author contact info */}
-                  {(project.author.profile?.githubUrl ?? project.author.profile?.linkedinUrl ?? project.author.profile?.twitterUrl ?? project.author.profile?.website ?? isOwner) && (
+                  {(project.author.profile?.githubUrl ??
+                    project.author.profile?.linkedinUrl ??
+                    project.author.profile?.twitterUrl ??
+                    project.author.profile?.website ??
+                    isOwner) && (
                     <>
                       <Divider />
                       <Stack gap="md">
@@ -988,12 +1027,19 @@ export default function ProjectDetailClient({
                         {isOwner && (
                           <BlueskyConnectButton
                             projectTitle={project.title}
-                            projectUrl={typeof window !== 'undefined' ? window.location.href : undefined}
+                            projectUrl={
+                              typeof window !== "undefined"
+                                ? window.location.href
+                                : undefined
+                            }
                           />
                         )}
 
                         {/* Author contact links */}
-                        {(project.author.profile?.githubUrl ?? project.author.profile?.linkedinUrl ?? project.author.profile?.twitterUrl ?? project.author.profile?.website) && (
+                        {(project.author.profile?.githubUrl ??
+                          project.author.profile?.linkedinUrl ??
+                          project.author.profile?.twitterUrl ??
+                          project.author.profile?.website) && (
                           <Group gap="md">
                             {project.author.profile?.githubUrl && (
                               <Button
@@ -1059,31 +1105,56 @@ export default function ProjectDetailClient({
                               return a.order - b.order;
                             })
                             .map((repo) => (
-                              <Paper key={repo.id} p="md" withBorder radius="md">
+                              <Paper
+                                key={repo.id}
+                                p="md"
+                                withBorder
+                                radius="md"
+                              >
                                 <Stack gap="sm">
-                                  <Group justify="space-between" align="flex-start">
+                                  <Group
+                                    justify="space-between"
+                                    align="flex-start"
+                                  >
                                     <Stack gap="xs" style={{ flex: 1 }}>
                                       <Group gap="xs">
                                         <Text fw={500} size="sm">
                                           {repo.name ?? "Repository"}
                                         </Text>
                                         {repo.isPrimary && (
-                                          <Badge size="xs" variant="light" color="blue">
+                                          <Badge
+                                            size="xs"
+                                            variant="light"
+                                            color="blue"
+                                          >
                                             Primary
                                           </Badge>
                                         )}
-                                        {repo.attestations && repo.attestations.length > 0 && (
-                                          <Badge size="xs" variant="light" color="violet">
-                                            {repo.attestations.length} attestation{repo.attestations.length > 1 ? 's' : ''}
-                                          </Badge>
-                                        )}
+                                        {repo.attestations &&
+                                          repo.attestations.length > 0 && (
+                                            <Badge
+                                              size="xs"
+                                              variant="light"
+                                              color="violet"
+                                            >
+                                              {repo.attestations.length}{" "}
+                                              attestation
+                                              {repo.attestations.length > 1
+                                                ? "s"
+                                                : ""}
+                                            </Badge>
+                                          )}
                                       </Group>
                                       {repo.description && (
                                         <Text size="sm" c="dimmed">
                                           {repo.description}
                                         </Text>
                                       )}
-                                      <Text size="xs" c="dimmed" style={{ wordBreak: 'break-all' }}>
+                                      <Text
+                                        size="xs"
+                                        c="dimmed"
+                                        style={{ wordBreak: "break-all" }}
+                                      >
                                         {repo.url}
                                       </Text>
                                     </Stack>
@@ -1093,62 +1164,111 @@ export default function ProjectDetailClient({
                                       target="_blank"
                                       size="sm"
                                       variant="light"
-                                      leftSection={<IconBrandGithub size={16} />}
+                                      leftSection={
+                                        <IconBrandGithub size={16} />
+                                      }
                                     >
                                       View
                                     </Button>
                                   </Group>
 
                                   {/* EAS Attestations Section */}
-                                  {repo.attestations && repo.attestations.length > 0 && (
-                                    <>
-                                      <Divider />
-                                      <Box>
-                                        <Button
-                                          variant="subtle"
-                                          size="xs"
-                                          onClick={() => toggleAttestations(repo.id)}
-                                          rightSection={expandedAttestations.has(repo.id) ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />}
-                                          px={0}
-                                        >
-                                          <Group gap={4}>
-                                            <IconLink size={14} />
-                                            <Text size="xs">On-chain Attestations</Text>
-                                          </Group>
-                                        </Button>
+                                  {repo.attestations &&
+                                    repo.attestations.length > 0 && (
+                                      <>
+                                        <Divider />
+                                        <Box>
+                                          <Button
+                                            variant="subtle"
+                                            size="xs"
+                                            onClick={() =>
+                                              toggleAttestations(repo.id)
+                                            }
+                                            rightSection={
+                                              expandedAttestations.has(
+                                                repo.id,
+                                              ) ? (
+                                                <IconChevronUp size={14} />
+                                              ) : (
+                                                <IconChevronDown size={14} />
+                                              )
+                                            }
+                                            px={0}
+                                          >
+                                            <Group gap={4}>
+                                              <IconLink size={14} />
+                                              <Text size="xs">
+                                                On-chain Attestations
+                                              </Text>
+                                            </Group>
+                                          </Button>
 
-                                        {expandedAttestations.has(repo.id) && (
-                                          <Stack gap="xs" mt="xs">
-                                            {repo.attestations.map((attestation) => {
-                                              const commits = getAttestationCommits(attestation.data);
-                                              return (
-                                                <Group key={attestation.id} gap="xs" wrap="nowrap">
-                                                  <Text size="xs" c="dimmed" style={{ minWidth: 75 }}>
-                                                    {formatAttestationDate(attestation.snapshotDate)}
-                                                  </Text>
-                                                  {commits !== undefined && (
-                                                    <Badge size="xs" color="blue" variant="light">
-                                                      {commits} commits
-                                                    </Badge>
-                                                  )}
-                                                  <Anchor
-                                                    href={getEASExplorerUrl(attestation.uid, attestation.chain)}
-                                                    target="_blank"
-                                                    size="xs"
-                                                    c="violet"
-                                                    style={{ whiteSpace: 'nowrap' }}
-                                                  >
-                                                    View
-                                                    <IconExternalLink size={10} style={{ marginLeft: 4, verticalAlign: 'middle' }} />
-                                                  </Anchor>
-                                                </Group>
-                                              );
-                                            })}
-                                          </Stack>
-                                        )}
-                                      </Box>
-                                    </>
-                                  )}
+                                          {expandedAttestations.has(
+                                            repo.id,
+                                          ) && (
+                                            <Stack gap="xs" mt="xs">
+                                              {repo.attestations.map(
+                                                (attestation) => {
+                                                  const commits =
+                                                    getAttestationCommits(
+                                                      attestation.data,
+                                                    );
+                                                  return (
+                                                    <Group
+                                                      key={attestation.id}
+                                                      gap="xs"
+                                                      wrap="nowrap"
+                                                    >
+                                                      <Text
+                                                        size="xs"
+                                                        c="dimmed"
+                                                        style={{ minWidth: 75 }}
+                                                      >
+                                                        {formatAttestationDate(
+                                                          attestation.snapshotDate,
+                                                        )}
+                                                      </Text>
+                                                      {commits !==
+                                                        undefined && (
+                                                        <Badge
+                                                          size="xs"
+                                                          color="blue"
+                                                          variant="light"
+                                                        >
+                                                          {commits} commits
+                                                        </Badge>
+                                                      )}
+                                                      <Anchor
+                                                        href={getEASExplorerUrl(
+                                                          attestation.uid,
+                                                          attestation.chain,
+                                                        )}
+                                                        target="_blank"
+                                                        size="xs"
+                                                        c="violet"
+                                                        style={{
+                                                          whiteSpace: "nowrap",
+                                                        }}
+                                                      >
+                                                        View
+                                                        <IconExternalLink
+                                                          size={10}
+                                                          style={{
+                                                            marginLeft: 4,
+                                                            verticalAlign:
+                                                              "middle",
+                                                          }}
+                                                        />
+                                                      </Anchor>
+                                                    </Group>
+                                                  );
+                                                },
+                                              )}
+                                            </Stack>
+                                          )}
+                                        </Box>
+                                      </>
+                                    )}
                                 </Stack>
                               </Paper>
                             ))}
@@ -1176,7 +1296,11 @@ export default function ProjectDetailClient({
                   </Group>
 
                   {timeline.length > 0 ? (
-                    <Timeline active={timeline.length} bulletSize={24} lineWidth={2}>
+                    <Timeline
+                      active={timeline.length}
+                      bulletSize={24}
+                      lineWidth={2}
+                    >
                       {timeline.map((update) => (
                         <Timeline.Item
                           key={update.id}
@@ -1214,138 +1338,183 @@ export default function ProjectDetailClient({
                             className="update-hover-container"
                           >
                             <Stack gap="sm" mt="xs">
-                            <Group gap="xs">
-                              <div style={{ width: 20, height: 20, borderRadius: '50%', overflow: 'hidden' }}>
-                                {update.author.image ? (
-                                  <Image
-                                    src={update.author.image}
-                                    alt={update.author.name ?? "Author"}
-                                    width={20}
-                                    height={20}
-                                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                  />
-                                ) : (
-                                  <div style={{ width: "100%", height: "100%", backgroundColor: "#e9ecef", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                    <Text size="xs">?</Text>
-                                  </div>
-                                )}
-                              </div>
-                              <Text size="sm" c="dimmed">
-                                {update.author.name ?? 'Anonymous'} • {getRelativeTime(update.updateDate)}
-                              </Text>
-                            </Group>
-
-                            <Box>
-                              <MarkdownRenderer content={update.content} />
-                            </Box>
-
-                            {/* Images */}
-                            {update.imageUrls.length > 0 && (
-                              <Box mt="md">
-                                {update.imageUrls.length === 1 ? (
-                                  // Single image - display large
-                                  <Paper
-                                    radius="md"
-                                    withBorder
-                                    style={{
-                                      overflow: 'hidden',
-                                      cursor: 'pointer',
-                                      transition: 'transform 0.2s ease',
-                                    }}
-                                    onClick={() => handleImageClick(update.imageUrls[0]!)}
-                                  >
+                              <Group gap="xs">
+                                <div
+                                  style={{
+                                    width: 20,
+                                    height: 20,
+                                    borderRadius: "50%",
+                                    overflow: "hidden",
+                                  }}
+                                >
+                                  {update.author.image ? (
                                     <Image
-                                      src={update.imageUrls[0]}
-                                      alt="Update image"
+                                      src={update.author.image}
+                                      alt={update.author.name ?? "Author"}
+                                      width={20}
+                                      height={20}
                                       style={{
                                         width: "100%",
-                                        maxHeight: "400px",
-                                        objectFit: "cover"
+                                        height: "100%",
+                                        objectFit: "cover",
                                       }}
                                     />
-                                  </Paper>
-                                ) : (
-                                  // Multiple images - display grid
-                                  <SimpleGrid
-                                    cols={{ base: 1, sm: 2, md: update.imageUrls.length >= 3 ? 3 : 2 }}
-                                    spacing="md"
-                                  >
-                                    {update.imageUrls.map((url, imgIndex) => (
-                                      <Paper
-                                        key={imgIndex}
-                                        radius="md"
-                                        withBorder
-                                        style={{
-                                          overflow: 'hidden',
-                                          cursor: 'pointer',
-                                          transition: 'transform 0.2s ease',
-                                          aspectRatio: '16/9'
-                                        }}
-                                        onClick={() => handleImageClick(url)}
-                                        onMouseEnter={(e) => {
-                                          e.currentTarget.style.transform = 'scale(1.05)';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                          e.currentTarget.style.transform = 'scale(1)';
-                                        }}
-                                      >
-                                        <Image
-                                          src={url}
-                                          alt={`Update image ${imgIndex + 1}`}
-                                          style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            objectFit: "cover"
-                                          }}
-                                        />
-                                      </Paper>
-                                    ))}
-                                  </SimpleGrid>
-                                )}
+                                  ) : (
+                                    <div
+                                      style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        backgroundColor: "#e9ecef",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <Text size="xs">?</Text>
+                                    </div>
+                                  )}
+                                </div>
+                                <Text size="sm" c="dimmed">
+                                  {update.author.name ?? "Anonymous"} •{" "}
+                                  {getRelativeTime(update.updateDate)}
+                                </Text>
+                              </Group>
+
+                              <Box>
+                                <MarkdownRenderer content={update.content} />
                               </Box>
-                            )}
 
-                            {/* Links */}
-                            {(update.githubUrls.length > 0 || update.demoUrls.length > 0) && (
-                              <Group gap="xs">
-                                {update.githubUrls.map((url, urlIndex) => (
-                                  <Anchor key={urlIndex} href={url} target="_blank" size="sm">
-                                    <Group gap={4}>
-                                      <IconBrandGithub size={14} />
-                                      GitHub
-                                    </Group>
-                                  </Anchor>
-                                ))}
-                                {update.demoUrls.map((url, urlIndex) => (
-                                  <Anchor key={urlIndex} href={url} target="_blank" size="sm">
-                                    <Group gap={4}>
-                                      <IconExternalLink size={14} />
-                                      Demo
-                                    </Group>
-                                  </Anchor>
-                                ))}
-                              </Group>
-                            )}
+                              {/* Images */}
+                              {update.imageUrls.length > 0 && (
+                                <Box mt="md">
+                                  {update.imageUrls.length === 1 ? (
+                                    // Single image - display large
+                                    <Paper
+                                      radius="md"
+                                      withBorder
+                                      style={{
+                                        overflow: "hidden",
+                                        cursor: "pointer",
+                                        transition: "transform 0.2s ease",
+                                      }}
+                                      onClick={() =>
+                                        handleImageClick(update.imageUrls[0]!)
+                                      }
+                                    >
+                                      <Image
+                                        src={update.imageUrls[0]}
+                                        alt="Update image"
+                                        style={{
+                                          width: "100%",
+                                          maxHeight: "400px",
+                                          objectFit: "cover",
+                                        }}
+                                      />
+                                    </Paper>
+                                  ) : (
+                                    // Multiple images - display grid
+                                    <SimpleGrid
+                                      cols={{
+                                        base: 1,
+                                        sm: 2,
+                                        md:
+                                          update.imageUrls.length >= 3 ? 3 : 2,
+                                      }}
+                                      spacing="md"
+                                    >
+                                      {update.imageUrls.map((url, imgIndex) => (
+                                        <Paper
+                                          key={imgIndex}
+                                          radius="md"
+                                          withBorder
+                                          style={{
+                                            overflow: "hidden",
+                                            cursor: "pointer",
+                                            transition: "transform 0.2s ease",
+                                            aspectRatio: "16/9",
+                                          }}
+                                          onClick={() => handleImageClick(url)}
+                                          onMouseEnter={(e) => {
+                                            e.currentTarget.style.transform =
+                                              "scale(1.05)";
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            e.currentTarget.style.transform =
+                                              "scale(1)";
+                                          }}
+                                        >
+                                          <Image
+                                            src={url}
+                                            alt={`Update image ${imgIndex + 1}`}
+                                            style={{
+                                              width: "100%",
+                                              height: "100%",
+                                              objectFit: "cover",
+                                            }}
+                                          />
+                                        </Paper>
+                                      ))}
+                                    </SimpleGrid>
+                                  )}
+                                </Box>
+                              )}
 
-                            {/* Tags */}
-                            {update.tags.length > 0 && (
-                              <Group gap="xs">
-                                {update.tags.map((tag, tagIndex) => (
-                                  <Badge key={tagIndex} size="xs" variant="outline">
-                                    {tag}
-                                  </Badge>
-                                ))}
-                              </Group>
-                            )}
+                              {/* Links */}
+                              {(update.githubUrls.length > 0 ||
+                                update.demoUrls.length > 0) && (
+                                <Group gap="xs">
+                                  {update.githubUrls.map((url, urlIndex) => (
+                                    <Anchor
+                                      key={urlIndex}
+                                      href={url}
+                                      target="_blank"
+                                      size="sm"
+                                    >
+                                      <Group gap={4}>
+                                        <IconBrandGithub size={14} />
+                                        GitHub
+                                      </Group>
+                                    </Anchor>
+                                  ))}
+                                  {update.demoUrls.map((url, urlIndex) => (
+                                    <Anchor
+                                      key={urlIndex}
+                                      href={url}
+                                      target="_blank"
+                                      size="sm"
+                                    >
+                                      <Group gap={4}>
+                                        <IconExternalLink size={14} />
+                                        Demo
+                                      </Group>
+                                    </Anchor>
+                                  ))}
+                                </Group>
+                              )}
 
-                            {/* Like Button */}
-                            <LikeButton
-                              updateId={update.id}
-                              initialLikeCount={0}
-                              initialHasLiked={false}
-                              userId={userId}
-                            />
-                          </Stack>
+                              {/* Tags */}
+                              {update.tags.length > 0 && (
+                                <Group gap="xs">
+                                  {update.tags.map((tag, tagIndex) => (
+                                    <Badge
+                                      key={tagIndex}
+                                      size="xs"
+                                      variant="outline"
+                                    >
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                </Group>
+                              )}
+
+                              {/* Like Button */}
+                              <LikeButton
+                                updateId={update.id}
+                                initialLikeCount={0}
+                                initialHasLiked={false}
+                                userId={userId}
+                              />
+                            </Stack>
                           </Paper>
                         </Timeline.Item>
                       ))}
@@ -1353,7 +1522,10 @@ export default function ProjectDetailClient({
                   ) : (
                     <Stack align="center" py="xl">
                       <Text c="dimmed" ta="center">
-                        No updates yet. {canEdit ? "Add the first update to start documenting your progress!" : "Check back later for project updates."}
+                        No updates yet.{" "}
+                        {canEdit
+                          ? "Add the first update to start documenting your progress!"
+                          : "Check back later for project updates."}
                       </Text>
                       {canEdit && (
                         <Button
@@ -1380,10 +1552,12 @@ export default function ProjectDetailClient({
 
                   {/* Show sub-tabs if multiple repositories, otherwise show single timeline */}
                   {project.repositories && project.repositories.length > 1 ? (
-                    <Tabs defaultValue={
-                      project.repositories.find(r => r.isPrimary)?.id ??
-                      project.repositories[0]?.id
-                    }>
+                    <Tabs
+                      defaultValue={
+                        project.repositories.find((r) => r.isPrimary)?.id ??
+                        project.repositories[0]?.id
+                      }
+                    >
                       <Tabs.List>
                         {[...project.repositories]
                           .sort((a, b) => {
@@ -1414,7 +1588,7 @@ export default function ProjectDetailClient({
                     <GitCommitTimeline
                       githubUrl={
                         project.repositories && project.repositories.length > 0
-                          ? project.repositories[0]?.url ?? null
+                          ? (project.repositories[0]?.url ?? null)
                           : project.githubUrl
                       }
                     />
@@ -1426,7 +1600,10 @@ export default function ProjectDetailClient({
             <Tabs.Panel value="impact" mt="md">
               <ImpactTab
                 projectId={project.id}
-                repositoryId={project.repositories?.find(r => r.isPrimary)?.id ?? project.repositories?.[0]?.id}
+                repositoryId={
+                  project.repositories?.find((r) => r.isPrimary)?.id ??
+                  project.repositories?.[0]?.id
+                }
               />
             </Tabs.Panel>
 
@@ -1440,7 +1617,11 @@ export default function ProjectDetailClient({
             </Tabs.Panel>
 
             <Tabs.Panel value="hypercerts" mt="md">
-              <HypercertsTab projectId={project.id} projectTitle={project.title} canEdit={canEdit} />
+              <HypercertsTab
+                projectId={project.id}
+                projectTitle={project.title}
+                canEdit={canEdit}
+              />
             </Tabs.Panel>
 
             <Tabs.Panel value="sds" mt="md">
@@ -1452,44 +1633,64 @@ export default function ProjectDetailClient({
                 <Stack gap="md">
                   <Title order={2}>Team Members</Title>
                   <Text size="sm" c="dimmed">
-                    {1 + project.collaborators.length} {1 + project.collaborators.length === 1 ? 'member' : 'members'} working on this project
+                    {1 + project.collaborators.length}{" "}
+                    {1 + project.collaborators.length === 1
+                      ? "member"
+                      : "members"}{" "}
+                    working on this project
                   </Text>
                   <Stack gap="md">
                     {/* Project Owner */}
                     <Anchor
                       href={`/profiles/${project.author.id}`}
-                      style={{ textDecoration: 'none', color: 'inherit' }}
+                      style={{ textDecoration: "none", color: "inherit" }}
                     >
-                      <Group gap="md" style={{ cursor: 'pointer' }}>
+                      <Group gap="md" style={{ cursor: "pointer" }}>
                         {project.author.image ? (
-                          <div style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden' }}>
+                          <div
+                            style={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: "50%",
+                              overflow: "hidden",
+                            }}
+                          >
                             <Image
                               src={project.author.image}
                               alt={project.author.name ?? "Owner"}
                               width={48}
                               height={48}
-                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                              }}
                             />
                           </div>
                         ) : (
-                          <div style={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: '50%',
-                            backgroundColor: '#e9ecef',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}>
+                          <div
+                            style={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: "50%",
+                              backgroundColor: "#e9ecef",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
                             <IconUser size={24} />
                           </div>
                         )}
                         <Stack gap={4} style={{ flex: 1 }}>
-                          <Text fw={500}>{project.author.name ?? 'Anonymous'}</Text>
+                          <Text fw={500}>
+                            {project.author.name ?? "Anonymous"}
+                          </Text>
                           {project.author.profile?.jobTitle && (
                             <Text size="sm" c="dimmed">
                               {project.author.profile.jobTitle}
-                              {project.author.profile.company && ` at ${project.author.profile.company}`}
+                              {project.author.profile.company &&
+                                ` at ${project.author.profile.company}`}
                             </Text>
                           )}
                           {project.author.profile?.location && (
@@ -1512,38 +1713,54 @@ export default function ProjectDetailClient({
                       <Anchor
                         key={collaborator.id}
                         href={`/profiles/${collaborator.userId}`}
-                        style={{ textDecoration: 'none', color: 'inherit' }}
+                        style={{ textDecoration: "none", color: "inherit" }}
                       >
-                        <Group gap="md" style={{ cursor: 'pointer' }}>
+                        <Group gap="md" style={{ cursor: "pointer" }}>
                           {collaborator.image ? (
-                            <div style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden' }}>
+                            <div
+                              style={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: "50%",
+                                overflow: "hidden",
+                              }}
+                            >
                               <Image
                                 src={collaborator.image}
                                 alt={collaborator.name ?? "Collaborator"}
                                 width={48}
                                 height={48}
-                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                }}
                               />
                             </div>
                           ) : (
-                            <div style={{
-                              width: 48,
-                              height: 48,
-                              borderRadius: '50%',
-                              backgroundColor: '#e9ecef',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
-                            }}>
+                            <div
+                              style={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: "50%",
+                                backgroundColor: "#e9ecef",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
                               <IconUser size={24} />
                             </div>
                           )}
                           <Stack gap={4} style={{ flex: 1 }}>
-                            <Text fw={500}>{collaborator.name ?? 'Anonymous'}</Text>
+                            <Text fw={500}>
+                              {collaborator.name ?? "Anonymous"}
+                            </Text>
                             {collaborator.profile?.jobTitle && (
                               <Text size="sm" c="dimmed">
                                 {collaborator.profile.jobTitle}
-                                {collaborator.profile.company && ` at ${collaborator.profile.company}`}
+                                {collaborator.profile.company &&
+                                  ` at ${collaborator.profile.company}`}
                               </Text>
                             )}
                             {collaborator.profile?.location && (
@@ -1582,7 +1799,7 @@ export default function ProjectDetailClient({
               label="Update Title"
               placeholder="e.g., Implemented user authentication"
               required
-              {...form.getInputProps('title')}
+              {...form.getInputProps("title")}
             />
 
             <MentionTextarea
@@ -1591,8 +1808,12 @@ export default function ProjectDetailClient({
               minRows={4}
               required
               value={form.values.content}
-              onChange={(value) => form.setFieldValue('content', value)}
-              error={typeof form.errors.content === 'string' ? form.errors.content : undefined}
+              onChange={(value) => form.setFieldValue("content", value)}
+              error={
+                typeof form.errors.content === "string"
+                  ? form.errors.content
+                  : undefined
+              }
             />
 
             <NumberInput
@@ -1600,7 +1821,7 @@ export default function ProjectDetailClient({
               placeholder="Which week of the program?"
               min={1}
               max={20}
-              {...form.getInputProps('weekNumber')}
+              {...form.getInputProps("weekNumber")}
             />
 
             <DatePickerInput
@@ -1608,8 +1829,12 @@ export default function ProjectDetailClient({
               placeholder="When did this update occur?"
               value={form.values.updateDate}
               onChange={(value) => {
-                const dateValue = value ? (typeof value === 'string' ? new Date(value) : value) : new Date();
-                form.setFieldValue('updateDate', dateValue);
+                const dateValue = value
+                  ? typeof value === "string"
+                    ? new Date(value)
+                    : value
+                  : new Date();
+                form.setFieldValue("updateDate", dateValue);
               }}
               maxDate={new Date()}
               clearable
@@ -1621,7 +1846,8 @@ export default function ProjectDetailClient({
                 Update Images
               </Text>
               <Text size="xs" c="dimmed">
-                Upload screenshots or demo images (JPG, PNG, GIF, or WebP, max 5MB each)
+                Upload screenshots or demo images (JPG, PNG, GIF, or WebP, max
+                5MB each)
               </Text>
 
               {form.values.imageUrls.length > 0 && (
@@ -1634,7 +1860,9 @@ export default function ProjectDetailClient({
                         radius="md"
                         h={120}
                         fit="cover"
-                        style={{ border: '1px solid var(--mantine-color-gray-3)' }}
+                        style={{
+                          border: "1px solid var(--mantine-color-gray-3)",
+                        }}
                       />
                       <ActionIcon
                         color="red"
@@ -1642,13 +1870,15 @@ export default function ProjectDetailClient({
                         radius="xl"
                         variant="filled"
                         style={{
-                          position: 'absolute',
+                          position: "absolute",
                           top: 4,
                           right: 4,
                         }}
                         onClick={() => {
-                          const newUrls = form.values.imageUrls.filter((_, i) => i !== index);
-                          form.setFieldValue('imageUrls', newUrls);
+                          const newUrls = form.values.imageUrls.filter(
+                            (_, i) => i !== index,
+                          );
+                          form.setFieldValue("imageUrls", newUrls);
                         }}
                       >
                         <IconX size={14} />
@@ -1680,7 +1910,9 @@ export default function ProjectDetailClient({
 
               {isUploadingImage && (
                 <Box>
-                  <Text size="sm" mb="xs">Uploading...</Text>
+                  <Text size="sm" mb="xs">
+                    Uploading...
+                  </Text>
                   <Progress value={uploadProgress} size="sm" />
                 </Box>
               )}
@@ -1689,12 +1921,15 @@ export default function ProjectDetailClient({
                 placeholder="Or paste image URL and press Enter"
                 size="xs"
                 onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
+                  if (event.key === "Enter") {
                     event.preventDefault();
                     const url = event.currentTarget.value.trim();
                     if (url) {
-                      form.setFieldValue('imageUrls', [...form.values.imageUrls, url]);
-                      event.currentTarget.value = '';
+                      form.setFieldValue("imageUrls", [
+                        ...form.values.imageUrls,
+                        url,
+                      ]);
+                      event.currentTarget.value = "";
                     }
                   }
                 }}
@@ -1705,8 +1940,10 @@ export default function ProjectDetailClient({
               label="GitHub URLs (comma-separated)"
               placeholder="https://github.com/user/repo/commit/abc123, https://github.com/user/repo/pull/5"
               onChange={(event) => {
-                const urls = event.target.value.split(',').map(url => url.trim());
-                form.setFieldValue('githubUrls', urls);
+                const urls = event.target.value
+                  .split(",")
+                  .map((url) => url.trim());
+                form.setFieldValue("githubUrls", urls);
               }}
             />
 
@@ -1714,8 +1951,10 @@ export default function ProjectDetailClient({
               label="Demo URLs (comma-separated)"
               placeholder="https://myproject.vercel.app, https://demo.example.com"
               onChange={(event) => {
-                const urls = event.target.value.split(',').map(url => url.trim());
-                form.setFieldValue('demoUrls', urls);
+                const urls = event.target.value
+                  .split(",")
+                  .map((url) => url.trim());
+                form.setFieldValue("demoUrls", urls);
               }}
             />
 
@@ -1723,13 +1962,18 @@ export default function ProjectDetailClient({
               label="Tags (comma-separated)"
               placeholder="milestone, frontend, demo, challenge"
               onChange={(event) => {
-                const tags = event.target.value.split(',').map(tag => tag.trim());
-                form.setFieldValue('tags', tags);
+                const tags = event.target.value
+                  .split(",")
+                  .map((tag) => tag.trim());
+                form.setFieldValue("tags", tags);
               }}
             />
 
             <Group justify="flex-end" mt="md">
-              <Button variant="subtle" onClick={() => setUpdateModalOpen(false)}>
+              <Button
+                variant="subtle"
+                onClick={() => setUpdateModalOpen(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" loading={createUpdate.isPending}>
@@ -1749,7 +1993,8 @@ export default function ProjectDetailClient({
       >
         <Stack gap="md">
           <Text>
-            Are you sure you want to delete this update? This action cannot be undone.
+            Are you sure you want to delete this update? This action cannot be
+            undone.
           </Text>
           <Group justify="flex-end">
             <Button variant="subtle" onClick={() => setDeleteModalOpen(false)}>
@@ -1775,11 +2020,18 @@ export default function ProjectDetailClient({
       >
         <Stack gap="md">
           <Text>
-            Are you sure you want to permanently delete <Text component="span" fw={600}>{project.title}</Text>?
-            This will delete the project and all its updates, collaborators, and data. This action cannot be undone.
+            Are you sure you want to permanently delete{" "}
+            <Text component="span" fw={600}>
+              {project.title}
+            </Text>
+            ? This will delete the project and all its updates, collaborators,
+            and data. This action cannot be undone.
           </Text>
           <Group justify="flex-end">
-            <Button variant="subtle" onClick={() => setDeleteProjectModalOpen(false)}>
+            <Button
+              variant="subtle"
+              onClick={() => setDeleteProjectModalOpen(false)}
+            >
               Cancel
             </Button>
             <Button
@@ -1814,7 +2066,7 @@ export default function ProjectDetailClient({
               width: "100%",
               height: "auto",
               maxHeight: "90vh",
-              objectFit: "contain"
+              objectFit: "contain",
             }}
           />
         )}
@@ -1864,7 +2116,8 @@ export default function ProjectDetailClient({
                 Project Logo
               </Text>
               <Text size="xs" c="dimmed">
-                Upload a small logo or icon for your project (JPG, PNG, GIF, or WebP, max 5MB)
+                Upload a small logo or icon for your project (JPG, PNG, GIF, or
+                WebP, max 5MB)
               </Text>
 
               {projectForm.values.imageUrl && (
@@ -1876,7 +2129,7 @@ export default function ProjectDetailClient({
                     h={100}
                     w={100}
                     fit="contain"
-                    style={{ border: '1px solid var(--mantine-color-gray-3)' }}
+                    style={{ border: "1px solid var(--mantine-color-gray-3)" }}
                   />
                 </Box>
               )}
@@ -1894,7 +2147,9 @@ export default function ProjectDetailClient({
                       size="sm"
                       loading={isUploadingLogo}
                     >
-                      {projectForm.values.imageUrl ? 'Change Logo' : 'Upload Logo'}
+                      {projectForm.values.imageUrl
+                        ? "Change Logo"
+                        : "Upload Logo"}
                     </Button>
                   )}
                 </FileButton>
@@ -1903,7 +2158,7 @@ export default function ProjectDetailClient({
                     variant="subtle"
                     size="sm"
                     color="red"
-                    onClick={() => projectForm.setFieldValue('imageUrl', '')}
+                    onClick={() => projectForm.setFieldValue("imageUrl", "")}
                   >
                     Remove Logo
                   </Button>
@@ -1912,7 +2167,9 @@ export default function ProjectDetailClient({
 
               {isUploadingLogo && (
                 <Box>
-                  <Text size="sm" mb="xs">Uploading logo...</Text>
+                  <Text size="sm" mb="xs">
+                    Uploading logo...
+                  </Text>
                   <Progress value={logoUploadProgress} size="sm" />
                 </Box>
               )}
@@ -1929,7 +2186,8 @@ export default function ProjectDetailClient({
                 Project Banner
               </Text>
               <Text size="xs" c="dimmed">
-                Upload a large banner image for your project page (JPG, PNG, GIF, or WebP, max 5MB)
+                Upload a large banner image for your project page (JPG, PNG,
+                GIF, or WebP, max 5MB)
               </Text>
 
               {projectForm.values.bannerUrl && (
@@ -1940,7 +2198,7 @@ export default function ProjectDetailClient({
                     radius="md"
                     h={150}
                     fit="cover"
-                    style={{ border: '1px solid var(--mantine-color-gray-3)' }}
+                    style={{ border: "1px solid var(--mantine-color-gray-3)" }}
                   />
                 </Box>
               )}
@@ -1958,7 +2216,9 @@ export default function ProjectDetailClient({
                       size="sm"
                       loading={isUploadingBanner}
                     >
-                      {projectForm.values.bannerUrl ? 'Change Banner' : 'Upload Banner'}
+                      {projectForm.values.bannerUrl
+                        ? "Change Banner"
+                        : "Upload Banner"}
                     </Button>
                   )}
                 </FileButton>
@@ -1967,7 +2227,7 @@ export default function ProjectDetailClient({
                     variant="subtle"
                     size="sm"
                     color="red"
-                    onClick={() => projectForm.setFieldValue('bannerUrl', '')}
+                    onClick={() => projectForm.setFieldValue("bannerUrl", "")}
                   >
                     Remove Banner
                   </Button>
@@ -1976,7 +2236,9 @@ export default function ProjectDetailClient({
 
               {isUploadingBanner && (
                 <Box>
-                  <Text size="sm" mb="xs">Uploading banner...</Text>
+                  <Text size="sm" mb="xs">
+                    Uploading banner...
+                  </Text>
                   <Progress value={bannerUploadProgress} size="sm" />
                 </Box>
               )}
@@ -2002,7 +2264,8 @@ export default function ProjectDetailClient({
                   Collaborators
                 </Text>
                 <Text size="xs" c="dimmed">
-                  Add other platform users who can edit this project and post updates
+                  Add other platform users who can edit this project and post
+                  updates
                 </Text>
 
                 {/* List of current collaborators */}
@@ -2010,7 +2273,9 @@ export default function ProjectDetailClient({
                   collaborators={projectCollaboratorsData.collaborators}
                   ownerId={projectCollaboratorsData.ownerId}
                   currentUserId={session?.user.id ?? ""}
-                  isOwner={session?.user.id === projectCollaboratorsData.ownerId}
+                  isOwner={
+                    session?.user.id === projectCollaboratorsData.ownerId
+                  }
                   onRemove={(userId) =>
                     removeCollaborator.mutate({
                       projectId: project.id,
@@ -2031,7 +2296,9 @@ export default function ProjectDetailClient({
                     }
                     excludeUserIds={[
                       userProfile.userId,
-                      ...projectCollaboratorsData.collaborators.map((c) => c.user.id),
+                      ...projectCollaboratorsData.collaborators.map(
+                        (c) => c.user.id,
+                      ),
                     ]}
                     placeholder="Search users to add as collaborators..."
                   />

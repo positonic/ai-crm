@@ -82,7 +82,13 @@ interface EvaluationInfo {
 interface AuditEvent {
   id: string;
   timestamp: Date;
-  eventType: 'EVALUATION_STARTED' | 'EVALUATION_COMPLETED' | 'SCORE_UPDATED' | 'COMMENT_ADDED' | 'STATUS_CHANGED' | 'AI_EVALUATION';
+  eventType:
+    | "EVALUATION_STARTED"
+    | "EVALUATION_COMPLETED"
+    | "SCORE_UPDATED"
+    | "COMMENT_ADDED"
+    | "STATUS_CHANGED"
+    | "AI_EVALUATION";
   applicationId: string;
   reviewerId?: string;
   reviewerName?: string;
@@ -91,41 +97,43 @@ interface AuditEvent {
   metadata?: unknown;
 }
 
-
-async function GET(request: NextRequest, context: { params: Promise<{ eventId: string }> }) {
+async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ eventId: string }> },
+) {
   const { eventId } = await context.params;
   const { searchParams } = new URL(request.url);
-  
+
   // Query parameters
-  const applicationId = searchParams.get('applicationId');
-  const reviewerId = searchParams.get('reviewerId');
-  const aiOnly = searchParams.get('aiOnly') === 'true';
-  const fromDate = searchParams.get('fromDate');
-  const toDate = searchParams.get('toDate');
-  const limit = parseInt(searchParams.get('limit') ?? '100');
-  
+  const applicationId = searchParams.get("applicationId");
+  const reviewerId = searchParams.get("reviewerId");
+  const aiOnly = searchParams.get("aiOnly") === "true";
+  const fromDate = searchParams.get("fromDate");
+  const toDate = searchParams.get("toDate");
+  const limit = parseInt(searchParams.get("limit") ?? "100");
+
   try {
     // Build where clause for audit trail query
     const whereClause: WhereClause = {
       application: {
-        eventId: eventId
-      }
+        eventId: eventId,
+      },
     };
-    
+
     if (applicationId) {
       whereClause.applicationId = applicationId;
     }
-    
+
     if (reviewerId) {
       whereClause.reviewerId = reviewerId;
     }
-    
+
     if (aiOnly) {
       whereClause.reviewer = {
-        email: "ai-reviewer@fundingthecommons.io"
+        email: "ai-reviewer@fundingthecommons.io",
       };
     }
-    
+
     if (fromDate ?? toDate) {
       whereClause.createdAt = {};
       if (fromDate) whereClause.createdAt.gte = new Date(fromDate);
@@ -147,9 +155,9 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
                 id: true,
                 name: true,
                 email: true,
-              }
-            }
-          }
+              },
+            },
+          },
         },
         reviewer: {
           select: {
@@ -157,7 +165,7 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
             name: true,
             email: true,
             role: true,
-          }
+          },
         },
         scores: {
           include: {
@@ -166,40 +174,40 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
                 id: true,
                 name: true,
                 category: true,
-              }
-            }
+              },
+            },
           },
           orderBy: {
-            createdAt: "asc"
-          }
+            createdAt: "asc",
+          },
         },
         comments: {
           orderBy: {
-            createdAt: "asc"
-          }
-        }
+            createdAt: "asc",
+          },
+        },
       },
       orderBy: {
-        createdAt: "desc"
+        createdAt: "desc",
       },
-      take: limit
+      take: limit,
     });
 
     const typedEvaluations = evaluations as EvaluationInfo[];
-
 
     // Build comprehensive audit trail
     const auditEvents: AuditEvent[] = [];
 
     // Process evaluation events
-    typedEvaluations.forEach(evaluation => {
-      const isAI = evaluation.reviewer.email === "ai-reviewer@fundingthecommons.io";
-      
+    typedEvaluations.forEach((evaluation) => {
+      const isAI =
+        evaluation.reviewer.email === "ai-reviewer@fundingthecommons.io";
+
       // Evaluation started event
       auditEvents.push({
         id: `eval_start_${evaluation.id}`,
         timestamp: evaluation.createdAt,
-        eventType: isAI ? 'AI_EVALUATION' : 'EVALUATION_STARTED',
+        eventType: isAI ? "AI_EVALUATION" : "EVALUATION_STARTED",
         applicationId: evaluation.applicationId,
         reviewerId: evaluation.reviewerId,
         reviewerName: evaluation.reviewer.name ?? evaluation.reviewer.email,
@@ -207,8 +215,8 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
         details: {
           evaluationId: evaluation.id,
           stage: evaluation.stage,
-          action: 'started',
-        }
+          action: "started",
+        },
       });
 
       // Evaluation completed event
@@ -216,7 +224,7 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
         auditEvents.push({
           id: `eval_complete_${evaluation.id}`,
           timestamp: evaluation.completedAt,
-          eventType: 'EVALUATION_COMPLETED',
+          eventType: "EVALUATION_COMPLETED",
           applicationId: evaluation.applicationId,
           reviewerId: evaluation.reviewerId,
           reviewerName: evaluation.reviewer.name ?? evaluation.reviewer.email,
@@ -228,17 +236,18 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
             recommendation: evaluation.recommendation,
             confidence: evaluation.confidence,
             timeSpentMinutes: evaluation.timeSpentMinutes,
-            action: 'completed',
+            action: "completed",
           },
           metadata: undefined,
         });
       }
 
       // Individual score events
-      evaluation.scores.forEach(score => {
+      evaluation.scores.forEach((score) => {
         auditEvents.push({
-          id: `score_${score.id}`,          timestamp: score.createdAt,
-          eventType: 'SCORE_UPDATED',
+          id: `score_${score.id}`,
+          timestamp: score.createdAt,
+          eventType: "SCORE_UPDATED",
           applicationId: evaluation.applicationId,
           reviewerId: evaluation.reviewerId,
           reviewerName: evaluation.reviewer.name ?? evaluation.reviewer.email,
@@ -251,17 +260,17 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
             criteriaCategory: score.criteria.category,
             score: score.score,
             reasoning: score.reasoning,
-            action: 'score_submitted',
-          }
+            action: "score_submitted",
+          },
         });
       });
 
       // Comment events
-      evaluation.comments.forEach(comment => {
+      evaluation.comments.forEach((comment) => {
         auditEvents.push({
           id: `comment_${comment.id}`,
           timestamp: comment.createdAt,
-          eventType: 'COMMENT_ADDED',
+          eventType: "COMMENT_ADDED",
           applicationId: evaluation.applicationId,
           reviewerId: evaluation.reviewerId,
           reviewerName: evaluation.reviewer.name ?? evaluation.reviewer.email,
@@ -272,8 +281,8 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
             questionKey: comment.questionKey,
             comment: comment.comment,
             isPrivate: comment.isPrivate,
-            action: 'comment_added',
-          }
+            action: "comment_added",
+          },
         });
       });
     });
@@ -285,46 +294,66 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
     const statistics = {
       totalEvents: auditEvents.length,
       eventTypes: {
-        EVALUATION_STARTED: auditEvents.filter(e => e.eventType === 'EVALUATION_STARTED').length,
-        EVALUATION_COMPLETED: auditEvents.filter(e => e.eventType === 'EVALUATION_COMPLETED').length,
-        AI_EVALUATION: auditEvents.filter(e => e.eventType === 'AI_EVALUATION').length,
-        SCORE_UPDATED: auditEvents.filter(e => e.eventType === 'SCORE_UPDATED').length,
-        COMMENT_ADDED: auditEvents.filter(e => e.eventType === 'COMMENT_ADDED').length,
+        EVALUATION_STARTED: auditEvents.filter(
+          (e) => e.eventType === "EVALUATION_STARTED",
+        ).length,
+        EVALUATION_COMPLETED: auditEvents.filter(
+          (e) => e.eventType === "EVALUATION_COMPLETED",
+        ).length,
+        AI_EVALUATION: auditEvents.filter(
+          (e) => e.eventType === "AI_EVALUATION",
+        ).length,
+        SCORE_UPDATED: auditEvents.filter(
+          (e) => e.eventType === "SCORE_UPDATED",
+        ).length,
+        COMMENT_ADDED: auditEvents.filter(
+          (e) => e.eventType === "COMMENT_ADDED",
+        ).length,
       },
-      reviewerActivity: auditEvents.reduce((acc, event) => {
-        if (!event.reviewerId) return acc;
-        acc[event.reviewerId] = (acc[event.reviewerId] ?? 0) + 1;
-        return acc;
-      }, {} as Record<string, number>),
+      reviewerActivity: auditEvents.reduce(
+        (acc, event) => {
+          if (!event.reviewerId) return acc;
+          acc[event.reviewerId] = (acc[event.reviewerId] ?? 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>,
+      ),
       aiVsHumanActivity: {
-        aiEvents: auditEvents.filter(e => e.isAIReviewer).length,
-        humanEvents: auditEvents.filter(e => !e.isAIReviewer).length,
+        aiEvents: auditEvents.filter((e) => e.isAIReviewer).length,
+        humanEvents: auditEvents.filter((e) => !e.isAIReviewer).length,
       },
       timeRange: {
         earliest: auditEvents[auditEvents.length - 1]?.timestamp ?? null,
         latest: auditEvents[0]?.timestamp ?? null,
-      }
+      },
     };
 
     // Identify patterns and anomalies
     const patterns = {
-      rapidFireEvaluations: auditEvents.filter(event => {
+      rapidFireEvaluations: auditEvents.filter((event) => {
         const timeSpent = event.details.timeSpentMinutes;
-        return event.eventType === 'EVALUATION_COMPLETED' && 
-               typeof timeSpent === 'number' &&
-               timeSpent < 5;
+        return (
+          event.eventType === "EVALUATION_COMPLETED" &&
+          typeof timeSpent === "number" &&
+          timeSpent < 5
+        );
       }).length,
-      
-      highVarianceScoring: typedEvaluations.filter(evaluation => {
-        const scores = evaluation.scores.map(s => s.score);
+
+      highVarianceScoring: typedEvaluations.filter((evaluation) => {
+        const scores = evaluation.scores.map((s) => s.score);
         if (scores.length < 2) return false;
-        const mean = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-        const variance = scores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / scores.length;
+        const mean =
+          scores.reduce((sum, score) => sum + score, 0) / scores.length;
+        const variance =
+          scores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) /
+          scores.length;
         return Math.sqrt(variance) > 15; // High standard deviation
       }).length,
-      
-      incompleteEvaluations: typedEvaluations.filter(evaluation => !evaluation.completedAt).length,
-      
+
+      incompleteEvaluations: typedEvaluations.filter(
+        (evaluation) => !evaluation.completedAt,
+      ).length,
+
       reviewerWorkload: Object.entries(statistics.reviewerActivity)
         .map(([reviewerId, count]) => ({ reviewerId, eventCount: count }))
         .sort((a, b) => b.eventCount - a.eventCount)
@@ -348,23 +377,25 @@ async function GET(request: NextRequest, context: { params: Promise<{ eventId: s
         },
         metadata: {
           generatedAt: new Date().toISOString(),
-          purpose: "Complete audit trail of evaluation activities for compliance and analysis",
-          dataRetention: "Audit data includes all evaluation actions and timestamps",
-          privacy: "Personal details anonymized where possible while maintaining audit integrity"
-        }
-      }
+          purpose:
+            "Complete audit trail of evaluation activities for compliance and analysis",
+          dataRetention:
+            "Audit data includes all evaluation actions and timestamps",
+          privacy:
+            "Personal details anonymized where possible while maintaining audit integrity",
+        },
+      },
     });
-
   } catch (error) {
     console.error("[MASTRA API] Error generating audit trail:", error);
-    
+
     return Response.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "Failed to generate audit trail",
-        details: error instanceof Error ? error.message : "Unknown error"
-      }, 
-      { status: 500 }
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
     );
   }
 }

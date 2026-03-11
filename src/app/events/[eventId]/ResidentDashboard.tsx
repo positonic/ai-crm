@@ -35,6 +35,7 @@ import {
   IconBrandTwitter,
   IconWorld,
   IconHandStop,
+  IconTarget,
 } from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import Link from "next/link";
@@ -46,6 +47,7 @@ import { ProjectManager } from "~/app/_components/ProjectManager";
 interface ResidentDashboardProps {
   eventId: string;
   eventName: string;
+  featureDeliberation?: boolean;
   userApplication: {
     status: string;
   } | null;
@@ -54,25 +56,37 @@ interface ResidentDashboardProps {
 export default function ResidentDashboard({
   eventId,
   eventName,
+  featureDeliberation,
   userApplication: _userApplication,
 }: ResidentDashboardProps) {
   const { data: session } = useSession();
 
   // Get profile completion data
-  const { data: profileCompletion } = api.profile.getProfileCompletion.useQuery();
+  const { data: profileCompletion } =
+    api.profile.getProfileCompletion.useQuery();
 
   // Get current user's projects - we'll need to refetch this when projects change
-  const { data: userProfile, refetch: refetchUserProfile } = api.profile.getMyProfile.useQuery();
+  const { data: userProfile, refetch: refetchUserProfile } =
+    api.profile.getMyProfile.useQuery();
 
   // Get accepted residents
-  const { data: residentsData } = api.application.getAcceptedResidents.useQuery({
-    eventId,
-  });
+  const { data: residentsData } = api.application.getAcceptedResidents.useQuery(
+    {
+      eventId,
+    },
+  );
 
   // Get resident projects
-  const { data: residentProjects } = api.application.getResidentProjects.useQuery({
-    eventId,
-  });
+  const { data: residentProjects } =
+    api.application.getResidentProjects.useQuery({
+      eventId,
+    });
+
+  // Check for active deliberation (only when feature flag is enabled)
+  const { data: deliberation } = api.deliberation.getDeliberation.useQuery(
+    { eventId },
+    { enabled: !!eventId && !!featureDeliberation },
+  );
 
   const userProjects = userProfile?.projects ?? [];
 
@@ -85,7 +99,8 @@ export default function ResidentDashboard({
             Welcome to {eventName}!
           </Title>
           <Text c="dimmed">
-            Your resident dashboard - connect, collaborate, and create amazing things together.
+            Your resident dashboard - connect, collaborate, and create amazing
+            things together.
           </Text>
         </div>
 
@@ -99,10 +114,7 @@ export default function ResidentDashboard({
                     <IconUser size={20} />
                     <Text fw={600}>Profile Completion</Text>
                   </Group>
-                  <Badge
-                    color="orange"
-                    variant="light"
-                  >
+                  <Badge color="orange" variant="light">
                     {profileCompletion?.percentage ?? 0}%
                   </Badge>
                 </Group>
@@ -116,27 +128,39 @@ export default function ResidentDashboard({
 
                 <Alert icon={<IconAlertCircle size={16} />} color="red" mb="md">
                   <Text size="sm">
-                    <strong>Other residents will not be able to find you</strong> until you complete your profile 
-                    (currently at {profileCompletion?.percentage ?? 0}%). Complete your profile to be visible 
-                    in the participant directory.
+                    <strong>
+                      Other residents will not be able to find you
+                    </strong>{" "}
+                    until you complete your profile (currently at{" "}
+                    {profileCompletion?.percentage ?? 0}%). Complete your
+                    profile to be visible in the participant directory.
                   </Text>
                 </Alert>
 
-                {profileCompletion && profileCompletion.missingFields.length > 0 && (
-                  <Stack gap="xs" mb="md">
-                    <Text size="sm" fw={500}>Missing fields:</Text>
-                    {profileCompletion.missingFields.slice(0, 3).map((field) => (
-                      <Text key={field} size="xs" c="dimmed">
-                        • {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                {profileCompletion &&
+                  profileCompletion.missingFields.length > 0 && (
+                    <Stack gap="xs" mb="md">
+                      <Text size="sm" fw={500}>
+                        Missing fields:
                       </Text>
-                    ))}
-                    {profileCompletion.missingFields.length > 3 && (
-                      <Text size="xs" c="dimmed">
-                        • And {profileCompletion.missingFields.length - 3} more...
-                      </Text>
-                    )}
-                  </Stack>
-                )}
+                      {profileCompletion.missingFields
+                        .slice(0, 3)
+                        .map((field) => (
+                          <Text key={field} size="xs" c="dimmed">
+                            •{" "}
+                            {field
+                              .replace(/([A-Z])/g, " $1")
+                              .replace(/^./, (str) => str.toUpperCase())}
+                          </Text>
+                        ))}
+                      {profileCompletion.missingFields.length > 3 && (
+                        <Text size="xs" c="dimmed">
+                          • And {profileCompletion.missingFields.length - 3}{" "}
+                          more...
+                        </Text>
+                      )}
+                    </Stack>
+                  )}
 
                 <Button
                   component={Link}
@@ -183,15 +207,29 @@ export default function ResidentDashboard({
           <Grid.Col span={12}>
             <Tabs defaultValue="participants" variant="outline">
               <Tabs.List grow>
-                <Tabs.Tab value="participants" leftSection={<IconUsers size={20} />}>
+                <Tabs.Tab
+                  value="participants"
+                  leftSection={<IconUsers size={20} />}
+                >
                   Participants
                 </Tabs.Tab>
                 <Tabs.Tab value="projects" leftSection={<IconBulb size={20} />}>
                   Projects
                 </Tabs.Tab>
-                <Tabs.Tab value="asks-offers" leftSection={<IconHandStop size={20} />}>
+                <Tabs.Tab
+                  value="asks-offers"
+                  leftSection={<IconHandStop size={20} />}
+                >
                   Asks & Offers
                 </Tabs.Tab>
+                {featureDeliberation && deliberation && (
+                  <Tabs.Tab
+                    value="priorities"
+                    leftSection={<IconTarget size={20} />}
+                  >
+                    Priorities
+                  </Tabs.Tab>
+                )}
               </Tabs.List>
 
               <Tabs.Panel value="participants" pt="lg">
@@ -203,17 +241,47 @@ export default function ResidentDashboard({
               </Tabs.Panel>
 
               <Tabs.Panel value="projects" pt="lg">
-                <ProjectsTab
-                  residentProjects={residentProjects}
-                />
+                <ProjectsTab residentProjects={residentProjects} />
               </Tabs.Panel>
 
               <Tabs.Panel value="asks-offers" pt="lg">
-                <AsksOffersTab
-                  eventId={eventId}
-                  session={session}
-                />
+                <AsksOffersTab eventId={eventId} session={session} />
               </Tabs.Panel>
+
+              {featureDeliberation && deliberation && (
+                <Tabs.Panel value="priorities" pt="lg">
+                  <Card withBorder p="lg">
+                    <Stack gap="md" align="center">
+                      <IconTarget
+                        size={40}
+                        color="var(--mantine-color-grape-6)"
+                      />
+                      <Title order={4}>{deliberation.title}</Title>
+                      <Text size="sm" c="dimmed" ta="center">
+                        {deliberation.description ??
+                          "Share what matters most and vote on community priorities."}
+                      </Text>
+                      <Group gap="xs">
+                        <Badge variant="light" color="green" size="sm">
+                          {deliberation._count.priorities} priorities
+                        </Badge>
+                        <Badge variant="light" color="blue" size="sm">
+                          {deliberation.totalVotes} votes
+                        </Badge>
+                      </Group>
+                      <Button
+                        component={Link}
+                        href={`/events/${eventId}/deliberation`}
+                        leftSection={<IconTarget size={16} />}
+                        variant="light"
+                        color="grape"
+                      >
+                        Open Deliberation
+                      </Button>
+                    </Stack>
+                  </Card>
+                </Tabs.Panel>
+              )}
             </Tabs>
           </Grid.Col>
         </Grid>
@@ -223,7 +291,10 @@ export default function ResidentDashboard({
 }
 
 // Helper function for social icons
-function getSocialIcon(url: string, type: 'github' | 'linkedin' | 'twitter' | 'website') {
+function getSocialIcon(
+  url: string,
+  type: "github" | "linkedin" | "twitter" | "website",
+) {
   const icons = {
     github: IconBrandGithub,
     linkedin: IconBrandLinkedin,
@@ -236,7 +307,7 @@ function getSocialIcon(url: string, type: 'github' | 'linkedin' | 'twitter' | 'w
       variant="light"
       size="sm"
       color="blue"
-      onClick={() => window.open(url, '_blank')}
+      onClick={() => window.open(url, "_blank")}
     >
       <Icon size={16} />
     </ActionIcon>
@@ -244,38 +315,44 @@ function getSocialIcon(url: string, type: 'github' | 'linkedin' | 'twitter' | 'w
 }
 
 interface ParticipantsTabProps {
-  residentsData: {
-    residents: Array<{
-      user?: {
-        id: string;
-        name: string | null;
-        image: string | null;
-        email?: string | null;
-        profile?: {
-          avatarUrl?: string | null;
-          jobTitle?: string | null;
-          company?: string | null;
-          location?: string | null;
-          bio?: string | null;
-          skills?: string[];
-          githubUrl?: string | null;
-          linkedinUrl?: string | null;
-          twitterUrl?: string | null;
-          website?: string | null;
-          availableForMentoring?: boolean | null;
-          availableForHiring?: boolean | null;
-          availableForOfficeHours?: boolean | null;
-        } | null;
-      } | null;
-      completionPercentage: number;
-    }>;
-    visibleResidents: number;
-    hiddenCount: number;
-  } | undefined;
+  residentsData:
+    | {
+        residents: Array<{
+          user?: {
+            id: string;
+            name: string | null;
+            image: string | null;
+            email?: string | null;
+            profile?: {
+              avatarUrl?: string | null;
+              jobTitle?: string | null;
+              company?: string | null;
+              location?: string | null;
+              bio?: string | null;
+              skills?: string[];
+              githubUrl?: string | null;
+              linkedinUrl?: string | null;
+              twitterUrl?: string | null;
+              website?: string | null;
+              availableForMentoring?: boolean | null;
+              availableForHiring?: boolean | null;
+              availableForOfficeHours?: boolean | null;
+            } | null;
+          } | null;
+          completionPercentage: number;
+        }>;
+        visibleResidents: number;
+        hiddenCount: number;
+      }
+    | undefined;
   session: Session | null;
   eventId: string;
 }
-function ParticipantsTab({ residentsData, session, eventId }: ParticipantsTabProps) {
+function ParticipantsTab({
+  residentsData,
+  session,
+  eventId,
+}: ParticipantsTabProps) {
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>
       <Group justify="space-between" mb="md">
@@ -292,7 +369,13 @@ function ParticipantsTab({ residentsData, session, eventId }: ParticipantsTabPro
             </Badge>
           )}
           {session && (
-            <Button component={Link} href={`/profile/edit?from-event=${eventId}`} size="xs" variant="light" leftSection={<IconEdit size={14} />}>
+            <Button
+              component={Link}
+              href={`/profile/edit?from-event=${eventId}`}
+              size="xs"
+              variant="light"
+              leftSection={<IconEdit size={14} />}
+            >
               Edit My Profile
             </Button>
           )}
@@ -302,8 +385,9 @@ function ParticipantsTab({ residentsData, session, eventId }: ParticipantsTabPro
       {residentsData && residentsData.hiddenCount > 0 && (
         <Alert icon={<IconAlertCircle size={16} />} color="blue" mb="md">
           <Text size="sm">
-            <strong>{residentsData.hiddenCount} participants</strong> haven&apos;t completed their profiles yet.
-            Complete your profile to help build our participant community!
+            <strong>{residentsData.hiddenCount} participants</strong>{" "}
+            haven&apos;t completed their profiles yet. Complete your profile to
+            help build our participant community!
           </Text>
         </Alert>
       )}
@@ -312,15 +396,15 @@ function ParticipantsTab({ residentsData, session, eventId }: ParticipantsTabPro
         <Grid>
           {residentsData.residents.map((resident) => (
             <Grid.Col key={resident.user?.id} span={{ base: 12, sm: 6, lg: 4 }}>
-              <Card 
-                shadow="sm" 
-                padding="lg" 
-                radius="md" 
-                withBorder 
+              <Card
+                shadow="sm"
+                padding="lg"
+                radius="md"
+                withBorder
                 h="100%"
                 component={Link}
                 href={`/profiles/${resident.user?.id}`}
-                style={{ textDecoration: 'none', color: 'inherit' }}
+                style={{ textDecoration: "none", color: "inherit" }}
               >
                 <Card.Section p="lg" pb="xs">
                   <Group gap="sm">
@@ -346,7 +430,8 @@ function ParticipantsTab({ residentsData, session, eventId }: ParticipantsTabPro
                       {resident.user?.profile?.jobTitle && (
                         <Text size="sm" c="dimmed" lineClamp={1}>
                           {resident.user?.profile?.jobTitle}
-                          {resident.user?.profile?.company && ` at ${resident.user?.profile?.company}`}
+                          {resident.user?.profile?.company &&
+                            ` at ${resident.user?.profile?.company}`}
                         </Text>
                       )}
                     </div>
@@ -369,20 +454,23 @@ function ParticipantsTab({ residentsData, session, eventId }: ParticipantsTabPro
                     </Text>
                   )}
 
-                  {resident.user?.profile?.skills && resident.user?.profile?.skills.length > 0 && (
-                    <Group gap={4} mb="xs">
-                      {resident.user?.profile?.skills.slice(0, 3).map((skill) => (
-                        <Badge key={skill} size="xs" variant="light">
-                          {skill}
-                        </Badge>
-                      ))}
-                      {resident.user?.profile?.skills.length > 3 && (
-                        <Badge size="xs" variant="outline" color="gray">
-                          +{resident.user?.profile?.skills.length - 3}
-                        </Badge>
-                      )}
-                    </Group>
-                  )}
+                  {resident.user?.profile?.skills &&
+                    resident.user?.profile?.skills.length > 0 && (
+                      <Group gap={4} mb="xs">
+                        {resident.user?.profile?.skills
+                          .slice(0, 3)
+                          .map((skill) => (
+                            <Badge key={skill} size="xs" variant="light">
+                              {skill}
+                            </Badge>
+                          ))}
+                        {resident.user?.profile?.skills.length > 3 && (
+                          <Badge size="xs" variant="outline" color="gray">
+                            +{resident.user?.profile?.skills.length - 3}
+                          </Badge>
+                        )}
+                      </Group>
+                    )}
                 </Card.Section>
 
                 <Card.Section px="lg" pb="lg">
@@ -427,10 +515,26 @@ function ParticipantsTab({ residentsData, session, eventId }: ParticipantsTabPro
                     </Group>
 
                     <Group gap={4}>
-                      {resident.user?.profile?.githubUrl && getSocialIcon(resident.user?.profile?.githubUrl, 'github')}
-                      {resident.user?.profile?.linkedinUrl && getSocialIcon(resident.user?.profile?.linkedinUrl, 'linkedin')}
-                      {resident.user?.profile?.twitterUrl && getSocialIcon(resident.user?.profile?.twitterUrl, 'twitter')}
-                      {resident.user?.profile?.website && getSocialIcon(resident.user?.profile?.website, 'website')}
+                      {resident.user?.profile?.githubUrl &&
+                        getSocialIcon(
+                          resident.user?.profile?.githubUrl,
+                          "github",
+                        )}
+                      {resident.user?.profile?.linkedinUrl &&
+                        getSocialIcon(
+                          resident.user?.profile?.linkedinUrl,
+                          "linkedin",
+                        )}
+                      {resident.user?.profile?.twitterUrl &&
+                        getSocialIcon(
+                          resident.user?.profile?.twitterUrl,
+                          "twitter",
+                        )}
+                      {resident.user?.profile?.website &&
+                        getSocialIcon(
+                          resident.user?.profile?.website,
+                          "website",
+                        )}
                     </Group>
                   </Group>
                 </Card.Section>
@@ -451,11 +555,7 @@ function ParticipantsTab({ residentsData, session, eventId }: ParticipantsTabPro
 
       {residentsData && residentsData.visibleResidents > 8 && (
         <Group justify="center" mt="md">
-          <Button
-            component={Link}
-            href="/profiles"
-            variant="light"
-          >
+          <Button component={Link} href="/profiles" variant="light">
             View All Participants ({residentsData.visibleResidents})
           </Button>
         </Group>
@@ -465,23 +565,25 @@ function ParticipantsTab({ residentsData, session, eventId }: ParticipantsTabPro
 }
 
 interface ProjectsTabProps {
-  residentProjects: Array<{
-    id: string;
-    title: string;
-    description: string | null;
-    technologies: string[];
-    liveUrl: string | null;
-    githubUrl: string | null;
-    profile: {
-      avatarUrl?: string | null;
-      user?: {
+  residentProjects:
+    | Array<{
         id: string;
-        name: string | null;
-        image: string | null;
-        email?: string | null;
-      } | null;
-    };
-  }> | undefined;
+        title: string;
+        description: string | null;
+        technologies: string[];
+        liveUrl: string | null;
+        githubUrl: string | null;
+        profile: {
+          avatarUrl?: string | null;
+          user?: {
+            id: string;
+            name: string | null;
+            image: string | null;
+            email?: string | null;
+          } | null;
+        };
+      }>
+    | undefined;
 }
 
 function ProjectsTab({ residentProjects }: ProjectsTabProps) {
@@ -491,24 +593,26 @@ function ProjectsTab({ residentProjects }: ProjectsTabProps) {
         <Group gap="xs">
           <Text fw={600}>Participant Projects</Text>
         </Group>
-        <Badge variant="light">
-          {residentProjects?.length ?? 0} projects
-        </Badge>
+        <Badge variant="light">{residentProjects?.length ?? 0} projects</Badge>
       </Group>
 
       {residentProjects && residentProjects.length > 0 ? (
         <Grid>
           {residentProjects.map((project) => (
             <Grid.Col key={project.id} span={{ base: 12, sm: 6, md: 4 }}>
-              <Card 
-                shadow="xs" 
-                padding="md" 
-                radius="md" 
-                withBorder 
+              <Card
+                shadow="xs"
+                padding="md"
+                radius="md"
+                withBorder
                 h="100%"
                 component={Link}
                 href={`/projects/${project.id}`}
-                style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}
+                style={{
+                  textDecoration: "none",
+                  color: "inherit",
+                  cursor: "pointer",
+                }}
               >
                 <Stack gap="xs">
                   <Group justify="space-between" align="flex-start">
@@ -523,7 +627,7 @@ function ProjectsTab({ residentProjects }: ProjectsTabProps) {
                             size="xs"
                             onClick={(e) => {
                               e.stopPropagation();
-                              window.open(project.liveUrl!, '_blank');
+                              window.open(project.liveUrl!, "_blank");
                             }}
                           >
                             <IconExternalLink size={12} />
@@ -537,7 +641,7 @@ function ProjectsTab({ residentProjects }: ProjectsTabProps) {
                             size="xs"
                             onClick={(e) => {
                               e.stopPropagation();
-                              window.open(project.githubUrl!, '_blank');
+                              window.open(project.githubUrl!, "_blank");
                             }}
                           >
                             <IconBrandGithub size={12} />
@@ -606,11 +710,7 @@ function ProjectsTab({ residentProjects }: ProjectsTabProps) {
 
       {residentProjects && residentProjects.length > 6 && (
         <Group justify="center" mt="md">
-          <Button
-            component={Link}
-            href="/projects"
-            variant="light"
-          >
+          <Button component={Link} href="/projects" variant="light">
             View All Projects ({residentProjects.length})
           </Button>
         </Group>

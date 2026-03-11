@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { TextInput, Paper, Group, Avatar, Text, Stack, Loader } from "@mantine/core";
+import {
+  TextInput,
+  Paper,
+  Group,
+  Avatar,
+  Text,
+  Stack,
+  Loader,
+} from "@mantine/core";
 import { api } from "~/trpc/react";
 import { IconSearch } from "@tabler/icons-react";
 import { getDisplayName } from "~/utils/userDisplay";
@@ -38,9 +46,8 @@ export function UserSearchSelect({
   );
 
   // Filter out excluded users
-  const filteredResults = searchResults?.filter(
-    (user) => !excludeUserIds.includes(user.id),
-  ) ?? [];
+  const filteredResults =
+    searchResults?.filter((user) => !excludeUserIds.includes(user.id)) ?? [];
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -143,13 +150,19 @@ export function UserSearchSelect({
                   style={{
                     cursor: "pointer",
                     backgroundColor:
-                      index === selectedIndex ? "var(--mantine-color-gray-1)" : "transparent",
+                      index === selectedIndex
+                        ? "var(--mantine-color-gray-1)"
+                        : "transparent",
                   }}
                   onClick={() => handleSelect(user)}
                   onMouseEnter={() => setSelectedIndex(index)}
                 >
                   <Group gap="sm">
-                    <Avatar src={user.image} alt={getDisplayName(user, "User")} size="sm" />
+                    <Avatar
+                      src={user.image}
+                      alt={getDisplayName(user, "User")}
+                      size="sm"
+                    />
                     <div style={{ flex: 1 }}>
                       <Text size="sm" fw={500}>
                         {getDisplayName(user, "Unknown")}

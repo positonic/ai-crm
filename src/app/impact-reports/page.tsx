@@ -11,10 +11,7 @@ import {
   Stack,
   ThemeIcon,
 } from "@mantine/core";
-import {
-  IconCalendar,
-  IconMapPin,
-} from "@tabler/icons-react";
+import { IconCalendar, IconMapPin } from "@tabler/icons-react";
 import Link from "next/link";
 
 interface ImpactReport {
@@ -89,7 +86,11 @@ export default function ImpactReportsPage() {
               padding="lg"
               radius="md"
               withBorder
-              style={{ textDecoration: "none", color: "inherit", cursor: "pointer" }}
+              style={{
+                textDecoration: "none",
+                color: "inherit",
+                cursor: "pointer",
+              }}
             >
               <Stack gap="md">
                 <div>

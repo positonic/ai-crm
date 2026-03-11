@@ -55,7 +55,9 @@ interface ThreadDetailClientProps {
   threadId: string;
 }
 
-export default function ThreadDetailClient({ threadId }: ThreadDetailClientProps) {
+export default function ThreadDetailClient({
+  threadId,
+}: ThreadDetailClientProps) {
   const { data: session } = useSession();
   const router = useRouter();
   const utils = api.useUtils();
@@ -66,7 +68,11 @@ export default function ThreadDetailClient({ threadId }: ThreadDetailClientProps
   const [replyContent, setReplyContent] = useState("");
 
   // Fetch thread
-  const { data: thread, isLoading, error } = api.forum.getThreadById.useQuery({
+  const {
+    data: thread,
+    isLoading,
+    error,
+  } = api.forum.getThreadById.useQuery({
     id: threadId,
   });
 
@@ -224,7 +230,9 @@ export default function ThreadDetailClient({ threadId }: ThreadDetailClientProps
                   <ActionIcon
                     variant="subtle"
                     color="red"
-                    onClick={() => deleteThreadMutation.mutate({ id: threadId })}
+                    onClick={() =>
+                      deleteThreadMutation.mutate({ id: threadId })
+                    }
                     loading={deleteThreadMutation.isPending}
                   >
                     <IconTrash size={18} />
@@ -255,7 +263,8 @@ export default function ThreadDetailClient({ threadId }: ThreadDetailClientProps
                 <Text fw={500}>{getDisplayName(thread.user, "Anonymous")}</Text>
                 <Text size="sm" c="dimmed">
                   {thread.user.profile?.jobTitle}
-                  {thread.user.profile?.company && ` at ${thread.user.profile.company}`}
+                  {thread.user.profile?.company &&
+                    ` at ${thread.user.profile.company}`}
                   {" · "}
                   {getRelativeTime(thread.createdAt)}
                 </Text>
@@ -284,16 +293,26 @@ export default function ThreadDetailClient({ threadId }: ThreadDetailClientProps
                   variant={thread.hasLiked ? "filled" : "light"}
                   color={thread.hasLiked ? "red" : "gray"}
                   size="sm"
-                  leftSection={thread.hasLiked ? <IconHeartFilled size={16} /> : <IconHeart size={16} />}
+                  leftSection={
+                    thread.hasLiked ? (
+                      <IconHeartFilled size={16} />
+                    ) : (
+                      <IconHeart size={16} />
+                    )
+                  }
                   onClick={handleThreadLikeToggle}
-                  loading={likeThreadMutation.isPending || unlikeThreadMutation.isPending}
+                  loading={
+                    likeThreadMutation.isPending ||
+                    unlikeThreadMutation.isPending
+                  }
                 >
                   {thread.likeCount} {thread.likeCount === 1 ? "Like" : "Likes"}
                 </Button>
                 <Group gap={4}>
                   <IconMessageCircle size={18} style={{ opacity: 0.6 }} />
                   <Text size="sm" c="dimmed">
-                    {thread.comments.length} {thread.comments.length === 1 ? "Comment" : "Comments"}
+                    {thread.comments.length}{" "}
+                    {thread.comments.length === 1 ? "Comment" : "Comments"}
                   </Text>
                 </Group>
               </Group>
@@ -367,7 +386,9 @@ export default function ThreadDetailClient({ threadId }: ThreadDetailClientProps
                             variant="subtle"
                             color="red"
                             size="sm"
-                            onClick={() => deleteCommentMutation.mutate({ id: comment.id })}
+                            onClick={() =>
+                              deleteCommentMutation.mutate({ id: comment.id })
+                            }
                             loading={deleteCommentMutation.isPending}
                           >
                             <IconTrash size={14} />
@@ -385,8 +406,16 @@ export default function ThreadDetailClient({ threadId }: ThreadDetailClientProps
                         variant="subtle"
                         color={commentHasLiked ? "red" : "gray"}
                         size="xs"
-                        leftSection={commentHasLiked ? <IconHeartFilled size={14} /> : <IconHeart size={14} />}
-                        onClick={() => handleCommentLikeToggle(comment.id, commentHasLiked)}
+                        leftSection={
+                          commentHasLiked ? (
+                            <IconHeartFilled size={14} />
+                          ) : (
+                            <IconHeart size={14} />
+                          )
+                        }
+                        onClick={() =>
+                          handleCommentLikeToggle(comment.id, commentHasLiked)
+                        }
                       >
                         {comment.likes.length}
                       </Button>
@@ -395,7 +424,11 @@ export default function ThreadDetailClient({ threadId }: ThreadDetailClientProps
                         color="gray"
                         size="xs"
                         leftSection={<IconCornerDownRight size={14} />}
-                        onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                        onClick={() =>
+                          setReplyingTo(
+                            replyingTo === comment.id ? null : comment.id,
+                          )
+                        }
                       >
                         Reply
                       </Button>
@@ -408,7 +441,9 @@ export default function ThreadDetailClient({ threadId }: ThreadDetailClientProps
                           <Textarea
                             placeholder="Write a reply..."
                             value={replyContent}
-                            onChange={(e) => setReplyContent(e.currentTarget.value)}
+                            onChange={(e) =>
+                              setReplyContent(e.currentTarget.value)
+                            }
                             minRows={2}
                             size="sm"
                           />
@@ -438,20 +473,33 @@ export default function ThreadDetailClient({ threadId }: ThreadDetailClientProps
 
                     {/* Nested Replies */}
                     {comment.replies && comment.replies.length > 0 && (
-                      <Stack gap="sm" style={{ marginLeft: "2rem", borderLeft: "2px solid var(--mantine-color-gray-3)", paddingLeft: "1rem" }}>
+                      <Stack
+                        gap="sm"
+                        style={{
+                          marginLeft: "2rem",
+                          borderLeft: "2px solid var(--mantine-color-gray-3)",
+                          paddingLeft: "1rem",
+                        }}
+                      >
                         {comment.replies.map((reply) => {
                           const replyHasLiked = session?.user
-                            ? reply.likes.some((like) => like.userId === session.user.id)
+                            ? reply.likes.some(
+                                (like) => like.userId === session.user.id,
+                              )
                             : false;
 
                           return (
                             <Paper key={reply.id} p="sm" bg="gray.0">
                               <Stack gap="xs">
-                                <Group justify="space-between" align="flex-start">
+                                <Group
+                                  justify="space-between"
+                                  align="flex-start"
+                                >
                                   <Group gap="xs">
                                     <Avatar
                                       src={getAvatarUrl({
-                                        customAvatarUrl: reply.user.profile?.avatarUrl,
+                                        customAvatarUrl:
+                                          reply.user.profile?.avatarUrl,
                                         oauthImageUrl: reply.user.image,
                                         name: reply.user.name,
                                       })}
@@ -475,7 +523,11 @@ export default function ThreadDetailClient({ threadId }: ThreadDetailClientProps
                                       variant="subtle"
                                       color="red"
                                       size="xs"
-                                      onClick={() => deleteCommentMutation.mutate({ id: reply.id })}
+                                      onClick={() =>
+                                        deleteCommentMutation.mutate({
+                                          id: reply.id,
+                                        })
+                                      }
                                     >
                                       <IconTrash size={12} />
                                     </ActionIcon>
@@ -486,8 +538,19 @@ export default function ThreadDetailClient({ threadId }: ThreadDetailClientProps
                                   variant="subtle"
                                   color={replyHasLiked ? "red" : "gray"}
                                   size="xs"
-                                  leftSection={replyHasLiked ? <IconHeartFilled size={12} /> : <IconHeart size={12} />}
-                                  onClick={() => handleCommentLikeToggle(reply.id, replyHasLiked)}
+                                  leftSection={
+                                    replyHasLiked ? (
+                                      <IconHeartFilled size={12} />
+                                    ) : (
+                                      <IconHeart size={12} />
+                                    )
+                                  }
+                                  onClick={() =>
+                                    handleCommentLikeToggle(
+                                      reply.id,
+                                      replyHasLiked,
+                                    )
+                                  }
                                   style={{ width: "fit-content" }}
                                 >
                                   {reply.likes.length}

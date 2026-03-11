@@ -8,10 +8,20 @@ export const metadata: Metadata = {
   description: "Event schedule",
 };
 
-export default async function SchedulePage({ params }: { params: Promise<{ eventId: string }> }) {
+export default async function SchedulePage({
+  params,
+}: {
+  params: Promise<{ eventId: string }>;
+}) {
   const { eventId } = await params;
   return (
-    <Suspense fallback={<Center h={400}><Loader size="lg" /></Center>}>
+    <Suspense
+      fallback={
+        <Center h={400}>
+          <Loader size="lg" />
+        </Center>
+      }
+    >
       <SchedulePageClient eventId={eventId} />
     </Suspense>
   );

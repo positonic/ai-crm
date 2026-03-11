@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { getAIMetricSuggestionService } from "~/server/services/aiMetricSuggestion";
 import { captureApiError } from "~/utils/errorCapture";
@@ -12,39 +16,34 @@ import { captureApiError } from "~/utils/errorCapture";
 
 // Zod schemas for validation
 const metricTypeEnum = z.enum([
-  'BUILDER',
-  'ENVIRONMENTAL',
-  'GIT',
-  'ONCHAIN',
-  'OFFCHAIN',
-  'CUSTOM'
+  "BUILDER",
+  "ENVIRONMENTAL",
+  "GIT",
+  "ONCHAIN",
+  "OFFCHAIN",
+  "CUSTOM",
 ]);
 
 const collectionMethodEnum = z.enum([
-  'ONCHAIN',
-  'OFFCHAIN_API',
-  'SELF_REPORTING',
-  'MANUAL',
-  'AUTOMATED'
+  "ONCHAIN",
+  "OFFCHAIN_API",
+  "SELF_REPORTING",
+  "MANUAL",
+  "AUTOMATED",
 ]);
 
 const metricCadenceEnum = z.enum([
-  'REALTIME',
-  'DAILY',
-  'WEEKLY',
-  'MONTHLY',
-  'QUARTERLY',
-  'ANNUAL',
-  'ONE_TIME',
-  'CUSTOM'
+  "REALTIME",
+  "DAILY",
+  "WEEKLY",
+  "MONTHLY",
+  "QUARTERLY",
+  "ANNUAL",
+  "ONE_TIME",
+  "CUSTOM",
 ]);
 
-const metricTimePeriodEnum = z.enum([
-  'BEFORE',
-  'DURING',
-  'AFTER',
-  'ONGOING'
-]);
+const metricTimePeriodEnum = z.enum(["BEFORE", "DURING", "AFTER", "ONGOING"]);
 
 export const metricRouter = createTRPCRouter({
   /**
@@ -60,10 +59,18 @@ export const metricRouter = createTRPCRouter({
         collectionMethod: collectionMethodEnum.nullish(),
         isOnChain: z.boolean().optional(),
         search: z.string().nullish(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
-      const { limit, offset, isActive, metricType, collectionMethod, isOnChain, search } = input;
+      const {
+        limit,
+        offset,
+        isActive,
+        metricType,
+        collectionMethod,
+        isOnChain,
+        search,
+      } = input;
 
       const where = {
         ...(isActive !== undefined && { isActive }),
@@ -72,9 +79,9 @@ export const metricRouter = createTRPCRouter({
         ...(isOnChain !== undefined && { isOnChain }),
         ...(search && {
           OR: [
-            { name: { contains: search, mode: 'insensitive' as const } },
-            { description: { contains: search, mode: 'insensitive' as const } },
-            { category: { contains: search, mode: 'insensitive' as const } },
+            { name: { contains: search, mode: "insensitive" as const } },
+            { description: { contains: search, mode: "insensitive" as const } },
+            { category: { contains: search, mode: "insensitive" as const } },
           ],
         }),
       };
@@ -84,7 +91,7 @@ export const metricRouter = createTRPCRouter({
           where,
           take: limit,
           skip: offset,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           include: {
             creator: {
               select: {
@@ -118,12 +125,14 @@ export const metricRouter = createTRPCRouter({
    */
   getById: publicProcedure
     .input(
-      z.object({
-        id: z.string().optional(),
-        slug: z.string().optional(),
-      }).refine(data => data.id ?? data.slug, {
-        message: "Either id or slug must be provided",
-      })
+      z
+        .object({
+          id: z.string().optional(),
+          slug: z.string().optional(),
+        })
+        .refine((data) => data.id ?? data.slug, {
+          message: "Either id or slug must be provided",
+        }),
     )
     .query(async ({ ctx, input }) => {
       const metric = await ctx.db.metric.findUnique({
@@ -140,7 +149,7 @@ export const metricRouter = createTRPCRouter({
           },
           measurements: {
             take: 10,
-            orderBy: { measurementDate: 'desc' },
+            orderBy: { measurementDate: "desc" },
             include: {
               project: {
                 select: {
@@ -206,8 +215,8 @@ export const metricRouter = createTRPCRouter({
         unitOfMetric: z.string().optional(),
         category: z.string().optional(),
         collectionMethod: collectionMethodEnum,
-        cadence: metricCadenceEnum.default('ONE_TIME'),
-        timePeriod: metricTimePeriodEnum.default('DURING'),
+        cadence: metricCadenceEnum.default("ONE_TIME"),
+        timePeriod: metricTimePeriodEnum.default("DURING"),
         isOnChain: z.boolean().default(false),
         deployerAccount: z.string().optional(),
         offChainApis: z.array(z.string()).default([]),
@@ -228,14 +237,16 @@ export const metricRouter = createTRPCRouter({
         source: z.string().optional(),
         notes: z.string().optional(),
         quantity: z.number().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Generate slug if not provided
-      const slug = input.slug ?? input.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+      const slug =
+        input.slug ??
+        input.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
 
       // Check if slug already exists
       const existing = await ctx.db.metric.findUnique({
@@ -307,7 +318,7 @@ export const metricRouter = createTRPCRouter({
         notes: z.string().optional(),
         quantity: z.number().optional(),
         isActive: z.boolean().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...updateData } = input;
@@ -398,7 +409,7 @@ export const metricRouter = createTRPCRouter({
         measurementDate: z.date(),
         timePeriod: metricTimePeriodEnum,
         notes: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Verify metric exists
@@ -451,7 +462,7 @@ export const metricRouter = createTRPCRouter({
         timePeriod: metricTimePeriodEnum.optional(),
         limit: z.number().min(1).max(100).default(50),
         offset: z.number().min(0).default(0),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const { metricId, projectId, eventId, timePeriod, limit, offset } = input;
@@ -468,7 +479,7 @@ export const metricRouter = createTRPCRouter({
           where,
           take: limit,
           skip: offset,
-          orderBy: { measurementDate: 'desc' },
+          orderBy: { measurementDate: "desc" },
           include: {
             metric: {
               select: {
@@ -518,7 +529,7 @@ export const metricRouter = createTRPCRouter({
         metricId: z.string(),
         projectId: z.string(),
         targetValue: z.number().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Check if association already exists
@@ -571,7 +582,7 @@ export const metricRouter = createTRPCRouter({
       z.object({
         projectId: z.string(),
         metricId: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const projectMetric = await ctx.db.projectMetric.findUnique({
@@ -632,7 +643,7 @@ export const metricRouter = createTRPCRouter({
             },
           },
         },
-        orderBy: { addedAt: 'desc' },
+        orderBy: { addedAt: "desc" },
       });
 
       return projectMetrics;
@@ -646,7 +657,7 @@ export const metricRouter = createTRPCRouter({
       z.object({
         projectId: z.string(),
         includeUpdates: z.boolean().default(true),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
@@ -656,7 +667,7 @@ export const metricRouter = createTRPCRouter({
           include: {
             updates: input.includeUpdates
               ? {
-                  orderBy: { createdAt: 'desc' },
+                  orderBy: { createdAt: "desc" },
                   take: 10,
                   select: {
                     title: true,
@@ -696,7 +707,9 @@ export const metricRouter = createTRPCRouter({
           select: { metricId: true },
         });
 
-        const alreadyAddedMetricIds = existingProjectMetrics.map(pm => pm.metricId);
+        const alreadyAddedMetricIds = existingProjectMetrics.map(
+          (pm) => pm.metricId,
+        );
 
         // Build project context
         const projectContext = {
@@ -730,7 +743,10 @@ export const metricRouter = createTRPCRouter({
 
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: error instanceof Error ? error.message : "Failed to generate metric suggestions",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to generate metric suggestions",
         });
       }
     }),

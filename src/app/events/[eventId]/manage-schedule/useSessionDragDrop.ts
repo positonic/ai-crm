@@ -12,7 +12,10 @@ export function useSessionDragDrop(eventId: string, venueId: string) {
       await utils.schedule.getFloorSessions.cancel({ eventId, venueId });
 
       // Snapshot the previous value
-      const previousData = utils.schedule.getFloorSessions.getData({ eventId, venueId });
+      const previousData = utils.schedule.getFloorSessions.getData({
+        eventId,
+        venueId,
+      });
 
       // Optimistically update the cache
       utils.schedule.getFloorSessions.setData({ eventId, venueId }, (old) => {

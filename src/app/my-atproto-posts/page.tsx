@@ -1,16 +1,36 @@
 "use client";
 
-import { Container, Title, Card, Text, Stack, Badge, Group, Loader, Alert, Button } from "@mantine/core";
-import { IconBrandTwitter, IconAlertCircle, IconExternalLink } from "@tabler/icons-react";
+import {
+  Container,
+  Title,
+  Card,
+  Text,
+  Stack,
+  Badge,
+  Group,
+  Loader,
+  Alert,
+  Button,
+} from "@mantine/core";
+import {
+  IconBrandTwitter,
+  IconAlertCircle,
+  IconExternalLink,
+} from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
 
 export default function MyAtProtoPostsPage() {
   const router = useRouter();
-  const { data: connectionStatus, isLoading: statusLoading } = api.atproto.getConnectionStatus.useQuery();
-  const { data: posts, isLoading: postsLoading, error } = api.atproto.getMyPosts.useQuery(
+  const { data: connectionStatus, isLoading: statusLoading } =
+    api.atproto.getConnectionStatus.useQuery();
+  const {
+    data: posts,
+    isLoading: postsLoading,
+    error,
+  } = api.atproto.getMyPosts.useQuery(
     { limit: 20 },
-    { enabled: connectionStatus?.isConnected ?? false }
+    { enabled: connectionStatus?.isConnected ?? false },
   );
 
   if (statusLoading) {
@@ -27,9 +47,16 @@ export default function MyAtProtoPostsPage() {
   if (!connectionStatus?.isConnected) {
     return (
       <Container size="md" py="xl">
-        <Alert icon={<IconAlertCircle size={16} />} title="Not Connected" color="yellow">
+        <Alert
+          icon={<IconAlertCircle size={16} />}
+          title="Not Connected"
+          color="yellow"
+        >
           <Stack gap="md">
-            <Text>You need to connect your AT Proto account first to view your posts.</Text>
+            <Text>
+              You need to connect your AT Proto account first to view your
+              posts.
+            </Text>
             <Button
               leftSection={<IconBrandTwitter size={16} />}
               onClick={() => router.push("/dashboard")}
@@ -52,11 +79,12 @@ export default function MyAtProtoPostsPage() {
               <Badge variant="light" color="blue">
                 @{connectionStatus.handle}
               </Badge>
-              {connectionStatus.pdsUrl && connectionStatus.pdsUrl !== "https://bsky.social" && (
-                <Badge variant="outline" color="gray">
-                  Custom PDS
-                </Badge>
-              )}
+              {connectionStatus.pdsUrl &&
+                connectionStatus.pdsUrl !== "https://bsky.social" && (
+                  <Badge variant="outline" color="gray">
+                    Custom PDS
+                  </Badge>
+                )}
             </Group>
           </Stack>
         </Group>
@@ -69,21 +97,34 @@ export default function MyAtProtoPostsPage() {
         )}
 
         {error && (
-          <Alert icon={<IconAlertCircle size={16} />} title="Error Loading Posts" color="red">
+          <Alert
+            icon={<IconAlertCircle size={16} />}
+            title="Error Loading Posts"
+            color="red"
+          >
             <Text>{error.message}</Text>
           </Alert>
         )}
 
         {posts && posts.length === 0 && (
           <Alert title="No Posts Yet" color="blue">
-            <Text>You haven&apos;t created any posts yet. Share a project to create your first post!</Text>
+            <Text>
+              You haven&apos;t created any posts yet. Share a project to create
+              your first post!
+            </Text>
           </Alert>
         )}
 
         {posts && posts.length > 0 && (
           <Stack gap="md">
             {posts.map((post) => (
-              <Card key={post.uri} shadow="sm" padding="lg" radius="md" withBorder>
+              <Card
+                key={post.uri}
+                shadow="sm"
+                padding="lg"
+                radius="md"
+                withBorder
+              >
                 <Stack gap="md">
                   <Group justify="space-between" align="flex-start">
                     <Text size="sm" c="dimmed">
@@ -92,7 +133,7 @@ export default function MyAtProtoPostsPage() {
                     <Group gap="xs">
                       <Button
                         component="a"
-                        href={`https://bsky.app/profile/${connectionStatus.did}/post/${post.uri.split('/').pop()}`}
+                        href={`https://bsky.app/profile/${connectionStatus.did}/post/${post.uri.split("/").pop()}`}
                         target="_blank"
                         size="xs"
                         variant="subtle"

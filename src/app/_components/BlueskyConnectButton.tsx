@@ -14,7 +14,11 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { IconBrandTwitter, IconCheck, IconAlertCircle } from "@tabler/icons-react";
+import {
+  IconBrandTwitter,
+  IconCheck,
+  IconAlertCircle,
+} from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 
 interface BlueskyConnectButtonProps {
@@ -24,12 +28,13 @@ interface BlueskyConnectButtonProps {
 
 export default function BlueskyConnectButton({
   projectTitle,
-  projectUrl
+  projectUrl,
 }: BlueskyConnectButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Get connection status
-  const { data: connectionStatus, refetch: refetchStatus } = api.atproto.getConnectionStatus.useQuery();
+  const { data: connectionStatus, refetch: refetchStatus } =
+    api.atproto.getConnectionStatus.useQuery();
 
   // Connect mutation
   const connectMutation = api.atproto.connectAccount.useMutation({
@@ -156,15 +161,15 @@ export default function BlueskyConnectButton({
         <Group gap="xs">
           <Badge variant="light" color="blue" size="sm">
             <Group gap={4}>
-              <IconBrandTwitter size={12} />
-              @{connectionStatus.handle}
+              <IconBrandTwitter size={12} />@{connectionStatus.handle}
             </Group>
           </Badge>
-          {connectionStatus.pdsUrl && connectionStatus.pdsUrl !== "https://bsky.social" && (
-            <Badge variant="outline" color="gray" size="xs">
-              Custom PDS
-            </Badge>
-          )}
+          {connectionStatus.pdsUrl &&
+            connectionStatus.pdsUrl !== "https://bsky.social" && (
+              <Badge variant="outline" color="gray" size="xs">
+                Custom PDS
+              </Badge>
+            )}
         </Group>
         <Group gap="xs">
           <Button
@@ -213,8 +218,9 @@ export default function BlueskyConnectButton({
           <Stack gap="md">
             <Alert color="blue" variant="light">
               <Text size="sm">
-                Connect your AT Proto account (Bluesky or custom PDS) to share updates about your project.
-                You&apos;ll need to use an <strong>App Password</strong> (not your main password).
+                Connect your AT Proto account (Bluesky or custom PDS) to share
+                updates about your project. You&apos;ll need to use an{" "}
+                <strong>App Password</strong> (not your main password).
               </Text>
             </Alert>
 

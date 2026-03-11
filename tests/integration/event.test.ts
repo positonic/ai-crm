@@ -47,7 +47,9 @@ describe("Event Router", () => {
     // ── Test 2: getEvent returns null for non-existent event ────────────
     it("returns null for non-existent event", async () => {
       const caller = createTestCaller(null);
-      const result = await caller.event.getEvent({ id: "non-existent-id-12345" });
+      const result = await caller.event.getEvent({
+        id: "non-existent-id-12345",
+      });
 
       expect(result).toBeNull();
     });
@@ -57,10 +59,13 @@ describe("Event Router", () => {
   describe("getAvailableEvents", () => {
     it("returns active events", async () => {
       const db = getTestDb();
-      const event = await createTestEvent({
-        name: "Available Event Test",
-        slug: "available-event-test",
-      }, db);
+      const event = await createTestEvent(
+        {
+          name: "Available Event Test",
+          slug: "available-event-test",
+        },
+        db,
+      );
 
       const caller = createTestCaller(null);
       const events = await caller.event.getAvailableEvents();

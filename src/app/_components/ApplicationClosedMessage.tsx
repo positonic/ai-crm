@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { Container, Card, Stack, Text, Group, Button } from "@mantine/core";
-import { IconCalendarX, IconArrowLeft, IconInfoCircle } from "@tabler/icons-react";
+import {
+  IconCalendarX,
+  IconArrowLeft,
+  IconInfoCircle,
+} from "@tabler/icons-react";
 import { getEventContent } from "~/utils/eventContent";
 import { normalizeEventType } from "~/types/event";
 
@@ -15,25 +19,29 @@ interface ApplicationClosedMessageProps {
   };
 }
 
-export default function ApplicationClosedMessage({ event }: ApplicationClosedMessageProps) {
+export default function ApplicationClosedMessage({
+  event,
+}: ApplicationClosedMessageProps) {
   // Get event-specific content or fallback to residency
-  const eventType = normalizeEventType(event?.type) ?? 'RESIDENCY';
+  const eventType = normalizeEventType(event?.type) ?? "RESIDENCY";
   const content = getEventContent(eventType);
-  
+
   // Use dynamic event data or fallback
   const eventName = event?.name ?? content.name;
   const eventDescription = content.shortDescription;
-  const backUrl = event ? `/events/${event.slug ?? event.id}` : "/events/funding-commons-residency-2025";
+  const backUrl = event
+    ? `/events/${event.slug ?? event.id}`
+    : "/events/funding-commons-residency-2025";
   const gradientClass = `bg-gradient-to-r ${content.branding.colors.gradient}`;
 
   return (
     <Container size="md" py="xl">
       <Stack gap="xl" align="center">
         {/* Main Closure Card */}
-        <Card 
-          p="xl" 
-          radius="lg" 
-          withBorder 
+        <Card
+          p="xl"
+          radius="lg"
+          withBorder
           className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 max-w-2xl w-full"
         >
           <Stack gap="xl" align="center">
@@ -57,11 +65,21 @@ export default function ApplicationClosedMessage({ event }: ApplicationClosedMes
               <Text size="md" ta="center" className="text-gray-700">
                 {content.applicationClosedMessage.description}
               </Text>
-              
-              <Card p="md" radius="md" className={`bg-${content.branding.colors.primary}-50 border border-${content.branding.colors.primary}-200`}>
+
+              <Card
+                p="md"
+                radius="md"
+                className={`bg-${content.branding.colors.primary}-50 border border-${content.branding.colors.primary}-200`}
+              >
                 <Group gap="sm">
-                  <IconInfoCircle size={20} className={`text-${content.branding.colors.primary}-600`} />
-                  <Text size="sm" className={`text-${content.branding.colors.primary}-800`}>
+                  <IconInfoCircle
+                    size={20}
+                    className={`text-${content.branding.colors.primary}-600`}
+                  />
+                  <Text
+                    size="sm"
+                    className={`text-${content.branding.colors.primary}-800`}
+                  >
                     {content.applicationClosedMessage.infoMessage}
                   </Text>
                 </Group>
@@ -78,9 +96,10 @@ export default function ApplicationClosedMessage({ event }: ApplicationClosedMes
                 className={`bg-gradient-to-r ${content.branding.colors.gradient} hover:from-${content.branding.colors.primary}-700 hover:to-${content.branding.colors.secondary}-700`}
                 size="md"
               >
-                Back to {eventType === 'HACKATHON' ? 'Hackathon' : 'Residency'} Overview
+                Back to {eventType === "HACKATHON" ? "Hackathon" : "Residency"}{" "}
+                Overview
               </Button>
-              
+
               <Button
                 component={Link}
                 href="/events"
@@ -95,16 +114,30 @@ export default function ApplicationClosedMessage({ event }: ApplicationClosedMes
         </Card>
 
         {/* Additional Info */}
-        <Card p="lg" radius="md" withBorder className={`bg-gradient-to-r from-${content.branding.colors.primary}-50 to-${content.branding.colors.secondary}-50 max-w-2xl w-full`}>
+        <Card
+          p="lg"
+          radius="md"
+          withBorder
+          className={`bg-gradient-to-r from-${content.branding.colors.primary}-50 to-${content.branding.colors.secondary}-50 max-w-2xl w-full`}
+        >
           <Stack gap="md">
-            <Text size="lg" fw={600} className={`text-${content.branding.colors.primary}-900`}>
-              About the {eventType === 'HACKATHON' ? 'RealFi Hackathon' : 'RealFi Residency'}
+            <Text
+              size="lg"
+              fw={600}
+              className={`text-${content.branding.colors.primary}-900`}
+            >
+              About the{" "}
+              {eventType === "HACKATHON"
+                ? "RealFi Hackathon"
+                : "RealFi Residency"}
             </Text>
-            <Text size="sm" className={`text-${content.branding.colors.primary}-700`}>
-              {eventType === 'HACKATHON'
-                ? 'A competitive event where builders and entrepreneurs develop innovative RealFi solutions that solve everyday problems for Argentinians. Join us for an intensive coding and collaboration experience in Buenos Aires.'
-                : 'This 8-week intensive program brings together builders, researchers, and entrepreneurs to develop real-world blockchain applications that solve everyday problems for Argentinians. The residency combines hands-on development, mentorship, and collaboration in Buenos Aires.'
-              }
+            <Text
+              size="sm"
+              className={`text-${content.branding.colors.primary}-700`}
+            >
+              {eventType === "HACKATHON"
+                ? "A competitive event where builders and entrepreneurs develop innovative RealFi solutions that solve everyday problems for Argentinians. Join us for an intensive coding and collaboration experience in Buenos Aires."
+                : "This 8-week intensive program brings together builders, researchers, and entrepreneurs to develop real-world blockchain applications that solve everyday problems for Argentinians. The residency combines hands-on development, mentorship, and collaboration in Buenos Aires."}
             </Text>
             <Group gap="md" mt="sm">
               <Button

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { 
-  Stack, 
-  Text, 
+import {
+  Stack,
+  Text,
   Button,
   Group,
   Paper,
@@ -11,8 +11,8 @@ import {
   ActionIcon,
   Divider,
 } from "@mantine/core";
-import { 
-  IconPlus, 
+import {
+  IconPlus,
   IconExternalLink,
   IconBrandGithub,
   IconCalendar,
@@ -23,14 +23,14 @@ interface ProjectManagementSectionProps {
   userId?: string;
 }
 
-export default function ProjectManagementSection({ userId }: ProjectManagementSectionProps) {
+export default function ProjectManagementSection({
+  userId,
+}: ProjectManagementSectionProps) {
   const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   // Fetch user's profile with projects
-  const { data: userProfile, isLoading: projectsLoading } = api.profile.getProfile.useQuery(
-    { userId: userId! },
-    { enabled: !!userId }
-  );
+  const { data: userProfile, isLoading: projectsLoading } =
+    api.profile.getProfile.useQuery({ userId: userId! }, { enabled: !!userId });
 
   const userProjects = userProfile?.projects ?? [];
 
@@ -52,7 +52,7 @@ export default function ProjectManagementSection({ userId }: ProjectManagementSe
 
   return (
     <Stack gap="md">
-      <Divider 
+      <Divider
         label={
           <Group gap="xs">
             <Text fw={600} size="sm" c="blue">
@@ -62,13 +62,15 @@ export default function ProjectManagementSection({ userId }: ProjectManagementSe
               {userProjects?.length ?? 0}
             </Badge>
           </Group>
-        } 
-        labelPosition="left" 
+        }
+        labelPosition="left"
       />
 
       {projectsLoading ? (
         <Paper p="md" withBorder radius="sm" bg="gray.0">
-          <Text size="sm" c="dimmed">Loading projects...</Text>
+          <Text size="sm" c="dimmed">
+            Loading projects...
+          </Text>
         </Paper>
       ) : userProjects && userProjects.length > 0 ? (
         <Stack gap="sm">
@@ -97,7 +99,8 @@ export default function ProjectManagementSection({ userId }: ProjectManagementSe
                     <Group gap="xs">
                       <IconCalendar size={12} color="gray" />
                       <Text size="xs" c="dimmed">
-                        Created: {new Date(project.createdAt).toLocaleDateString()}
+                        Created:{" "}
+                        {new Date(project.createdAt).toLocaleDateString()}
                       </Text>
                     </Group>
                   )}

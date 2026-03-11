@@ -27,10 +27,16 @@ describe("Application Router", () => {
   describe("createApplication", () => {
     it("creates a DRAFT application for an authenticated user", async () => {
       const db = getTestDb();
-      const user = await createTestUser({ role: "user", email: "applicant@test.com" }, db);
+      const user = await createTestUser(
+        { role: "user", email: "applicant@test.com" },
+        db,
+      );
       const event = await createTestEvent({ name: "App Test Event" }, db);
 
-      const caller = createTestCaller("user", { id: user.id, email: "applicant@test.com" });
+      const caller = createTestCaller("user", {
+        id: user.id,
+        email: "applicant@test.com",
+      });
 
       const result = await caller.application.createApplication({
         eventId: event.id,
@@ -43,7 +49,9 @@ describe("Application Router", () => {
       expect(result.applicationType).toBe("SPEAKER");
       // The procedure includes event relation at runtime
       expect((result as Record<string, unknown>).event).toBeDefined();
-      expect(((result as Record<string, unknown>).event as { name: string }).name).toBe("App Test Event");
+      expect(
+        ((result as Record<string, unknown>).event as { name: string }).name,
+      ).toBe("App Test Event");
     });
 
     // ── Test 2: createApplication rejects unauthenticated users ────────
@@ -77,17 +85,23 @@ describe("Application Router", () => {
       const db = getTestDb();
       const user = await createTestUser({ role: "user" }, db);
       const event = await createTestEvent({}, db);
-      const question = await createTestQuestion({
-        eventId: event.id,
-        questionKey: "bio",
-        questionEn: "Tell us about yourself?",
-        required: true,
-      }, db);
-      const application = await createTestApplication({
-        userId: user.id,
-        eventId: event.id,
-        email: user.email ?? "test@test.com",
-      }, db);
+      const question = await createTestQuestion(
+        {
+          eventId: event.id,
+          questionKey: "bio",
+          questionEn: "Tell us about yourself?",
+          required: true,
+        },
+        db,
+      );
+      const application = await createTestApplication(
+        {
+          userId: user.id,
+          eventId: event.id,
+          email: user.email ?? "test@test.com",
+        },
+        db,
+      );
 
       const caller = createTestCaller("user", { id: user.id });
 
@@ -113,31 +127,45 @@ describe("Application Router", () => {
       const event = await createTestEvent({}, db);
 
       // Create required questions (avoid conditional field names)
-      const q1 = await createTestQuestion({
-        eventId: event.id,
-        questionKey: "full_name",
-        questionEn: "What is your full name?",
-        required: true,
-        order: 0,
-      }, db);
-      const q2 = await createTestQuestion({
-        eventId: event.id,
-        questionKey: "motivation",
-        questionEn: "Why do you want to attend?",
-        required: true,
-        order: 1,
-      }, db);
+      const q1 = await createTestQuestion(
+        {
+          eventId: event.id,
+          questionKey: "full_name",
+          questionEn: "What is your full name?",
+          required: true,
+          order: 0,
+        },
+        db,
+      );
+      const q2 = await createTestQuestion(
+        {
+          eventId: event.id,
+          questionKey: "motivation",
+          questionEn: "Why do you want to attend?",
+          required: true,
+          order: 1,
+        },
+        db,
+      );
 
-      const application = await createTestApplication({
-        userId: user.id,
-        eventId: event.id,
-        email: user.email ?? "test@test.com",
-        applicationType: "RESIDENT",
-      }, db);
+      const application = await createTestApplication(
+        {
+          userId: user.id,
+          eventId: event.id,
+          email: user.email ?? "test@test.com",
+          applicationType: "RESIDENT",
+        },
+        db,
+      );
 
       // Fill all required questions
       await createTestResponse(application.id, q1.id, "John Doe", db);
-      await createTestResponse(application.id, q2.id, "I want to learn and grow.", db);
+      await createTestResponse(
+        application.id,
+        q2.id,
+        "I want to learn and grow.",
+        db,
+      );
 
       const caller = createTestCaller("user", { id: user.id });
 
@@ -156,20 +184,26 @@ describe("Application Router", () => {
       const event = await createTestEvent({}, db);
 
       // Create a required question but don't answer it
-      await createTestQuestion({
-        eventId: event.id,
-        questionKey: "about_you",
-        questionEn: "Tell us about you?",
-        required: true,
-        order: 0,
-      }, db);
+      await createTestQuestion(
+        {
+          eventId: event.id,
+          questionKey: "about_you",
+          questionEn: "Tell us about you?",
+          required: true,
+          order: 0,
+        },
+        db,
+      );
 
-      const application = await createTestApplication({
-        userId: user.id,
-        eventId: event.id,
-        email: user.email ?? "test@test.com",
-        applicationType: "RESIDENT",
-      }, db);
+      const application = await createTestApplication(
+        {
+          userId: user.id,
+          eventId: event.id,
+          email: user.email ?? "test@test.com",
+          applicationType: "RESIDENT",
+        },
+        db,
+      );
 
       const caller = createTestCaller("user", { id: user.id });
 
@@ -186,7 +220,9 @@ describe("Application Router", () => {
       }
 
       // Verify status is still DRAFT
-      const app = await db.application.findUnique({ where: { id: application.id } });
+      const app = await db.application.findUnique({
+        where: { id: application.id },
+      });
       expect(app?.status).toBe("DRAFT");
     });
   });
@@ -199,19 +235,28 @@ describe("Application Router", () => {
 
     beforeAll(async () => {
       const db = getTestDb();
-      adminUser = await createTestUser({ role: "admin", email: "admin@test.com" }, db);
-      applicantUser = await createTestUser({ role: "user", email: "applicant-status@test.com" }, db);
+      adminUser = await createTestUser(
+        { role: "admin", email: "admin@test.com" },
+        db,
+      );
+      applicantUser = await createTestUser(
+        { role: "user", email: "applicant-status@test.com" },
+        db,
+      );
       testEvent = await createTestEvent({ name: "Status Test Event" }, db);
     });
 
     it("admin changes status to ACCEPTED and email record is created", async () => {
       const db = getTestDb();
-      const application = await createTestApplication({
-        userId: applicantUser.id,
-        eventId: testEvent.id,
-        email: applicantUser.email ?? "applicant-status@test.com",
-        status: "SUBMITTED",
-      }, db);
+      const application = await createTestApplication(
+        {
+          userId: applicantUser.id,
+          eventId: testEvent.id,
+          email: applicantUser.email ?? "applicant-status@test.com",
+          status: "SUBMITTED",
+        },
+        db,
+      );
 
       const caller = createTestCaller("admin", { id: adminUser.id });
 
@@ -229,7 +274,9 @@ describe("Application Router", () => {
 
       // Email should have been attempted (mocked Postmark won't actually send)
       expect(emails.length).toBeGreaterThanOrEqual(1);
-      const acceptedEmail = emails.find(e => e.type === "APPLICATION_ACCEPTED");
+      const acceptedEmail = emails.find(
+        (e) => e.type === "APPLICATION_ACCEPTED",
+      );
       if (acceptedEmail) {
         expect(acceptedEmail.toEmail).toBe(applicantUser.email);
         expect(acceptedEmail.templateName).toBe("applicationAccepted");

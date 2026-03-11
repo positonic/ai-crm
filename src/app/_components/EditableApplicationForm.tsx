@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { 
-  Stack, 
-  Text, 
-  TextInput, 
+import {
+  Stack,
+  Text,
+  TextInput,
   Textarea,
   Select,
   MultiSelect,
@@ -13,12 +13,11 @@ import {
   Button,
   Group,
   Alert,
-
   Paper,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { 
-  IconDeviceFloppy, 
+import {
+  IconDeviceFloppy,
   IconCheck,
   IconAlertCircle,
 } from "@tabler/icons-react";
@@ -32,7 +31,16 @@ type Question = {
   questionKey: string;
   questionEn: string;
   questionEs: string;
-  questionType: "TEXT" | "TEXTAREA" | "EMAIL" | "PHONE" | "URL" | "SELECT" | "MULTISELECT" | "CHECKBOX" | "NUMBER";
+  questionType:
+    | "TEXT"
+    | "TEXTAREA"
+    | "EMAIL"
+    | "PHONE"
+    | "URL"
+    | "SELECT"
+    | "MULTISELECT"
+    | "CHECKBOX"
+    | "NUMBER";
   required: boolean;
   options: string[];
   order: number;
@@ -41,7 +49,14 @@ type Question = {
 type ApplicationWithUser = {
   id: string;
   email: string;
-  status: "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "ACCEPTED" | "REJECTED" | "WAITLISTED" | "CANCELLED";
+  status:
+    | "DRAFT"
+    | "SUBMITTED"
+    | "UNDER_REVIEW"
+    | "ACCEPTED"
+    | "REJECTED"
+    | "WAITLISTED"
+    | "CANCELLED";
   submittedAt: Date | null;
   createdAt: Date;
   affiliation: string | null;
@@ -79,69 +94,81 @@ export default function EditableApplicationForm({
   eventId,
   onSaved,
 }: EditableApplicationFormProps) {
-  console.log('🔍 EditableApplicationForm: Component rendered', {
+  console.log("🔍 EditableApplicationForm: Component rendered", {
     applicationId: application.id,
     eventId,
     userEmail: application.email,
-    responseCount: application.responses.length
+    responseCount: application.responses.length,
   });
 
   const [formValues, setFormValues] = useState<Record<string, unknown>>({});
-  const [originalValues, setOriginalValues] = useState<Record<string, unknown>>({});
-  const [userName, setUserName] = useState(getDisplayName(application.user, ""));
+  const [originalValues, setOriginalValues] = useState<Record<string, unknown>>(
+    {},
+  );
+  const [userName, setUserName] = useState(
+    getDisplayName(application.user, ""),
+  );
   const [affiliation, setAffiliation] = useState(application.affiliation ?? "");
   const [isSaving, setIsSaving] = useState(false);
 
   // Fetch questions for the event
-  const { data: questions, isLoading: questionsLoading, error: questionsError } = api.application.getEventQuestions.useQuery({
+  const {
+    data: questions,
+    isLoading: questionsLoading,
+    error: questionsError,
+  } = api.application.getEventQuestions.useQuery({
     eventId,
   });
 
-  console.log('🔍 EditableApplicationForm: Questions query state', {
+  console.log("🔍 EditableApplicationForm: Questions query state", {
     questionsLoading,
     questionsCount: questions?.length,
     questionsError: questionsError?.message,
-    eventId
+    eventId,
   });
 
   // API mutations
   const updateResponse = api.application.updateResponse.useMutation();
-  const updateUserName = api.application.updateApplicationUserName.useMutation();
-  const updateAffiliation = api.application.updateApplicationAffiliation.useMutation();
-  const bulkUpdateResponses = api.application.bulkUpdateApplicationResponses.useMutation();
-
+  const updateUserName =
+    api.application.updateApplicationUserName.useMutation();
+  const updateAffiliation =
+    api.application.updateApplicationAffiliation.useMutation();
+  const bulkUpdateResponses =
+    api.application.bulkUpdateApplicationResponses.useMutation();
 
   // Create stable dependency to prevent infinite loops
   const responsesHash = useMemo(() => {
-    return JSON.stringify(application.responses.map(r => ({
-      questionKey: r.question.questionKey,
-      answer: r.answer
-    })));
+    return JSON.stringify(
+      application.responses.map((r) => ({
+        questionKey: r.question.questionKey,
+        answer: r.answer,
+      })),
+    );
   }, [application.responses]);
 
   // Initialize form values with existing responses
   useEffect(() => {
-    console.log('🔍 EditableApplicationForm: useEffect triggered', {
+    console.log("🔍 EditableApplicationForm: useEffect triggered", {
       hasQuestions: !!questions,
       questionsLength: questions?.length,
-      applicationResponsesLength: application.responses.length
+      applicationResponsesLength: application.responses.length,
     });
 
     if (questions && questions.length > 0) {
-      console.log('🔍 EditableApplicationForm: Initializing form values');
+      console.log("🔍 EditableApplicationForm: Initializing form values");
       const initialValues: Record<string, unknown> = {};
 
       questions.forEach((question) => {
         const existingResponse = application.responses.find(
-          r => r.question.questionKey === question.questionKey
+          (r) => r.question.questionKey === question.questionKey,
         );
-        
+
         console.log(`🔍 Processing question ${question.questionKey}:`, {
           questionType: question.questionType,
           hasExistingResponse: !!existingResponse,
-          existingAnswer: existingResponse?.answer?.substring(0, 100)
+          existingAnswer: existingResponse?.answer?.substring(0, 100),
         });
-        
+
         if (existingResponse) {
           if (question.questionType === "MULTISELECT") {
             try {
@@ -149,32 +176,47 @@ export default function EditableApplicationForm({
               const parsed = JSON.parse(existingResponse.answer) as unknown[];
               if (Array.isArray(parsed)) {
                 initialValues[question.questionKey] = parsed;
-                console.log(`✅ MULTISELECT ${question.questionKey} JSON parsed:`, parsed);
+                console.log(
+                  `✅ MULTISELECT ${question.questionKey} JSON parsed:`,
+                  parsed,
+                );
               } else {
                 throw new Error("Not an array");
               }
             } catch {
               // Fallback: Handle plain text format (e.g., "Developer / Desarrollador")
-              console.log(`🔄 MULTISELECT ${question.questionKey} JSON failed, parsing as text:`, existingResponse.answer);
-              
+              console.log(
+                `🔄 MULTISELECT ${question.questionKey} JSON failed, parsing as text:`,
+                existingResponse.answer,
+              );
+
               // Extract the English part before " / " if bilingual format
               let cleanAnswer = existingResponse.answer;
               if (cleanAnswer.includes(" / ")) {
-                cleanAnswer = cleanAnswer.split(" / ")[0]?.trim() ?? cleanAnswer;
+                cleanAnswer =
+                  cleanAnswer.split(" / ")[0]?.trim() ?? cleanAnswer;
               }
-              
+
               // Handle comma-separated values or single value
-              const textValues = cleanAnswer.includes(",") 
-                ? cleanAnswer.split(",").map(v => v.trim()).filter(v => v.length > 0)
-                : [cleanAnswer.trim()].filter(v => v.length > 0);
-              
+              const textValues = cleanAnswer.includes(",")
+                ? cleanAnswer
+                    .split(",")
+                    .map((v) => v.trim())
+                    .filter((v) => v.length > 0)
+                : [cleanAnswer.trim()].filter((v) => v.length > 0);
+
               initialValues[question.questionKey] = textValues;
-              console.log(`✅ MULTISELECT ${question.questionKey} text parsed:`, textValues);
+              console.log(
+                `✅ MULTISELECT ${question.questionKey} text parsed:`,
+                textValues,
+              );
             }
           } else if (question.questionType === "CHECKBOX") {
-            initialValues[question.questionKey] = existingResponse.answer === "true";
+            initialValues[question.questionKey] =
+              existingResponse.answer === "true";
           } else if (question.questionType === "NUMBER") {
-            initialValues[question.questionKey] = parseFloat(existingResponse.answer) || 0;
+            initialValues[question.questionKey] =
+              parseFloat(existingResponse.answer) || 0;
           } else {
             initialValues[question.questionKey] = existingResponse.answer;
           }
@@ -192,20 +234,20 @@ export default function EditableApplicationForm({
         }
       });
 
-      console.log('🔍 EditableApplicationForm: Setting form values', {
+      console.log("🔍 EditableApplicationForm: Setting form values", {
         initialValuesKeys: Object.keys(initialValues),
-        initialValuesCount: Object.keys(initialValues).length
+        initialValuesCount: Object.keys(initialValues).length,
       });
       setFormValues(initialValues);
       setOriginalValues({ ...initialValues }); // Store original values for change tracking
-      console.log('✅ EditableApplicationForm: Form values set successfully');
+      console.log("✅ EditableApplicationForm: Form values set successfully");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questions, responsesHash]); // responsesHash prevents infinite loops by hashing application.responses
 
   // Handle form field changes
   const handleFieldChange = (questionKey: string, value: unknown) => {
-    setFormValues(prev => ({ ...prev, [questionKey]: value }));
+    setFormValues((prev) => ({ ...prev, [questionKey]: value }));
   };
 
   // Save user name
@@ -230,7 +272,7 @@ export default function EditableApplicationForm({
     } finally {
       setIsSaving(false);
     }
-  };;
+  };
 
   // Save affiliation
   const saveAffiliation = async () => {
@@ -254,16 +296,15 @@ export default function EditableApplicationForm({
     }
   };
 
-
   // Save a specific field
   const saveField = async (questionKey: string, value: unknown) => {
     if (!questions) return;
 
-    const question = questions.find(q => q.questionKey === questionKey);
+    const question = questions.find((q) => q.questionKey === questionKey);
     if (!question) return;
 
     setIsSaving(true);
-    
+
     try {
       let answerValue: string;
       if (question.questionType === "MULTISELECT") {
@@ -291,7 +332,7 @@ export default function EditableApplicationForm({
     } finally {
       setIsSaving(false);
     }
-  };;
+  };
 
   // Helper function to check if two values are different
   const valuesAreDifferent = (original: unknown, current: unknown): boolean => {
@@ -320,15 +361,18 @@ export default function EditableApplicationForm({
     try {
       // Find only changed fields
       const changedResponses = questions
-        .filter(question => {
+        .filter((question) => {
           const currentValue = formValues[question.questionKey];
           const originalValue = originalValues[question.questionKey];
-          return currentValue !== undefined && valuesAreDifferent(originalValue, currentValue);
+          return (
+            currentValue !== undefined &&
+            valuesAreDifferent(originalValue, currentValue)
+          );
         })
-        .map(question => {
+        .map((question) => {
           const value = formValues[question.questionKey];
           let answerValue: string;
-          
+
           if (question.questionType === "MULTISELECT") {
             answerValue = JSON.stringify(value);
           } else if (question.questionType === "CHECKBOX") {
@@ -354,7 +398,6 @@ export default function EditableApplicationForm({
         return;
       }
 
-
       // Use bulk update mutation with timeout handling
       await bulkUpdateResponses.mutateAsync({
         applicationId: application.id,
@@ -368,7 +411,7 @@ export default function EditableApplicationForm({
       notifications.hide(savingNotificationId);
       notifications.show({
         title: "Saved",
-        message: `Updated ${changedResponses.length} field${changedResponses.length === 1 ? '' : 's'} successfully`,
+        message: `Updated ${changedResponses.length} field${changedResponses.length === 1 ? "" : "s"} successfully`,
         color: "green",
         icon: <IconCheck />,
         autoClose: 4000,
@@ -378,9 +421,10 @@ export default function EditableApplicationForm({
     } catch (error) {
       // Hide saving notification and show error
       notifications.hide(savingNotificationId);
-      
-      const errorMessage = error instanceof Error ? error.message : "Failed to save changes";
-      
+
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to save changes";
+
       notifications.show({
         title: "Error",
         message: errorMessage,
@@ -388,12 +432,12 @@ export default function EditableApplicationForm({
         icon: <IconAlertCircle />,
         autoClose: 6000, // Show error longer
       });
-      
-      console.error('Save failed:', error);
+
+      console.error("Save failed:", error);
     } finally {
       setIsSaving(false);
     }
-  };;
+  };
 
   // Render individual question
   const renderQuestion = (question: Question) => {
@@ -401,7 +445,7 @@ export default function EditableApplicationForm({
       questionType: question.questionType,
       currentValue: formValues[question.questionKey],
       hasOptions: !!question.options,
-      optionsLength: question.options?.length
+      optionsLength: question.options?.length,
     });
 
     const questionText = question.questionEn; // Use English for admin interface
@@ -412,13 +456,13 @@ export default function EditableApplicationForm({
       required: question.required,
       size: "md" as const,
       styles: {
-        label: { 
-          fontSize: '14px', 
-          fontWeight: 600, 
-          marginBottom: '8px',
+        label: {
+          fontSize: "14px",
+          fontWeight: 600,
+          marginBottom: "8px",
           lineHeight: 1.4,
         },
-        input: { fontSize: '14px', lineHeight: 1.5 },
+        input: { fontSize: "14px", lineHeight: 1.5 },
       },
     };
 
@@ -431,11 +475,19 @@ export default function EditableApplicationForm({
           <TextInput
             key={question.id}
             {...commonProps}
-            type={question.questionType === "EMAIL" ? "email" : 
-                  question.questionType === "URL" ? "url" : 
-                  question.questionType === "PHONE" ? "tel" : "text"}
+            type={
+              question.questionType === "EMAIL"
+                ? "email"
+                : question.questionType === "URL"
+                  ? "url"
+                  : question.questionType === "PHONE"
+                    ? "tel"
+                    : "text"
+            }
             value={typeof currentValue === "string" ? currentValue : ""}
-            onChange={(event) => handleFieldChange(question.questionKey, event.currentTarget.value)}
+            onChange={(event) =>
+              handleFieldChange(question.questionKey, event.currentTarget.value)
+            }
             onBlur={() => void saveField(question.questionKey, currentValue)}
           />
         );
@@ -449,7 +501,9 @@ export default function EditableApplicationForm({
             minRows={4}
             maxRows={12}
             value={typeof currentValue === "string" ? currentValue : ""}
-            onChange={(event) => handleFieldChange(question.questionKey, event.currentTarget.value)}
+            onChange={(event) =>
+              handleFieldChange(question.questionKey, event.currentTarget.value)
+            }
             onBlur={() => void saveField(question.questionKey, currentValue)}
           />
         );
@@ -523,7 +577,9 @@ export default function EditableApplicationForm({
             key={question.id}
             {...commonProps}
             value={typeof currentValue === "string" ? currentValue : ""}
-            onChange={(event) => handleFieldChange(question.questionKey, event.currentTarget.value)}
+            onChange={(event) =>
+              handleFieldChange(question.questionKey, event.currentTarget.value)
+            }
             onBlur={() => void saveField(question.questionKey, currentValue)}
           />
         );
@@ -531,7 +587,7 @@ export default function EditableApplicationForm({
   };
 
   if (questionsLoading) {
-    console.log('🔍 EditableApplicationForm: Showing loading state');
+    console.log("🔍 EditableApplicationForm: Showing loading state");
     return (
       <Stack align="center" gap="md" p="xl">
         <Text c="dimmed">Loading application form...</Text>
@@ -540,7 +596,7 @@ export default function EditableApplicationForm({
   }
 
   if (!questions || questions.length === 0) {
-    console.log('🔍 EditableApplicationForm: No questions found');
+    console.log("🔍 EditableApplicationForm: No questions found");
     return (
       <Alert color="yellow" icon={<IconAlertCircle />}>
         No questions found for this event.
@@ -548,23 +604,30 @@ export default function EditableApplicationForm({
     );
   }
 
-  console.log('🔍 EditableApplicationForm: About to render main form', {
+  console.log("🔍 EditableApplicationForm: About to render main form", {
     questionsCount: questions.length,
     formValuesCount: Object.keys(formValues).length,
-    isSaving
+    isSaving,
   });
 
   return (
     <Stack gap="xl">
       <Alert color="blue" icon={<IconDeviceFloppy />} radius="md" p="lg">
-        <Text fw={500} mb="xs">Auto-save enabled</Text>
-        <Text size="sm">Changes are saved automatically when you move to the next field or change selections.</Text>
+        <Text fw={500} mb="xs">
+          Auto-save enabled
+        </Text>
+        <Text size="sm">
+          Changes are saved automatically when you move to the next field or
+          change selections.
+        </Text>
       </Alert>
 
       {/* User Name Editor */}
       <Paper p="xl" withBorder radius="md">
         <Stack gap="lg">
-          <Text fw={600} size="lg">Applicant Information</Text>
+          <Text fw={600} size="lg">
+            Applicant Information
+          </Text>
           <TextInput
             label="Applicant Name"
             placeholder="Enter applicant's full name"
@@ -580,8 +643,8 @@ export default function EditableApplicationForm({
               )
             }
             styles={{
-              label: { fontSize: '14px', fontWeight: 600, marginBottom: '8px' },
-              input: { fontSize: '14px' }
+              label: { fontSize: "14px", fontWeight: 600, marginBottom: "8px" },
+              input: { fontSize: "14px" },
             }}
           />
           <TextInput
@@ -599,8 +662,8 @@ export default function EditableApplicationForm({
               )
             }
             styles={{
-              label: { fontSize: '14px', fontWeight: 600, marginBottom: '8px' },
-              input: { fontSize: '14px' }
+              label: { fontSize: "14px", fontWeight: 600, marginBottom: "8px" },
+              input: { fontSize: "14px" },
             }}
           />
           <Paper p="md" bg="gray.0" radius="sm">
@@ -628,14 +691,16 @@ export default function EditableApplicationForm({
 
       {/* Editable form questions */}
       <Stack gap="xl">
-        <Text fw={600} size="lg">Application Responses</Text>
+        <Text fw={600} size="lg">
+          Application Responses
+        </Text>
         {questions
           .sort((a, b) => a.order - b.order)
           .map((question) => (
             <Paper key={question.id} p="xl" withBorder radius="md">
               <Stack gap="lg">
                 {renderQuestion(question)}
-                {question.questionKey === 'project_description' && (
+                {question.questionKey === "project_description" && (
                   <ProjectManagementSection userId={application.user?.id} />
                 )}
               </Stack>

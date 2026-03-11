@@ -39,18 +39,18 @@ export default function YourAccountPage() {
       </h2>
       <p className="docs-text">
         After signing in, take a moment to complete your profile. A filled-out
-        profile helps event organisers and fellow attendees learn more about you.
-        You can update your name, bio, and links at any time from your profile
-        page.
+        profile helps event organisers and fellow attendees learn more about
+        you. You can update your name, bio, and links at any time from your
+        profile page.
       </p>
 
       <h2 id="managing-your-account" className="docs-heading-h2">
         Managing Your Account
       </h2>
       <p className="docs-text">
-        Your account settings allow you to update your email address, change your
-        password, and manage connected services like Discord. If you need to
-        delete your account, please contact the event organisers.
+        Your account settings allow you to update your email address, change
+        your password, and manage connected services like Discord. If you need
+        to delete your account, please contact the event organisers.
       </p>
 
       <hr className="docs-divider" />

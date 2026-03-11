@@ -1,6 +1,5 @@
 "use client";
 
-
 import {
   Container,
   Grid,
@@ -57,9 +56,16 @@ interface ProfileDisplayClientProps {
 export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
   const { data: session } = useSession();
   const router = useRouter();
-  const { data: profileData, isLoading, error } = api.profile.getProfile.useQuery({ userId });
-  const { data: projectUpdates = [] } = api.project.getUserProjectUpdates.useQuery({ userId });
-  const { data: userSessions = [] } = api.profile.getUserSessions.useQuery({ userId });
+  const {
+    data: profileData,
+    isLoading,
+    error,
+  } = api.profile.getProfile.useQuery({ userId });
+  const { data: projectUpdates = [] } =
+    api.project.getUserProjectUpdates.useQuery({ userId });
+  const { data: userSessions = [] } = api.profile.getUserSessions.useQuery({
+    userId,
+  });
 
   const getRelativeTime = (date: Date) => {
     const now = new Date();
@@ -109,7 +115,11 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
     );
   }
 
-  const getSocialLink = (url: string, type: 'github' | 'linkedin' | 'twitter' | 'website' | 'bluesky', label: string) => (
+  const getSocialLink = (
+    url: string,
+    type: "github" | "linkedin" | "twitter" | "website" | "bluesky",
+    label: string,
+  ) => (
     <ActionIcon
       component="a"
       href={url}
@@ -119,11 +129,11 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
       color="blue"
       title={`Visit ${label}`}
     >
-      {type === 'github' && <IconBrandGithub size={20} />}
-      {type === 'linkedin' && <IconBrandLinkedin size={20} />}
-      {type === 'twitter' && <IconBrandTwitter size={20} />}
-      {type === 'website' && <IconWorld size={20} />}
-      {type === 'bluesky' && <IconBrandBluesky size={20} />}
+      {type === "github" && <IconBrandGithub size={20} />}
+      {type === "linkedin" && <IconBrandLinkedin size={20} />}
+      {type === "twitter" && <IconBrandTwitter size={20} />}
+      {type === "website" && <IconWorld size={20} />}
+      {type === "bluesky" && <IconBrandBluesky size={20} />}
     </ActionIcon>
   );
 
@@ -146,14 +156,17 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
             <Group align="flex-start" gap="xl">
               <UserAvatar
                 user={{
-                  customAvatarUrl: ('avatarUrl' in profile ? (profile.avatarUrl as string | null | undefined) : null) ?? null,
+                  customAvatarUrl:
+                    ("avatarUrl" in profile
+                      ? (profile.avatarUrl as string | null | undefined)
+                      : null) ?? null,
                   oauthImageUrl: user.image ?? null,
                   name: user.name ?? null,
                 }}
                 size={120}
                 radius="md"
               />
-              
+
               <Box style={{ flex: 1 }}>
                 <Group justify="space-between" align="flex-start" mb="md">
                   <div>
@@ -175,7 +188,7 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
                       </Group>
                     )}
                   </div>
-                  
+
                   <Group gap="sm">
                     {isOwnProfile && (
                       <Button
@@ -233,11 +246,16 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
 
                 {/* Social Links */}
                 <Group gap="sm">
-                  {profile?.githubUrl && getSocialLink(profile.githubUrl, 'github', 'GitHub')}
-                  {profile?.linkedinUrl && getSocialLink(profile.linkedinUrl, 'linkedin', 'LinkedIn')}
-                  {profile?.twitterUrl && getSocialLink(profile.twitterUrl, 'twitter', 'Twitter')}
-                  {profile?.website && getSocialLink(profile.website, 'website', 'Website')}
-                  {profile?.blueskyUrl && getSocialLink(profile.blueskyUrl, 'bluesky', 'Bluesky')}
+                  {profile?.githubUrl &&
+                    getSocialLink(profile.githubUrl, "github", "GitHub")}
+                  {profile?.linkedinUrl &&
+                    getSocialLink(profile.linkedinUrl, "linkedin", "LinkedIn")}
+                  {profile?.twitterUrl &&
+                    getSocialLink(profile.twitterUrl, "twitter", "Twitter")}
+                  {profile?.website &&
+                    getSocialLink(profile.website, "website", "Website")}
+                  {profile?.blueskyUrl &&
+                    getSocialLink(profile.blueskyUrl, "bluesky", "Bluesky")}
                 </Group>
               </Box>
             </Group>
@@ -264,7 +282,9 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
 
           {(profile?.interests?.length ?? 0) > 0 && (
             <Card shadow="sm" padding="lg" radius="md" withBorder mb="lg">
-              <Title order={3} mb="md">Interests</Title>
+              <Title order={3} mb="md">
+                Interests
+              </Title>
               <Group gap="xs">
                 {profile.interests.map((interest: string) => (
                   <Badge key={interest} size="md" variant="outline">
@@ -276,7 +296,9 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
           )}
 
           {/* Speaker Experience */}
-          {(profile?.speakerPreviousExperience ?? profile?.speakerPastTalkUrl ?? profile?.speakerEntityName) && (
+          {(profile?.speakerPreviousExperience ??
+            profile?.speakerPastTalkUrl ??
+            profile?.speakerEntityName) && (
             <Card shadow="sm" padding="lg" radius="md" withBorder mb="lg">
               <Group gap="sm" mb="md">
                 <IconMicrophone size={20} />
@@ -285,13 +307,17 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
               <Stack gap="md">
                 {profile.speakerEntityName && (
                   <Group gap="xs">
-                    <Text size="sm" fw={500}>Representing:</Text>
+                    <Text size="sm" fw={500}>
+                      Representing:
+                    </Text>
                     <Text size="sm">{profile.speakerEntityName}</Text>
                   </Group>
                 )}
                 {profile.speakerPreviousExperience && (
                   <div>
-                    <Text size="sm" fw={500} mb="xs">Speaking Experience</Text>
+                    <Text size="sm" fw={500} mb="xs">
+                      Speaking Experience
+                    </Text>
                     <Text size="sm" style={{ lineHeight: 1.6 }}>
                       {profile.speakerPreviousExperience}
                     </Text>
@@ -300,7 +326,11 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
                 {profile.speakerPastTalkUrl && (
                   <Group gap="xs">
                     <IconVideo size={16} />
-                    <Anchor href={profile.speakerPastTalkUrl} target="_blank" size="sm">
+                    <Anchor
+                      href={profile.speakerPastTalkUrl}
+                      target="_blank"
+                      size="sm"
+                    >
                       Watch a past talk
                     </Anchor>
                   </Group>
@@ -312,7 +342,9 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
           {/* Projects */}
           {profile?.projects && profile.projects.length > 0 && (
             <Card shadow="sm" padding="lg" radius="md" withBorder mb="lg">
-              <Title order={3} mb="md">Featured Projects</Title>
+              <Title order={3} mb="md">
+                Featured Projects
+              </Title>
               <Stack gap="md">
                 {profile.projects.map((project) => (
                   <Paper
@@ -322,18 +354,19 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
                     component={Link}
                     href={`/projects/${project.id}`}
                     style={{
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      cursor: 'pointer',
-                      transition: 'transform 0.1s ease, box-shadow 0.1s ease'
+                      textDecoration: "none",
+                      color: "inherit",
+                      cursor: "pointer",
+                      transition: "transform 0.1s ease, box-shadow 0.1s ease",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow =
+                        "0 4px 12px rgba(0,0,0,0.1)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '';
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "";
                     }}
                   >
                     <Group justify="space-between" align="flex-start" gap="md">
@@ -350,12 +383,22 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
                       )}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <Group gap="xs" align="center">
-                          <Text fw={500} size="sm" lineClamp={1} style={{ flex: 1 }}>
+                          <Text
+                            fw={500}
+                            size="sm"
+                            lineClamp={1}
+                            style={{ flex: 1 }}
+                          >
                             {project.title}
                           </Text>
                           {project.featured && (
                             <Tooltip label="Featured project">
-                              <IconStar size={14} style={{ color: 'var(--mantine-color-yellow-6)' }} />
+                              <IconStar
+                                size={14}
+                                style={{
+                                  color: "var(--mantine-color-yellow-6)",
+                                }}
+                              />
                             </Tooltip>
                           )}
                         </Group>
@@ -394,7 +437,7 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
                     acc[eId] ??= { event: session.event, sessions: [] };
                     acc[eId].sessions.push(session);
                     return acc;
-                  }, {})
+                  }, {}),
                 ).map(([groupEventId, { event, sessions }]) => (
                   <div key={groupEventId}>
                     <Group gap="xs" mb="sm">
@@ -435,15 +478,11 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
                             onMouseLeave={(
                               e: React.MouseEvent<HTMLAnchorElement>,
                             ) => {
-                              e.currentTarget.style.transform =
-                                "translateY(0)";
+                              e.currentTarget.style.transform = "translateY(0)";
                               e.currentTarget.style.boxShadow = "";
                             }}
                           >
-                            <Group
-                              justify="space-between"
-                              align="flex-start"
-                            >
+                            <Group justify="space-between" align="flex-start">
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <Group gap="xs" align="center">
                                   <Text
@@ -513,7 +552,9 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
           {/* Project Updates Feed */}
           {projectUpdates.length > 0 && (
             <Card shadow="sm" padding="lg" radius="md" withBorder>
-              <Title order={3} mb="md">Project Updates</Title>
+              <Title order={3} mb="md">
+                Project Updates
+              </Title>
               <Stack gap="md">
                 {projectUpdates.map((update) => (
                   <Paper key={update.id} p="md" withBorder>
@@ -542,19 +583,25 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
                                 c="blue"
                                 component={Link}
                                 href={`/projects/${update.project.id}`}
-                                style={{ textDecoration: 'none', cursor: 'pointer' }}
+                                style={{
+                                  textDecoration: "none",
+                                  cursor: "pointer",
+                                }}
                                 onMouseEnter={(e) => {
-                                  e.currentTarget.style.textDecoration = 'underline';
+                                  e.currentTarget.style.textDecoration =
+                                    "underline";
                                 }}
                                 onMouseLeave={(e) => {
-                                  e.currentTarget.style.textDecoration = 'none';
+                                  e.currentTarget.style.textDecoration = "none";
                                 }}
                               >
                                 {update.project.title}
                               </Text>
                               {update.weekNumber && (
                                 <>
-                                  <Text size="xs" c="dimmed">•</Text>
+                                  <Text size="xs" c="dimmed">
+                                    •
+                                  </Text>
                                   <Badge size="xs" variant="light">
                                     Week {update.weekNumber}
                                   </Badge>
@@ -563,7 +610,11 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
                             </Group>
                           </div>
                         </Group>
-                        <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
+                        <Text
+                          size="xs"
+                          c="dimmed"
+                          style={{ whiteSpace: "nowrap" }}
+                        >
                           {getRelativeTime(update.updateDate)}
                         </Text>
                       </Group>
@@ -576,7 +627,10 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
                       {/* Update Images */}
                       {update.imageUrls.length > 0 && (
                         <SimpleGrid
-                          cols={{ base: 1, sm: update.imageUrls.length === 1 ? 1 : 2 }}
+                          cols={{
+                            base: 1,
+                            sm: update.imageUrls.length === 1 ? 1 : 2,
+                          }}
                           spacing="xs"
                         >
                           {update.imageUrls.slice(0, 4).map((url, idx) => (
@@ -587,9 +641,15 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
                               radius="sm"
                               style={{
                                 width: "100%",
-                                height: update.imageUrls.length === 1 ? "auto" : "150px",
+                                height:
+                                  update.imageUrls.length === 1
+                                    ? "auto"
+                                    : "150px",
                                 objectFit: "cover",
-                                maxHeight: update.imageUrls.length === 1 ? "300px" : "150px"
+                                maxHeight:
+                                  update.imageUrls.length === 1
+                                    ? "300px"
+                                    : "150px",
                               }}
                             />
                           ))}
@@ -610,9 +670,13 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
                       {/* Like Count */}
                       {update.likes.length > 0 && (
                         <Group gap={4}>
-                          <IconHeart size={14} style={{ color: 'var(--mantine-color-red-6)' }} />
+                          <IconHeart
+                            size={14}
+                            style={{ color: "var(--mantine-color-red-6)" }}
+                          />
                           <Text size="xs" c="dimmed">
-                            {update.likes.length} {update.likes.length === 1 ? 'like' : 'likes'}
+                            {update.likes.length}{" "}
+                            {update.likes.length === 1 ? "like" : "likes"}
                           </Text>
                         </Group>
                       )}
@@ -627,13 +691,17 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
         <Grid.Col span={{ base: 12, md: 4 }}>
           {/* Additional Info */}
           <Card shadow="sm" padding="lg" radius="md" withBorder>
-            <Title order={3} mb="md">Details</Title>
+            <Title order={3} mb="md">
+              Details
+            </Title>
             <Stack gap="md">
               {profile?.yearsOfExperience && (
                 <Group gap="sm">
                   <IconCalendar size={16} />
                   <div>
-                    <Text size="sm" fw={500}>Experience</Text>
+                    <Text size="sm" fw={500}>
+                      Experience
+                    </Text>
                     <Text size="xs" c="dimmed">
                       {profile.yearsOfExperience} years
                     </Text>
@@ -645,7 +713,9 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
                 <Group gap="sm">
                   <IconClock size={16} />
                   <div>
-                    <Text size="sm" fw={500}>Timezone</Text>
+                    <Text size="sm" fw={500}>
+                      Timezone
+                    </Text>
                     <Text size="xs" c="dimmed">
                       {profile.timezone}
                     </Text>
@@ -657,7 +727,9 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
                 <Group gap="sm" align="flex-start">
                   <IconLanguage size={16} />
                   <div>
-                    <Text size="sm" fw={500}>Languages</Text>
+                    <Text size="sm" fw={500}>
+                      Languages
+                    </Text>
                     <Text size="xs" c="dimmed">
                       {profile.languages.join(", ")}
                     </Text>
@@ -670,7 +742,9 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
                 <>
                   <Divider />
                   <div>
-                    <Text size="sm" fw={500} mb="xs">Contact</Text>
+                    <Text size="sm" fw={500} mb="xs">
+                      Contact
+                    </Text>
                     <Stack gap="xs">
                       {profile.telegramHandle && (
                         <Text size="xs" c="dimmed">

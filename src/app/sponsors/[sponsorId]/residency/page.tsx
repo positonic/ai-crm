@@ -11,27 +11,29 @@ interface SponsorResidencyPageProps {
   }>;
 }
 
-export default async function SponsorResidencyPage({ 
-  params, 
-  searchParams 
+export default async function SponsorResidencyPage({
+  params,
+  searchParams,
 }: SponsorResidencyPageProps) {
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
-  
+
   // For now, use a default event ID. In production, this would be passed via searchParams
   const eventId = resolvedSearchParams.eventId ?? "realfi-hackathon-2025";
-  
+
   try {
     // Get the event sponsor relationship
     const event = await api.event.getEvent({ id: eventId });
-    const eventSponsor = event?.sponsors.find(es => es.sponsor.id === resolvedParams.sponsorId);
-    
+    const eventSponsor = event?.sponsors.find(
+      (es) => es.sponsor.id === resolvedParams.sponsorId,
+    );
+
     if (!eventSponsor) {
       notFound();
     }
 
     return (
-      <SponsorResidencyDashboard 
+      <SponsorResidencyDashboard
         eventSponsorId={eventSponsor.id}
         sponsorId={resolvedParams.sponsorId}
         eventId={eventId}

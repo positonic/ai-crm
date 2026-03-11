@@ -6,7 +6,10 @@ interface AdminEventLayoutProps {
   params: Promise<{ eventId: string }>;
 }
 
-export default async function AdminEventLayout({ children, params }: AdminEventLayoutProps) {
+export default async function AdminEventLayout({
+  children,
+  params,
+}: AdminEventLayoutProps) {
   const { eventId } = await params;
 
   const featureFlagSelect = {

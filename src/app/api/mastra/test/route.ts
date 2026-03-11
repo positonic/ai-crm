@@ -7,21 +7,21 @@ async function GET() {
     const result = await db.$queryRaw`SELECT 1 as test`;
     return Response.json({
       success: true,
-      data: { 
+      data: {
         message: "Database connection successful",
-        result 
-      }
+        result,
+      },
     });
   } catch (error) {
     console.error("[MASTRA API] Error in test endpoint:", error);
-    
+
     return Response.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "Test failed",
-        details: error instanceof Error ? error.message : "Unknown error"
-      }, 
-      { status: 500 }
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
     );
   }
 }

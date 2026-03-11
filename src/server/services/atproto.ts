@@ -39,14 +39,15 @@ export class AtProtoService {
    */
   async connectAccount(
     userId: string,
-    credentials: AtProtoCredentials
+    credentials: AtProtoCredentials,
   ): Promise<{ handle: string; did: string; pdsUrl: string }> {
     try {
       // Check if encryption is configured
       if (!isEncryptionConfigured()) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "AT Proto encryption is not configured. Please contact an administrator.",
+          message:
+            "AT Proto encryption is not configured. Please contact an administrator.",
         });
       }
 
@@ -119,13 +120,18 @@ export class AtProtoService {
         if (error.message.includes("Invalid identifier or password")) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
-            message: "Invalid handle or app password. Make sure you're using an app password, not your main password.",
+            message:
+              "Invalid handle or app password. Make sure you're using an app password, not your main password.",
           });
         }
-        if (error.message.includes("network") || error.message.includes("ENOTFOUND")) {
+        if (
+          error.message.includes("network") ||
+          error.message.includes("ENOTFOUND")
+        ) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: "Unable to connect to AT Proto server. Please try again later.",
+            message:
+              "Unable to connect to AT Proto server. Please try again later.",
           });
         }
       }
@@ -214,7 +220,8 @@ export class AtProtoService {
     if (!account?.accessJwt || !account.refreshJwt) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
-        message: "No AT Proto account connected. Please connect your account first.",
+        message:
+          "No AT Proto account connected. Please connect your account first.",
       });
     }
 
@@ -249,7 +256,8 @@ export class AtProtoService {
 
       throw new TRPCError({
         code: "UNAUTHORIZED",
-        message: "Failed to authenticate with AT Proto. Please reconnect your account.",
+        message:
+          "Failed to authenticate with AT Proto. Please reconnect your account.",
       });
     }
   }
@@ -276,7 +284,7 @@ export class AtProtoService {
       // Attempt to refresh the session
       const response = await agent.com.atproto.server.refreshSession(
         undefined,
-        { headers: { authorization: `Bearer ${refreshJwt}` } }
+        { headers: { authorization: `Bearer ${refreshJwt}` } },
       );
 
       // Encrypt and store new tokens
@@ -310,12 +318,17 @@ export class AtProtoService {
   /**
    * Gets user's posts from AT Proto
    */
-  async getUserPosts(userId: string, limit = 10): Promise<Array<{
-    uri: string;
-    cid: string;
-    text: string;
-    createdAt: string;
-  }>> {
+  async getUserPosts(
+    userId: string,
+    limit = 10,
+  ): Promise<
+    Array<{
+      uri: string;
+      cid: string;
+      text: string;
+      createdAt: string;
+    }>
+  > {
     try {
       const agent = await this.getAuthenticatedAgent(userId);
       const account = await this.db.atProtoAccount.findUnique({
@@ -368,7 +381,10 @@ export class AtProtoService {
   /**
    * Creates a post on AT Proto
    */
-  async createPost(userId: string, content: PostContent): Promise<{ uri: string; cid: string }> {
+  async createPost(
+    userId: string,
+    content: PostContent,
+  ): Promise<{ uri: string; cid: string }> {
     try {
       const agent = await this.getAuthenticatedAgent(userId);
 
@@ -421,6 +437,9 @@ export class AtProtoService {
 /**
  * Factory function to create an AtProtoService instance
  */
-export function createAtProtoService(db: PrismaClient, customPdsUrl?: string): AtProtoService {
+export function createAtProtoService(
+  db: PrismaClient,
+  customPdsUrl?: string,
+): AtProtoService {
   return new AtProtoService(db, customPdsUrl);
 }

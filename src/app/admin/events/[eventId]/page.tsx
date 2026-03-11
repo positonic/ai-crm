@@ -7,7 +7,9 @@ interface AdminEventDetailPageProps {
   params: Promise<{ eventId: string }>;
 }
 
-export default async function AdminEventDetailPage({ params }: AdminEventDetailPageProps) {
+export default async function AdminEventDetailPage({
+  params,
+}: AdminEventDetailPageProps) {
   const { eventId } = await params;
 
   const session = await auth();
@@ -40,6 +42,7 @@ export default async function AdminEventDetailPage({ params }: AdminEventDetailP
     featureSponsorManagement: true,
     featureScheduleManagement: true,
     featureFloorManagement: true,
+    featureDeliberation: true,
     registrationUrl: true,
     lumaEventId: true,
     _count: {

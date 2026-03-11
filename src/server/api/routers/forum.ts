@@ -474,7 +474,7 @@ export const forumRouter = createTRPCRouter({
           }
 
           console.log(
-            `Forum comment notifications sent for comment ${comment.id}`
+            `Forum comment notifications sent for comment ${comment.id}`,
           );
         } catch (error) {
           console.error("Failed to send forum comment notifications:", error);

@@ -103,22 +103,26 @@ export const Tile = ({
 }: TileProps) => {
   const opacity = entry.isBlueprint ? 0.5 : 1;
 
-  const fallback = entry.id && isAddress(entry.id) ? formatAddress(entry.id) : entry.id ?? "Unknown";
+  const fallback =
+    entry.id && isAddress(entry.id)
+      ? formatAddress(entry.id)
+      : (entry.id ?? "Unknown");
   const name = entry.displayName ?? entry.name ?? fallback;
   const toolTipLabel = formatTooltipLabel(entry.id ?? "unknown", name);
   const layout = getTileLayout(wrapperProps.width, wrapperProps.height);
 
   // Determine image styles based on objectFit mode
-  const imageStyles = imageObjectFit === "cover"
-    ? {
-        width: "100%",
-        height: "100%",
-        objectFit: "cover" as const,
-      }
-    : {
-        maxWidth: logoSize,
-        maxHeight: logoSize,
-      };
+  const imageStyles =
+    imageObjectFit === "cover"
+      ? {
+          width: "100%",
+          height: "100%",
+          objectFit: "cover" as const,
+        }
+      : {
+          maxWidth: logoSize,
+          maxHeight: logoSize,
+        };
 
   return (
     <Wrapper {...wrapperProps}>

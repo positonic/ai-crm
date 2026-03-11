@@ -18,17 +18,12 @@ import {
   Loader,
   SimpleGrid,
   Tooltip,
-  Menu
+  Menu,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useDebouncedValue } from "@mantine/hooks";
-import {
-  IconSearch,
-  IconUserPlus,
-  IconEye,
-  IconX
-} from "@tabler/icons-react";
+import { IconSearch, IconUserPlus, IconEye, IconX } from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import { getDisplayName } from "~/utils/userDisplay";
 
@@ -50,21 +45,29 @@ export default function UsersClient() {
   const [debouncedSearch] = useDebouncedValue(searchTerm, 300);
 
   // API queries
-  const { data: users, refetch: refetchUsers, isLoading: loadingUsers, isFetching } = api.role.getAllUsersWithEventRoles.useQuery({
-    search: debouncedSearch || undefined,
-    eventId: filterEventId || undefined,
-    roleId: filterRoleId || undefined,
-  }, {
-    // Keep previous data while fetching new results to prevent UI flash
-    placeholderData: (previousData) => previousData,
-  });
+  const {
+    data: users,
+    refetch: refetchUsers,
+    isLoading: loadingUsers,
+    isFetching,
+  } = api.role.getAllUsersWithEventRoles.useQuery(
+    {
+      search: debouncedSearch || undefined,
+      eventId: filterEventId || undefined,
+      roleId: filterRoleId || undefined,
+    },
+    {
+      // Keep previous data while fetching new results to prevent UI flash
+      placeholderData: (previousData) => previousData,
+    },
+  );
 
   const { data: userStats } = api.role.getUserStats.useQuery();
   const { data: events } = api.event.getEvents.useQuery();
   const { data: roles } = api.invitation.getAvailableRoles.useQuery();
   const { data: userDetails } = api.role.getUserDetails.useQuery(
     { userId: selectedUserId },
-    { enabled: !!selectedUserId && userDetailModalOpen }
+    { enabled: !!selectedUserId && userDetailModalOpen },
   );
 
   // API mutations
@@ -142,11 +145,18 @@ export default function UsersClient() {
     assignEventRole.mutate(values);
   };
 
-  const handleRemoveRole = (userId: string, eventId: string, roleId: string) => {
+  const handleRemoveRole = (
+    userId: string,
+    eventId: string,
+    roleId: string,
+  ) => {
     removeEventRole.mutate({ userId, eventId, roleId });
   };
 
-  const handleUpdateGlobalRole = (userId: string, newRole: "user" | "staff" | "admin") => {
+  const handleUpdateGlobalRole = (
+    userId: string,
+    newRole: "user" | "staff" | "admin",
+  ) => {
     updateGlobalRole.mutate({ userId, newRole });
   };
 
@@ -157,9 +167,12 @@ export default function UsersClient() {
 
   const getGlobalRoleBadgeColor = (role: string) => {
     switch (role) {
-      case "admin": return "red";
-      case "staff": return "orange";
-      default: return "blue";
+      case "admin":
+        return "red";
+      case "staff":
+        return "orange";
+      default:
+        return "blue";
     }
   };
 
@@ -189,32 +202,52 @@ export default function UsersClient() {
         <SimpleGrid cols={{ base: 2, sm: 5 }} mb="xl">
           <Paper p="md" radius="md" withBorder>
             <Group>
-              <Text size="xl" fw={700}>{userStats.total}</Text>
-              <Text size="sm" c="dimmed">Total Users</Text>
+              <Text size="xl" fw={700}>
+                {userStats.total}
+              </Text>
+              <Text size="sm" c="dimmed">
+                Total Users
+              </Text>
             </Group>
           </Paper>
           <Paper p="md" radius="md" withBorder>
             <Group>
-              <Text size="xl" fw={700} c="red">{userStats.admins}</Text>
-              <Text size="sm" c="dimmed">Admins</Text>
+              <Text size="xl" fw={700} c="red">
+                {userStats.admins}
+              </Text>
+              <Text size="sm" c="dimmed">
+                Admins
+              </Text>
             </Group>
           </Paper>
           <Paper p="md" radius="md" withBorder>
             <Group>
-              <Text size="xl" fw={700} c="orange">{userStats.staff}</Text>
-              <Text size="sm" c="dimmed">Staff</Text>
+              <Text size="xl" fw={700} c="orange">
+                {userStats.staff}
+              </Text>
+              <Text size="sm" c="dimmed">
+                Staff
+              </Text>
             </Group>
           </Paper>
           <Paper p="md" radius="md" withBorder>
             <Group>
-              <Text size="xl" fw={700} c="blue">{userStats.users}</Text>
-              <Text size="sm" c="dimmed">Regular Users</Text>
+              <Text size="xl" fw={700} c="blue">
+                {userStats.users}
+              </Text>
+              <Text size="sm" c="dimmed">
+                Regular Users
+              </Text>
             </Group>
           </Paper>
           <Paper p="md" radius="md" withBorder>
             <Group>
-              <Text size="xl" fw={700} c="green">{userStats.usersWithEventRoles}</Text>
-              <Text size="sm" c="dimmed">With Event Roles</Text>
+              <Text size="xl" fw={700} c="green">
+                {userStats.usersWithEventRoles}
+              </Text>
+              <Text size="sm" c="dimmed">
+                With Event Roles
+              </Text>
             </Group>
           </Paper>
         </SimpleGrid>
@@ -235,7 +268,12 @@ export default function UsersClient() {
             placeholder="Filter by event"
             value={filterEventId}
             onChange={(value) => setFilterEventId(value ?? "")}
-            data={events?.map(event => ({ value: event.id, label: event.name })) ?? []}
+            data={
+              events?.map((event) => ({
+                value: event.id,
+                label: event.name,
+              })) ?? []
+            }
             clearable
             style={{ minWidth: 200 }}
           />
@@ -243,7 +281,9 @@ export default function UsersClient() {
             placeholder="Filter by role"
             value={filterRoleId}
             onChange={(value) => setFilterRoleId(value ?? "")}
-            data={roles?.map(role => ({ value: role.id, label: role.name })) ?? []}
+            data={
+              roles?.map((role) => ({ value: role.id, label: role.name })) ?? []
+            }
             clearable
             style={{ minWidth: 150 }}
           />
@@ -271,10 +311,16 @@ export default function UsersClient() {
                       {user.name?.[0] ?? user.email?.[0]}
                     </Avatar>
                     <div>
-                      <Text size="sm" fw={500}>{getDisplayName(user, "No name")}</Text>
-                      <Text size="xs" c="dimmed">{user.email}</Text>
+                      <Text size="sm" fw={500}>
+                        {getDisplayName(user, "No name")}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {user.email}
+                      </Text>
                       {user.emailVerified && (
-                        <Badge size="xs" color="green" variant="dot">Verified</Badge>
+                        <Badge size="xs" color="green" variant="dot">
+                          Verified
+                        </Badge>
                       )}
                     </div>
                   </Group>
@@ -282,29 +328,29 @@ export default function UsersClient() {
                 <Table.Td>
                   <Menu position="bottom-end">
                     <Menu.Target>
-                      <Badge 
-                        color={getGlobalRoleBadgeColor(user.role ?? "user")} 
-                        variant="light" 
-                        style={{ cursor: 'pointer' }}
+                      <Badge
+                        color={getGlobalRoleBadgeColor(user.role ?? "user")}
+                        variant="light"
+                        style={{ cursor: "pointer" }}
                       >
                         {(user.role ?? "user").toUpperCase()}
                       </Badge>
                     </Menu.Target>
                     <Menu.Dropdown>
                       <Menu.Label>Change Global Role</Menu.Label>
-                      <Menu.Item 
+                      <Menu.Item
                         onClick={() => handleUpdateGlobalRole(user.id, "user")}
                         disabled={user.role === "user"}
                       >
                         User
                       </Menu.Item>
-                      <Menu.Item 
+                      <Menu.Item
                         onClick={() => handleUpdateGlobalRole(user.id, "staff")}
                         disabled={user.role === "staff"}
                       >
                         Staff
                       </Menu.Item>
-                      <Menu.Item 
+                      <Menu.Item
                         onClick={() => handleUpdateGlobalRole(user.id, "admin")}
                         disabled={user.role === "admin"}
                       >
@@ -316,19 +362,27 @@ export default function UsersClient() {
                 <Table.Td>
                   <Group gap={4}>
                     {user.userRoles.length === 0 ? (
-                      <Text size="xs" c="dimmed">No roles</Text>
+                      <Text size="xs" c="dimmed">
+                        No roles
+                      </Text>
                     ) : (
                       user.userRoles.slice(0, 2).map((userRole) => (
                         <Tooltip
                           key={`${userRole.event.id}-${userRole.role.id}`}
                           label={`${userRole.role.name} for ${userRole.event.name}`}
                         >
-                          <Badge 
-                            size="xs" 
-                            variant="light" 
+                          <Badge
+                            size="xs"
+                            variant="light"
                             color="blue"
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => handleRemoveRole(user.id, userRole.event.id, userRole.role.id)}
+                            style={{ cursor: "pointer" }}
+                            onClick={() =>
+                              handleRemoveRole(
+                                user.id,
+                                userRole.event.id,
+                                userRole.role.id,
+                              )
+                            }
                           >
                             {userRole.role.name}
                           </Badge>
@@ -363,7 +417,10 @@ export default function UsersClient() {
                       color="green"
                       size="sm"
                       onClick={() => {
-                        assignRoleForm.setValues({ ...assignRoleForm.values, userId: user.id });
+                        assignRoleForm.setValues({
+                          ...assignRoleForm.values,
+                          userId: user.id,
+                        });
                         setAssignRoleModalOpen(true);
                       }}
                       title="Assign role"
@@ -395,36 +452,53 @@ export default function UsersClient() {
           <Select
             label="User"
             placeholder="Select a user"
-            data={users?.map(user => ({
-              value: user.id,
-              label: `${getDisplayName(user)} (${user.email})`
-            })) ?? []}
+            data={
+              users?.map((user) => ({
+                value: user.id,
+                label: `${getDisplayName(user)} (${user.email})`,
+              })) ?? []
+            }
             value={assignRoleForm.values.userId}
-            onChange={(value) => assignRoleForm.setFieldValue("userId", value ?? "")}
+            onChange={(value) =>
+              assignRoleForm.setFieldValue("userId", value ?? "")
+            }
             searchable
           />
 
           {/* Global Role Section */}
           <Paper withBorder p="md" radius="md">
-            <Text fw={500} mb="sm">Global Role</Text>
+            <Text fw={500} mb="sm">
+              Global Role
+            </Text>
             <Text size="sm" c="dimmed" mb="md">
               Set the user&apos;s platform-wide permissions
             </Text>
             <Group>
               {(["user", "staff", "admin"] as const).map((role) => {
-                const selectedUser = users?.find(u => u.id === assignRoleForm.values.userId);
+                const selectedUser = users?.find(
+                  (u) => u.id === assignRoleForm.values.userId,
+                );
                 const isCurrentRole = selectedUser?.role === role;
                 return (
                   <Button
                     key={role}
                     variant={isCurrentRole ? "filled" : "light"}
-                    color={role === "admin" ? "red" : role === "staff" ? "orange" : "blue"}
+                    color={
+                      role === "admin"
+                        ? "red"
+                        : role === "staff"
+                          ? "orange"
+                          : "blue"
+                    }
                     size="sm"
                     disabled={!assignRoleForm.values.userId || isCurrentRole}
                     loading={updateGlobalRole.isPending}
                     onClick={() => {
                       if (assignRoleForm.values.userId) {
-                        handleUpdateGlobalRole(assignRoleForm.values.userId, role);
+                        handleUpdateGlobalRole(
+                          assignRoleForm.values.userId,
+                          role,
+                        );
                       }
                     }}
                   >
@@ -437,7 +511,9 @@ export default function UsersClient() {
 
           {/* Event Role Section */}
           <Paper withBorder p="md" radius="md">
-            <Text fw={500} mb="sm">Event Role</Text>
+            <Text fw={500} mb="sm">
+              Event Role
+            </Text>
             <Text size="sm" c="dimmed" mb="md">
               Assign a role for a specific event
             </Text>
@@ -446,14 +522,24 @@ export default function UsersClient() {
                 <Select
                   label="Event"
                   placeholder="Select an event"
-                  data={events?.map(event => ({ value: event.id, label: event.name })) ?? []}
+                  data={
+                    events?.map((event) => ({
+                      value: event.id,
+                      label: event.name,
+                    })) ?? []
+                  }
                   {...assignRoleForm.getInputProps("eventId")}
                 />
 
                 <Select
                   label="Role"
                   placeholder="Select a role"
-                  data={roles?.map(role => ({ value: role.id, label: role.name })) ?? []}
+                  data={
+                    roles?.map((role) => ({
+                      value: role.id,
+                      label: role.name,
+                    })) ?? []
+                  }
                   {...assignRoleForm.getInputProps("roleId")}
                 />
 
@@ -461,7 +547,11 @@ export default function UsersClient() {
                   type="submit"
                   loading={assignEventRole.isPending}
                   leftSection={<IconUserPlus size={16} />}
-                  disabled={!assignRoleForm.values.userId || !assignRoleForm.values.eventId || !assignRoleForm.values.roleId}
+                  disabled={
+                    !assignRoleForm.values.userId ||
+                    !assignRoleForm.values.eventId ||
+                    !assignRoleForm.values.roleId
+                  }
                 >
                   Assign Event Role
                 </Button>
@@ -470,7 +560,10 @@ export default function UsersClient() {
           </Paper>
 
           <Group justify="flex-end">
-            <Button variant="light" onClick={() => setAssignRoleModalOpen(false)}>
+            <Button
+              variant="light"
+              onClick={() => setAssignRoleModalOpen(false)}
+            >
               Close
             </Button>
           </Group>
@@ -492,9 +585,14 @@ export default function UsersClient() {
                 {userDetails.name?.[0] ?? userDetails.email?.[0]}
               </Avatar>
               <div>
-                <Text fw={600} size="lg">{getDisplayName(userDetails, "No name")}</Text>
+                <Text fw={600} size="lg">
+                  {getDisplayName(userDetails, "No name")}
+                </Text>
                 <Text c="dimmed">{userDetails.email}</Text>
-                <Badge color={getGlobalRoleBadgeColor(userDetails.role ?? "user")} variant="light">
+                <Badge
+                  color={getGlobalRoleBadgeColor(userDetails.role ?? "user")}
+                  variant="light"
+                >
                   {(userDetails.role ?? "user").toUpperCase()}
                 </Badge>
               </div>
@@ -503,41 +601,73 @@ export default function UsersClient() {
             {/* Stats */}
             <SimpleGrid cols={3}>
               <Paper p="sm" withBorder>
-                <Text size="lg" fw={700}>{userDetails._count.userRoles}</Text>
-                <Text size="xs" c="dimmed">Event Roles</Text>
+                <Text size="lg" fw={700}>
+                  {userDetails._count.userRoles}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Event Roles
+                </Text>
               </Paper>
               <Paper p="sm" withBorder>
-                <Text size="lg" fw={700}>{userDetails._count.applications}</Text>
-                <Text size="xs" c="dimmed">Applications</Text>
+                <Text size="lg" fw={700}>
+                  {userDetails._count.applications}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Applications
+                </Text>
               </Paper>
               <Paper p="sm" withBorder>
-                <Text size="lg" fw={700}>{userDetails._count.posts}</Text>
-                <Text size="xs" c="dimmed">Posts</Text>
+                <Text size="lg" fw={700}>
+                  {userDetails._count.posts}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Posts
+                </Text>
               </Paper>
             </SimpleGrid>
 
             {/* Event Roles */}
             <div>
-              <Text fw={600} mb="sm">Event Roles</Text>
+              <Text fw={600} mb="sm">
+                Event Roles
+              </Text>
               {userDetails.userRoles.length === 0 ? (
-                <Text size="sm" c="dimmed">No event roles assigned</Text>
+                <Text size="sm" c="dimmed">
+                  No event roles assigned
+                </Text>
               ) : (
                 <Stack gap="xs">
                   {userDetails.userRoles.map((userRole) => (
-                    <Group key={`${userRole.event.id}-${userRole.role.id}`} justify="space-between">
+                    <Group
+                      key={`${userRole.event.id}-${userRole.role.id}`}
+                      justify="space-between"
+                    >
                       <Group>
-                        <Badge color="blue" variant="light">{userRole.role.name}</Badge>
+                        <Badge color="blue" variant="light">
+                          {userRole.role.name}
+                        </Badge>
                         <Text size="sm">{userRole.event.name}</Text>
                         <Text size="xs" c="dimmed">
-                          {new Date(userRole.event.startDate).toLocaleDateString()} - 
-                          {new Date(userRole.event.endDate).toLocaleDateString()}
+                          {new Date(
+                            userRole.event.startDate,
+                          ).toLocaleDateString()}{" "}
+                          -
+                          {new Date(
+                            userRole.event.endDate,
+                          ).toLocaleDateString()}
                         </Text>
                       </Group>
                       <ActionIcon
                         color="red"
                         variant="light"
                         size="sm"
-                        onClick={() => handleRemoveRole(userDetails.id, userRole.event.id, userRole.role.id)}
+                        onClick={() =>
+                          handleRemoveRole(
+                            userDetails.id,
+                            userRole.event.id,
+                            userRole.role.id,
+                          )
+                        }
                         title="Remove role"
                       >
                         <IconX size={14} />
@@ -550,17 +680,27 @@ export default function UsersClient() {
 
             {/* Applications */}
             <div>
-              <Text fw={600} mb="sm">Recent Applications</Text>
+              <Text fw={600} mb="sm">
+                Recent Applications
+              </Text>
               {userDetails.applications.length === 0 ? (
-                <Text size="sm" c="dimmed">No applications submitted</Text>
+                <Text size="sm" c="dimmed">
+                  No applications submitted
+                </Text>
               ) : (
                 <Stack gap="xs">
                   {userDetails.applications.slice(0, 5).map((application) => (
                     <Group key={application.id} justify="space-between">
                       <Group>
                         <Text size="sm">{application.event.name}</Text>
-                        <Badge 
-                          color={application.status === "ACCEPTED" ? "green" : application.status === "REJECTED" ? "red" : "blue"}
+                        <Badge
+                          color={
+                            application.status === "ACCEPTED"
+                              ? "green"
+                              : application.status === "REJECTED"
+                                ? "red"
+                                : "blue"
+                          }
                           variant="light"
                           size="sm"
                         >

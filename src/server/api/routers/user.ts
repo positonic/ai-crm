@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure, protectedProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  protectedProcedure,
+} from "~/server/api/trpc";
 import { hashPassword } from "~/utils/password";
 import { TRPCError } from "@trpc/server";
 
@@ -9,7 +13,10 @@ export const userRouter = createTRPCRouter({
       z.object({
         firstName: z.string().min(1, "First name is required"),
         surname: z.string().optional(),
-        email: z.string().email("Invalid email address").transform(v => v.toLowerCase().trim()),
+        email: z
+          .string()
+          .email("Invalid email address")
+          .transform((v) => v.toLowerCase().trim()),
         password: z.string().min(8, "Password must be at least 8 characters"),
       }),
     )
@@ -50,63 +57,67 @@ export const userRouter = createTRPCRouter({
       return user;
     }),
 
-  getAll: protectedProcedure
-    .query(async ({ ctx }) => {
-      // Only allow staff and admin users to fetch all users
-      if (ctx.session.user.role !== "staff" && ctx.session.user.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only staff and admin users can access user list",
-        });
-      }
-
-      const users = await ctx.db.user.findMany({
-        select: {
-          id: true,
-          firstName: true,
-          surname: true,
-          name: true,
-          email: true,
-          role: true,
-        },
-        orderBy: {
-          firstName: "asc",
-        },
+  getAll: protectedProcedure.query(async ({ ctx }) => {
+    // Only allow staff and admin users to fetch all users
+    if (
+      ctx.session.user.role !== "staff" &&
+      ctx.session.user.role !== "admin"
+    ) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Only staff and admin users can access user list",
       });
+    }
 
-      return users;
-    }),
+    const users = await ctx.db.user.findMany({
+      select: {
+        id: true,
+        firstName: true,
+        surname: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+      orderBy: {
+        firstName: "asc",
+      },
+    });
 
-  getAdmins: protectedProcedure
-    .query(async ({ ctx }) => {
-      // Only allow staff and admin users to fetch admin users
-      if (ctx.session.user.role !== "staff" && ctx.session.user.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only staff and admin users can access admin user list",
-        });
-      }
+    return users;
+  }),
 
-      const adminUsers = await ctx.db.user.findMany({
-        where: {
-          role: "admin",
-        },
-        select: {
-          id: true,
-          firstName: true,
-          surname: true,
-          name: true,
-          email: true,
-          role: true,
-          isAIReviewer: true,
-        },
-        orderBy: {
-          firstName: "asc",
-        },
+  getAdmins: protectedProcedure.query(async ({ ctx }) => {
+    // Only allow staff and admin users to fetch admin users
+    if (
+      ctx.session.user.role !== "staff" &&
+      ctx.session.user.role !== "admin"
+    ) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Only staff and admin users can access admin user list",
       });
+    }
 
-      return adminUsers;
-    }),
+    const adminUsers = await ctx.db.user.findMany({
+      where: {
+        role: "admin",
+      },
+      select: {
+        id: true,
+        firstName: true,
+        surname: true,
+        name: true,
+        email: true,
+        role: true,
+        isAIReviewer: true,
+      },
+      orderBy: {
+        firstName: "asc",
+      },
+    });
+
+    return adminUsers;
+  }),
 
   updateUserAdminNotes: protectedProcedure
     .input(
@@ -145,7 +156,24 @@ export const userRouter = createTRPCRouter({
     .input(
       z.object({
         userId: z.string(),
-        adminLabels: z.array(z.enum(["AI / ML expert", "Designer", "Developer", "Entrepreneur", "Lawyer", "Non-Technical", "Project manager", "REFI", "Regen", "Researcher", "Scientist", "Woman", "Writer", "ZK"])),
+        adminLabels: z.array(
+          z.enum([
+            "AI / ML expert",
+            "Designer",
+            "Developer",
+            "Entrepreneur",
+            "Lawyer",
+            "Non-Technical",
+            "Project manager",
+            "REFI",
+            "Regen",
+            "Researcher",
+            "Scientist",
+            "Woman",
+            "Writer",
+            "ZK",
+          ]),
+        ),
       }),
     )
     .mutation(async ({ ctx, input }) => {

@@ -19,7 +19,12 @@ import {
 import { DateTimePicker } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { IconPlus, IconTrash, IconArrowUp, IconArrowDown } from "@tabler/icons-react";
+import {
+  IconPlus,
+  IconTrash,
+  IconArrowUp,
+  IconArrowDown,
+} from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import type { QuestionType } from "@prisma/client";
 
@@ -137,7 +142,11 @@ export function CreateEventModal({
         if (!values.endDate) {
           errors.endDate = "End date is required";
         }
-        if (values.startDate && values.endDate && values.endDate <= values.startDate) {
+        if (
+          values.startDate &&
+          values.endDate &&
+          values.endDate <= values.startDate
+        ) {
           errors.endDate = "End date must be after start date";
         }
         if (!values.isOnline && !values.location.trim()) {
@@ -218,12 +227,14 @@ export function CreateEventModal({
     }
 
     // Ensure dates are Date objects (DateTimePicker can return strings)
-    const startDate = values.startDate instanceof Date
-      ? values.startDate
-      : new Date(values.startDate);
-    const endDate = values.endDate instanceof Date
-      ? values.endDate
-      : new Date(values.endDate);
+    const startDate =
+      values.startDate instanceof Date
+        ? values.startDate
+        : new Date(values.startDate);
+    const endDate =
+      values.endDate instanceof Date
+        ? values.endDate
+        : new Date(values.endDate);
 
     createEvent.mutate({
       name: values.name,
@@ -284,7 +295,11 @@ export function CreateEventModal({
       size="xl"
       padding="xl"
     >
-      <Stepper active={active} onStepClick={setActive} allowNextStepsSelect={false}>
+      <Stepper
+        active={active}
+        onStepClick={setActive}
+        allowNextStepsSelect={false}
+      >
         <Stepper.Step label="Basic Info" description="Event details">
           <Stack gap="md" mt="xl">
             <TextInput
@@ -350,13 +365,20 @@ export function CreateEventModal({
           </Stack>
         </Stepper.Step>
 
-        <Stepper.Step label="Application Questions" description="Customize form">
+        <Stepper.Step
+          label="Application Questions"
+          description="Customize form"
+        >
           <Stack gap="md" mt="xl">
             <Group justify="space-between">
               <Text size="sm" fw={500}>
                 Configure application questions for this event
               </Text>
-              <Button size="xs" leftSection={<IconPlus size={16} />} onClick={addQuestion}>
+              <Button
+                size="xs"
+                leftSection={<IconPlus size={16} />}
+                onClick={addQuestion}
+              >
                 Add Question
               </Button>
             </Group>
@@ -401,7 +423,9 @@ export function CreateEventModal({
                         label="Question Key"
                         placeholder="unique_key"
                         size="xs"
-                        {...form.getInputProps(`questions.${index}.questionKey`)}
+                        {...form.getInputProps(
+                          `questions.${index}.questionKey`,
+                        )}
                       />
 
                       <TextInput
@@ -420,14 +444,19 @@ export function CreateEventModal({
                         <Select
                           label="Type"
                           data={QUESTION_TYPES}
-                          {...form.getInputProps(`questions.${index}.questionType`)}
+                          {...form.getInputProps(
+                            `questions.${index}.questionType`,
+                          )}
                         />
 
                         <Switch
                           label="Required"
-                          {...form.getInputProps(`questions.${index}.required`, {
-                            type: "checkbox",
-                          })}
+                          {...form.getInputProps(
+                            `questions.${index}.required`,
+                            {
+                              type: "checkbox",
+                            },
+                          )}
                         />
                       </Group>
 

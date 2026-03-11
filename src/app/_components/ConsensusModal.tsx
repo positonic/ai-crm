@@ -50,11 +50,18 @@ import {
 } from "~/utils/confidenceWeighting";
 
 // Helper function to validate recommendation values from database
-function validateRecommendation(rec: string | null): 'ACCEPT' | 'REJECT' | 'WAITLIST' | 'NEEDS_MORE_INFO' {
-  if (rec === 'ACCEPT' || rec === 'REJECT' || rec === 'WAITLIST' || rec === 'NEEDS_MORE_INFO') {
+function validateRecommendation(
+  rec: string | null,
+): "ACCEPT" | "REJECT" | "WAITLIST" | "NEEDS_MORE_INFO" {
+  if (
+    rec === "ACCEPT" ||
+    rec === "REJECT" ||
+    rec === "WAITLIST" ||
+    rec === "NEEDS_MORE_INFO"
+  ) {
     return rec;
   }
-  return 'NEEDS_MORE_INFO'; // fallback for invalid values
+  return "NEEDS_MORE_INFO"; // fallback for invalid values
 }
 
 interface ConsensusModalProps {
@@ -70,37 +77,39 @@ interface ReviewerCardProps {
   expanded: boolean;
 }
 
-function ReviewerCard({ reviewer, onExpandToggle, expanded }: ReviewerCardProps) {
+function ReviewerCard({
+  reviewer,
+  onExpandToggle,
+  expanded,
+}: ReviewerCardProps) {
   const confidenceStars = Array.from({ length: 5 }, (_, i) => i + 1);
-  
+
   return (
     <Card withBorder p="md" mb="sm">
       <Stack gap="sm">
         <Group justify="space-between" align="flex-start">
           <Group gap="sm">
-            <Avatar
-              src={reviewer.reviewerImage ?? ""}
-              size={32}
-              radius="xl"
-            >
-              {reviewer.reviewerName?.[0]?.toUpperCase() ?? 
-               reviewer.reviewerEmail?.[0]?.toUpperCase() ?? '?'}
+            <Avatar src={reviewer.reviewerImage ?? ""} size={32} radius="xl">
+              {reviewer.reviewerName?.[0]?.toUpperCase() ??
+                reviewer.reviewerEmail?.[0]?.toUpperCase() ??
+                "?"}
             </Avatar>
             <Box>
               <Text fw={600} size="sm">
-                {reviewer.reviewerName ?? 'Unknown Reviewer'}
+                {reviewer.reviewerName ?? "Unknown Reviewer"}
               </Text>
               <Text size="xs" c="dimmed">
                 {reviewer.reviewerEmail}
               </Text>
             </Box>
           </Group>
-          
-          <ActionIcon
-            variant="subtle"
-            onClick={onExpandToggle}
-          >
-            {expanded ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
+
+          <ActionIcon variant="subtle" onClick={onExpandToggle}>
+            {expanded ? (
+              <IconChevronUp size={16} />
+            ) : (
+              <IconChevronDown size={16} />
+            )}
           </ActionIcon>
         </Group>
 
@@ -110,25 +119,39 @@ function ReviewerCard({ reviewer, onExpandToggle, expanded }: ReviewerCardProps)
               <Text size="xl" fw={700} c="blue">
                 {reviewer.overallScore.toFixed(1)}
               </Text>
-              <Text size="xs" c="dimmed">Original</Text>
+              <Text size="xs" c="dimmed">
+                Original
+              </Text>
             </Box>
-            
-            <Text size="lg" c="dimmed">→</Text>
-            
+
+            <Text size="lg" c="dimmed">
+              →
+            </Text>
+
             <Box ta="center">
-              <Text size="xl" fw={700} c={getConfidenceColor(reviewer.confidence)}>
+              <Text
+                size="xl"
+                fw={700}
+                c={getConfidenceColor(reviewer.confidence)}
+              >
                 {reviewer.weightedScore.toFixed(1)}
               </Text>
-              <Text size="xs" c="dimmed">Weighted</Text>
+              <Text size="xs" c="dimmed">
+                Weighted
+              </Text>
             </Box>
           </Group>
 
           <Group gap="sm">
             <Badge
               color={
-                reviewer.recommendation === 'ACCEPT' ? 'green' :
-                reviewer.recommendation === 'REJECT' ? 'red' :
-                reviewer.recommendation === 'WAITLIST' ? 'orange' : 'gray'
+                reviewer.recommendation === "ACCEPT"
+                  ? "green"
+                  : reviewer.recommendation === "REJECT"
+                    ? "red"
+                    : reviewer.recommendation === "WAITLIST"
+                      ? "orange"
+                      : "gray"
               }
               variant="light"
             >
@@ -138,7 +161,9 @@ function ReviewerCard({ reviewer, onExpandToggle, expanded }: ReviewerCardProps)
         </Group>
 
         <Group gap="xs" align="center">
-          <Text size="sm" fw={500}>Confidence:</Text>
+          <Text size="sm" fw={500}>
+            Confidence:
+          </Text>
           <Group gap={2}>
             {confidenceStars.map((star) => (
               <ActionIcon
@@ -147,43 +172,64 @@ function ReviewerCard({ reviewer, onExpandToggle, expanded }: ReviewerCardProps)
                 variant="transparent"
                 c={getConfidenceColor(reviewer.confidence)}
               >
-                {reviewer.confidence >= star ? 
-                  <IconStarFilled size={12} /> : 
+                {reviewer.confidence >= star ? (
+                  <IconStarFilled size={12} />
+                ) : (
                   <IconStar size={12} />
-                }
+                )}
               </ActionIcon>
             ))}
           </Group>
           <Text size="sm" c="dimmed">
-            ({reviewer.confidence}/5 • {Math.round((reviewer.finalWeight ?? reviewer.confidenceWeight) * 100)}% final weight)
+            ({reviewer.confidence}/5 •{" "}
+            {Math.round(
+              (reviewer.finalWeight ?? reviewer.confidenceWeight) * 100,
+            )}
+            % final weight)
           </Text>
         </Group>
 
         <Collapse in={expanded}>
           <Divider my="sm" />
-          
+
           {/* Weight Breakdown */}
           <Stack gap="xs" mb="md">
-            <Text size="sm" fw={500}>Weight Breakdown:</Text>
+            <Text size="sm" fw={500}>
+              Weight Breakdown:
+            </Text>
             <Group gap="md">
               <Box>
-                <Text size="xs" c="dimmed">Confidence</Text>
-                <Text size="sm" fw={500} c={getConfidenceColor(reviewer.confidence)}>
+                <Text size="xs" c="dimmed">
+                  Confidence
+                </Text>
+                <Text
+                  size="sm"
+                  fw={500}
+                  c={getConfidenceColor(reviewer.confidence)}
+                >
                   {Math.round(reviewer.confidenceWeight * 100)}%
                 </Text>
               </Box>
-              {reviewer.competencyWeight !== undefined && reviewer.competencyWeight !== 1.0 && (
-                <Box>
-                  <Text size="xs" c="dimmed">Competency</Text>
-                  <Text size="sm" fw={500} c="blue">
-                    {Math.round(reviewer.competencyWeight * 100)}%
-                  </Text>
-                </Box>
-              )}
+              {reviewer.competencyWeight !== undefined &&
+                reviewer.competencyWeight !== 1.0 && (
+                  <Box>
+                    <Text size="xs" c="dimmed">
+                      Competency
+                    </Text>
+                    <Text size="sm" fw={500} c="blue">
+                      {Math.round(reviewer.competencyWeight * 100)}%
+                    </Text>
+                  </Box>
+                )}
               <Box>
-                <Text size="xs" c="dimmed">Final</Text>
+                <Text size="xs" c="dimmed">
+                  Final
+                </Text>
                 <Text size="sm" fw={600} c="dark">
-                  {Math.round((reviewer.finalWeight ?? reviewer.confidenceWeight) * 100)}%
+                  {Math.round(
+                    (reviewer.finalWeight ?? reviewer.confidenceWeight) * 100,
+                  )}
+                  %
                 </Text>
               </Box>
             </Group>
@@ -192,7 +238,9 @@ function ReviewerCard({ reviewer, onExpandToggle, expanded }: ReviewerCardProps)
           {/* Competencies */}
           {reviewer.competencies && reviewer.competencies.length > 0 && (
             <Stack gap="xs" mb="md">
-              <Text size="sm" fw={500}>Reviewer Competencies:</Text>
+              <Text size="sm" fw={500}>
+                Reviewer Competencies:
+              </Text>
               <Group gap="xs">
                 {reviewer.competencies.map((comp) => (
                   <Badge
@@ -201,25 +249,27 @@ function ReviewerCard({ reviewer, onExpandToggle, expanded }: ReviewerCardProps)
                     variant="light"
                     size="sm"
                   >
-                    {getCategoryDisplayName(comp.category)}: {getCompetencyLabel(comp.competencyLevel)}
+                    {getCategoryDisplayName(comp.category)}:{" "}
+                    {getCompetencyLabel(comp.competencyLevel)}
                   </Badge>
                 ))}
               </Group>
             </Stack>
           )}
 
-          <Text size="sm" fw={500} mb="xs">Completed:</Text>
+          <Text size="sm" fw={500} mb="xs">
+            Completed:
+          </Text>
           <Text size="sm" c="dimmed">
-            {reviewer.completedAt ? 
-              new Date(reviewer.completedAt).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              }) : 
-              "Unknown date"
-            }
+            {reviewer.completedAt
+              ? new Date(reviewer.completedAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "Unknown date"}
           </Text>
         </Collapse>
       </Stack>
@@ -227,21 +277,24 @@ function ReviewerCard({ reviewer, onExpandToggle, expanded }: ReviewerCardProps)
   );
 }
 
-export default function ConsensusModal({ 
-  opened, 
-  onClose, 
-  applicationId, 
-  onStatusUpdate 
+export default function ConsensusModal({
+  opened,
+  onClose,
+  applicationId,
+  onStatusUpdate,
 }: ConsensusModalProps) {
   const [finalDecision, setFinalDecision] = useState<string>("");
   const [decisionNotes, setDecisionNotes] = useState("");
-  const [expandedReviewers, setExpandedReviewers] = useState<Set<string>>(new Set());
+  const [expandedReviewers, setExpandedReviewers] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Fetch consensus data
-  const { data: consensusData, refetch } = api.evaluation.getConsensusData.useQuery(
-    { applicationId },
-    { enabled: opened && !!applicationId }
-  );
+  const { data: consensusData, refetch } =
+    api.evaluation.getConsensusData.useQuery(
+      { applicationId },
+      { enabled: opened && !!applicationId },
+    );
 
   // Update consensus mutation
   const updateConsensusMutation = api.evaluation.updateConsensus.useMutation({
@@ -262,7 +315,7 @@ export default function ConsensusModal({
         color: "red",
         icon: <IconX />,
       });
-    }
+    },
   });
 
   const handleStatusUpdate = async () => {
@@ -270,7 +323,7 @@ export default function ConsensusModal({
 
     await updateConsensusMutation.mutateAsync({
       applicationId,
-      finalDecision: finalDecision as 'ACCEPT' | 'REJECT' | 'WAITLIST',
+      finalDecision: finalDecision as "ACCEPT" | "REJECT" | "WAITLIST",
       discussionNotes: decisionNotes,
     });
   };
@@ -287,38 +340,45 @@ export default function ConsensusModal({
 
   if (!consensusData) {
     return (
-      <Modal opened={opened} onClose={onClose} title="Consensus Review" size="100%">
+      <Modal
+        opened={opened}
+        onClose={onClose}
+        title="Consensus Review"
+        size="100%"
+      >
         <Text>Loading consensus data...</Text>
       </Modal>
     );
   }
 
   // Transform evaluation data to enhanced reviewer scores with competencies
-  const reviewerScores: EnhancedReviewerScore[] = consensusData.evaluations.map(evaluation => ({
-    reviewerId: evaluation.reviewer.id,
-    reviewerName: evaluation.reviewer.name,
-    reviewerEmail: evaluation.reviewer.email,
-    reviewerImage: evaluation.reviewer.image,
-    overallScore: evaluation.overallScore ?? 0,
-    confidence: evaluation.confidence ?? 3,
-    recommendation: validateRecommendation(evaluation.recommendation),
-    completedAt: evaluation.completedAt,
-    competencies: evaluation.reviewer.reviewerCompetencies?.map(comp => ({
-      category: comp.category,
-      competencyLevel: comp.competencyLevel,
-      baseWeight: comp.baseWeight,
-    })),
-  }));
+  const reviewerScores: EnhancedReviewerScore[] = consensusData.evaluations.map(
+    (evaluation) => ({
+      reviewerId: evaluation.reviewer.id,
+      reviewerName: evaluation.reviewer.name,
+      reviewerEmail: evaluation.reviewer.email,
+      reviewerImage: evaluation.reviewer.image,
+      overallScore: evaluation.overallScore ?? 0,
+      confidence: evaluation.confidence ?? 3,
+      recommendation: validateRecommendation(evaluation.recommendation),
+      completedAt: evaluation.completedAt,
+      competencies: evaluation.reviewer.reviewerCompetencies?.map((comp) => ({
+        category: comp.category,
+        competencyLevel: comp.competencyLevel,
+        baseWeight: comp.baseWeight,
+      })),
+    }),
+  );
 
   const weightedScores = calculateEnhancedWeightedScores(reviewerScores);
   const consensusIndicator = getConsensusIndicator(weightedScores);
 
   return (
-    <Modal 
-      opened={opened} 
-      onClose={onClose} 
+    <Modal
+      opened={opened}
+      onClose={onClose}
       title={
-        <Group justify="space-between" style={{ width: '100%' }}>
+        <Group justify="space-between" style={{ width: "100%" }}>
           <Text fw={600}>Consensus Review</Text>
           {consensusData.evaluations?.[0]?.id && (
             <Button
@@ -338,7 +398,7 @@ export default function ConsensusModal({
       size="100%"
       styles={{
         body: { padding: 0 },
-        content: { height: '90vh' },
+        content: { height: "90vh" },
       }}
     >
       <Box p="md">
@@ -350,16 +410,14 @@ export default function ConsensusModal({
                 <IconUsers size={20} />
                 <Title order={4}>Application Details</Title>
               </Group>
-              
+
               <Card withBorder p="md">
                 <Group justify="space-between" mb="md">
                   <Box>
                     <Text size="lg" fw={600}>
-                      {getDisplayName(consensusData.user, 'No name provided')}
+                      {getDisplayName(consensusData.user, "No name provided")}
                     </Text>
-                    <Text c="dimmed">
-                      {consensusData.user?.email}
-                    </Text>
+                    <Text c="dimmed">{consensusData.user?.email}</Text>
                   </Box>
                   <Badge size="lg" color="blue" variant="light">
                     {consensusData.event?.name}
@@ -367,7 +425,7 @@ export default function ConsensusModal({
                 </Group>
               </Card>
 
-              <Box style={{ flex: 1, overflowY: 'auto', maxHeight: '60vh' }}>
+              <Box style={{ flex: 1, overflowY: "auto", maxHeight: "60vh" }}>
                 <Stack gap="md">
                   {consensusData.responses?.map((response) => (
                     <Card key={response.question.questionKey} withBorder p="md">
@@ -375,7 +433,11 @@ export default function ConsensusModal({
                         {response.question.questionEn}
                       </Title>
                       <Text size="sm">
-                        {response.answer || <Text fs="italic" c="dimmed">No answer provided</Text>}
+                        {response.answer || (
+                          <Text fs="italic" c="dimmed">
+                            No answer provided
+                          </Text>
+                        )}
                       </Text>
                     </Card>
                   ))}
@@ -392,16 +454,21 @@ export default function ConsensusModal({
                   <IconMessageCircle size={20} />
                   <Title order={4}>Reviewer Summary</Title>
                   <Badge color="blue" variant="light">
-                    {weightedScores.length} review{weightedScores.length !== 1 ? 's' : ''}
+                    {weightedScores.length} review
+                    {weightedScores.length !== 1 ? "s" : ""}
                   </Badge>
                 </Group>
 
                 {/* Consensus Indicator */}
                 <Alert
                   icon={
-                    consensusIndicator.type.includes('accept') ? <IconCheck size={16} /> :
-                    consensusIndicator.type.includes('reject') ? <IconX size={16} /> :
-                    <IconAlertTriangle size={16} />
+                    consensusIndicator.type.includes("accept") ? (
+                      <IconCheck size={16} />
+                    ) : consensusIndicator.type.includes("reject") ? (
+                      <IconX size={16} />
+                    ) : (
+                      <IconAlertTriangle size={16} />
+                    )
                   }
                   color={getConsensusColor(consensusIndicator.type)}
                   title={consensusIndicator.label}
@@ -409,13 +476,15 @@ export default function ConsensusModal({
                   {consensusIndicator.description}
                 </Alert>
 
-                <ScrollArea style={{ flex: 1, maxHeight: '50vh' }}>
+                <ScrollArea style={{ flex: 1, maxHeight: "50vh" }}>
                   <Stack gap="sm">
                     {weightedScores.map((reviewer) => (
                       <ReviewerCard
                         key={reviewer.reviewerId}
                         reviewer={reviewer}
-                        onExpandToggle={() => toggleReviewerExpanded(reviewer.reviewerId)}
+                        onExpandToggle={() =>
+                          toggleReviewerExpanded(reviewer.reviewerId)
+                        }
                         expanded={expandedReviewers.has(reviewer.reviewerId)}
                       />
                     ))}
@@ -432,7 +501,9 @@ export default function ConsensusModal({
 
                 {/* Final Decision Section */}
                 <Card withBorder p="md">
-                  <Title order={5} mb="md">Final Decision</Title>
+                  <Title order={5} mb="md">
+                    Final Decision
+                  </Title>
                   <Stack gap="md">
                     <Select
                       label="Application Status"
@@ -440,9 +511,9 @@ export default function ConsensusModal({
                       value={finalDecision}
                       onChange={(value) => setFinalDecision(value ?? "")}
                       data={[
-                        { value: 'ACCEPT', label: 'Accept' },
-                        { value: 'REJECT', label: 'Reject' },
-                        { value: 'WAITLIST', label: 'Waitlist' },
+                        { value: "ACCEPT", label: "Accept" },
+                        { value: "REJECT", label: "Reject" },
+                        { value: "WAITLIST", label: "Waitlist" },
                       ]}
                     />
 
@@ -471,10 +542,14 @@ export default function ConsensusModal({
                 {/* Current Consensus Status */}
                 {consensusData.consensus && (
                   <Alert color="green" title="Decision Recorded">
-                    Final Decision: <strong>{consensusData.consensus.finalDecision}</strong>
+                    Final Decision:{" "}
+                    <strong>{consensusData.consensus.finalDecision}</strong>
                     {consensusData.consensus.decidedAt && (
                       <Text size="sm" mt="xs">
-                        Decided on {new Date(consensusData.consensus.decidedAt).toLocaleDateString()}
+                        Decided on{" "}
+                        {new Date(
+                          consensusData.consensus.decidedAt,
+                        ).toLocaleDateString()}
                       </Text>
                     )}
                   </Alert>

@@ -14,7 +14,12 @@ import {
   Anchor,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { IconArrowLeft, IconCheck, IconAlertCircle, IconMail } from "@tabler/icons-react";
+import {
+  IconArrowLeft,
+  IconCheck,
+  IconAlertCircle,
+  IconMail,
+} from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 
 interface ForgotPasswordFormData {
@@ -72,11 +77,13 @@ export default function ForgotPasswordPage() {
                 Check Your Email
               </Text>
               <Text c="dimmed">
-                If an account with that email exists, we&apos;ve sent you a link to reset your password.
+                If an account with that email exists, we&apos;ve sent you a link
+                to reset your password.
               </Text>
             </div>
             <Text size="sm" c="dimmed">
-              Didn&apos;t receive an email? Check your spam folder or try again with a different email address.
+              Didn&apos;t receive an email? Check your spam folder or try again
+              with a different email address.
             </Text>
             <Link href="/signin">
               <Button variant="light" leftSection={<IconArrowLeft size={16} />}>
@@ -104,7 +111,8 @@ export default function ForgotPasswordPage() {
               </Text>
             </Group>
             <Text c="dimmed">
-              Enter your email address and we&apos;ll send you a link to reset your password.
+              Enter your email address and we&apos;ll send you a link to reset
+              your password.
             </Text>
           </div>
 

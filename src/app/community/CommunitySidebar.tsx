@@ -52,15 +52,19 @@ export default function CommunitySidebar() {
     staleTime: 30000,
   });
 
-  const { data: forumCount = 0 } = api.forum.getThreadCount.useQuery(undefined, {
-    refetchOnWindowFocus: false,
-    staleTime: 30000,
-  });
+  const { data: forumCount = 0 } = api.forum.getThreadCount.useQuery(
+    undefined,
+    {
+      refetchOnWindowFocus: false,
+      staleTime: 30000,
+    },
+  );
 
   const asksOffersCount = asksData.length + offersData.length;
   const updatesCount = updates?.length ?? 0;
 
-  const isActive = (path: string) => pathname === path || pathname.startsWith(path + "/");
+  const isActive = (path: string) =>
+    pathname === path || pathname.startsWith(path + "/");
 
   return (
     <aside className="community-sidebar">

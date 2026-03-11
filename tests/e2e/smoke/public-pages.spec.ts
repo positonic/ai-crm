@@ -19,9 +19,9 @@ test.describe("Event page", () => {
     await page.goto(`/events/${EVENT_SLUG}`);
 
     // The ConferenceDashboard renders the event name as a heading
-    await expect(
-      page.getByRole("heading", { name: EVENT_NAME }),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("heading", { name: EVENT_NAME })).toBeVisible({
+      timeout: 15_000,
+    });
   });
 });
 
@@ -32,17 +32,13 @@ test.describe("Schedule page", () => {
     await page.goto(`/events/${EVENT_SLUG}/schedule`);
 
     // Event name appears as heading
-    await expect(
-      page.getByRole("heading", { name: EVENT_NAME }),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("heading", { name: EVENT_NAME })).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Filter controls: search input (by placeholder) and view toggle button
-    await expect(
-      page.getByPlaceholder("Schedule or people"),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: /view/i }),
-    ).toBeVisible();
+    await expect(page.getByPlaceholder("Schedule or people")).toBeVisible();
+    await expect(page.getByRole("button", { name: /view/i })).toBeVisible();
 
     // At least one session title from the seed data is visible
     await expect(

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo } from "react";
 import {
   Container,
   Title,
@@ -17,41 +17,51 @@ import {
   Alert,
   Badge,
   Paper,
-} from '@mantine/core';
-import { IconSearch, IconX, IconInfoCircle } from '@tabler/icons-react';
-import { api } from '~/trpc/react';
-import { ProjectCard } from '~/app/_components/ProjectCard';
+} from "@mantine/core";
+import { IconSearch, IconX, IconInfoCircle } from "@tabler/icons-react";
+import { api } from "~/trpc/react";
+import { ProjectCard } from "~/app/_components/ProjectCard";
 
 const ITEMS_PER_PAGE = 12;
 
 export function ProjectIdeasClient() {
   // State for filters and pagination
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTechnologies, setSelectedTechnologies] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTechnologies, setSelectedTechnologies] = useState<string[]>(
+    [],
+  );
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(
+    null,
+  );
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
 
   // Build API query parameters - load all projects
-  const queryParams = useMemo(() => ({
-    limit: 100, // Load all projects
-    offset: 0,
-    technologies: selectedTechnologies.length > 0 ? selectedTechnologies : undefined,
-    category: selectedCategory ?? undefined,
-    difficulty: selectedDifficulty ?? undefined,
-    search: searchTerm.trim() || undefined,
-  }), [searchTerm, selectedTechnologies, selectedCategory, selectedDifficulty]);
+  const queryParams = useMemo(
+    () => ({
+      limit: 100, // Load all projects
+      offset: 0,
+      technologies:
+        selectedTechnologies.length > 0 ? selectedTechnologies : undefined,
+      category: selectedCategory ?? undefined,
+      difficulty: selectedDifficulty ?? undefined,
+      search: searchTerm.trim() || undefined,
+    }),
+    [searchTerm, selectedTechnologies, selectedCategory, selectedDifficulty],
+  );
 
   // API queries
   const projectsQuery = api.projectIdea.getAll.useQuery(queryParams);
-  
+
   // Client-side pagination
   const displayedProjects = useMemo(() => {
     if (!projectsQuery.data?.projects) return [];
     return projectsQuery.data.projects.slice(0, displayCount);
   }, [projectsQuery.data?.projects, displayCount]);
-  
-  const hasMore = projectsQuery.data?.projects && displayCount < projectsQuery.data.projects.length;
+
+  const hasMore =
+    projectsQuery.data?.projects &&
+    displayCount < projectsQuery.data.projects.length;
   const technologiesQuery = api.projectIdea.getTechnologies.useQuery();
   const categoriesQuery = api.projectIdea.getCategories.useQuery();
   const difficultiesQuery = api.projectIdea.getDifficulties.useQuery();
@@ -64,47 +74,54 @@ export function ProjectIdeasClient() {
 
   // Load more projects
   const loadMore = () => {
-    setDisplayCount(prev => prev + ITEMS_PER_PAGE);
+    setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
   };
 
   // Clear all filters
   const clearFilters = () => {
-    setSearchTerm('');
+    setSearchTerm("");
     setSelectedTechnologies([]);
     setSelectedCategory(null);
     setSelectedDifficulty(null);
     setDisplayCount(ITEMS_PER_PAGE);
   };
 
-  const hasActiveFilters = searchTerm ?? selectedTechnologies.length > 0 ?? selectedCategory ?? selectedDifficulty;
+  const hasActiveFilters =
+    searchTerm ??
+    selectedTechnologies.length > 0 ??
+    selectedCategory ??
+    selectedDifficulty;
 
   // Prepare options for selects
   interface TechnologyData {
     name: string;
     count: number;
   }
-  const technologyOptions = technologiesQuery.data?.map((tech: TechnologyData) => ({
-    value: tech.name,
-    label: `${tech.name} (${tech.count})`,
-  })) ?? [];
+  const technologyOptions =
+    technologiesQuery.data?.map((tech: TechnologyData) => ({
+      value: tech.name,
+      label: `${tech.name} (${tech.count})`,
+    })) ?? [];
 
   interface CategoryData {
     name: string;
     count: number;
   }
-  const categoryOptions = categoriesQuery.data?.map((cat: CategoryData) => ({
-    value: cat.name,
-    label: `${cat.name} (${cat.count})`,
-  })) ?? [];
+  const categoryOptions =
+    categoriesQuery.data?.map((cat: CategoryData) => ({
+      value: cat.name,
+      label: `${cat.name} (${cat.count})`,
+    })) ?? [];
 
   interface DifficultyData {
     name: string;
     count: number;
   }
-  const difficultyOptions = difficultiesQuery.data?.map((diff: DifficultyData) => ({
-    value: diff.name,
-    label: `${diff.name} (${diff.count})`,
-  })) ?? [];
+  const difficultyOptions =
+    difficultiesQuery.data?.map((diff: DifficultyData) => ({
+      value: diff.name,
+      label: `${diff.name} (${diff.count})`,
+    })) ?? [];
 
   return (
     <div className="bg-theme-gradient min-h-screen">
@@ -116,10 +133,10 @@ export function ProjectIdeasClient() {
               Project Ideas
             </Title>
             <Text size="lg" c="dimmed" maw={600} mx="auto">
-              Explore innovative blockchain and crypto project ideas from our community.
-              Find your next build or contribute to the ecosystem.
+              Explore innovative blockchain and crypto project ideas from our
+              community. Find your next build or contribute to the ecosystem.
             </Text>
-            
+
             {/* Stats */}
             {statsQuery.data && (
               <Group justify="center" mt="md" gap="md">
@@ -128,7 +145,10 @@ export function ProjectIdeasClient() {
                 </Badge>
                 {statsQuery.data.lastSync && (
                   <Text size="sm" c="dimmed">
-                    Last updated: {new Date(statsQuery.data.lastSync.startedAt).toLocaleDateString()}
+                    Last updated:{" "}
+                    {new Date(
+                      statsQuery.data.lastSync.startedAt,
+                    ).toLocaleDateString()}
                   </Text>
                 )}
               </Group>
@@ -136,7 +156,12 @@ export function ProjectIdeasClient() {
           </div>
 
           {/* Filters */}
-          <Paper p="md" radius="md" withBorder className="bg-theme-surface-primary">
+          <Paper
+            p="md"
+            radius="md"
+            withBorder
+            className="bg-theme-surface-primary"
+          >
             <Stack gap="md">
               {/* Search */}
               <TextInput
@@ -149,7 +174,7 @@ export function ProjectIdeasClient() {
                 }}
                 style={{ maxWidth: 400 }}
               />
-              
+
               {/* Filter selects */}
               <Grid>
                 <Grid.Col span={{ base: 12, sm: 4 }}>
@@ -164,7 +189,7 @@ export function ProjectIdeasClient() {
                     clearable
                   />
                 </Grid.Col>
-                
+
                 <Grid.Col span={{ base: 12, sm: 4 }}>
                   <Select
                     placeholder="Filter by difficulty"
@@ -177,7 +202,7 @@ export function ProjectIdeasClient() {
                     clearable
                   />
                 </Grid.Col>
-                
+
                 <Grid.Col span={{ base: 12, sm: 4 }}>
                   <MultiSelect
                     placeholder="Filter by technologies"
@@ -192,13 +217,13 @@ export function ProjectIdeasClient() {
                   />
                 </Grid.Col>
               </Grid>
-              
+
               {/* Filter actions */}
               {hasActiveFilters && (
                 <Group>
-                  <Button 
-                    variant="subtle" 
-                    size="sm" 
+                  <Button
+                    variant="subtle"
+                    size="sm"
                     leftSection={<IconX size={14} />}
                     onClick={clearFilters}
                   >
@@ -218,31 +243,31 @@ export function ProjectIdeasClient() {
               </Stack>
             </Center>
           ) : projectsQuery.error ? (
-            <Alert 
-              icon={<IconInfoCircle size={16} />} 
-              title="Error loading projects" 
+            <Alert
+              icon={<IconInfoCircle size={16} />}
+              title="Error loading projects"
               color="red"
             >
               {projectsQuery.error.message}
             </Alert>
           ) : !displayedProjects.length ? (
-            <Alert 
-              icon={<IconInfoCircle size={16} />} 
-              title="No projects found" 
+            <Alert
+              icon={<IconInfoCircle size={16} />}
+              title="No projects found"
               color="blue"
             >
-              {hasActiveFilters ? 
-                "No projects match your current filters. Try adjusting your search criteria." :
-                "No project ideas are currently available. Check back later!"
-              }
+              {hasActiveFilters
+                ? "No projects match your current filters. Try adjusting your search criteria."
+                : "No project ideas are currently available. Check back later!"}
             </Alert>
           ) : (
             <Stack gap="lg">
               {/* Results count */}
               <Text size="sm" c="dimmed">
-                Showing {displayedProjects.length} of {projectsQuery.data?.totalCount ?? 0} projects
+                Showing {displayedProjects.length} of{" "}
+                {projectsQuery.data?.totalCount ?? 0} projects
               </Text>
-              
+
               {/* Project grid */}
               <Grid>
                 {displayedProjects.map((project) => (
@@ -251,7 +276,7 @@ export function ProjectIdeasClient() {
                   </Grid.Col>
                 ))}
               </Grid>
-              
+
               {/* Load more button */}
               {hasMore && (
                 <Center>

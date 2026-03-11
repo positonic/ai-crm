@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { 
-  Container, 
-  Title, 
-  Text, 
-  Card, 
-  Group, 
-  Stack, 
+import {
+  Container,
+  Title,
+  Text,
+  Card,
+  Group,
+  Stack,
   Button,
   ThemeIcon,
   Badge,
@@ -25,6 +25,7 @@ import {
   IconAlertCircle,
   IconEdit,
   IconMicrophone,
+  IconTarget,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -38,7 +39,14 @@ type Application = {
   id: string;
   userId: string | null;
   eventId: string;
-  status: "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "ACCEPTED" | "REJECTED" | "WAITLISTED" | "CANCELLED";
+  status:
+    | "DRAFT"
+    | "SUBMITTED"
+    | "UNDER_REVIEW"
+    | "ACCEPTED"
+    | "REJECTED"
+    | "WAITLISTED"
+    | "CANCELLED";
   language: string;
   submittedAt: Date | null;
   responses: Array<{
@@ -64,6 +72,7 @@ type Event = {
   endDate: Date;
   location: string | null;
   type: string;
+  featureDeliberation?: boolean;
   applications?: unknown[];
 };
 
@@ -114,67 +123,71 @@ function getStatusMessage(status: string) {
   }
 }
 
-export default function EventDetailClient({ 
-  event, 
-  userApplication, 
+export default function EventDetailClient({
+  event,
+  userApplication,
   userId: _userId,
   defaultTab,
   language = "en",
-  hasLatePassAccess = false
+  hasLatePassAccess = false,
 }: EventDetailClientProps) {
   // Get event-specific content
-  const eventType = normalizeEventType(event.type) ?? 'RESIDENCY';
+  const eventType = normalizeEventType(event.type) ?? "RESIDENCY";
   const content = getEventContent(eventType);
-  
+
   console.log("🔍 EventDetailClient props:", {
     event,
     userApplication,
-    userId: _userId
+    userId: _userId,
   });
-  const [activeTab, setActiveTab] = useState<string | null>(defaultTab ?? "overview");
+  const [activeTab, setActiveTab] = useState<string | null>(
+    defaultTab ?? "overview",
+  );
   const { data: session } = useSession();
 
   // Check if user is a mentor for this event
   const { data: isMentor } = api.event.checkMentorRole.useQuery(
     { eventId: event.id },
-    { enabled: !!session?.user }
+    { enabled: !!session?.user },
   );
 
   // Get user's mentor application
   const { data: mentorApplication } = api.application.getApplication.useQuery(
-    { 
+    {
       eventId: event.id,
-      applicationType: "MENTOR" 
+      applicationType: "MENTOR",
     },
-    { enabled: !!session?.user }
+    { enabled: !!session?.user },
   );
 
   // Get accepted participants (public)
-  const { data: participants = [] } = api.application.getEventParticipants.useQuery({
-    eventId: event.id
-  });
+  const { data: participants = [] } =
+    api.application.getEventParticipants.useQuery({
+      eventId: event.id,
+    });
 
   // Get projects from participants (public)
   const { data: projects = [] } = api.project.getEventProjects.useQuery({
-    eventId: event.id
+    eventId: event.id,
   });
 
   // Check if user is admin/staff
-  const isAdmin = session?.user?.role === "admin" || session?.user?.role === "staff";
+  const isAdmin =
+    session?.user?.role === "admin" || session?.user?.role === "staff";
 
   const utils = api.useUtils();
 
   // Format dates
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      timeZone: 'UTC',
-      timeZoneName: 'short',
+    return new Intl.DateTimeFormat("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      timeZone: "UTC",
+      timeZoneName: "short",
     }).format(date);
   };
 
@@ -189,14 +202,16 @@ export default function EventDetailClient({
   const handleApplicationUpdated = async () => {
     // No need to refetch on every auto-save - trust the optimistic updates
     // Only refetch on page load, explicit refresh, or form submission
-    console.log('🔍 EventDetailClient: Application updated (no refetch needed)');
+    console.log(
+      "🔍 EventDetailClient: Application updated (no refetch needed)",
+    );
   };
   console.log("🔍 Debug info:", {
     hasUser: !!session?.user,
     userEmail: session?.user?.email,
     userApplication: userApplication,
     applicationStatus: userApplication?.status,
-    shouldShowBanner: session?.user && userApplication?.status === "ACCEPTED"
+    shouldShowBanner: session?.user && userApplication?.status === "ACCEPTED",
   });
   return (
     <Container size="lg" py="xl">
@@ -205,11 +220,16 @@ export default function EventDetailClient({
         <Card shadow="lg" padding="xl" radius="md" withBorder>
           <Group align="flex-start" gap="lg">
             <div className="hidden-mobile">
-              <ThemeIcon size={80} radius="md" variant="gradient" gradient={{ from: 'blue', to: 'purple' }}>
+              <ThemeIcon
+                size={80}
+                radius="md"
+                variant="gradient"
+                gradient={{ from: "blue", to: "purple" }}
+              >
                 <IconCalendarEvent size={40} />
               </ThemeIcon>
             </div>
-            
+
             <Stack gap="sm" style={{ flex: 1 }}>
               <Group justify="space-between" align="flex-start">
                 <Title order={1} size="h1">
@@ -219,7 +239,7 @@ export default function EventDetailClient({
                   {event.type}
                 </Badge>
               </Group>
-              
+
               <Text size="lg" c="dimmed">
                 {event.description}
               </Text>
@@ -230,8 +250,12 @@ export default function EventDetailClient({
                     <IconClock size={16} />
                   </ThemeIcon>
                   <Stack gap={0}>
-                    <Text size="sm" fw={500}>Start Date</Text>
-                    <Text size="xs" c="dimmed">{formatDate(event.startDate)}</Text>
+                    <Text size="sm" fw={500}>
+                      Start Date
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {formatDate(event.startDate)}
+                    </Text>
                   </Stack>
                 </Group>
 
@@ -240,8 +264,12 @@ export default function EventDetailClient({
                     <IconClock size={16} />
                   </ThemeIcon>
                   <Stack gap={0}>
-                    <Text size="sm" fw={500}>End Date</Text>
-                    <Text size="xs" c="dimmed">{formatDate(event.endDate)}</Text>
+                    <Text size="sm" fw={500}>
+                      End Date
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {formatDate(event.endDate)}
+                    </Text>
                   </Stack>
                 </Group>
 
@@ -251,8 +279,12 @@ export default function EventDetailClient({
                       <IconMapPin size={16} />
                     </ThemeIcon>
                     <Stack gap={0}>
-                      <Text size="sm" fw={500}>Location</Text>
-                      <Text size="xs" c="dimmed">{event.location}</Text>
+                      <Text size="sm" fw={500}>
+                        Location
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {event.location}
+                      </Text>
                     </Stack>
                   </Group>
                 )}
@@ -263,10 +295,16 @@ export default function EventDetailClient({
 
         {/* Application Status Alert */}
         {userApplication && (
-          <Alert 
+          <Alert
             color={getStatusColor(userApplication.status)}
             title={`Application Status: ${userApplication.status.replace("_", " ")}`}
-            icon={userApplication.status === "ACCEPTED" ? <IconCheck /> : <IconAlertCircle />}
+            icon={
+              userApplication.status === "ACCEPTED" ? (
+                <IconCheck />
+              ) : (
+                <IconAlertCircle />
+              )
+            }
           >
             {getStatusMessage(userApplication.status)}
             {userApplication.submittedAt && (
@@ -287,7 +325,8 @@ export default function EventDetailClient({
                   Complete Onboarding
                 </Button>
                 <Text size="sm" c="dimmed">
-                  Please complete your onboarding form to finalize your participation.
+                  Please complete your onboarding form to finalize your
+                  participation.
                 </Text>
               </Group>
             )}
@@ -295,12 +334,14 @@ export default function EventDetailClient({
         )}
 
         {/* Main Content */}
-        <Tabs value={activeTab} onChange={setActiveTab}>
-          <Tabs.List grow>
-            <Tabs.Tab value="overview">
-              Event Overview
-            </Tabs.Tab>
-            {eventType !== 'CONFERENCE' && (
+        <Tabs
+          value={activeTab}
+          onChange={setActiveTab}
+          className="nav-tabs-scrollable"
+        >
+          <Tabs.List>
+            <Tabs.Tab value="overview">Event Overview</Tabs.Tab>
+            {eventType !== "CONFERENCE" && (
               <Tabs.Tab
                 value="application"
                 disabled={!hasLatePassAccess && !userApplication}
@@ -315,7 +356,7 @@ export default function EventDetailClient({
                 </Group>
               </Tabs.Tab>
             )}
-            {eventType === 'CONFERENCE' && (
+            {eventType === "CONFERENCE" && (
               <Tabs.Tab value="speakers">
                 <Group gap="xs">
                   <IconMicrophone size={14} />
@@ -341,13 +382,17 @@ export default function EventDetailClient({
             </Tabs.Tab>
             {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing */}
             {(isMentor || isAdmin) && (
-              <Tabs.Tab value="mentor">
-                Mentor Dashboard
+              <Tabs.Tab value="mentor">Mentor Dashboard</Tabs.Tab>
+            )}
+            <Tabs.Tab value="resources">Resources</Tabs.Tab>
+            {event.featureDeliberation && (
+              <Tabs.Tab value="priorities">
+                <Group gap="xs">
+                  <IconTarget size={14} />
+                  Priorities
+                </Group>
               </Tabs.Tab>
             )}
-            <Tabs.Tab value="resources">
-              Resources
-            </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="overview" mt="md">
@@ -355,19 +400,24 @@ export default function EventDetailClient({
               <Stack gap="lg">
                 <Title order={2}>About This Event</Title>
                 <Text>
-                  {event.description ?? "No detailed description available for this event."}
+                  {event.description ??
+                    "No detailed description available for this event."}
                 </Text>
-                
+
                 <Divider />
-                
+
                 <Group gap="xl">
                   <Stack gap="xs">
                     <Text fw={500}>Duration</Text>
                     <Text c="dimmed">
-                      {Math.ceil((event.endDate.getTime() - event.startDate.getTime()) / (1000 * 60 * 60 * 24))} days
+                      {Math.ceil(
+                        (event.endDate.getTime() - event.startDate.getTime()) /
+                          (1000 * 60 * 60 * 24),
+                      )}{" "}
+                      days
                     </Text>
                   </Stack>
-                  
+
                   <Stack gap="xs">
                     <Text fw={500}>Format</Text>
                     <Text c="dimmed">
@@ -376,13 +426,14 @@ export default function EventDetailClient({
                   </Stack>
                 </Group>
 
-                {eventType === 'CONFERENCE' ? (
+                {eventType === "CONFERENCE" ? (
                   <>
                     <Divider />
                     <Stack gap="md">
                       <Title order={3}>Speak at This Event</Title>
                       <Text c="dimmed">
-                        Interested in presenting at {event.name}? Submit a speaker application with your talk proposal.
+                        Interested in presenting at {event.name}? Submit a
+                        speaker application with your talk proposal.
                       </Text>
                       <Button
                         component={Link}
@@ -417,15 +468,15 @@ export default function EventDetailClient({
                 <Stack gap="lg">
                   <Group justify="space-between">
                     <Title order={2}>Your Application</Title>
-                    <Badge 
+                    <Badge
                       color={getStatusColor(userApplication.status)}
-                      size="lg" 
+                      size="lg"
                       variant="light"
                     >
                       {userApplication.status.replace("_", " ")}
                     </Badge>
                   </Group>
-                  
+
                   <DynamicApplicationForm
                     eventId={event.id}
                     existingApplication={userApplication}
@@ -442,12 +493,11 @@ export default function EventDetailClient({
                     {language === "es" ? "Aplicar al Evento" : "Apply to Event"}
                   </Title>
                   <Text c="dimmed">
-                    {language === "es" 
+                    {language === "es"
                       ? "Complete el formulario a continuación para aplicar a este evento."
-                      : "Complete the form below to apply to this event."
-                    }
+                      : "Complete the form below to apply to this event."}
                   </Text>
-                  
+
                   <DynamicApplicationForm
                     eventId={event.id}
                     language={language}
@@ -459,26 +509,24 @@ export default function EventDetailClient({
                 </Stack>
               ) : (
                 <Stack gap="lg" align="center">
-                  <Alert 
-                    color="orange" 
+                  <Alert
+                    color="orange"
                     title="Applications Closed"
                     icon={<IconAlertCircle />}
                     variant="light"
                     radius="md"
-                    style={{ maxWidth: 500, width: '100%' }}
+                    style={{ maxWidth: 500, width: "100%" }}
                   >
                     <Text size="md">
-                      {language === "es" 
+                      {language === "es"
                         ? "Las aplicaciones para este evento están cerradas. Si tienes un código de acceso tardío, usa el enlace proporcionado por los organizadores."
-                        : "Applications for this event are currently closed. If you have a late pass code, please use the link provided by the organizers."
-                      }
+                        : "Applications for this event are currently closed. If you have a late pass code, please use the link provided by the organizers."}
                     </Text>
                   </Alert>
                   <Text size="sm" c="dimmed" ta="center">
                     {language === "es"
                       ? "Contacta a los organizadores si crees que esto es un error."
-                      : "Contact the organizers if you believe this is an error."
-                    }
+                      : "Contact the organizers if you believe this is an error."}
                   </Text>
                 </Stack>
               )}
@@ -486,25 +534,37 @@ export default function EventDetailClient({
           </Tabs.Panel>
 
           {/* Speakers Tab (Conference events) */}
-          {eventType === 'CONFERENCE' && (
+          {eventType === "CONFERENCE" && (
             <Tabs.Panel value="speakers" mt="md">
               <Paper p="xl" radius="md" withBorder>
                 <Stack gap="lg">
                   <Title order={2}>Speakers</Title>
                   <Text c="dimmed">
-                    Speakers for this conference will be announced as applications are reviewed.
+                    Speakers for this conference will be announced as
+                    applications are reviewed.
                   </Text>
 
                   <Divider />
 
-                  <Card p="xl" radius="md" withBorder style={{ textAlign: 'center' }}>
+                  <Card
+                    p="xl"
+                    radius="md"
+                    withBorder
+                    style={{ textAlign: "center" }}
+                  >
                     <Stack gap="md" align="center">
-                      <ThemeIcon size={60} radius="xl" variant="light" color="teal">
+                      <ThemeIcon
+                        size={60}
+                        radius="xl"
+                        variant="light"
+                        color="teal"
+                      >
                         <IconMicrophone size={30} />
                       </ThemeIcon>
                       <Title order={3}>Want to Speak?</Title>
                       <Text c="dimmed" maw={400}>
-                        Share your expertise with our community. Submit a speaker application with your talk proposal.
+                        Share your expertise with our community. Submit a
+                        speaker application with your talk proposal.
                       </Text>
                       <Button
                         component={Link}
@@ -530,11 +590,12 @@ export default function EventDetailClient({
                 <Stack gap="lg">
                   <Title order={2}>Mentor Dashboard</Title>
                   <Text c="dimmed">
-                    Welcome to your mentor dashboard. Here you can manage your mentorship activities and track resident progress.
+                    Welcome to your mentor dashboard. Here you can manage your
+                    mentorship activities and track resident progress.
                   </Text>
-                  
+
                   <Divider />
-                  
+
                   <Group gap="xl">
                     <Stack gap="xs">
                       <Text fw={500}>Your Role</Text>
@@ -542,30 +603,40 @@ export default function EventDetailClient({
                         {isMentor ? "Mentor" : "Administrator"}
                       </Text>
                     </Stack>
-                    
+
                     <Stack gap="xs">
                       <Text fw={500}>Mentorship Status</Text>
                       {mentorApplication ? (
-                        <Badge 
-                          color={mentorApplication.status === "ACCEPTED" ? "green" : 
-                                 mentorApplication.status === "REJECTED" ? "red" :
-                                 mentorApplication.status === "SUBMITTED" ? "blue" : "gray"} 
+                        <Badge
+                          color={
+                            mentorApplication.status === "ACCEPTED"
+                              ? "green"
+                              : mentorApplication.status === "REJECTED"
+                                ? "red"
+                                : mentorApplication.status === "SUBMITTED"
+                                  ? "blue"
+                                  : "gray"
+                          }
                           variant="light"
                         >
-                          {mentorApplication.status.replace("_", " ").toLowerCase()}
+                          {mentorApplication.status
+                            .replace("_", " ")
+                            .toLowerCase()}
                         </Badge>
                       ) : (
                         <Text c="dimmed">
-                          {isMentor ? "Active Mentor" : isAdmin ? "Admin Access" : "Not Applied"}
+                          {isMentor
+                            ? "Active Mentor"
+                            : isAdmin
+                              ? "Admin Access"
+                              : "Not Applied"}
                         </Text>
                       )}
                     </Stack>
-                    
+
                     <Stack gap="xs">
                       <Text fw={500}>Access Level</Text>
-                      <Text c="dimmed">
-                        Full mentor privileges
-                      </Text>
+                      <Text c="dimmed">Full mentor privileges</Text>
                     </Stack>
                   </Group>
 
@@ -578,27 +649,32 @@ export default function EventDetailClient({
                         component="a"
                         href={`/events/${event.slug ?? event.id}/mentor`}
                         variant="light"
-                        color={mentorApplication?.status === "ACCEPTED" ? "green" : "blue"}
+                        color={
+                          mentorApplication?.status === "ACCEPTED"
+                            ? "green"
+                            : "blue"
+                        }
                         leftSection={<IconEdit size={16} />}
                       >
-                        {mentorApplication?.status === "ACCEPTED" 
+                        {mentorApplication?.status === "ACCEPTED"
                           ? "View Mentor Profile"
                           : mentorApplication?.status === "REJECTED"
-                          ? "Update Mentor Application" 
-                          : mentorApplication?.status === "SUBMITTED"
-                          ? "Edit Mentor Application"
-                          : mentorApplication
-                          ? "Continue Mentor Application"
-                          : "Complete Mentor Application"
-                        }
+                            ? "Update Mentor Application"
+                            : mentorApplication?.status === "SUBMITTED"
+                              ? "Edit Mentor Application"
+                              : mentorApplication
+                                ? "Continue Mentor Application"
+                                : "Complete Mentor Application"}
                       </Button>
                     </Group>
                   </Stack>
 
                   <Divider />
-                  
+
                   <Text size="sm" c="dimmed">
-                    More mentor features will be available soon. For now, you have full access to all event information and can bypass application restrictions.
+                    More mentor features will be available soon. For now, you
+                    have full access to all event information and can bypass
+                    application restrictions.
                   </Text>
                 </Stack>
               </Paper>
@@ -613,31 +689,62 @@ export default function EventDetailClient({
                 {participants.length > 0 ? (
                   <>
                     <Text c="dimmed">
-                      Meet the {participants.length} accepted {eventType === 'HACKATHON' ? 'participants' : 'residents'} joining this event.
+                      Meet the {participants.length} accepted{" "}
+                      {eventType === "HACKATHON" ? "participants" : "residents"}{" "}
+                      joining this event.
                     </Text>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fill, minmax(320px, 1fr))",
+                        gap: "1rem",
+                      }}
+                    >
                       {participants.map((participant) => (
-                        <Card key={participant.id} shadow="sm" padding="lg" radius="md" withBorder>
+                        <Card
+                          key={participant.id}
+                          shadow="sm"
+                          padding="lg"
+                          radius="md"
+                          withBorder
+                        >
                           <Group align="flex-start" gap="md">
                             {participant.user?.image && (
-                              <div style={{ width: 60, height: 60, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
-                                <Image 
-                                  src={participant.user.image} 
-                                  alt={participant.user.name ?? "Participant"} 
-                                  width={60} 
-                                  height={60} 
-                                  style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                              <div
+                                style={{
+                                  width: 60,
+                                  height: 60,
+                                  borderRadius: "50%",
+                                  overflow: "hidden",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                <Image
+                                  src={participant.user.image}
+                                  alt={participant.user.name ?? "Participant"}
+                                  width={60}
+                                  height={60}
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                  }}
                                 />
                               </div>
                             )}
                             <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
                               <Text fw={500} size="lg" truncate>
-                                {getDisplayName(participant.user, 'Anonymous Participant')}
+                                {getDisplayName(
+                                  participant.user,
+                                  "Anonymous Participant",
+                                )}
                               </Text>
                               {participant.user?.profile?.jobTitle && (
                                 <Text size="sm" c="dimmed" truncate>
                                   {participant.user.profile.jobTitle}
-                                  {participant.user.profile.company && ` at ${participant.user.profile.company}`}
+                                  {participant.user.profile.company &&
+                                    ` at ${participant.user.profile.company}`}
                                 </Text>
                               )}
                               {participant.user?.profile?.location && (
@@ -650,10 +757,13 @@ export default function EventDetailClient({
                                   {participant.user.profile.bio}
                                 </Text>
                               )}
-                              {(participant.user?.profile?.githubUrl ?? participant.user?.profile?.linkedinUrl ?? participant.user?.profile?.twitterUrl ?? participant.user?.profile?.website) && (
+                              {(participant.user?.profile?.githubUrl ??
+                                participant.user?.profile?.linkedinUrl ??
+                                participant.user?.profile?.twitterUrl ??
+                                participant.user?.profile?.website) && (
                                 <Group gap="xs" mt="xs">
                                   {participant.user?.profile?.githubUrl && (
-                                    <Button 
+                                    <Button
                                       component="a"
                                       href={participant.user.profile.githubUrl}
                                       target="_blank"
@@ -664,9 +774,11 @@ export default function EventDetailClient({
                                     </Button>
                                   )}
                                   {participant.user?.profile?.linkedinUrl && (
-                                    <Button 
+                                    <Button
                                       component="a"
-                                      href={participant.user.profile.linkedinUrl}
+                                      href={
+                                        participant.user.profile.linkedinUrl
+                                      }
                                       target="_blank"
                                       variant="subtle"
                                       size="xs"
@@ -675,7 +787,7 @@ export default function EventDetailClient({
                                     </Button>
                                   )}
                                   {participant.user?.profile?.twitterUrl && (
-                                    <Button 
+                                    <Button
                                       component="a"
                                       href={participant.user.profile.twitterUrl}
                                       target="_blank"
@@ -686,7 +798,7 @@ export default function EventDetailClient({
                                     </Button>
                                   )}
                                   {participant.user?.profile?.website && (
-                                    <Button 
+                                    <Button
                                       component="a"
                                       href={participant.user.profile.website}
                                       target="_blank"
@@ -706,7 +818,8 @@ export default function EventDetailClient({
                   </>
                 ) : (
                   <Text c="dimmed" ta="center" py="xl">
-                    No participants to display yet. Participants will appear here once applications are accepted.
+                    No participants to display yet. Participants will appear
+                    here once applications are accepted.
                   </Text>
                 )}
               </Stack>
@@ -717,28 +830,46 @@ export default function EventDetailClient({
           <Tabs.Panel value="projects" mt="md">
             <Paper p="xl" radius="md" withBorder>
               <Stack gap="lg">
-                <Title order={2}>{eventType === 'HACKATHON' ? 'Hackathon Projects' : 'Participant Projects'}</Title>
+                <Title order={2}>
+                  {eventType === "HACKATHON"
+                    ? "Hackathon Projects"
+                    : "Participant Projects"}
+                </Title>
                 {projects.length > 0 ? (
                   <>
                     <Text c="dimmed">
-                      Explore {projects.length} projects created by event participants.
+                      Explore {projects.length} projects created by event
+                      participants.
                     </Text>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1rem' }}>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fill, minmax(350px, 1fr))",
+                        gap: "1rem",
+                      }}
+                    >
                       {projects.map((project) => (
-                        <Card 
-                          key={project.id} 
-                          shadow="sm" 
-                          padding="lg" 
-                          radius="md" 
+                        <Card
+                          key={project.id}
+                          shadow="sm"
+                          padding="lg"
+                          radius="md"
                           withBorder
-                          style={{ cursor: 'pointer', transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
+                          style={{
+                            cursor: "pointer",
+                            transition:
+                              "transform 0.2s ease, box-shadow 0.2s ease",
+                          }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-4px)';
-                            e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+                            e.currentTarget.style.transform =
+                              "translateY(-4px)";
+                            e.currentTarget.style.boxShadow =
+                              "0 8px 25px rgba(0, 0, 0, 0.15)";
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '';
+                            e.currentTarget.style.transform = "translateY(0)";
+                            e.currentTarget.style.boxShadow = "";
                           }}
                           onClick={() => {
                             window.location.href = `/projects/${project.id}`;
@@ -746,76 +877,143 @@ export default function EventDetailClient({
                         >
                           <Stack gap="md">
                             {project.imageUrl && (
-                              <div style={{ width: '100%', height: 200, borderRadius: 8, overflow: 'hidden' }}>
-                                <Image 
-                                  src={project.imageUrl} 
-                                  alt={project.title} 
-                                  width={350} 
-                                  height={200} 
-                                  style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                              <div
+                                style={{
+                                  width: "100%",
+                                  height: 200,
+                                  borderRadius: 8,
+                                  overflow: "hidden",
+                                }}
+                              >
+                                <Image
+                                  src={project.imageUrl}
+                                  alt={project.title}
+                                  width={350}
+                                  height={200}
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                  }}
                                 />
                               </div>
                             )}
                             <div>
-                              <Group justify="space-between" align="flex-start" mb="xs">
+                              <Group
+                                justify="space-between"
+                                align="flex-start"
+                                mb="xs"
+                              >
                                 <Text fw={500} size="lg" lineClamp={1}>
                                   {project.title}
                                 </Text>
                                 {project.featured && (
-                                  <Badge variant="light" color="yellow" size="sm">
+                                  <Badge
+                                    variant="light"
+                                    color="yellow"
+                                    size="sm"
+                                  >
                                     Featured
                                   </Badge>
                                 )}
                               </Group>
                               {project.description && (
-                                <Text size="sm" c="dimmed" lineClamp={3} mb="sm">
+                                <Text
+                                  size="sm"
+                                  c="dimmed"
+                                  lineClamp={3}
+                                  mb="sm"
+                                >
                                   {project.description}
                                 </Text>
                               )}
                               <Group gap="xs" mb="sm">
-                                <div style={{ width: 24, height: 24, borderRadius: '50%', overflow: 'hidden' }}>
+                                <div
+                                  style={{
+                                    width: 24,
+                                    height: 24,
+                                    borderRadius: "50%",
+                                    overflow: "hidden",
+                                  }}
+                                >
                                   {project.author.image ? (
                                     <Image
                                       src={project.author.image}
-                                      alt={getDisplayName(project.author, "Author")}
+                                      alt={getDisplayName(
+                                        project.author,
+                                        "Author",
+                                      )}
                                       width={24}
                                       height={24}
-                                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                      style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "cover",
+                                      }}
                                     />
                                   ) : (
-                                    <div style={{ width: "100%", height: "100%", backgroundColor: "#e9ecef", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    <div
+                                      style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        backgroundColor: "#e9ecef",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
                                       <Text size="xs">?</Text>
                                     </div>
                                   )}
                                 </div>
                                 <Text size="sm" c="dimmed">
-                                  by {getDisplayName(project.author, 'Anonymous')}
+                                  by{" "}
+                                  {getDisplayName(project.author, "Anonymous")}
                                 </Text>
                               </Group>
-                              {project.technologies && project.technologies.length > 0 && (
-                                <Group gap="xs" mb="sm">
-                                  {project.technologies.slice(0, 3).map((tech, index) => (
-                                    <Badge key={index} variant="outline" size="xs">
-                                      {tech}
-                                    </Badge>
-                                  ))}
-                                  {project.technologies.length > 3 && (
-                                    <Badge variant="outline" size="xs" color="gray">
-                                      +{project.technologies.length - 3} more
-                                    </Badge>
-                                  )}
-                                </Group>
-                              )}
+                              {project.technologies &&
+                                project.technologies.length > 0 && (
+                                  <Group gap="xs" mb="sm">
+                                    {project.technologies
+                                      .slice(0, 3)
+                                      .map((tech, index) => (
+                                        <Badge
+                                          key={index}
+                                          variant="outline"
+                                          size="xs"
+                                        >
+                                          {tech}
+                                        </Badge>
+                                      ))}
+                                    {project.technologies.length > 3 && (
+                                      <Badge
+                                        variant="outline"
+                                        size="xs"
+                                        color="gray"
+                                      >
+                                        +{project.technologies.length - 3} more
+                                      </Badge>
+                                    )}
+                                  </Group>
+                                )}
                               <Group gap="xs">
-                                {(project.repositories && project.repositories.length > 0
-                                  ? project.repositories.find(r => r.isPrimary)?.url ?? project.repositories[0]?.url
+                                {(project.repositories &&
+                                project.repositories.length > 0
+                                  ? (project.repositories.find(
+                                      (r) => r.isPrimary,
+                                    )?.url ?? project.repositories[0]?.url)
                                   : project.githubUrl) && (
                                   <Button
                                     component="a"
                                     href={
-                                      project.repositories && project.repositories.length > 0
-                                        ? project.repositories.find(r => r.isPrimary)?.url ?? project.repositories[0]?.url ?? undefined
-                                        : project.githubUrl ?? undefined
+                                      project.repositories &&
+                                      project.repositories.length > 0
+                                        ? (project.repositories.find(
+                                            (r) => r.isPrimary,
+                                          )?.url ??
+                                          project.repositories[0]?.url ??
+                                          undefined)
+                                        : (project.githubUrl ?? undefined)
                                     }
                                     target="_blank"
                                     variant="light"
@@ -826,7 +1024,7 @@ export default function EventDetailClient({
                                   </Button>
                                 )}
                                 {project.liveUrl && (
-                                  <Button 
+                                  <Button
                                     component="a"
                                     href={project.liveUrl}
                                     target="_blank"
@@ -846,7 +1044,8 @@ export default function EventDetailClient({
                   </>
                 ) : (
                   <Text c="dimmed" ta="center" py="xl">
-                    No projects to display yet. Projects will appear here as participants add them to their profiles.
+                    No projects to display yet. Projects will appear here as
+                    participants add them to their profiles.
                   </Text>
                 )}
               </Stack>
@@ -858,7 +1057,7 @@ export default function EventDetailClient({
             <Paper p="xl" radius="md" withBorder>
               <Stack gap="lg">
                 <Title order={2}>Event Resources</Title>
-                
+
                 <Stack gap="md">
                   <Text fw={500}>Program Information</Text>
                   <Group gap="md">
@@ -868,7 +1067,8 @@ export default function EventDetailClient({
                       variant="light"
                       color={content.branding.colors.primary}
                     >
-                      About the {eventType === 'HACKATHON' ? 'Hackathon' : 'Residency'}
+                      About the{" "}
+                      {eventType === "HACKATHON" ? "Hackathon" : "Residency"}
                     </Button>
                     <Button
                       component="a"
@@ -901,11 +1101,36 @@ export default function EventDetailClient({
                 <Divider />
 
                 <Text size="sm" c="dimmed">
-                  Additional resources and documentation will be made available as the program progresses.
+                  Additional resources and documentation will be made available
+                  as the program progresses.
                 </Text>
               </Stack>
             </Paper>
           </Tabs.Panel>
+
+          {event.featureDeliberation && (
+            <Tabs.Panel value="priorities" mt="md">
+              <Paper p="xl" radius="md" withBorder>
+                <Stack gap="md" align="center">
+                  <IconTarget size={48} color="var(--mantine-color-grape-6)" />
+                  <Title order={3}>Community Priorities</Title>
+                  <Text c="dimmed" ta="center">
+                    Share what matters most and vote on community priorities for
+                    this event.
+                  </Text>
+                  <Button
+                    component={Link}
+                    href={`/events/${event.slug ?? event.id}/deliberation`}
+                    leftSection={<IconTarget size={16} />}
+                    variant="filled"
+                    color="grape"
+                  >
+                    View Priorities
+                  </Button>
+                </Stack>
+              </Paper>
+            </Tabs.Panel>
+          )}
         </Tabs>
       </Stack>
     </Container>

@@ -60,7 +60,11 @@ export function ProfileSyncAdminClient() {
   const [dryRun, setDryRun] = useState(true);
   const [limitUsers, setLimitUsers] = useState<number | undefined>(10);
 
-  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = api.profile.adminGetSyncStats.useQuery();
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    refetch: refetchStats,
+  } = api.profile.adminGetSyncStats.useQuery();
 
   const bulkSyncMutation = api.profile.adminBulkSyncProfiles.useMutation({
     onSuccess: (data) => {
@@ -115,21 +119,23 @@ export function ProfileSyncAdminClient() {
     <Container size="lg" py="md">
       {/* Header */}
       <Group mb="xl">
-        <Link href="/admin" style={{ textDecoration: 'none' }}>
+        <Link href="/admin" style={{ textDecoration: "none" }}>
           <Button variant="subtle" leftSection={<IconArrowLeft size={16} />}>
             Back to Admin
           </Button>
         </Link>
       </Group>
 
-      <div style={{ marginBottom: '2rem' }}>
+      <div style={{ marginBottom: "2rem" }}>
         <Group>
           <ThemeIcon size="lg" color="blue">
             <IconUserCog size={24} />
           </ThemeIcon>
           <div>
             <Title order={1}>Profile Sync Management</Title>
-            <Text c="dimmed">Bulk import application data to enhance user profiles</Text>
+            <Text c="dimmed">
+              Bulk import application data to enhance user profiles
+            </Text>
           </div>
         </Group>
       </div>
@@ -217,7 +223,8 @@ export function ProfileSyncAdminClient() {
             radius="md"
           />
           <Text size="sm" c="dimmed">
-            {stats?.usersWithUnsyncedApplications ?? 0} users with submitted applications still need profile sync
+            {stats?.usersWithUnsyncedApplications ?? 0} users with submitted
+            applications still need profile sync
           </Text>
         </Stack>
       </Card>
@@ -226,15 +233,21 @@ export function ProfileSyncAdminClient() {
       <Card withBorder mb="xl">
         <Stack>
           <Title order={3}>Bulk Sync Configuration</Title>
-          
+
           <SimpleGrid cols={{ base: 1, md: 2 }}>
             <Box>
-              <Text fw={500} mb="xs">Sync Mode</Text>
+              <Text fw={500} mb="xs">
+                Sync Mode
+              </Text>
               <Switch
                 checked={!dryRun}
                 onChange={(event) => setDryRun(!event.currentTarget.checked)}
                 label={dryRun ? "Preview Mode (Dry Run)" : "Execute Sync"}
-                description={dryRun ? "Preview changes without applying them" : "Actually sync data to profiles"}
+                description={
+                  dryRun
+                    ? "Preview changes without applying them"
+                    : "Actually sync data to profiles"
+                }
                 color="blue"
               />
             </Box>
@@ -245,7 +258,9 @@ export function ProfileSyncAdminClient() {
                 description="Maximum number of users to process"
                 placeholder="10"
                 value={limitUsers}
-                onChange={(value) => setLimitUsers(typeof value === 'number' ? value : undefined)}
+                onChange={(value) =>
+                  setLimitUsers(typeof value === "number" ? value : undefined)
+                }
                 min={1}
                 max={100}
               />
@@ -282,7 +297,8 @@ export function ProfileSyncAdminClient() {
 
           {stats?.usersWithUnsyncedApplications === 0 && (
             <Alert color="green" icon={<IconCheck size={16} />}>
-              All users with submitted applications have been synced to profiles!
+              All users with submitted applications have been synced to
+              profiles!
             </Alert>
           )}
         </Stack>
@@ -293,15 +309,29 @@ export function ProfileSyncAdminClient() {
         <Stack>
           <Title order={3}>How Profile Sync Works</Title>
           <List spacing="sm">
-            <List.Item>Finds users with SUBMITTED applications that haven&apos;t been synced to their profiles</List.Item>
-            <List.Item>Safely merges application data without overwriting existing profile information</List.Item>
-            <List.Item>Skills are merged (combined with existing skills), other fields only filled if empty</List.Item>
-            <List.Item>Creates ProfileSync records to prevent duplicate imports</List.Item>
-            <List.Item>Uses the most recent submitted application if multiple exist</List.Item>
+            <List.Item>
+              Finds users with SUBMITTED applications that haven&apos;t been
+              synced to their profiles
+            </List.Item>
+            <List.Item>
+              Safely merges application data without overwriting existing
+              profile information
+            </List.Item>
+            <List.Item>
+              Skills are merged (combined with existing skills), other fields
+              only filled if empty
+            </List.Item>
+            <List.Item>
+              Creates ProfileSync records to prevent duplicate imports
+            </List.Item>
+            <List.Item>
+              Uses the most recent submitted application if multiple exist
+            </List.Item>
           </List>
-          
+
           <Text size="sm" c="dimmed" mt="md">
-            <strong>Synced Fields:</strong> Technical Skills, Bio, Location, Company, LinkedIn URL, GitHub URL, Twitter URL, Telegram Handle
+            <strong>Synced Fields:</strong> Technical Skills, Bio, Location,
+            Company, LinkedIn URL, GitHub URL, Twitter URL, Telegram Handle
           </Text>
         </Stack>
       </Card>
@@ -327,31 +357,40 @@ export function ProfileSyncAdminClient() {
                 <Text size="xl" fw={700} c="blue">
                   {syncResults.totalProcessed}
                 </Text>
-                <Text size="sm" c="dimmed">Processed</Text>
+                <Text size="sm" c="dimmed">
+                  Processed
+                </Text>
               </Box>
               <Box ta="center">
                 <Text size="xl" fw={700} c="green">
                   {syncResults.successful}
                 </Text>
-                <Text size="sm" c="dimmed">Successful</Text>
+                <Text size="sm" c="dimmed">
+                  Successful
+                </Text>
               </Box>
               <Box ta="center">
                 <Text size="xl" fw={700} c="red">
                   {syncResults.failed}
                 </Text>
-                <Text size="sm" c="dimmed">Failed</Text>
+                <Text size="sm" c="dimmed">
+                  Failed
+                </Text>
               </Box>
             </SimpleGrid>
 
             {syncResults.dryRun && (
               <Alert color="blue" icon={<IconEye size={16} />}>
-                This was a preview - no changes were actually made to user profiles.
+                This was a preview - no changes were actually made to user
+                profiles.
               </Alert>
             )}
 
             {syncResults.results.length > 0 && (
               <div>
-                <Text fw={500} mb="sm">Detailed Results</Text>
+                <Text fw={500} mb="sm">
+                  Detailed Results
+                </Text>
                 <Table striped highlightOnHover>
                   <Table.Thead>
                     <Table.Tr>
@@ -361,42 +400,55 @@ export function ProfileSyncAdminClient() {
                     </Table.Tr>
                   </Table.Thead>
                   <Table.Tbody>
-                    {syncResults.results.map((result: SyncResult, index: number) => (
-                      <Table.Tr key={index}>
-                        <Table.Td>{result.userEmail}</Table.Td>
-                        <Table.Td>
-                          {result.syncedFields.length > 0 ? (
-                            <Group gap="xs">
-                              {result.syncedFields.map((field) => (
-                                <Badge key={field} size="xs" variant="light">
-                                  {field}
-                                </Badge>
-                              ))}
-                            </Group>
-                          ) : (
-                            <Text c="dimmed" size="sm">No fields</Text>
-                          )}
-                        </Table.Td>
-                        <Table.Td>
-                          {result.error ? (
-                            <Badge color="red" leftSection={<IconX size={12} />}>
-                              Error
-                            </Badge>
-                          ) : (
-                            <Badge color="green" leftSection={<IconCheck size={12} />}>
-                              Success
-                            </Badge>
-                          )}
-                        </Table.Td>
-                      </Table.Tr>
-                    ))}
+                    {syncResults.results.map(
+                      (result: SyncResult, index: number) => (
+                        <Table.Tr key={index}>
+                          <Table.Td>{result.userEmail}</Table.Td>
+                          <Table.Td>
+                            {result.syncedFields.length > 0 ? (
+                              <Group gap="xs">
+                                {result.syncedFields.map((field) => (
+                                  <Badge key={field} size="xs" variant="light">
+                                    {field}
+                                  </Badge>
+                                ))}
+                              </Group>
+                            ) : (
+                              <Text c="dimmed" size="sm">
+                                No fields
+                              </Text>
+                            )}
+                          </Table.Td>
+                          <Table.Td>
+                            {result.error ? (
+                              <Badge
+                                color="red"
+                                leftSection={<IconX size={12} />}
+                              >
+                                Error
+                              </Badge>
+                            ) : (
+                              <Badge
+                                color="green"
+                                leftSection={<IconCheck size={12} />}
+                              >
+                                Success
+                              </Badge>
+                            )}
+                          </Table.Td>
+                        </Table.Tr>
+                      ),
+                    )}
                   </Table.Tbody>
                 </Table>
               </div>
             )}
 
             <Group justify="flex-end">
-              <Button variant="light" onClick={() => setResultsModalOpen(false)}>
+              <Button
+                variant="light"
+                onClick={() => setResultsModalOpen(false)}
+              >
                 Close
               </Button>
               {syncResults.dryRun && syncResults.totalProcessed > 0 && (

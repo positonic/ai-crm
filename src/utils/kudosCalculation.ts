@@ -15,31 +15,31 @@ import { type PrismaClient } from "@prisma/client";
 // Kudos System Constants
 export const KUDOS_CONSTANTS = {
   // Attendance-based starting kudos
-  KUDOS_PER_DAY: 10,          // Kudos earned per day of residency attendance
-  DAYS_ATTENDED: 13,          // Current days of residency (assumed all residents present)
-  BASE_KUDOS: 130,            // Starting kudos (10 × 13 days)
+  KUDOS_PER_DAY: 10, // Kudos earned per day of residency attendance
+  DAYS_ATTENDED: 13, // Current days of residency (assumed all residents present)
+  BASE_KUDOS: 130, // Starting kudos (10 × 13 days)
 
   // Content creation rewards
-  UPDATE_WEIGHT: 10,          // Kudos minted per ProjectUpdate posted
-  METRICS_WEIGHT: 10,         // Kudos earned per project with at least one metric
+  UPDATE_WEIGHT: 10, // Kudos minted per ProjectUpdate posted
+  METRICS_WEIGHT: 10, // Kudos earned per project with at least one metric
 
   // Transfer rates for engagement
   PRAISE_TRANSFER_RATE: 0.05, // 5% of sender's kudos transferred with praise
-  LIKE_TRANSFER_RATE: 0.02,   // 2% of liker's kudos transferred with like
+  LIKE_TRANSFER_RATE: 0.02, // 2% of liker's kudos transferred with like
 
   // Backfill values for historical data without transfer tracking
-  BACKFILL_PRAISE_VALUE: 5,   // Default kudos for old praise
-  BACKFILL_LIKE_VALUE: 2,     // Default kudos for old likes
+  BACKFILL_PRAISE_VALUE: 5, // Default kudos for old praise
+  BACKFILL_LIKE_VALUE: 2, // Default kudos for old likes
 } as const;
 
 interface KudosBreakdown {
-  base: number;              // Attendance-based starting kudos
-  fromUpdates: number;       // Kudos from creating ProjectUpdates
+  base: number; // Attendance-based starting kudos
+  fromUpdates: number; // Kudos from creating ProjectUpdates
   fromLikesReceived: number; // Kudos gained from likes received
   fromPraiseReceived: number; // Kudos gained from praise received
-  spentOnLikes: number;      // Kudos spent on liking others' content
-  spentOnPraise: number;     // Kudos spent on praising others
-  total: number;             // Final kudos balance
+  spentOnLikes: number; // Kudos spent on liking others' content
+  spentOnPraise: number; // Kudos spent on praising others
+  total: number; // Final kudos balance
 }
 
 /**
@@ -56,41 +56,41 @@ interface KudosBreakdown {
  */
 export async function calculateUserKudos(
   userId: string,
-  db: PrismaClient
+  db: PrismaClient,
 ): Promise<KudosBreakdown> {
   // Base kudos from attendance
   const base = KUDOS_CONSTANTS.BASE_KUDOS;
 
   // Count ProjectUpdates authored by user (mints new kudos)
   const updateCount = await db.projectUpdate.count({
-    where: { userId }
+    where: { userId },
   });
   const fromUpdates = updateCount * KUDOS_CONSTANTS.UPDATE_WEIGHT;
 
   // Calculate kudos from likes received on all content types
   const projectUpdateLikesReceived = await db.projectUpdateLike.findMany({
     where: {
-      projectUpdate: { userId }
+      projectUpdate: { userId },
     },
-    select: { kudosTransferred: true }
+    select: { kudosTransferred: true },
   });
 
   const askOfferLikesReceived = await db.askOfferLike.findMany({
     where: {
-      askOffer: { userId }
+      askOffer: { userId },
     },
-    select: { kudosTransferred: true }
+    select: { kudosTransferred: true },
   });
 
   const userProjectLikesReceived = await db.userProjectLike.findMany({
     where: {
       project: {
         profile: {
-          userId
-        }
-      }
+          userId,
+        },
+      },
     },
-    select: { kudosTransferred: true }
+    select: { kudosTransferred: true },
   });
 
   const fromLikesReceived =
@@ -101,17 +101,17 @@ export async function calculateUserKudos(
   // Calculate kudos spent on likes given
   const projectUpdateLikesGiven = await db.projectUpdateLike.findMany({
     where: { userId },
-    select: { kudosTransferred: true }
+    select: { kudosTransferred: true },
   });
 
   const askOfferLikesGiven = await db.askOfferLike.findMany({
     where: { userId },
-    select: { kudosTransferred: true }
+    select: { kudosTransferred: true },
   });
 
   const userProjectLikesGiven = await db.userProjectLike.findMany({
     where: { userId },
-    select: { kudosTransferred: true }
+    select: { kudosTransferred: true },
   });
 
   const spentOnLikes =
@@ -122,14 +122,14 @@ export async function calculateUserKudos(
   // Calculate kudos from praise received
   const praiseReceived = await db.praise.findMany({
     where: { recipientId: userId },
-    select: { kudosTransferred: true }
+    select: { kudosTransferred: true },
   });
   const fromPraiseReceived = sumKudosTransferred(praiseReceived);
 
   // Calculate kudos spent on praise sent
   const praiseSent = await db.praise.findMany({
     where: { senderId: userId },
-    select: { kudosTransferred: true }
+    select: { kudosTransferred: true },
   });
   const spentOnPraise = sumKudosTransferred(praiseSent);
 
@@ -149,7 +149,7 @@ export async function calculateUserKudos(
     fromPraiseReceived,
     spentOnLikes,
     spentOnPraise,
-    total: Math.max(0, total) // Floor at 0, can't go negative
+    total: Math.max(0, total), // Floor at 0, can't go negative
   };
 }
 
@@ -158,7 +158,7 @@ export async function calculateUserKudos(
  */
 function sumKudosTransferred(
   records: Array<{ kudosTransferred: number | null }>,
-  backfillValue?: number
+  backfillValue?: number,
 ): number {
   return records.reduce((sum, record) => {
     // Use transferred value if exists, otherwise use backfill value, otherwise 0
@@ -172,7 +172,7 @@ function sumKudosTransferred(
  */
 export function calculateTransferAmount(
   currentKudos: number,
-  transferRate: number
+  transferRate: number,
 ): number {
   return currentKudos * transferRate;
 }
@@ -181,14 +181,20 @@ export function calculateTransferAmount(
  * Calculate kudos for a like action (2% transfer)
  */
 export function calculateLikeTransfer(currentKudos: number): number {
-  return calculateTransferAmount(currentKudos, KUDOS_CONSTANTS.LIKE_TRANSFER_RATE);
+  return calculateTransferAmount(
+    currentKudos,
+    KUDOS_CONSTANTS.LIKE_TRANSFER_RATE,
+  );
 }
 
 /**
  * Calculate kudos for a praise action (5% transfer)
  */
 export function calculatePraiseTransfer(currentKudos: number): number {
-  return calculateTransferAmount(currentKudos, KUDOS_CONSTANTS.PRAISE_TRANSFER_RATE);
+  return calculateTransferAmount(
+    currentKudos,
+    KUDOS_CONSTANTS.PRAISE_TRANSFER_RATE,
+  );
 }
 
 /**
@@ -196,7 +202,7 @@ export function calculatePraiseTransfer(currentKudos: number): number {
  */
 export function hasSufficientKudos(
   currentKudos: number,
-  requiredAmount: number
+  requiredAmount: number,
 ): boolean {
   return currentKudos >= requiredAmount;
 }

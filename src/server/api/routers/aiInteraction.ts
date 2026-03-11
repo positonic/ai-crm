@@ -129,7 +129,10 @@ export const aiInteractionRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "admin" && ctx.session.user.role !== "staff") {
+      if (
+        ctx.session.user.role !== "admin" &&
+        ctx.session.user.role !== "staff"
+      ) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Admin access required",
@@ -142,10 +145,34 @@ export const aiInteractionRouter = createTRPCRouter({
         ...(input.search
           ? {
               OR: [
-                { userMessage: { contains: input.search, mode: "insensitive" as const } },
-                { aiResponse: { contains: input.search, mode: "insensitive" as const } },
-                { user: { name: { contains: input.search, mode: "insensitive" as const } } },
-                { user: { email: { contains: input.search, mode: "insensitive" as const } } },
+                {
+                  userMessage: {
+                    contains: input.search,
+                    mode: "insensitive" as const,
+                  },
+                },
+                {
+                  aiResponse: {
+                    contains: input.search,
+                    mode: "insensitive" as const,
+                  },
+                },
+                {
+                  user: {
+                    name: {
+                      contains: input.search,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                },
+                {
+                  user: {
+                    email: {
+                      contains: input.search,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                },
               ],
             }
           : {}),
@@ -197,7 +224,10 @@ export const aiInteractionRouter = createTRPCRouter({
         .optional(),
     )
     .query(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "admin" && ctx.session.user.role !== "staff") {
+      if (
+        ctx.session.user.role !== "admin" &&
+        ctx.session.user.role !== "staff"
+      ) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Admin access required",
@@ -206,7 +236,7 @@ export const aiInteractionRouter = createTRPCRouter({
 
       const where = {
         ...(input?.eventId ? { eventId: input.eventId } : {}),
-        ...(input?.startDate ?? input?.endDate
+        ...((input?.startDate ?? input?.endDate)
           ? {
               createdAt: {
                 ...(input?.startDate ? { gte: input.startDate } : {}),
@@ -249,11 +279,8 @@ export const aiInteractionRouter = createTRPCRouter({
         totalInteractions,
         errorCount,
         errorRate:
-          totalInteractions > 0
-            ? (errorCount / totalInteractions) * 100
-            : 0,
-        averageResponseTimeMs:
-          avgResponseTime._avg.responseTimeMs ?? null,
+          totalInteractions > 0 ? (errorCount / totalInteractions) * 100 : 0,
+        averageResponseTimeMs: avgResponseTime._avg.responseTimeMs ?? null,
         averageRating: feedbackStats._avg.rating ?? null,
         totalFeedback: feedbackStats._count.rating,
         ratingDistribution: ratingDistribution.map((r) => ({

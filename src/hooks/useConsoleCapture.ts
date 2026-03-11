@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback } from "react";
 
 export interface ConsoleEntry {
-  level: 'error' | 'warn';
+  level: "error" | "warn";
   message: string;
   timestamp: string;
 }
@@ -22,19 +22,19 @@ export function useConsoleCapture(maxEntries = 50) {
     const stringify = (args: unknown[]): string => {
       return args
         .map((a) => {
-          if (typeof a === 'string') return a;
+          if (typeof a === "string") return a;
           try {
             return JSON.stringify(a);
           } catch {
             return String(a);
           }
         })
-        .join(' ');
+        .join(" ");
     };
 
     console.error = (...args: unknown[]) => {
       entriesRef.current.push({
-        level: 'error',
+        level: "error",
         message: stringify(args).slice(0, 2000),
         timestamp: new Date().toISOString(),
       });
@@ -46,7 +46,7 @@ export function useConsoleCapture(maxEntries = 50) {
 
     console.warn = (...args: unknown[]) => {
       entriesRef.current.push({
-        level: 'warn',
+        level: "warn",
         message: stringify(args).slice(0, 2000),
         timestamp: new Date().toISOString(),
       });

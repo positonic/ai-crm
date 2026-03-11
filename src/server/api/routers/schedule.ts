@@ -206,7 +206,10 @@ export const scheduleRouter = createTRPCRouter({
       });
 
       if (!session) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Session not found",
+        });
       }
 
       return session;
@@ -370,14 +373,20 @@ export const scheduleRouter = createTRPCRouter({
       // Validate room belongs to the session's venue
       if (input.roomId) {
         if (!input.venueId) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot assign a room without a venue" });
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Cannot assign a room without a venue",
+          });
         }
         const room = await ctx.db.scheduleRoom.findUnique({
           where: { id: input.roomId },
           select: { venueId: true },
         });
         if (!room || room.venueId !== input.venueId) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Room does not belong to the selected floor" });
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Room does not belong to the selected floor",
+          });
         }
       }
 
@@ -463,8 +472,8 @@ export const scheduleRouter = createTRPCRouter({
       // Collect all unique linked speaker user IDs for validation
       const allSpeakerUserIds = [
         ...new Set(
-          input.sessions.flatMap((s) =>
-            s.linkedSpeakers?.map((ls) => ls.userId) ?? [],
+          input.sessions.flatMap(
+            (s) => s.linkedSpeakers?.map((ls) => ls.userId) ?? [],
           ),
         ),
       ];
@@ -583,19 +592,19 @@ export const scheduleRouter = createTRPCRouter({
 
         const orConditions = [];
         if (firstName) {
-          orConditions.push(
-            { firstName: { contains: firstName, mode: "insensitive" as const } },
-          );
+          orConditions.push({
+            firstName: { contains: firstName, mode: "insensitive" as const },
+          });
         }
         if (surname) {
-          orConditions.push(
-            { surname: { contains: surname, mode: "insensitive" as const } },
-          );
+          orConditions.push({
+            surname: { contains: surname, mode: "insensitive" as const },
+          });
         }
         // Also try full name match on the "name" field
-        orConditions.push(
-          { name: { contains: cleanName, mode: "insensitive" as const } },
-        );
+        orConditions.push({
+          name: { contains: cleanName, mode: "insensitive" as const },
+        });
 
         const users = await ctx.db.user.findMany({
           where: {
@@ -683,14 +692,24 @@ export const scheduleRouter = createTRPCRouter({
       );
       if (speakerOnly) {
         const restrictedFields = [
-          data.venueId, data.roomId, data.startTime, data.endTime,
-          data.order, data.isPublished, data.sessionTypeId, data.trackId,
+          data.venueId,
+          data.roomId,
+          data.startTime,
+          data.endTime,
+          data.order,
+          data.isPublished,
+          data.sessionTypeId,
+          data.trackId,
           data.speakers,
         ];
-        if (restrictedFields.some((f) => f !== undefined) || linkedSpeakers !== undefined) {
+        if (
+          restrictedFields.some((f) => f !== undefined) ||
+          linkedSpeakers !== undefined
+        ) {
           throw new TRPCError({
             code: "FORBIDDEN",
-            message: "Speakers can only edit the title and description of their sessions",
+            message:
+              "Speakers can only edit the title and description of their sessions",
           });
         }
       }
@@ -702,7 +721,11 @@ export const scheduleRouter = createTRPCRouter({
           select: { event: { select: { startDate: true, endDate: true } } },
         });
         if (session?.event) {
-          validateSessionDateRange(session.event.startDate, session.event.endDate, data.startTime);
+          validateSessionDateRange(
+            session.event.startDate,
+            session.event.endDate,
+            data.startTime,
+          );
         }
       }
 
@@ -726,19 +749,29 @@ export const scheduleRouter = createTRPCRouter({
 
       // Validate room belongs to the effective venue
       if (data.roomId !== undefined && data.roomId !== null) {
-        const effectiveVenue = data.venueId ?? (await ctx.db.scheduleSession.findUnique({
-          where: { id },
-          select: { venueId: true },
-        }))?.venueId;
+        const effectiveVenue =
+          data.venueId ??
+          (
+            await ctx.db.scheduleSession.findUnique({
+              where: { id },
+              select: { venueId: true },
+            })
+          )?.venueId;
         if (!effectiveVenue) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot assign a room without a venue" });
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Cannot assign a room without a venue",
+          });
         }
         const room = await ctx.db.scheduleRoom.findUnique({
           where: { id: data.roomId },
           select: { venueId: true },
         });
         if (!room || room.venueId !== effectiveVenue) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Room does not belong to the selected floor" });
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Room does not belong to the selected floor",
+          });
         }
       }
 
@@ -762,7 +795,10 @@ export const scheduleRouter = createTRPCRouter({
         }
       }
 
-      const session = await ctx.db.scheduleSession.update({ where: { id }, data });
+      const session = await ctx.db.scheduleSession.update({
+        where: { id },
+        data,
+      });
 
       // Sync linked speakers if explicitly provided
       if (linkedSpeakers !== undefined) {
@@ -802,7 +838,8 @@ export const scheduleRouter = createTRPCRouter({
       if (speakerOnly) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "Speakers cannot delete sessions. Contact a floor lead or admin.",
+          message:
+            "Speakers cannot delete sessions. Contact a floor lead or admin.",
         });
       }
       return ctx.db.scheduleSession.delete({ where: { id: input.id } });
@@ -834,8 +871,7 @@ export const scheduleRouter = createTRPCRouter({
       }
 
       const isAdmin =
-        ctx.session.user.role === "admin" ||
-        ctx.session.user.role === "staff";
+        ctx.session.user.role === "admin" || ctx.session.user.role === "staff";
       const isSpeaker = session.sessionSpeakers.length > 0;
 
       if (!isAdmin && !isSpeaker) {
@@ -894,7 +930,9 @@ export const scheduleRouter = createTRPCRouter({
       }
       // Resolve slug to real event ID
       const event = await resolveEventId(ctx.db, input.eventId);
-      return ctx.db.scheduleVenue.create({ data: { ...input, eventId: event.id } });
+      return ctx.db.scheduleVenue.create({
+        data: { ...input, eventId: event.id },
+      });
     }),
 
   // Admin or floor lead: Update venue metadata
@@ -1036,7 +1074,9 @@ export const scheduleRouter = createTRPCRouter({
       }
       // Resolve slug to real event ID
       const event = await resolveEventId(ctx.db, input.eventId);
-      return ctx.db.scheduleSessionType.create({ data: { ...input, eventId: event.id } });
+      return ctx.db.scheduleSessionType.create({
+        data: { ...input, eventId: event.id },
+      });
     }),
 
   // Admin only: Delete a session type
@@ -1075,7 +1115,9 @@ export const scheduleRouter = createTRPCRouter({
       }
       // Resolve slug to real event ID
       const event = await resolveEventId(ctx.db, input.eventId);
-      return ctx.db.scheduleTrack.create({ data: { ...input, eventId: event.id } });
+      return ctx.db.scheduleTrack.create({
+        data: { ...input, eventId: event.id },
+      });
     }),
 
   // Admin only: Delete a track
@@ -1190,11 +1232,7 @@ export const scheduleRouter = createTRPCRouter({
               select: { id: true },
             })
           ).map((v) => v.id)
-        : await getUserOwnedVenueIds(
-            ctx.db,
-            ctx.session.user.id,
-            event.id,
-          );
+        : await getUserOwnedVenueIds(ctx.db, ctx.session.user.id, event.id);
 
       const sessions = await ctx.db.scheduleSession.findMany({
         where: { eventId: event.id, venueId: { in: venueIds } },
@@ -1300,7 +1338,9 @@ export const scheduleRouter = createTRPCRouter({
 
       // Find or create user by email
       let user = await ctx.db.user.findFirst({
-        where: { email: { equals: input.email.toLowerCase(), mode: "insensitive" } },
+        where: {
+          email: { equals: input.email.toLowerCase(), mode: "insensitive" },
+        },
         select: userSelectFields,
       });
 
@@ -1325,18 +1365,20 @@ export const scheduleRouter = createTRPCRouter({
         where: { userId: user.id, eventId: event.id },
       });
 
-      const application = existingApp ?? await ctx.db.application.create({
-        data: {
-          eventId: event.id,
-          userId: user.id,
-          email: input.email.toLowerCase(),
-          applicationType: "SPEAKER",
-          status: "SUBMITTED",
-          language: "en",
-          isComplete: false,
-          submittedAt: new Date(),
-        },
-      });
+      const application =
+        existingApp ??
+        (await ctx.db.application.create({
+          data: {
+            eventId: event.id,
+            userId: user.id,
+            email: input.email.toLowerCase(),
+            applicationType: "SPEAKER",
+            status: "SUBMITTED",
+            language: "en",
+            isComplete: false,
+            submittedAt: new Date(),
+          },
+        }));
 
       // Link to venue if provided
       if (input.venueId) {
@@ -1356,7 +1398,8 @@ export const scheduleRouter = createTRPCRouter({
       const userId = ctx.session.user.id;
       const userRole = ctx.session.user.role;
 
-      if (isAdminOrStaff(userRole)) return { canManage: true, isSpeakerOnly: false };
+      if (isAdminOrStaff(userRole))
+        return { canManage: true, isSpeakerOnly: false };
 
       const session = await ctx.db.scheduleSession.findUnique({
         where: { id: input.sessionId },
@@ -1413,7 +1456,8 @@ export const scheduleRouter = createTRPCRouter({
       if (speakerOnly) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "Speakers cannot manage participants. Contact a floor lead or admin.",
+          message:
+            "Speakers cannot manage participants. Contact a floor lead or admin.",
         });
       }
 
@@ -1452,7 +1496,8 @@ export const scheduleRouter = createTRPCRouter({
 
         if (session) {
           const updatedSpeakers = session.speakers.filter(
-            (name) => name.toLowerCase() !== input.removeTextSpeaker!.toLowerCase(),
+            (name) =>
+              name.toLowerCase() !== input.removeTextSpeaker!.toLowerCase(),
           );
 
           await ctx.db.scheduleSession.update({
@@ -1683,9 +1728,15 @@ export const scheduleRouter = createTRPCRouter({
           const eventPath = event.slug ?? event.id;
           const manageFloorUrl = `${baseUrl}/events/${eventPath}/manage-schedule`;
 
-          const fullName = [user.firstName, user.surname].filter(Boolean).join(" ");
-          const floorOwnerName = fullName.length > 0 ? fullName : (user.name ?? "there");
-          const assignedByName = ctx.session.user.name ?? ctx.session.user.email ?? "An administrator";
+          const fullName = [user.firstName, user.surname]
+            .filter(Boolean)
+            .join(" ");
+          const floorOwnerName =
+            fullName.length > 0 ? fullName : (user.name ?? "there");
+          const assignedByName =
+            ctx.session.user.name ??
+            ctx.session.user.email ??
+            "An administrator";
 
           const emailService = getEmailService(ctx.db);
           await emailService.sendEmail({
@@ -1871,7 +1922,10 @@ export const scheduleRouter = createTRPCRouter({
       });
 
       if (!comment) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Comment not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Comment not found",
+        });
       }
 
       // Only the author or an admin can delete
@@ -1905,7 +1959,10 @@ export const scheduleRouter = createTRPCRouter({
       });
 
       if (!comment) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Comment not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Comment not found",
+        });
       }
 
       await assertCanManageSession(
@@ -1965,7 +2022,8 @@ export const scheduleRouter = createTRPCRouter({
       if (speakerOnly) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "Speakers cannot reschedule sessions. Contact a floor lead or admin.",
+          message:
+            "Speakers cannot reschedule sessions. Contact a floor lead or admin.",
         });
       }
 
@@ -1982,11 +2040,18 @@ export const scheduleRouter = createTRPCRouter({
       });
 
       if (!session) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Session not found",
+        });
       }
 
       // Validate new date falls within event date range
-      validateSessionDateRange(session.event.startDate, session.event.endDate, input.newStartTime);
+      validateSessionDateRange(
+        session.event.startDate,
+        session.event.endDate,
+        input.newStartTime,
+      );
 
       const duration =
         new Date(session.endTime).getTime() -
@@ -2260,7 +2325,13 @@ export const scheduleRouter = createTRPCRouter({
 
         const user = await ctx.db.user.findUnique({
           where: { id: reminder.speakerUserId },
-          select: { id: true, email: true, firstName: true, surname: true, name: true },
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            surname: true,
+            name: true,
+          },
         });
 
         if (!user?.email) {
@@ -2268,8 +2339,7 @@ export const scheduleRouter = createTRPCRouter({
           continue;
         }
 
-        const speakerName =
-          user.firstName ?? user.name ?? user.email;
+        const speakerName = user.firstName ?? user.name ?? user.email;
         const sessionUrl = `${baseUrl}/events/${eventPath}/schedule/${session.id}`;
 
         try {

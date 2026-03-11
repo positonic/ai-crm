@@ -24,7 +24,9 @@ export const env = createEnv({
     NOTION_EVENTS_DATABASE_ID: z.string(),
     POSTMARK_SERVER_TOKEN: z.string().optional(),
     POSTMARK_SANDBOX_TOKEN: z.string().optional(),
-    EMAIL_MODE: z.enum(["development", "staging", "production"]).default("development"),
+    EMAIL_MODE: z
+      .enum(["development", "staging", "production"])
+      .default("development"),
     TEST_EMAIL_OVERRIDE: z.string().email().optional(),
     ADMIN_EMAIL: z.string().email(),
     MASTRA_API_KEY: z.string(),
@@ -49,11 +51,15 @@ export const env = createEnv({
     // EAS (Ethereum Attestation Service) configuration
     EAS_PRIVATE_KEY: z.string().optional(), // Platform wallet private key for signing
     EAS_USE_MAINNET: z.enum(["true", "false"]).optional().default("false"),
-    EAS_ATTESTATIONS_ENABLED: z.enum(["true", "false"]).optional().default("false"),
+    EAS_ATTESTATIONS_ENABLED: z
+      .enum(["true", "false"])
+      .optional()
+      .default("false"),
     EAS_SCHEMA_UID: z.string().optional(), // Set after schema is registered
     // Exponential API integration (bug reporting)
     EXPONENTIAL_API_KEY: z.string().optional(),
     EXPONENTIAL_BUG_PROJECT_ID: z.string().optional(),
+    TRANSCRIPTION_API_KEY: z.string().optional(),
   },
 
   /**
@@ -96,8 +102,10 @@ export const env = createEnv({
     TELEGRAM_PRAISE_TOPIC_ID: process.env.TELEGRAM_PRAISE_TOPIC_ID,
     TELEGRAM_ASKOFFER_TOPIC_ID: process.env.TELEGRAM_ASKOFFER_TOPIC_ID,
     TELEGRAM_UPDATES_TOPIC_ID: process.env.TELEGRAM_UPDATES_TOPIC_ID,
-    TELEGRAM_PROJECT_UPDATE_CHANNEL_ID: process.env.TELEGRAM_PROJECT_UPDATE_CHANNEL_ID,
-    TELEGRAM_PROJECT_UPDATE_TOPIC_ID: process.env.TELEGRAM_PROJECT_UPDATE_TOPIC_ID,
+    TELEGRAM_PROJECT_UPDATE_CHANNEL_ID:
+      process.env.TELEGRAM_PROJECT_UPDATE_CHANNEL_ID,
+    TELEGRAM_PROJECT_UPDATE_TOPIC_ID:
+      process.env.TELEGRAM_PROJECT_UPDATE_TOPIC_ID,
     ATPROTO_PDS_URL: process.env.ATPROTO_PDS_URL,
     ATPROTO_ENCRYPTION_KEY: process.env.ATPROTO_ENCRYPTION_KEY,
     ATPROTO_PLATFORM_HANDLE: process.env.ATPROTO_PLATFORM_HANDLE,
@@ -110,6 +118,7 @@ export const env = createEnv({
     EAS_SCHEMA_UID: process.env.EAS_SCHEMA_UID,
     EXPONENTIAL_API_KEY: process.env.EXPONENTIAL_API_KEY,
     EXPONENTIAL_BUG_PROJECT_ID: process.env.EXPONENTIAL_BUG_PROJECT_ID,
+    TRANSCRIPTION_API_KEY: process.env.TRANSCRIPTION_API_KEY,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
   },
   /**

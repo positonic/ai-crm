@@ -107,29 +107,45 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
   };
 
   // Fetch focus areas distribution
-  const { data: focusAreasData, isLoading: loadingFocusAreas } = api.project.getFocusAreasDistribution.useQuery({
-    eventId: config.eventId,
-  });
+  const { data: focusAreasData, isLoading: loadingFocusAreas } =
+    api.project.getFocusAreasDistribution.useQuery({
+      eventId: config.eventId,
+    });
 
   // Fetch GitHub activity stats
-  const { data: activityStats, isLoading: loadingActivityStats } = api.project.getEventActivityStats.useQuery({
-    eventId: config.eventId,
-  });
+  const { data: activityStats, isLoading: loadingActivityStats } =
+    api.project.getEventActivityStats.useQuery({
+      eventId: config.eventId,
+    });
 
   // Fetch all projects with commit counts and metrics
-  const { data: projectsWithMetrics, isLoading: loadingProjects } = api.project.getEventProjectsWithMetrics.useQuery({
-    eventId: config.eventId,
-  });
+  const { data: projectsWithMetrics, isLoading: loadingProjects } =
+    api.project.getEventProjectsWithMetrics.useQuery({
+      eventId: config.eventId,
+    });
 
   // Fetch combined hyperboard (sponsors + residents)
-  const { data: combinedHyperboard } = api.application.getCombinedHyperboard.useQuery({
-    eventId: config.eventId,
-  });
+  const { data: combinedHyperboard } =
+    api.application.getCombinedHyperboard.useQuery({
+      eventId: config.eventId,
+    });
 
   // Stats from config
   const stats = [
-    { value: config.residentCount, label: "Residents", subtitle: "Accepted to residency", icon: IconUsers, color: "violet" },
-    { value: config.projectCount, label: "Projects", subtitle: "Active projects", icon: IconBriefcase, color: "blue" },
+    {
+      value: config.residentCount,
+      label: "Residents",
+      subtitle: "Accepted to residency",
+      icon: IconUsers,
+      color: "violet",
+    },
+    {
+      value: config.projectCount,
+      label: "Projects",
+      subtitle: "Active projects",
+      icon: IconBriefcase,
+      color: "blue",
+    },
   ];
 
   const additionalStats = [
@@ -138,50 +154,55 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
       label: "Projects with Metrics",
       subtitle: "Tracking impact",
       icon: IconChartBar,
-      color: "cyan"
+      color: "cyan",
     },
     {
       value: config.engagementStats?.totalDataPoints ?? "TBD",
       label: "Total Metrics",
       subtitle: "Data points tracked",
       icon: IconTrendingUp,
-      color: "grape"
+      color: "grape",
     },
     {
-      value: loadingActivityStats ? "—" : `${activityStats?.percentageActive ?? "—"}%`,
+      value: loadingActivityStats
+        ? "—"
+        : `${activityStats?.percentageActive ?? "—"}%`,
       label: "Projects Still Active",
       subtitle: "% with recent GitHub activity",
       icon: IconGitBranch,
-      color: "green"
+      color: "green",
     },
     {
-      value: loadingActivityStats ? "—" : (activityStats?.avgWeeksActive ?? "—"),
+      value: loadingActivityStats
+        ? "—"
+        : (activityStats?.avgWeeksActive ?? "—"),
       label: "Avg. Weeks Active",
       subtitle: "GitHub activity duration",
       icon: IconClock,
-      color: "blue"
+      color: "blue",
     },
     {
       value: "TBD",
       label: "New Projects",
       subtitle: "Initiated during residency",
       icon: IconRocket,
-      color: "violet"
+      color: "violet",
     },
     {
       value: "TBD",
       label: "Existing Projects",
       subtitle: "Continued from before",
       icon: IconRefresh,
-      color: "indigo"
+      color: "indigo",
     },
   ];
 
   // Project categories from API data
-  const projectCategories = focusAreasData?.distribution.map(d => ({
-    category: d.area,
-    count: d.count,
-  })) ?? [];
+  const projectCategories =
+    focusAreasData?.distribution.map((d) => ({
+      category: d.area,
+      count: d.count,
+    })) ?? [];
 
   return (
     <Box className="bg-theme-gradient" style={{ minHeight: "100vh" }}>
@@ -193,17 +214,33 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
               <Text size="sm" tt="uppercase" fw={700} c="dimmed" mb="xs">
                 Impact Report
               </Text>
-              <Title order={1} size={56} fw={900} mb="md" style={{ lineHeight: 1.1 }}>
+              <Title
+                order={1}
+                size={56}
+                fw={900}
+                mb="md"
+                style={{ lineHeight: 1.1 }}
+              >
                 {config.title}
               </Title>
               <Group gap="md" align="center" mb="md">
                 <Title order={2} size={32} fw={600} c="dimmed">
                   {config.subtitle}
                 </Title>
-                <Badge size="lg" variant="light" color="blue" leftSection={<IconMapPin size={14} />}>
+                <Badge
+                  size="lg"
+                  variant="light"
+                  color="blue"
+                  leftSection={<IconMapPin size={14} />}
+                >
                   {config.location}
                 </Badge>
-                <Badge size="lg" variant="light" color="violet" leftSection={<IconCalendar size={14} />}>
+                <Badge
+                  size="lg"
+                  variant="light"
+                  color="violet"
+                  leftSection={<IconCalendar size={14} />}
+                >
                   {config.dateRange}
                 </Badge>
               </Group>
@@ -230,7 +267,11 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
           </Group>
 
           {/* Key Stats Grid */}
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg" className="stats-grid">
+          <SimpleGrid
+            cols={{ base: 1, sm: 2, lg: 4 }}
+            spacing="lg"
+            className="stats-grid"
+          >
             {stats.map((stat, index) => (
               <Paper
                 key={index}
@@ -245,7 +286,12 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
               >
                 <Stack gap="md">
                   <Group justify="space-between">
-                    <ThemeIcon size={48} radius="md" variant="light" color={stat.color}>
+                    <ThemeIcon
+                      size={48}
+                      radius="md"
+                      variant="light"
+                      color={stat.color}
+                    >
                       <stat.icon size={28} />
                     </ThemeIcon>
                   </Group>
@@ -279,7 +325,11 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
             Program Highlights
           </Title>
 
-          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xl" className="highlights-grid">
+          <SimpleGrid
+            cols={{ base: 1, md: 2 }}
+            spacing="xl"
+            className="highlights-grid"
+          >
             <Paper p="xl" radius="lg" withBorder>
               <Group mb="lg">
                 <ThemeIcon size={48} radius="md" variant="light" color="blue">
@@ -327,12 +377,14 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
               </Center>
             ) : projectCategories.length === 0 ? (
               <Text size="sm" c="dimmed" ta="center" py="xl">
-                No focus areas data available yet. Run the categorization script to populate this section.
+                No focus areas data available yet. Run the categorization script
+                to populate this section.
               </Text>
             ) : (
               <>
                 <Text size="sm" c="dimmed" mb="xl">
-                  Distribution of {focusAreasData?.projectsWithFocusAreas ?? 0} projects across {projectCategories.length} focus areas
+                  Distribution of {focusAreasData?.projectsWithFocusAreas ?? 0}{" "}
+                  projects across {projectCategories.length} focus areas
                 </Text>
                 <Stack gap="lg">
                   {projectCategories.map((cat, index) => (
@@ -342,18 +394,23 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
                           {cat.category}
                         </Text>
                         <Badge variant="light" color="blue">
-                          {cat.count} {cat.count === 1 ? 'project' : 'projects'}
+                          {cat.count} {cat.count === 1 ? "project" : "projects"}
                         </Badge>
                       </Group>
                       <Progress
-                        value={(cat.count / (focusAreasData?.totalProjects ?? 1)) * 100}
+                        value={
+                          (cat.count / (focusAreasData?.totalProjects ?? 1)) *
+                          100
+                        }
                         size="lg"
                         radius="md"
                         striped
                         animated
                         color="blue"
                         styles={{
-                          root: { backgroundColor: "var(--mantine-color-gray-2)" },
+                          root: {
+                            backgroundColor: "var(--mantine-color-gray-2)",
+                          },
                         }}
                       />
                     </Box>
@@ -370,7 +427,11 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
             Program Metrics
           </Title>
 
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg" className="stats-grid">
+          <SimpleGrid
+            cols={{ base: 1, sm: 2, lg: 3 }}
+            spacing="lg"
+            className="stats-grid"
+          >
             {additionalStats.map((stat, index) => (
               <Paper
                 key={index}
@@ -383,7 +444,12 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
                 className="hover-lift"
               >
                 <Stack gap="md" align="center">
-                  <ThemeIcon size={56} radius="md" variant="light" color={stat.color}>
+                  <ThemeIcon
+                    size={56}
+                    radius="md"
+                    variant="light"
+                    color={stat.color}
+                  >
                     <stat.icon size={32} />
                   </ThemeIcon>
                   <Box style={{ textAlign: "center" }}>
@@ -409,7 +475,11 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
             Program Structure
           </Title>
 
-          <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg" className="program-grid">
+          <SimpleGrid
+            cols={{ base: 1, md: 3 }}
+            spacing="lg"
+            className="program-grid"
+          >
             {config.programStructure.map((phase, index) => (
               <Paper
                 key={index}
@@ -446,18 +516,28 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
               Impact & Engagement
             </Title>
 
-            <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xl" className="highlights-grid">
+            <SimpleGrid
+              cols={{ base: 1, md: 2 }}
+              spacing="xl"
+              className="highlights-grid"
+            >
               <Paper
                 p="xl"
                 radius="lg"
                 style={{
-                  background: "linear-gradient(135deg, var(--mantine-color-grape-0) 0%, var(--mantine-color-violet-0) 100%)",
+                  background:
+                    "linear-gradient(135deg, var(--mantine-color-grape-0) 0%, var(--mantine-color-violet-0) 100%)",
                   border: "2px solid var(--mantine-color-grape-3)",
                 }}
               >
                 <Stack gap="md">
                   <Group>
-                    <ThemeIcon size={48} radius="md" variant="light" color="grape">
+                    <ThemeIcon
+                      size={48}
+                      radius="md"
+                      variant="light"
+                      color="grape"
+                    >
                       <IconChartBar size={28} />
                     </ThemeIcon>
                     <Title order={3} size={20} fw={600}>
@@ -465,11 +545,14 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
                     </Title>
                   </Group>
                   <Text size="lg" fw={700} c="grape">
-                    {config.engagementStats.metricsTrackingPercentage} of projects tracking metrics
+                    {config.engagementStats.metricsTrackingPercentage} of
+                    projects tracking metrics
                   </Text>
                   <Text size="sm" c="dimmed">
-                    {config.engagementStats.projectsWithMetrics} projects implemented measurable impact metrics to track their progress and outcomes.
-                    Teams defined KPIs ranging from user adoption to transaction volume to community growth.
+                    {config.engagementStats.projectsWithMetrics} projects
+                    implemented measurable impact metrics to track their
+                    progress and outcomes. Teams defined KPIs ranging from user
+                    adoption to transaction volume to community growth.
                   </Text>
                   <Divider />
                   <Group gap="xl">
@@ -497,13 +580,19 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
                 p="xl"
                 radius="lg"
                 style={{
-                  background: "linear-gradient(135deg, var(--mantine-color-pink-0) 0%, var(--mantine-color-orange-0) 100%)",
+                  background:
+                    "linear-gradient(135deg, var(--mantine-color-pink-0) 0%, var(--mantine-color-orange-0) 100%)",
                   border: "2px solid var(--mantine-color-pink-3)",
                 }}
               >
                 <Stack gap="md">
                   <Group>
-                    <ThemeIcon size={48} radius="md" variant="light" color="pink">
+                    <ThemeIcon
+                      size={48}
+                      radius="md"
+                      variant="light"
+                      color="pink"
+                    >
                       <IconMessage size={28} />
                     </ThemeIcon>
                     <Title order={3} size={20} fw={600}>
@@ -514,7 +603,12 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
                     Active collaboration & sharing
                   </Text>
                   <Text size="sm" c="dimmed">
-                    Residents actively shared progress through {config.engagementStats.totalUpdates} project updates, received community feedback via {config.engagementStats.totalLikes} likes, and facilitated collaboration through {config.engagementStats.asksOffers} asks & offers posted on the platform.
+                    Residents actively shared progress through{" "}
+                    {config.engagementStats.totalUpdates} project updates,
+                    received community feedback via{" "}
+                    {config.engagementStats.totalLikes} likes, and facilitated
+                    collaboration through {config.engagementStats.asksOffers}{" "}
+                    asks & offers posted on the platform.
                   </Text>
                   <Divider />
                   <Group gap="xl">
@@ -547,7 +641,11 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
             Participant Profile
           </Title>
 
-          <SimpleGrid cols={{ base: 1, md: 3 }} spacing="xl" className="program-grid">
+          <SimpleGrid
+            cols={{ base: 1, md: 3 }}
+            spacing="xl"
+            className="program-grid"
+          >
             <Paper p="xl" radius="lg" withBorder>
               <Group mb="lg">
                 <ThemeIcon size={48} radius="md" variant="light" color="blue">
@@ -565,11 +663,13 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
               </Badge>
               <Stack gap="xs">
                 <Group gap="xs">
-                  {config.participantProfile.regionBreakdown.map((region, idx) => (
-                    <Badge key={idx} variant="light" color={region.color}>
-                      {region.percentage} {region.label}
-                    </Badge>
-                  ))}
+                  {config.participantProfile.regionBreakdown.map(
+                    (region, idx) => (
+                      <Badge key={idx} variant="light" color={region.color}>
+                        {region.percentage} {region.label}
+                      </Badge>
+                    ),
+                  )}
                 </Group>
               </Stack>
               <Text size="xs" c="dimmed" mt="md">
@@ -638,7 +738,8 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
             ) : (
               <>
                 <Text size="sm" c="dimmed" mb="xl">
-                  {projectsWithMetrics?.length ?? 0} projects from the residency — click to view metrics
+                  {projectsWithMetrics?.length ?? 0} projects from the residency
+                  — click to view metrics
                 </Text>
                 <Accordion variant="separated" radius="md">
                   {projectsWithMetrics?.map((project) => (
@@ -650,11 +751,21 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
                           </Text>
                           <Group gap="md">
                             <Badge variant="light" color="blue">
-                              {project.totalCommits} {project.totalCommits === 1 ? 'commit' : 'commits'}
+                              {project.totalCommits}{" "}
+                              {project.totalCommits === 1
+                                ? "commit"
+                                : "commits"}
                             </Badge>
                             {project.metrics.length > 0 && (
-                              <Badge variant="light" color="grape" leftSection={<IconChartLine size={12} />}>
-                                {project.metrics.length} {project.metrics.length === 1 ? 'metric' : 'metrics'}
+                              <Badge
+                                variant="light"
+                                color="grape"
+                                leftSection={<IconChartLine size={12} />}
+                              >
+                                {project.metrics.length}{" "}
+                                {project.metrics.length === 1
+                                  ? "metric"
+                                  : "metrics"}
                               </Badge>
                             )}
                           </Group>
@@ -698,8 +809,14 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
                               <Box>
                                 <Group gap="xs" mb="sm">
                                   <IconGitCommit size={18} />
-                                  <Text size="sm" fw={500}>Standard Metrics</Text>
-                                  <Badge size="xs" variant="light" color="green">
+                                  <Text size="sm" fw={500}>
+                                    Standard Metrics
+                                  </Text>
+                                  <Badge
+                                    size="xs"
+                                    variant="light"
+                                    color="green"
+                                  >
                                     automated
                                   </Badge>
                                 </Group>
@@ -708,7 +825,9 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
                                     <Accordion.Control>
                                       <Group gap="xs">
                                         <IconGitCommit size={16} />
-                                        <Text size="sm" fw={500}>GitHub Commits</Text>
+                                        <Text size="sm" fw={500}>
+                                          GitHub Commits
+                                        </Text>
                                       </Group>
                                     </Accordion.Control>
                                     <Accordion.Panel>
@@ -731,47 +850,80 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
                                 Custom Tracked Metrics
                               </Text>
                               <Stack gap="xs">
-                                {project.metrics.map((metric: { id: string; name: string; description: string | null; metricType: string[]; unitOfMetric: string | null; targetValue: number | null }) => (
-                                  <Paper key={metric.id} p="sm" withBorder radius="sm" bg="gray.0">
-                                    <Group justify="space-between" wrap="nowrap">
-                                      <Box style={{ flex: 1, minWidth: 0 }}>
-                                        <Text size="sm" fw={500} lineClamp={1}>
-                                          {metric.name}
-                                        </Text>
-                                        {metric.description && (
-                                          <Text size="xs" c="dimmed" lineClamp={2}>
-                                            {metric.description}
+                                {project.metrics.map(
+                                  (metric: {
+                                    id: string;
+                                    name: string;
+                                    description: string | null;
+                                    metricType: string[];
+                                    unitOfMetric: string | null;
+                                    targetValue: number | null;
+                                  }) => (
+                                    <Paper
+                                      key={metric.id}
+                                      p="sm"
+                                      withBorder
+                                      radius="sm"
+                                      bg="gray.0"
+                                    >
+                                      <Group
+                                        justify="space-between"
+                                        wrap="nowrap"
+                                      >
+                                        <Box style={{ flex: 1, minWidth: 0 }}>
+                                          <Text
+                                            size="sm"
+                                            fw={500}
+                                            lineClamp={1}
+                                          >
+                                            {metric.name}
                                           </Text>
-                                        )}
-                                      </Box>
-                                      <Group gap="xs" wrap="nowrap">
-                                        {metric.metricType.slice(0, 2).map((type: string) => (
-                                          <Badge key={type} size="xs" variant="light">
-                                            {type.toLowerCase()}
-                                          </Badge>
-                                        ))}
-                                        {metric.unitOfMetric && (
-                                          <Text size="xs" c="dimmed">
-                                            {metric.unitOfMetric}
-                                          </Text>
-                                        )}
+                                          {metric.description && (
+                                            <Text
+                                              size="xs"
+                                              c="dimmed"
+                                              lineClamp={2}
+                                            >
+                                              {metric.description}
+                                            </Text>
+                                          )}
+                                        </Box>
+                                        <Group gap="xs" wrap="nowrap">
+                                          {metric.metricType
+                                            .slice(0, 2)
+                                            .map((type: string) => (
+                                              <Badge
+                                                key={type}
+                                                size="xs"
+                                                variant="light"
+                                              >
+                                                {type.toLowerCase()}
+                                              </Badge>
+                                            ))}
+                                          {metric.unitOfMetric && (
+                                            <Text size="xs" c="dimmed">
+                                              {metric.unitOfMetric}
+                                            </Text>
+                                          )}
+                                        </Group>
                                       </Group>
-                                    </Group>
-                                  </Paper>
-                                ))}
+                                    </Paper>
+                                  ),
+                                )}
                               </Stack>
                             </>
                           )}
 
                           {/* Show message if no metrics at all */}
-                          {!project.primaryRepoId && project.metrics.length === 0 && (
-                            <>
-                              <Divider />
-                              <Text size="sm" c="dimmed" fs="italic">
-                                No metrics tracked for this project yet.
-                              </Text>
-                            </>
-                          )}
+                          {!project.primaryRepoId &&
+                            project.metrics.length === 0 && (
+                              <>
+                                <Divider />
+                                <Text size="sm" c="dimmed" fs="italic">
+                                  No metrics tracked for this project yet.
+                                </Text>
+                              </>
+                            )}
                         </Stack>
                       </Accordion.Panel>
                     </Accordion.Item>
@@ -790,7 +942,8 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
 
           <Paper p="xl" radius="lg" withBorder>
             <Text size="sm" c="dimmed" mb="xl">
-              Our community of sponsors and residents — tile size reflects contribution level
+              Our community of sponsors and residents — tile size reflects
+              contribution level
             </Text>
             {combinedHyperboard && combinedHyperboard.length > 0 ? (
               <Hyperboard
@@ -819,7 +972,8 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
           radius="lg"
           mb={60}
           style={{
-            background: "linear-gradient(135deg, var(--mantine-color-indigo-6) 0%, var(--mantine-color-violet-6) 100%)",
+            background:
+              "linear-gradient(135deg, var(--mantine-color-indigo-6) 0%, var(--mantine-color-violet-6) 100%)",
           }}
         >
           <Stack gap="lg">
@@ -827,7 +981,10 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
               Explore the Impact
             </Title>
             <Text size="lg" c="white" style={{ lineHeight: 1.6 }}>
-              Dive deeper into the projects, metrics, and community activities from the {config.title} {config.subtitle}. Visit the interactive impact dashboard to see real-time updates, browse resident profiles, and explore the hyperboards showcasing our community.
+              Dive deeper into the projects, metrics, and community activities
+              from the {config.title} {config.subtitle}. Visit the interactive
+              impact dashboard to see real-time updates, browse resident
+              profiles, and explore the hyperboards showcasing our community.
             </Text>
             <Group gap="xl" mt="md">
               <Anchor
@@ -857,10 +1014,15 @@ export function ResidencyImpactReport({ config }: ResidencyImpactReportProps) {
         {/* Footer Note */}
         <Paper p="lg" radius="md" withBorder>
           <Text size="sm" c="dimmed" ta="center">
-            <strong>Note:</strong> This impact report reflects data collected during and immediately after the
-            residency program. Some metrics marked with &ldquo;TBD&rdquo; are still being compiled and will be updated
-            as comprehensive analysis continues. For the most current statistics, please visit the{" "}
-            <Anchor component={Link} href={`/events/${config.eventSlug}/impact`}>
+            <strong>Note:</strong> This impact report reflects data collected
+            during and immediately after the residency program. Some metrics
+            marked with &ldquo;TBD&rdquo; are still being compiled and will be
+            updated as comprehensive analysis continues. For the most current
+            statistics, please visit the{" "}
+            <Anchor
+              component={Link}
+              href={`/events/${config.eventSlug}/impact`}
+            >
               live impact dashboard
             </Anchor>
             .

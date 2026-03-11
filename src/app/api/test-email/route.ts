@@ -31,7 +31,7 @@ export async function GET() {
   });
 
   // Check where the email went
-  const emailDestination = emailConfig.hasSandboxToken 
+  const emailDestination = emailConfig.hasSandboxToken
     ? "Postmark Sandbox (black hole - no actual delivery)"
     : `Redirected to: ${emailConfig.testEmail}`;
 
@@ -45,8 +45,10 @@ export async function GET() {
       error: result.error,
     },
     instructions: {
-      development: "Emails are either sent to sandbox (black hole) or redirected to TEST_EMAIL_OVERRIDE",
-      staging: "All emails are redirected to TEST_EMAIL_OVERRIDE with [STAGING] prefix",
+      development:
+        "Emails are either sent to sandbox (black hole) or redirected to TEST_EMAIL_OVERRIDE",
+      staging:
+        "All emails are redirected to TEST_EMAIL_OVERRIDE with [STAGING] prefix",
       production: "Emails are sent to actual recipients",
     },
   });

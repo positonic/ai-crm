@@ -33,7 +33,6 @@ declare module "next-auth" {
   }
 }
 
-
 /**
  * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
  *
@@ -45,11 +44,14 @@ export const authConfig = {
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        console.log("[AUTH] Authorize function called with credentials for:", credentials?.email);
-        
+        console.log(
+          "[AUTH] Authorize function called with credentials for:",
+          credentials?.email,
+        );
+
         const credentialsSchema = z.object({
           email: z.string().email(),
           password: z.string().min(1),
@@ -79,7 +81,18 @@ export const authConfig = {
           },
         });
 
-        console.log("[AUTH] User found:", user ? { id: user.id, email: user.email, firstName: user.firstName, surname: user.surname, hasPassword: !!user.password } : "No user found");
+        console.log(
+          "[AUTH] User found:",
+          user
+            ? {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                surname: user.surname,
+                hasPassword: !!user.password,
+              }
+            : "No user found",
+        );
 
         if (!user?.password) {
           console.log("[AUTH] User not found or no password set");
@@ -98,11 +111,17 @@ export const authConfig = {
         const userForAuth = {
           id: user.id,
           email: user.email,
-          name: (`${user.firstName ?? ''} ${user.surname ?? ''}`.trim() || user.name) ?? null,
+          name:
+            (`${user.firstName ?? ""} ${user.surname ?? ""}`.trim() ||
+              user.name) ??
+            null,
           role: user.role ?? undefined,
         };
 
-        console.log("[AUTH] Authentication successful, returning user:", userForAuth);
+        console.log(
+          "[AUTH] Authentication successful, returning user:",
+          userForAuth,
+        );
         return userForAuth;
       },
     }),
@@ -128,11 +147,14 @@ export const authConfig = {
       apiKey: process.env.POSTMARK_SERVER_TOKEN,
       async sendVerificationRequest({ identifier: to, url, expires }) {
         const expirationMinutes = Math.round(
-          (expires.getTime() - Date.now()) / (1000 * 60)
+          (expires.getTime() - Date.now()) / (1000 * 60),
         );
 
         const html = await render(
-          MagicLinkTemplate({ signInUrl: url, expirationMinutes }) as React.ReactElement
+          MagicLinkTemplate({
+            signInUrl: url,
+            expirationMinutes,
+          }) as React.ReactElement,
         );
 
         await sendEmail({
@@ -147,9 +169,9 @@ export const authConfig = {
   adapter: PrismaAdapter(db),
   // Account linking will be handled by the signIn callback
   pages: {
-    signIn: '/signin',
-    error: '/auth/error',
-    verifyRequest: '/auth/verify-request',
+    signIn: "/signin",
+    error: "/auth/error",
+    verifyRequest: "/auth/verify-request",
   },
   session: {
     strategy: "jwt", // Use JWT for credentials provider
@@ -169,44 +191,58 @@ export const authConfig = {
     async signIn({ user, account, profile }) {
       // Update firstName/surname from OAuth provider profile if available
       if (account?.provider === "google" && profile && user.id) {
-        const googleProfile = profile as { given_name?: string; family_name?: string };
+        const googleProfile = profile as {
+          given_name?: string;
+          family_name?: string;
+        };
         if (googleProfile.given_name ?? googleProfile.family_name) {
-          await db.user.update({
-            where: { id: user.id },
-            data: {
-              firstName: googleProfile.given_name ?? user.name?.split(' ')[0] ?? null,
-              surname: googleProfile.family_name ?? user.name?.split(' ').slice(1).join(' ') ?? null,
-              name: user.name, // Keep name field for compatibility
-            },
-          }).catch(() => {
-            // Ignore errors if user doesn't exist yet (will be created by adapter)
-          });
+          await db.user
+            .update({
+              where: { id: user.id },
+              data: {
+                firstName:
+                  googleProfile.given_name ?? user.name?.split(" ")[0] ?? null,
+                surname:
+                  googleProfile.family_name ??
+                  user.name?.split(" ").slice(1).join(" ") ??
+                  null,
+                name: user.name, // Keep name field for compatibility
+              },
+            })
+            .catch(() => {
+              // Ignore errors if user doesn't exist yet (will be created by adapter)
+            });
         }
       } else if (account?.provider === "discord" && user.name && user.id) {
         // Parse Discord username into firstName/surname
-        const nameParts = user.name.split(' ');
+        const nameParts = user.name.split(" ");
         const firstName = nameParts[0] ?? user.name;
-        const surname = nameParts.slice(1).join(' ') || '';
-        await db.user.update({
-          where: { id: user.id },
-          data: {
-            firstName,
-            surname,
-            name: user.name, // Keep name field for compatibility
-          },
-        }).catch(() => {
-          // Ignore errors if user doesn't exist yet (will be created by adapter)
-        });
+        const surname = nameParts.slice(1).join(" ") || "";
+        await db.user
+          .update({
+            where: { id: user.id },
+            data: {
+              firstName,
+              surname,
+              name: user.name, // Keep name field for compatibility
+            },
+          })
+          .catch(() => {
+            // Ignore errors if user doesn't exist yet (will be created by adapter)
+          });
       }
 
       // Universal invitation acceptance for ALL sign-in methods
       if (user.id && user.email) {
         try {
-          const invitationResult = await acceptPendingInvitations(user.email, user.id);
+          const invitationResult = await acceptPendingInvitations(
+            user.email,
+            user.id,
+          );
           if (invitationResult.accepted > 0) {
             console.log(
               `[AUTH] Accepted ${invitationResult.accepted} invitation(s) for ${user.email}:`,
-              invitationResult.roles
+              invitationResult.roles,
             );
           }
         } catch (error) {
@@ -238,4 +274,4 @@ export const authConfig = {
       },
     }),
   },
-} satisfies NextAuthConfig;;
+} satisfies NextAuthConfig;

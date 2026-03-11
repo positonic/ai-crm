@@ -36,7 +36,7 @@ export class BotNotificationService {
       eventId?: string;
       communicationType?: string;
       templateData?: Record<string, unknown>;
-    }
+    },
   ): Promise<BotNotificationResult> {
     const botToken = env.TELEGRAM_BOT_TOKEN;
 
@@ -61,7 +61,7 @@ export class BotNotificationService {
 
       if (!userProfile?.telegramChatId) {
         console.log(
-          `User ${userId} does not have a Telegram chat ID - they need to interact with the bot first`
+          `User ${userId} does not have a Telegram chat ID - they need to interact with the bot first`,
         );
         return {
           success: false,
@@ -85,7 +85,7 @@ export class BotNotificationService {
             parse_mode: "Markdown",
             disable_web_page_preview: false,
           }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -94,7 +94,8 @@ export class BotNotificationService {
           error_code?: number;
         };
         throw new Error(
-          errorData.description ?? `HTTP ${response.status}: ${response.statusText}`
+          errorData.description ??
+            `HTTP ${response.status}: ${response.statusText}`,
         );
       }
 
@@ -109,24 +110,27 @@ export class BotNotificationService {
         const communication = await this.db.communication.create({
           data: {
             eventId: metadata?.eventId ?? "system",
-            toTelegram: userProfile.telegramHandle ?? userProfile.telegramChatId,
+            toTelegram:
+              userProfile.telegramHandle ?? userProfile.telegramChatId,
             channel: "TELEGRAM",
             textContent: message,
-            type: (metadata?.communicationType as
-              | "UPDATE_COMMENT"
-              | "GENERAL") ?? "GENERAL",
+            type:
+              (metadata?.communicationType as "UPDATE_COMMENT" | "GENERAL") ??
+              "GENERAL",
             status: "SENT",
             createdBy: "system", // Bot notifications are system-generated
             sentAt: new Date(),
             telegramMsgId: result.result?.message_id?.toString(),
-            templateData: metadata?.templateData ? (metadata.templateData as unknown as Prisma.InputJsonValue) : undefined,
+            templateData: metadata?.templateData
+              ? (metadata.templateData as unknown as Prisma.InputJsonValue)
+              : undefined,
           },
         });
         communicationId = communication.id;
       } catch (dbError) {
         console.error(
           `Failed to track notification for user ${userId}:`,
-          dbError
+          dbError,
         );
       }
 
@@ -141,7 +145,10 @@ export class BotNotificationService {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
 
-      console.error(`Failed to send bot notification to user ${userId}:`, errorMessage);
+      console.error(
+        `Failed to send bot notification to user ${userId}:`,
+        errorMessage,
+      );
 
       captureApiError(error, {
         userId: "system",
@@ -202,12 +209,12 @@ export class BotNotificationService {
 
       // Filter to members with Telegram chat IDs
       const notifiableMembers = collaborators.filter(
-        (collab) => collab.user.profile?.telegramChatId
+        (collab) => collab.user.profile?.telegramChatId,
       );
 
       if (notifiableMembers.length === 0) {
         console.log(
-          "No project members with Telegram chat IDs to notify (they need to interact with the bot first)"
+          "No project members with Telegram chat IDs to notify (they need to interact with the bot first)",
         );
         return results;
       }
@@ -239,14 +246,14 @@ ${commentPreview}
               commenterName: commentData.commenterName,
               recipientUserId: collaborator.userId,
             },
-          }
+          },
         );
 
         results.push(result);
 
         if (result.success) {
           console.log(
-            `Notification sent to user ${collaborator.userId} (@${result.recipientTelegramHandle ?? "unknown"})`
+            `Notification sent to user ${collaborator.userId} (@${result.recipientTelegramHandle ?? "unknown"})`,
           );
         }
 

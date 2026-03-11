@@ -14,30 +14,30 @@ function calculateProfileCompletion(profile: unknown): number {
   if (!profile) return 0;
 
   const fields = [
-    'bio',
-    'jobTitle', 
-    'company',
-    'location',
-    'skills',
-    'interests',
-    'yearsOfExperience',
-    'timezone',
-    'languages'
+    "bio",
+    "jobTitle",
+    "company",
+    "location",
+    "skills",
+    "interests",
+    "yearsOfExperience",
+    "timezone",
+    "languages",
   ];
 
   let filledFields = 0;
   const totalFields = fields.length;
 
-  fields.forEach(field => {
+  fields.forEach((field) => {
     const value = (profile as Record<string, unknown>)?.[field];
-    if (field === 'skills' || field === 'interests' || field === 'languages') {
+    if (field === "skills" || field === "interests" || field === "languages") {
       // Array fields - count as filled if they have at least one item
       if (Array.isArray(value) && value.length > 0) {
         filledFields++;
       }
     } else {
       // Regular fields - count as filled if they have a non-empty value
-      if (value && typeof value === 'string' && value.trim().length > 0) {
+      if (value && typeof value === "string" && value.trim().length > 0) {
         filledFields++;
       }
     }
@@ -65,35 +65,50 @@ const EventDataSchema = z.object({
   telegram: z.string().nullable().optional(),
   tags: z.array(z.string()).default([]),
   topics: z.array(z.string()).default([]),
-  usersGoingObj: z.array(z.object({
-    handle: z.string(),
-    avatar: z.string(),
-    name: z.string(),
-    followerCount: z.number(),
-    airtableId: z.string(),
-  })).default([]),
-  usersInterestedObj: z.array(z.object({
-    handle: z.string(),
-    avatar: z.string(),
-    name: z.string(),
-    followerCount: z.number(),
-    airtableId: z.string(),
-  })).default([]),
+  usersGoingObj: z
+    .array(
+      z.object({
+        handle: z.string(),
+        avatar: z.string(),
+        name: z.string(),
+        followerCount: z.number(),
+        airtableId: z.string(),
+      }),
+    )
+    .default([]),
+  usersInterestedObj: z
+    .array(
+      z.object({
+        handle: z.string(),
+        avatar: z.string(),
+        name: z.string(),
+        followerCount: z.number(),
+        airtableId: z.string(),
+      }),
+    )
+    .default([]),
   benefits: z.string().nullable().optional(),
-  series: z.array(z.object({
-    id: z.string(),
-    title: z.string(),
-    color: z.string(),
-    slug: z.string(),
-    shortSlug: z.string(),
-    visible: z.boolean(),
-    clickable: z.boolean(),
-    logo: z.string(),
-    banner: z.string(),
-  })).default([]),
+  series: z
+    .array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        color: z.string(),
+        slug: z.string(),
+        shortSlug: z.string(),
+        visible: z.boolean(),
+        clickable: z.boolean(),
+        logo: z.string(),
+        banner: z.string(),
+      }),
+    )
+    .default([]),
   slug: z.string().default(""),
   shortSlug: z.string().default(""),
-  logo: z.union([z.string(), z.object({}).passthrough()]).nullable().optional(),
+  logo: z
+    .union([z.string(), z.object({}).passthrough()])
+    .nullable()
+    .optional(),
   created: z.string().default(""),
   promoted: z.union([z.boolean(), z.array(z.unknown())]).default(false),
   promoType: z.array(z.string()).default([]),
@@ -145,13 +160,15 @@ async function syncEventsToNotion(events: EventData[]): Promise<{
 }> {
   const notionToken = process.env.NOTION_TOKEN;
   const notionEventsDbId = process.env.NOTION_EVENTS_DATABASE_ID;
-  
+
   if (!notionToken || !notionEventsDbId) {
-    throw new Error("Notion integration token or events database ID not set in environment variables.");
+    throw new Error(
+      "Notion integration token or events database ID not set in environment variables.",
+    );
   }
 
   const notion = new NotionClient({ auth: notionToken });
-  
+
   let synced = 0;
   let skipped = 0;
   const errors: Array<{ eventId: string; error: string }> = [];
@@ -170,7 +187,9 @@ async function syncEventsToNotion(events: EventData[]): Promise<{
       });
 
       if (existingEvent.results.length > 0) {
-        console.log(`Event "${event.event}" already exists in Notion, skipping...`);
+        console.log(
+          `Event "${event.event}" already exists in Notion, skipping...`,
+        );
         skipped++;
         continue;
       }
@@ -178,7 +197,8 @@ async function syncEventsToNotion(events: EventData[]): Promise<{
       // Prepare location string
       const locationParts = [];
       if (event.city.length > 0) locationParts.push(event.city.join(", "));
-      if (event.country.length > 0) locationParts.push(event.country.join(", "));
+      if (event.country.length > 0)
+        locationParts.push(event.country.join(", "));
       const location = locationParts.join(", ");
 
       // Determine event type based on tags
@@ -198,16 +218,16 @@ async function syncEventsToNotion(events: EventData[]): Promise<{
         "End Date": {
           date: { start: event.endDate },
         },
-        "Location": {
+        Location: {
           rich_text: [{ text: { content: location } }],
         },
         "Event Type": {
           select: { name: eventType },
         },
         "Focus Areas": {
-          multi_select: event.topics.map(topic => ({ name: topic })),
+          multi_select: event.topics.map((topic) => ({ name: topic })),
         },
-        "Organizer": {
+        Organizer: {
           rich_text: [{ text: { content: event.organizer ?? "Unknown" } }],
         },
         "Attending Status": {
@@ -216,17 +236,35 @@ async function syncEventsToNotion(events: EventData[]): Promise<{
         "Event URL": {
           url: event.link,
         },
-        "Banner": event.banner ? { url: event.banner } : undefined,
-        "City": event.city?.length ? { multi_select: event.city.map(c => ({ name: c })) } : undefined,
-        "Country": event.country.length ? { multi_select: event.country.map(c => ({ name: c })) } : undefined,
-        "Region": event.region.length ? { multi_select: event.region.map(r => ({ name: r })) } : undefined,
-        "Timezone": event.timezone.length ? { multi_select: event.timezone.map(tz => ({ name: tz })) } : undefined,
-        "Twitter": event.twitter ? { rich_text: [{ text: { content: event.twitter } }] } : undefined,
-        "Telegram": event.telegram ? { rich_text: [{ text: { content: event.telegram } }] } : undefined,
-        "Tags": event.tags.length ? { multi_select: event.tags.map(tag => ({ name: tag })) } : undefined,
-        "Slug": event.slug ? { rich_text: [{ text: { content: event.slug } }] } : undefined,
-        "Short Slug": event.shortSlug ? { rich_text: [{ text: { content: event.shortSlug } }] } : undefined,
-        "Logo": event.logo
+        Banner: event.banner ? { url: event.banner } : undefined,
+        City: event.city?.length
+          ? { multi_select: event.city.map((c) => ({ name: c })) }
+          : undefined,
+        Country: event.country.length
+          ? { multi_select: event.country.map((c) => ({ name: c })) }
+          : undefined,
+        Region: event.region.length
+          ? { multi_select: event.region.map((r) => ({ name: r })) }
+          : undefined,
+        Timezone: event.timezone.length
+          ? { multi_select: event.timezone.map((tz) => ({ name: tz })) }
+          : undefined,
+        Twitter: event.twitter
+          ? { rich_text: [{ text: { content: event.twitter } }] }
+          : undefined,
+        Telegram: event.telegram
+          ? { rich_text: [{ text: { content: event.telegram } }] }
+          : undefined,
+        Tags: event.tags.length
+          ? { multi_select: event.tags.map((tag) => ({ name: tag })) }
+          : undefined,
+        Slug: event.slug
+          ? { rich_text: [{ text: { content: event.slug } }] }
+          : undefined,
+        "Short Slug": event.shortSlug
+          ? { rich_text: [{ text: { content: event.shortSlug } }] }
+          : undefined,
+        Logo: event.logo
           ? typeof event.logo === "string"
             ? { url: event.logo }
             : { url: "" } // or handle object logo as needed
@@ -234,7 +272,10 @@ async function syncEventsToNotion(events: EventData[]): Promise<{
       };
 
       // Remove undefined properties
-      const filteredProperties: Record<string, NonNullable<typeof properties[keyof typeof properties]>> = {};
+      const filteredProperties: Record<
+        string,
+        NonNullable<(typeof properties)[keyof typeof properties]>
+      > = {};
       Object.entries(properties).forEach(([key, value]) => {
         if (value !== undefined) {
           filteredProperties[key] = value;
@@ -271,13 +312,15 @@ async function syncUsersToNotion(events: EventData[]): Promise<{
 }> {
   const notionToken = process.env.NOTION_TOKEN;
   const notionContactsDbId = process.env.NOTION_CONTACTS_DATABASE_ID;
-  
+
   if (!notionToken || !notionContactsDbId) {
-    throw new Error("Notion integration token or contacts database ID not set in environment variables.");
+    throw new Error(
+      "Notion integration token or contacts database ID not set in environment variables.",
+    );
   }
 
   const notion = new NotionClient({ auth: notionToken });
-  
+
   let synced = 0;
   const skipped = 0;
   const errors: Array<{ userId: string; error: string }> = [];
@@ -311,19 +354,19 @@ async function syncUsersToNotion(events: EventData[]): Promise<{
           "First name": {
             rich_text: [{ text: { content: firstName } }],
           },
-          "avatar": {
+          avatar: {
             rich_text: [{ text: { content: user.avatar ?? "" } }],
           },
-          "followerCount": {
+          followerCount: {
             number: user.followerCount ?? 0,
           },
-          "airtableId": {
+          airtableId: {
             rich_text: [{ text: { content: user.airtableId } }],
           },
           "Lead Source": {
             select: { name: "CryptoNomadsImport" },
           },
-          "Source": {
+          Source: {
             rich_text: [{ text: { content: "CryptoNomadsImport" } }],
           },
           "Current Process Status": {
@@ -333,7 +376,7 @@ async function syncUsersToNotion(events: EventData[]): Promise<{
 
         // Create dynamic properties object
         const dynamicProperties: Record<string, object> = {};
-        
+
         // Add Twitter and Telegram only if handle doesn't start with "0x"
         if (isTwitterHandle) {
           dynamicProperties.Twitter = {
@@ -345,20 +388,22 @@ async function syncUsersToNotion(events: EventData[]): Promise<{
         }
 
         // Add Notes with any additional context
-        const notesContent = isTwitterHandle 
-          ? `Event: ${event.event}` 
+        const notesContent = isTwitterHandle
+          ? `Event: ${event.event}`
           : `Event: ${event.event} | Handle: ${user.handle}`;
-        
+
         dynamicProperties.Notes = {
           rich_text: [{ text: { content: notesContent } }],
         };
 
         // Add Event Series if available and has valid entries
         if (event.series && event.series.length > 0) {
-          const validSeries = event.series.filter(s => s.title && s.title.trim() !== "");
+          const validSeries = event.series.filter(
+            (s) => s.title && s.title.trim() !== "",
+          );
           if (validSeries.length > 0) {
             dynamicProperties["Event Series"] = {
-              multi_select: validSeries.map(s => ({ name: s.title })),
+              multi_select: validSeries.map((s) => ({ name: s.title })),
             };
           }
         }
@@ -366,16 +411,18 @@ async function syncUsersToNotion(events: EventData[]): Promise<{
         // Combine base and dynamic properties
         const contactProperties = {
           ...baseContactProperties,
-          ...dynamicProperties
+          ...dynamicProperties,
         };
-        
+
         await notion.pages.create({
           parent: { database_id: notionContactsDbId },
           properties: contactProperties,
         });
 
         synced++;
-        console.log(`Successfully synced user ${user.airtableId} to Notion contacts`);
+        console.log(
+          `Successfully synced user ${user.airtableId} to Notion contacts`,
+        );
       } catch (error) {
         console.error(`Error syncing user ${user.airtableId}:`, error);
         errors.push({
@@ -400,7 +447,7 @@ export const eventRouter = createTRPCRouter({
         })
         .refine((data) => data.id ?? data.slug, {
           message: "Either id or slug must be provided",
-        })
+        }),
     )
     .query(async ({ ctx, input }) => {
       const includeClause = {
@@ -468,10 +515,12 @@ export const eventRouter = createTRPCRouter({
   }),
 
   addSponsorToEvent: publicProcedure
-    .input(z.object({ 
-      eventId: z.string(),
-      sponsorId: z.string(),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(),
+        sponsorId: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // Check if the relationship already exists
       const existing = await ctx.db.eventSponsor.findUnique({
@@ -501,11 +550,13 @@ export const eventRouter = createTRPCRouter({
     }),
 
   updateSponsorQualified: publicProcedure
-    .input(z.object({ 
-      eventId: z.string(),
-      sponsorId: z.string(),
-      qualified: z.boolean(),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(),
+        sponsorId: z.string(),
+        qualified: z.boolean(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const eventSponsor = await ctx.db.eventSponsor.update({
         where: {
@@ -550,38 +601,41 @@ export const eventRouter = createTRPCRouter({
       where: {
         userId: ctx.session.user.id,
         role: {
-          name: "sponsor"
-        }
+          name: "sponsor",
+        },
       },
       include: {
         event: {
           include: {
             sponsors: {
               include: {
-                sponsor: true
-              }
+                sponsor: true,
+              },
             },
             _count: {
               select: {
                 applications: true,
                 userRoles: true,
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      },
     });
 
-    return userRoles.map(ur => ({
+    return userRoles.map((ur) => ({
       ...ur.event,
       // Find the sponsor relationship for this user's organization - safe array access with proper type
-      sponsorInfo: ur.event.sponsors.length > 0 ? {
-        id: ur.event.sponsors[0]!.id,
-        sponsor: {
-          id: ur.event.sponsors[0]!.sponsor.id,
-          name: ur.event.sponsors[0]!.sponsor.name,
-        }
-      } : undefined
+      sponsorInfo:
+        ur.event.sponsors.length > 0
+          ? {
+              id: ur.event.sponsors[0]!.id,
+              sponsor: {
+                id: ur.event.sponsors[0]!.sponsor.id,
+                name: ur.event.sponsors[0]!.sponsor.name,
+              },
+            }
+          : undefined,
     }));
   }),
 
@@ -591,8 +645,8 @@ export const eventRouter = createTRPCRouter({
       where: {
         userId: ctx.session.user.id,
         role: {
-          name: "mentor"
-        }
+          name: "mentor",
+        },
       },
       include: {
         event: {
@@ -601,14 +655,14 @@ export const eventRouter = createTRPCRouter({
               select: {
                 applications: true,
                 userRoles: true,
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      },
     });
 
-    return userRoles.map(ur => ur.event);
+    return userRoles.map((ur) => ur.event);
   }),
 
   getOrganizerEvents: protectedProcedure.query(async ({ ctx }) => {
@@ -617,8 +671,8 @@ export const eventRouter = createTRPCRouter({
       where: {
         userId: ctx.session.user.id,
         role: {
-          name: "organizer"
-        }
+          name: "organizer",
+        },
       },
       include: {
         event: {
@@ -637,11 +691,11 @@ export const eventRouter = createTRPCRouter({
                 applications: true,
                 userRoles: true,
                 sponsors: true,
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      },
     });
 
     const createdEvents = await ctx.db.event.findMany({
@@ -663,16 +717,17 @@ export const eventRouter = createTRPCRouter({
             applications: true,
             userRoles: true,
             sponsors: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     // Combine and deduplicate with proper type safety
-    const roleEvents: EventWithSponsors[] = userRoles.map(ur => ur.event);
+    const roleEvents: EventWithSponsors[] = userRoles.map((ur) => ur.event);
     const allEvents: EventWithSponsors[] = [...roleEvents, ...createdEvents];
-    const uniqueEvents = allEvents.filter((event, index, self) => 
-      index === self.findIndex(e => e.id === event.id)
+    const uniqueEvents = allEvents.filter(
+      (event, index, self) =>
+        index === self.findIndex((e) => e.id === event.id),
     );
 
     return uniqueEvents;
@@ -681,7 +736,9 @@ export const eventRouter = createTRPCRouter({
   getAvailableEvents: publicProcedure.query(async ({ ctx }) => {
     // Get all active events - the ACTIVE status controls visibility,
     // not the date. Use COMPLETED status to hide past events.
-    const isAdmin = ctx.session?.user?.role === "admin" || ctx.session?.user?.role === "staff";
+    const isAdmin =
+      ctx.session?.user?.role === "admin" ||
+      ctx.session?.user?.role === "staff";
 
     // Check if user is a floor lead (venue owner) for any event
     let isFloorLead = false;
@@ -695,7 +752,7 @@ export const eventRouter = createTRPCRouter({
 
     const events = await ctx.db.event.findMany({
       where: {
-        status: 'ACTIVE',
+        status: "ACTIVE",
         // Hide test/example events from regular users
         ...(!isAdmin && !isFloorLead ? { slug: { not: "example-conf" } } : {}),
       },
@@ -703,12 +760,10 @@ export const eventRouter = createTRPCRouter({
         _count: {
           select: {
             applications: true,
-          }
-        }
+          },
+        },
       },
-      orderBy: [
-        { startDate: "asc" }
-      ]
+      orderBy: [{ startDate: "asc" }],
     });
 
     return events;
@@ -720,12 +775,12 @@ export const eventRouter = createTRPCRouter({
       where: {
         userId: ctx.session.user.id,
         role: {
-          name: "organizer"
-        }
+          name: "organizer",
+        },
       },
       select: {
         eventId: true,
-      }
+      },
     });
 
     const createdEvents = await ctx.db.event.findMany({
@@ -734,10 +789,13 @@ export const eventRouter = createTRPCRouter({
       },
       select: {
         id: true,
-      }
+      },
     });
 
-    const allEventIds = [...userRoles.map(ur => ur.eventId), ...createdEvents.map(e => e.id)];
+    const allEventIds = [
+      ...userRoles.map((ur) => ur.eventId),
+      ...createdEvents.map((e) => e.id),
+    ];
     const uniqueEventIds = [...new Set(allEventIds)];
 
     if (uniqueEventIds.length === 0) {
@@ -749,22 +807,26 @@ export const eventRouter = createTRPCRouter({
     }
 
     // Calculate stats with proper type safety
-    const applications: ApplicationWithStatus[] = await ctx.db.application.findMany({
-      where: {
-        eventId: {
-          in: uniqueEventIds,
-        }
-      },
-      select: {
-        status: true,
-      }
-    });
+    const applications: ApplicationWithStatus[] =
+      await ctx.db.application.findMany({
+        where: {
+          eventId: {
+            in: uniqueEventIds,
+          },
+        },
+        select: {
+          status: true,
+        },
+      });
 
     const totalApplications = applications.length;
-    const acceptedApplications = applications.filter(app => app.status === "ACCEPTED").length;
-    const averageAcceptanceRate = totalApplications > 0 
-      ? Math.round((acceptedApplications / totalApplications) * 100) 
-      : 0;
+    const acceptedApplications = applications.filter(
+      (app) => app.status === "ACCEPTED",
+    ).length;
+    const averageAcceptanceRate =
+      totalApplications > 0
+        ? Math.round((acceptedApplications / totalApplications) * 100)
+        : 0;
 
     return {
       totalEvents: uniqueEventIds.length,
@@ -782,9 +844,9 @@ export const eventRouter = createTRPCRouter({
           userId: ctx.session.user.id,
           eventId: input.eventId,
           role: {
-            name: "mentor"
-          }
-        }
+            name: "mentor",
+          },
+        },
       });
       return !!mentorRole;
     }),
@@ -798,9 +860,9 @@ export const eventRouter = createTRPCRouter({
           userId: ctx.session.user.id,
           eventId: input.eventId,
           role: {
-            name: "speaker"
-          }
-        }
+            name: "speaker",
+          },
+        },
       });
       return !!speakerRole;
     }),
@@ -814,16 +876,22 @@ export const eventRouter = createTRPCRouter({
           eventId: input.eventId,
           applicationType: "RESIDENT",
           status: {
-            in: ["SUBMITTED", "UNDER_REVIEW", "ACCEPTED", "REJECTED", "WAITLISTED"]
-          }
+            in: [
+              "SUBMITTED",
+              "UNDER_REVIEW",
+              "ACCEPTED",
+              "REJECTED",
+              "WAITLISTED",
+            ],
+          },
         },
         include: {
           user: {
             include: {
-              profile: true
-            }
-          }
-        }
+              profile: true,
+            },
+          },
+        },
       });
 
       const totalApplicants = applications.length;
@@ -836,21 +904,22 @@ export const eventRouter = createTRPCRouter({
       const jobTitles = new Map<string, number>();
       const experienceLevels = new Map<string, number>();
       const languages = new Map<string, number>();
-      
+
       let profilesWithSocial = 0;
       let profilesWithTelegram = 0;
       let profilesWithDiscord = 0;
       let profilesOver70Percent = 0;
 
-      applications.forEach(app => {
+      applications.forEach((app) => {
         const profile = app.user?.profile;
-        
+
         if (profile) {
           // Geographic data
           if (profile.location) {
-            const locationParts = profile.location.split(',');
+            const locationParts = profile.location.split(",");
             if (locationParts.length >= 2) {
-              const country = locationParts[locationParts.length - 1]?.trim() ?? '';
+              const country =
+                locationParts[locationParts.length - 1]?.trim() ?? "";
               countries.add(country);
             }
             cities.add(profile.location);
@@ -863,27 +932,44 @@ export const eventRouter = createTRPCRouter({
           }
 
           // Skills distribution
-          profile.skills?.forEach(skill => {
+          profile.skills?.forEach((skill) => {
             skills.set(skill, (skills.get(skill) ?? 0) + 1);
           });
 
           // Job titles
           if (profile.jobTitle) {
-            jobTitles.set(profile.jobTitle, (jobTitles.get(profile.jobTitle) ?? 0) + 1);
+            jobTitles.set(
+              profile.jobTitle,
+              (jobTitles.get(profile.jobTitle) ?? 0) + 1,
+            );
           }
 
           // Experience levels
-          if (profile.yearsOfExperience !== null && profile.yearsOfExperience !== undefined) {
+          if (
+            profile.yearsOfExperience !== null &&
+            profile.yearsOfExperience !== undefined
+          ) {
             let expLevel = "0-2 years";
-            if (profile.yearsOfExperience >= 3 && profile.yearsOfExperience <= 5) expLevel = "3-5 years";
-            else if (profile.yearsOfExperience >= 6 && profile.yearsOfExperience <= 10) expLevel = "6-10 years";
+            if (
+              profile.yearsOfExperience >= 3 &&
+              profile.yearsOfExperience <= 5
+            )
+              expLevel = "3-5 years";
+            else if (
+              profile.yearsOfExperience >= 6 &&
+              profile.yearsOfExperience <= 10
+            )
+              expLevel = "6-10 years";
             else if (profile.yearsOfExperience > 10) expLevel = "10+ years";
-            
-            experienceLevels.set(expLevel, (experienceLevels.get(expLevel) ?? 0) + 1);
+
+            experienceLevels.set(
+              expLevel,
+              (experienceLevels.get(expLevel) ?? 0) + 1,
+            );
           }
 
           // Languages
-          profile.languages?.forEach(lang => {
+          profile.languages?.forEach((lang) => {
             languages.set(lang, (languages.get(lang) ?? 0) + 1);
           });
 
@@ -919,8 +1005,9 @@ export const eventRouter = createTRPCRouter({
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10)
         .map(([name, count]) => ({ name, count }));
-      const experienceDistribution = Array.from(experienceLevels.entries())
-        .map(([level, count]) => ({ level, count }));
+      const experienceDistribution = Array.from(experienceLevels.entries()).map(
+        ([level, count]) => ({ level, count }),
+      );
       const languageDistribution = Array.from(languages.entries())
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10)
@@ -944,8 +1031,11 @@ export const eventRouter = createTRPCRouter({
         },
         profileCompletion: {
           over70Percent: profilesOver70Percent,
-          percentage: totalApplicants > 0 ? Math.round((profilesOver70Percent / totalApplicants) * 100) : 0
-        }
+          percentage:
+            totalApplicants > 0
+              ? Math.round((profilesOver70Percent / totalApplicants) * 100)
+              : 0,
+        },
       };
     }),
 
@@ -1106,6 +1196,7 @@ export const eventRouter = createTRPCRouter({
         featureSponsorManagement: z.boolean().optional(),
         featureScheduleManagement: z.boolean().optional(),
         featureFloorManagement: z.boolean().optional(),
+        featureDeliberation: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -1222,8 +1313,7 @@ export const eventRouter = createTRPCRouter({
         (ur) => ur.role.name === "ORGANIZER" || ur.role.name === "ADMIN",
       );
       const isGlobalAdmin =
-        ctx.session.user.role === "admin" ||
-        ctx.session.user.role === "staff";
+        ctx.session.user.role === "admin" || ctx.session.user.role === "staff";
 
       if (!isCreator && !hasOrganizerRole && !isGlobalAdmin) {
         throw new Error(
@@ -1305,6 +1395,7 @@ export const eventRouter = createTRPCRouter({
         featureSponsorManagement: z.boolean().optional(),
         featureScheduleManagement: z.boolean().optional(),
         featureFloorManagement: z.boolean().optional(),
+        featureDeliberation: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

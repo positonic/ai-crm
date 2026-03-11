@@ -98,7 +98,7 @@ export function AsksOffersTab({ eventId, session }: AsksOffersTabProps) {
 
   const renderAskOfferCard = (
     item: (typeof asksData)[0],
-    type: "ASK" | "OFFER"
+    type: "ASK" | "OFFER",
   ) => {
     const isOwn = isOwnAskOffer(item.userId);
 
@@ -110,18 +110,18 @@ export function AsksOffersTab({ eventId, session }: AsksOffersTabProps) {
         component={Link}
         href={`/events/${eventId}/asks-offers/${item.id}`}
         style={{
-          textDecoration: 'none',
-          color: 'inherit',
-          cursor: 'pointer',
-          transition: 'transform 0.1s ease, box-shadow 0.1s ease'
+          textDecoration: "none",
+          color: "inherit",
+          cursor: "pointer",
+          transition: "transform 0.1s ease, box-shadow 0.1s ease",
         }}
         onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
-          e.currentTarget.style.transform = 'translateY(-2px)';
-          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+          e.currentTarget.style.transform = "translateY(-2px)";
+          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
         }}
         onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = '';
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "";
         }}
       >
         <Group justify="space-between" align="flex-start" mb="xs">
@@ -216,11 +216,20 @@ export function AsksOffersTab({ eventId, session }: AsksOffersTabProps) {
         )}
 
         <Group justify="flex-end" mt="sm">
-          <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+          <div
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+          >
             <LikeButton
               updateId={item.id}
               initialLikeCount={item.likes.length}
-              initialHasLiked={session?.user ? item.likes.some(like => like.userId === session.user.id) : false}
+              initialHasLiked={
+                session?.user
+                  ? item.likes.some((like) => like.userId === session.user.id)
+                  : false
+              }
               userId={session?.user?.id}
               likeType="askOffer"
             />
@@ -234,9 +243,7 @@ export function AsksOffersTab({ eventId, session }: AsksOffersTabProps) {
     ...asksData.map((ask) => ({ ...ask, itemType: "ASK" as const })),
     ...offersData.map((offer) => ({ ...offer, itemType: "OFFER" as const })),
   ].sort((a, b) => {
-    return (
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
   return (
@@ -288,17 +295,53 @@ export function AsksOffersTab({ eventId, session }: AsksOffersTabProps) {
           )}
         </Group>
 
-      <Tabs.Panel value="all" pt="lg">
-        {allItems.length === 0 ? (
-          <Stack align="center" gap="md" py="xl">
-            <Text ta="center" c="dimmed">
-              No asks or offers yet
-            </Text>
-            <Text ta="center" size="sm" c="dimmed">
-              Be the first to add an ask or offer to the community
-            </Text>
-            {session && (
-              <Group gap="sm">
+        <Tabs.Panel value="all" pt="lg">
+          {allItems.length === 0 ? (
+            <Stack align="center" gap="md" py="xl">
+              <Text ta="center" c="dimmed">
+                No asks or offers yet
+              </Text>
+              <Text ta="center" size="sm" c="dimmed">
+                Be the first to add an ask or offer to the community
+              </Text>
+              {session && (
+                <Group gap="sm">
+                  <Button
+                    leftSection={<IconPlus size={16} />}
+                    onClick={() => handleOpenModal("ASK")}
+                    size="sm"
+                    color="orange"
+                  >
+                    Add Ask
+                  </Button>
+                  <Button
+                    leftSection={<IconPlus size={16} />}
+                    onClick={() => handleOpenModal("OFFER")}
+                    size="sm"
+                    color="blue"
+                  >
+                    Add Offer
+                  </Button>
+                </Group>
+              )}
+            </Stack>
+          ) : (
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+              {allItems.map((item) => renderAskOfferCard(item, item.itemType))}
+            </SimpleGrid>
+          )}
+        </Tabs.Panel>
+
+        <Tabs.Panel value="asks" pt="lg">
+          {asksData.length === 0 ? (
+            <Stack align="center" gap="md" py="xl">
+              <Text ta="center" c="dimmed">
+                No asks yet
+              </Text>
+              <Text ta="center" size="sm" c="dimmed">
+                Be the first to share what you&apos;re looking for help with
+              </Text>
+              {session && (
                 <Button
                   leftSection={<IconPlus size={16} />}
                   onClick={() => handleOpenModal("ASK")}
@@ -307,6 +350,25 @@ export function AsksOffersTab({ eventId, session }: AsksOffersTabProps) {
                 >
                   Add Ask
                 </Button>
+              )}
+            </Stack>
+          ) : (
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+              {asksData.map((item) => renderAskOfferCard(item, "ASK"))}
+            </SimpleGrid>
+          )}
+        </Tabs.Panel>
+
+        <Tabs.Panel value="offers" pt="lg">
+          {offersData.length === 0 ? (
+            <Stack align="center" gap="md" py="xl">
+              <Text ta="center" c="dimmed">
+                No offers yet
+              </Text>
+              <Text ta="center" size="sm" c="dimmed">
+                Be the first to share what you can help others with
+              </Text>
+              {session && (
                 <Button
                   leftSection={<IconPlus size={16} />}
                   onClick={() => handleOpenModal("OFFER")}
@@ -315,79 +377,22 @@ export function AsksOffersTab({ eventId, session }: AsksOffersTabProps) {
                 >
                   Add Offer
                 </Button>
-              </Group>
-            )}
-          </Stack>
-        ) : (
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
-            {allItems.map((item) =>
-              renderAskOfferCard(item, item.itemType)
-            )}
-          </SimpleGrid>
-        )}
-      </Tabs.Panel>
+              )}
+            </Stack>
+          ) : (
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+              {offersData.map((item) => renderAskOfferCard(item, "OFFER"))}
+            </SimpleGrid>
+          )}
+        </Tabs.Panel>
+      </Tabs>
 
-      <Tabs.Panel value="asks" pt="lg">
-        {asksData.length === 0 ? (
-          <Stack align="center" gap="md" py="xl">
-            <Text ta="center" c="dimmed">
-              No asks yet
-            </Text>
-            <Text ta="center" size="sm" c="dimmed">
-              Be the first to share what you&apos;re looking for help with
-            </Text>
-            {session && (
-              <Button
-                leftSection={<IconPlus size={16} />}
-                onClick={() => handleOpenModal("ASK")}
-                size="sm"
-                color="orange"
-              >
-                Add Ask
-              </Button>
-            )}
-          </Stack>
-        ) : (
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
-            {asksData.map((item) => renderAskOfferCard(item, "ASK"))}
-          </SimpleGrid>
-        )}
-      </Tabs.Panel>
-
-      <Tabs.Panel value="offers" pt="lg">
-        {offersData.length === 0 ? (
-          <Stack align="center" gap="md" py="xl">
-            <Text ta="center" c="dimmed">
-              No offers yet
-            </Text>
-            <Text ta="center" size="sm" c="dimmed">
-              Be the first to share what you can help others with
-            </Text>
-            {session && (
-              <Button
-                leftSection={<IconPlus size={16} />}
-                onClick={() => handleOpenModal("OFFER")}
-                size="sm"
-                color="blue"
-              >
-                Add Offer
-              </Button>
-            )}
-          </Stack>
-        ) : (
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
-            {offersData.map((item) => renderAskOfferCard(item, "OFFER"))}
-          </SimpleGrid>
-        )}
-      </Tabs.Panel>
-    </Tabs>
-
-    <CreateAskOfferModal
-      eventId={eventId}
-      isOpen={isModalOpen}
-      onClose={() => setIsModalOpen(false)}
-      initialType={modalType}
-    />
+      <CreateAskOfferModal
+        eventId={eventId}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        initialType={modalType}
+      />
     </>
   );
 }

@@ -47,12 +47,12 @@ export function AsksAndOffers({ eventId, session }: AsksAndOffersProps) {
   // Fetch user's asks and offers (filtered to only their own items)
   const { data: asksData = [] } = api.askOffer.getUserAsksOffers.useQuery(
     { eventId, type: "ASK", onlyActive: true },
-    { enabled: !!session }
+    { enabled: !!session },
   );
 
   const { data: offersData = [] } = api.askOffer.getUserAsksOffers.useQuery(
     { eventId, type: "OFFER", onlyActive: true },
-    { enabled: !!session }
+    { enabled: !!session },
   );
 
   // Mutations
@@ -97,12 +97,12 @@ export function AsksAndOffers({ eventId, session }: AsksAndOffersProps) {
     return session?.user?.id === userId;
   };
 
-  const renderAskOfferCard = (item: typeof asksData[0]) => {
+  const renderAskOfferCard = (item: (typeof asksData)[0]) => {
     const isOwn = isOwnAskOffer(item.userId);
 
     const handleCardClick = (e: React.MouseEvent) => {
       // Don't navigate if clicking on action buttons
-      if ((e.target as HTMLElement).closest('button')) {
+      if ((e.target as HTMLElement).closest("button")) {
         return;
       }
       router.push(`/events/${eventId}/asks-offers/${item.id}`);
@@ -114,16 +114,16 @@ export function AsksAndOffers({ eventId, session }: AsksAndOffersProps) {
         p="md"
         withBorder
         style={{
-          cursor: 'pointer',
-          transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+          cursor: "pointer",
+          transition: "transform 0.2s ease, box-shadow 0.2s ease",
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-2px)';
-          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+          e.currentTarget.style.transform = "translateY(-2px)";
+          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.1)";
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = '';
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "";
         }}
         onClick={handleCardClick}
       >
@@ -152,7 +152,8 @@ export function AsksAndOffers({ eventId, session }: AsksAndOffersProps) {
               {item.user.profile?.jobTitle && (
                 <Text size="xs" c="dimmed">
                   {item.user.profile.jobTitle}
-                  {item.user.profile.company && ` at ${item.user.profile.company}`}
+                  {item.user.profile.company &&
+                    ` at ${item.user.profile.company}`}
                 </Text>
               )}
             </div>
@@ -214,7 +215,11 @@ export function AsksAndOffers({ eventId, session }: AsksAndOffersProps) {
             <LikeButton
               updateId={item.id}
               initialLikeCount={item.likes.length}
-              initialHasLiked={session?.user ? item.likes.some(like => like.userId === session.user.id) : false}
+              initialHasLiked={
+                session?.user
+                  ? item.likes.some((like) => like.userId === session.user.id)
+                  : false
+              }
               userId={session?.user?.id}
               likeType="askOffer"
             />

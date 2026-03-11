@@ -40,7 +40,7 @@ async function slugExists(slug: string, excludeId?: string): Promise<boolean> {
  */
 async function generateUniqueSlug(
   name: string,
-  excludeId?: string
+  excludeId?: string,
 ): Promise<string> {
   const baseSlug = generateSlug(name);
   let slug = baseSlug;
@@ -98,10 +98,14 @@ async function main() {
 
     if (errors === 0) {
       console.log(
-        "\n💡 Next step: Make slug required in schema and run migration:"
+        "\n💡 Next step: Make slug required in schema and run migration:",
       );
-      console.log("   1. Change `slug String?` to `slug String` in schema.prisma");
-      console.log("   2. Run: bunx prisma migrate dev --name make_event_slug_required");
+      console.log(
+        "   1. Change `slug String?` to `slug String` in schema.prisma",
+      );
+      console.log(
+        "   2. Run: bunx prisma migrate dev --name make_event_slug_required",
+      );
     }
   } catch (error) {
     console.error("Fatal error during backfill:", error);

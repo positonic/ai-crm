@@ -176,6 +176,13 @@ model User {
   // AI interaction relations
   aiInteractions        AiInteraction[]     @relation("UserAiInteractions")
   aiFeedback            AiFeedback[]        @relation("UserAiFeedback")
+
+  // Deliberation relations
+  transcriptUploads        Transcription[]                @relation("TranscriptUploads")
+  deliberationPriorities   DeliberationPriority[]         @relation("UserPriorities")
+  deliberationVotes        DeliberationVote[]             @relation("UserDeliberationVotes")
+  deliberationBlockers     DeliberationBlocker[]          @relation("UserDeliberationBlockers")
+  deliberationResources    DeliberationResourceSuggestion[] @relation("UserDeliberationResources")
 }
 
 model VerificationToken {
@@ -257,6 +264,9 @@ model Event {
   // Feature flag for floor management
   featureFloorManagement Boolean @default(false)
 
+  // Feature flag for deliberation
+  featureDeliberation Boolean @default(false)
+
   // Activity cert (Hypercerts) integration
   activityCertUri         String?
   activityCertCid         String?
@@ -275,6 +285,10 @@ model Event {
 
   // AI interaction relations
   aiInteractions       AiInteraction[] @relation("EventAiInteractions")
+
+  // Deliberation relations
+  deliberations        Deliberation[]
+  transcriptions       Transcription[]
 
   @@index([slug])
 }
@@ -2399,4 +2413,185 @@ model AiFeedback {
   @@index([userId])
   @@index([rating])
   @@index([createdAt])
+}
+
+// ============================================
+// DELIBERATION SYSTEM
+// ============================================
+
+enum DeliberationStatus {
+  COLLECTING
+  CLOSED
+  ANALYZING
+  PUBLISHED
+}
+
+enum TranscriptStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum TranscriptionSource {
+  MANUAL
+  WHISPER_API
+  BROWSER
+  WEBHOOK
+  API
+}
+
+model Deliberation {
+  id            String              @id @default(cuid())
+  eventId       String
+  title         String
+  description   String?             @db.Text
+  status        DeliberationStatus  @default(COLLECTING)
+  closesAt      DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  // DDS publication references (set after publish)
+  summaryUri    String?
+  summaryCid    String?
+  pcaUri        String?
+  pcaCid        String?
+  activityUri   String?
+  activityCid   String?
+  boardUri      String?
+  boardCid      String?
+
+  // Analysis result (stored as JSON for POC flexibility)
+  analysisResult Json?
+
+  event         Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  transcripts   Transcription[]
+  topicClusters TopicCluster[]
+  priorities    DeliberationPriority[]
+
+  @@unique([eventId, title])
+  @@index([eventId])
+  @@index([status])
+}
+
+model Transcription {
+  id              String              @id @default(cuid())
+
+  // Flexible linking (all optional)
+  eventId         String?
+  deliberationId  String?
+  sessionId       String?             // Optional link to ScheduleSession
+
+  // Content
+  title           String
+  transcript      String?             @db.Text
+  summary         String?             @db.Text
+  notes           String?             @db.Text
+
+  // Source
+  source          TranscriptionSource @default(MANUAL)
+  sourceSessionId String?             @unique // External dedup key
+  audioUrl        String?
+  audioFileName   String?
+
+  // Processing
+  status          TranscriptStatus    @default(PENDING)
+  errorMessage    String?
+  processedAt     DateTime?
+
+  // Ownership
+  uploadedById    String?
+
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  // Relations
+  event           Event?              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  deliberation    Deliberation?       @relation(fields: [deliberationId], references: [id], onDelete: Cascade)
+  uploadedBy      User?               @relation("TranscriptUploads", fields: [uploadedById], references: [id])
+
+  @@index([eventId])
+  @@index([deliberationId])
+  @@index([status])
+  @@index([source])
+}
+
+model TopicCluster {
+  id              String       @id @default(cuid())
+  deliberationId  String
+  label           String       // e.g. "Public goods funding models"
+  keywords        String[]
+  mentionCount    Int          @default(0)
+  sourceExcerpts  String[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  deliberation    Deliberation @relation(fields: [deliberationId], references: [id], onDelete: Cascade)
+
+  @@index([deliberationId])
+  @@index([mentionCount])
+}
+
+model DeliberationPriority {
+  id              String       @id @default(cuid())
+  deliberationId  String
+  userId          String
+  title           String
+  description     String?      @db.Text
+  trackId         String?      // Optional link to ScheduleTrack
+  isModerated     Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  deliberation    Deliberation            @relation(fields: [deliberationId], references: [id], onDelete: Cascade)
+  user            User                    @relation("UserPriorities", fields: [userId], references: [id])
+  votes           DeliberationVote[]
+  blockers        DeliberationBlocker[]
+  resources       DeliberationResourceSuggestion[]
+
+  @@index([deliberationId])
+  @@index([userId])
+}
+
+model DeliberationVote {
+  id          String               @id @default(cuid())
+  priorityId  String
+  userId      String
+  createdAt   DateTime             @default(now())
+
+  priority    DeliberationPriority @relation(fields: [priorityId], references: [id], onDelete: Cascade)
+  user        User                 @relation("UserDeliberationVotes", fields: [userId], references: [id])
+
+  @@unique([priorityId, userId])
+  @@index([priorityId])
+  @@index([userId])
+}
+
+model DeliberationBlocker {
+  id          String               @id @default(cuid())
+  priorityId  String
+  userId      String
+  description String               @db.Text
+  createdAt   DateTime             @default(now())
+
+  priority    DeliberationPriority @relation(fields: [priorityId], references: [id], onDelete: Cascade)
+  user        User                 @relation("UserDeliberationBlockers", fields: [userId], references: [id])
+
+  @@index([priorityId])
+  @@index([userId])
+}
+
+model DeliberationResourceSuggestion {
+  id          String               @id @default(cuid())
+  priorityId  String
+  userId      String
+  category    String               // "funding" | "talent" | "tooling" | "other"
+  description String               @db.Text
+  createdAt   DateTime             @default(now())
+
+  priority    DeliberationPriority @relation(fields: [priorityId], references: [id], onDelete: Cascade)
+  user        User                 @relation("UserDeliberationResources", fields: [userId], references: [id])
+
+  @@index([priorityId])
+  @@index([userId])
 }

@@ -51,10 +51,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!scheduleSession) {
-      return NextResponse.json(
-        { error: "Session not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
     const isAdmin =

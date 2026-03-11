@@ -92,10 +92,7 @@ async function getEventProjects(eventId: string): Promise<Project[]> {
                       name: true,
                       description: true,
                     },
-                    orderBy: [
-                      { isPrimary: "desc" },
-                      { order: "asc" },
-                    ],
+                    orderBy: [{ isPrimary: "desc" }, { order: "asc" }],
                   },
                   updates: {
                     select: {
@@ -126,7 +123,7 @@ async function getEventProjects(eventId: string): Promise<Project[]> {
 
 async function categorizeProject(
   project: Project,
-  anthropic: Anthropic
+  anthropic: Anthropic,
 ): Promise<CategorizationResult> {
   console.log(`\n🤖 Analyzing: "${project.title}"...`);
 
@@ -138,17 +135,31 @@ ${project.description ? `Description: ${project.description}\n` : ""}
 
 ${project.technologies.length > 0 ? `Technologies: ${project.technologies.join(", ")}\n` : ""}
 
-${project.repositories.length > 0 ? `Repositories:
+${
+  project.repositories.length > 0
+    ? `Repositories:
 ${project.repositories
-  .map((repo) => `- ${repo.name ?? "Repository"} (${repo.url})${repo.description ? `: ${repo.description}` : ""}`)
+  .map(
+    (repo) =>
+      `- ${repo.name ?? "Repository"} (${repo.url})${repo.description ? `: ${repo.description}` : ""}`,
+  )
   .join("\n")}
-` : ""}
+`
+    : ""
+}
 
-${project.updates.length > 0 ? `Recent Updates:
+${
+  project.updates.length > 0
+    ? `Recent Updates:
 ${project.updates
-  .map((update, i) => `${i + 1}. ${update.title}\n   ${update.content.substring(0, 200)}${update.content.length > 200 ? "..." : ""}`)
+  .map(
+    (update, i) =>
+      `${i + 1}. ${update.title}\n   ${update.content.substring(0, 200)}${update.content.length > 200 ? "..." : ""}`,
+  )
   .join("\n\n")}
-` : "No updates yet"}
+`
+    : "No updates yet"
+}
   `.trim();
 
   const systemPrompt = `You are an expert at categorizing technology and impact-focused projects.
@@ -205,7 +216,7 @@ Respond in JSON format:
 
     // Validate focus areas against our predefined list
     const validFocusAreas = result.focusAreas.filter((area) =>
-      FOCUS_AREAS.includes(area as (typeof FOCUS_AREAS)[number])
+      FOCUS_AREAS.includes(area as (typeof FOCUS_AREAS)[number]),
     );
 
     if (validFocusAreas.length === 0) {
@@ -240,7 +251,7 @@ Respond in JSON format:
 }
 
 async function updateProjectFocusAreas(
-  results: CategorizationResult[]
+  results: CategorizationResult[],
 ): Promise<void> {
   console.log(`\n💾 Updating ${results.length} projects in database...`);
 
@@ -259,7 +270,7 @@ async function updateProjectFocusAreas(
       errorCount++;
       console.error(
         `   ✗ Failed to update ${result.projectTitle}:`,
-        error instanceof Error ? error.message : "Unknown error"
+        error instanceof Error ? error.message : "Unknown error",
       );
     }
   }
@@ -285,15 +296,15 @@ async function generateReport(results: CategorizationResult[]): Promise<void> {
 
   // Sort by count
   const sortedAreas = Object.entries(focusAreaCounts).sort(
-    ([, a], [, b]) => b - a
+    ([, a], [, b]) => b - a,
   );
 
   console.log(`\nTotal Projects: ${results.length}`);
   console.log(
-    `Projects Categorized: ${results.filter((r) => r.focusAreas.length > 0).length}`
+    `Projects Categorized: ${results.filter((r) => r.focusAreas.length > 0).length}`,
   );
   console.log(
-    `Projects Uncategorized: ${results.filter((r) => r.focusAreas.length === 0).length}`
+    `Projects Uncategorized: ${results.filter((r) => r.focusAreas.length === 0).length}`,
   );
 
   console.log("\n📈 Focus Area Distribution:");
@@ -326,13 +337,15 @@ async function main() {
     console.error("  bun run scripts/categorize-projects.ts <eventId>");
     console.error("\nExample:");
     console.error(
-      "  bun run scripts/categorize-projects.ts funding-commons-residency-2025"
+      "  bun run scripts/categorize-projects.ts funding-commons-residency-2025",
     );
     process.exit(1);
   }
 
   if (!process.env.ANTHROPIC_API_KEY) {
-    console.error("❌ Error: ANTHROPIC_API_KEY environment variable is required");
+    console.error(
+      "❌ Error: ANTHROPIC_API_KEY environment variable is required",
+    );
     console.error("   Add it to your .env.local file");
     process.exit(1);
   }

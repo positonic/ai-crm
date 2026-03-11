@@ -50,10 +50,12 @@ interface EditDrawerPropsTest {
   eventId: string;
 }
 
-console.log('Work Experience Feature Test Interfaces Defined');
-console.log('✅ All TypeScript interfaces validate successfully');
-console.log('✅ adminWorkExperience field is properly typed throughout the system');
-console.log('✅ Integration points are correctly defined');
+console.log("Work Experience Feature Test Interfaces Defined");
+console.log("✅ All TypeScript interfaces validate successfully");
+console.log(
+  "✅ adminWorkExperience field is properly typed throughout the system",
+);
+console.log("✅ Integration points are correctly defined");
 
 // Validation Results Summary
 const validationResults = {
@@ -61,27 +63,27 @@ const validationResults = {
     hasWorkExperienceField: true,
     hasAutoSave: true,
     hasMutation: true,
-    status: 'PASSED'
+    status: "PASSED",
   },
   trpcRouter: {
     hasUpdateMutation: true,
     hasProperValidation: true,
     hasAdminRoleCheck: true,
-    status: 'PASSED'
+    status: "PASSED",
   },
   applicationEvaluation: {
     hasFieldAccess: true,
     passesToDrawer: true,
     properlyTyped: true,
-    status: 'PASSED'
+    status: "PASSED",
   },
   databaseSchema: {
     hasColumn: true,
     isTextType: true,
     isNullable: true,
-    status: 'PASSED'
+    status: "PASSED",
   },
-  overall: 'ALL_TESTS_PASSED'
+  overall: "ALL_TESTS_PASSED",
 };
 
 export default validationResults;

@@ -16,12 +16,17 @@ import {
   Badge,
   Timeline,
   Collapse,
-  Paper
+  Paper,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { IconCalendar, IconCheck, IconClock, IconMapPin } from "@tabler/icons-react";
+import {
+  IconCalendar,
+  IconCheck,
+  IconClock,
+  IconMapPin,
+} from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 
 interface VisitRequestFormProps {
@@ -43,24 +48,30 @@ interface VisitRequestFormProps {
 }
 
 const visitTypeOptions = [
-  { value: 'KICKOFF', label: 'Opening Week Kickoff (1-2 days)' },
-  { value: 'MENTORSHIP', label: 'Mid-program Mentorship Visit' },
-  { value: 'DEMO_DAY', label: 'Final Showcase/Demo Day (1 day)' },
-  { value: 'CUSTOM', label: 'Custom dates' },
+  { value: "KICKOFF", label: "Opening Week Kickoff (1-2 days)" },
+  { value: "MENTORSHIP", label: "Mid-program Mentorship Visit" },
+  { value: "DEMO_DAY", label: "Final Showcase/Demo Day (1 day)" },
+  { value: "CUSTOM", label: "Custom dates" },
 ];
 
 const purposeOptions = [
-  { value: 'Technical workshop delivery', label: 'Technical workshop delivery' },
-  { value: 'Mentorship sessions', label: 'Mentorship sessions' },
-  { value: 'Office hours', label: 'Office hours' },
-  { value: 'Demo day judging', label: 'Demo day judging' },
-  { value: 'Networking/relationship building', label: 'Networking/relationship building' },
+  {
+    value: "Technical workshop delivery",
+    label: "Technical workshop delivery",
+  },
+  { value: "Mentorship sessions", label: "Mentorship sessions" },
+  { value: "Office hours", label: "Office hours" },
+  { value: "Demo day judging", label: "Demo day judging" },
+  {
+    value: "Networking/relationship building",
+    label: "Networking/relationship building",
+  },
 ];
 
-export default function VisitRequestForm({ 
-  eventSponsorId, 
-  eventDates, 
-  existingRequests 
+export default function VisitRequestForm({
+  eventSponsorId,
+  eventDates,
+  existingRequests,
 }: VisitRequestFormProps) {
   const [wantsToVisit, setWantsToVisit] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -69,25 +80,28 @@ export default function VisitRequestForm({
 
   const form = useForm({
     initialValues: {
-      visitType: '',
+      visitType: "",
       preferredDates: [] as Date[],
       numAttendees: 1,
-      purpose: '',
-      requirements: '',
+      purpose: "",
+      requirements: "",
     },
     validate: {
-      visitType: (value) => (value ? null : 'Please select a visit type'),
-      preferredDates: (value) => (value.length > 0 ? null : 'Please select at least one preferred date'),
-      purpose: (value) => (value ? null : 'Please describe the purpose of your visit'),
+      visitType: (value) => (value ? null : "Please select a visit type"),
+      preferredDates: (value) =>
+        value.length > 0 ? null : "Please select at least one preferred date",
+      purpose: (value) =>
+        value ? null : "Please describe the purpose of your visit",
     },
   });
 
   const createVisitRequest = api.sponsor.createVisitRequest.useMutation({
     onSuccess: () => {
       notifications.show({
-        title: 'Visit request submitted',
-        message: 'Your visit request has been submitted successfully. We will be in touch soon.',
-        color: 'green',
+        title: "Visit request submitted",
+        message:
+          "Your visit request has been submitted successfully. We will be in touch soon.",
+        color: "green",
         icon: <IconCheck size={16} />,
       });
       form.reset();
@@ -97,9 +111,9 @@ export default function VisitRequestForm({
     },
     onError: (error) => {
       notifications.show({
-        title: 'Error submitting request',
+        title: "Error submitting request",
         message: error.message,
-        color: 'red',
+        color: "red",
       });
     },
   });
@@ -107,7 +121,11 @@ export default function VisitRequestForm({
   const handleSubmit = (values: typeof form.values) => {
     createVisitRequest.mutate({
       eventSponsorId,
-      visitType: values.visitType as 'KICKOFF' | 'MENTORSHIP' | 'DEMO_DAY' | 'CUSTOM',
+      visitType: values.visitType as
+        | "KICKOFF"
+        | "MENTORSHIP"
+        | "DEMO_DAY"
+        | "CUSTOM",
       preferredDates: values.preferredDates,
       numAttendees: values.numAttendees,
       purpose: values.purpose,
@@ -125,42 +143,55 @@ export default function VisitRequestForm({
           <Title order={3}>Onsite Visit Planning</Title>
           {existingRequests.length > 0 && (
             <Badge color="blue" variant="light">
-              {existingRequests.length} Request{existingRequests.length > 1 ? 's' : ''} Submitted
+              {existingRequests.length} Request
+              {existingRequests.length > 1 ? "s" : ""} Submitted
             </Badge>
           )}
         </Group>
 
         <Text>
-          While most mentorship can be provided remotely, onsite presence adds significant value 
-          to the residency experience. You can request to visit during key moments of the program.
+          While most mentorship can be provided remotely, onsite presence adds
+          significant value to the residency experience. You can request to
+          visit during key moments of the program.
         </Text>
 
         {/* Existing Requests */}
         {existingRequests.length > 0 && (
           <Paper p="md" withBorder>
             <Stack gap="sm">
-              <Text fw={500} size="sm">Your Visit Requests</Text>
+              <Text fw={500} size="sm">
+                Your Visit Requests
+              </Text>
               <Timeline bulletSize={20} lineWidth={2}>
                 {existingRequests.map((request) => (
-                  <Timeline.Item 
+                  <Timeline.Item
                     key={request.id}
                     bullet={getStatusIcon(request.status)}
-                    title={visitTypeOptions.find(opt => opt.value === request.visitType)?.label}
+                    title={
+                      visitTypeOptions.find(
+                        (opt) => opt.value === request.visitType,
+                      )?.label
+                    }
                   >
                     <Text size="sm" c="dimmed">
-                      {request.purpose} • {request.numAttendees} attendee{request.numAttendees > 1 ? 's' : ''}
+                      {request.purpose} • {request.numAttendees} attendee
+                      {request.numAttendees > 1 ? "s" : ""}
                     </Text>
-                    <Badge 
-                      size="xs" 
-                      color={getStatusColor(request.status)} 
+                    <Badge
+                      size="xs"
+                      color={getStatusColor(request.status)}
                       variant="light"
                       mt="xs"
                     >
-                      {request.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
+                      {request.status
+                        .replace("_", " ")
+                        .toLowerCase()
+                        .replace(/\b\w/g, (l) => l.toUpperCase())}
                     </Badge>
                     {request.scheduledDate && (
                       <Text size="xs" c="dimmed" mt="xs">
-                        Scheduled: {new Date(request.scheduledDate).toLocaleDateString()}
+                        Scheduled:{" "}
+                        {new Date(request.scheduledDate).toLocaleDateString()}
                       </Text>
                     )}
                   </Timeline.Item>
@@ -193,7 +224,7 @@ export default function VisitRequestForm({
                   label="Visit Type"
                   placeholder="Select when you'd like to visit"
                   data={visitTypeOptions}
-                  {...form.getInputProps('visitType')}
+                  {...form.getInputProps("visitType")}
                   required
                 />
 
@@ -204,7 +235,7 @@ export default function VisitRequestForm({
                   description="Choose multiple dates to give us flexibility in scheduling"
                   minDate={startDate}
                   maxDate={endDate}
-                  {...form.getInputProps('preferredDates')}
+                  {...form.getInputProps("preferredDates")}
                   required
                 />
 
@@ -214,7 +245,7 @@ export default function VisitRequestForm({
                   description="Typically 1-3 people expected"
                   min={1}
                   max={10}
-                  {...form.getInputProps('numAttendees')}
+                  {...form.getInputProps("numAttendees")}
                   required
                 />
 
@@ -223,7 +254,7 @@ export default function VisitRequestForm({
                   placeholder="What's the main purpose of your visit?"
                   data={purposeOptions}
                   searchable
-                  {...form.getInputProps('purpose')}
+                  {...form.getInputProps("purpose")}
                   required
                 />
 
@@ -232,12 +263,12 @@ export default function VisitRequestForm({
                   placeholder="Any logistics needs, equipment requirements, or other considerations?"
                   description="Optional: Let us know about any special arrangements needed"
                   minRows={3}
-                  {...form.getInputProps('requirements')}
+                  {...form.getInputProps("requirements")}
                 />
 
                 <Group justify="end">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setShowForm(false);
                       setWantsToVisit(false);
@@ -246,8 +277,8 @@ export default function VisitRequestForm({
                   >
                     Cancel
                   </Button>
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     loading={createVisitRequest.isPending}
                     leftSection={<IconCalendar size={16} />}
                   >
@@ -260,16 +291,24 @@ export default function VisitRequestForm({
         </Collapse>
 
         {/* Helper Info */}
-        <Alert icon={<IconMapPin size={16} />} title="Visit Guidelines" color="blue" variant="light">
+        <Alert
+          icon={<IconMapPin size={16} />}
+          title="Visit Guidelines"
+          color="blue"
+          variant="light"
+        >
           <Stack gap="xs">
             <Text size="sm">
-              • <strong>Opening Week:</strong> Great for kickoff presentations and initial workshops
+              • <strong>Opening Week:</strong> Great for kickoff presentations
+              and initial workshops
             </Text>
             <Text size="sm">
-              • <strong>Mid-Program:</strong> Ideal for hands-on mentorship and technical guidance
+              • <strong>Mid-Program:</strong> Ideal for hands-on mentorship and
+              technical guidance
             </Text>
             <Text size="sm">
-              • <strong>Demo Day:</strong> Perfect for final presentations, judging, and networking
+              • <strong>Demo Day:</strong> Perfect for final presentations,
+              judging, and networking
             </Text>
             <Text size="sm">
               • We recommend at least one mentor onsite for 4-7 days total
@@ -283,10 +322,10 @@ export default function VisitRequestForm({
 
 function getStatusIcon(status: string) {
   switch (status) {
-    case 'COMPLETED':
+    case "COMPLETED":
       return <IconCheck size={14} />;
-    case 'SCHEDULED':
-    case 'APPROVED':
+    case "SCHEDULED":
+    case "APPROVED":
       return <IconCalendar size={14} />;
     default:
       return <IconClock size={14} />;
@@ -295,14 +334,14 @@ function getStatusIcon(status: string) {
 
 function getStatusColor(status: string) {
   switch (status) {
-    case 'COMPLETED':
-      return 'green';
-    case 'SCHEDULED':
-    case 'APPROVED':
-      return 'blue';
-    case 'CANCELLED':
-      return 'red';
+    case "COMPLETED":
+      return "green";
+    case "SCHEDULED":
+    case "APPROVED":
+      return "blue";
+    case "CANCELLED":
+      return "red";
     default:
-      return 'yellow';
+      return "yellow";
   }
 }

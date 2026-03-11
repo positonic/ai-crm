@@ -5,7 +5,8 @@ import { HyperboardPlaygroundClient } from "./HyperboardPlaygroundClient";
 
 export const metadata: Metadata = {
   title: "Hyperboard Playground | Impactful Events",
-  description: "Configure and preview Hyperboard visualizations with interactive controls",
+  description:
+    "Configure and preview Hyperboard visualizations with interactive controls",
 };
 
 export default async function HyperboardPlaygroundPage() {

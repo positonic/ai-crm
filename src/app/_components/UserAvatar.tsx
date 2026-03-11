@@ -13,7 +13,8 @@ interface UserData {
   surname?: string | null;
 }
 
-interface UserAvatarProps extends Omit<AvatarProps, "src" | "alt" | "children"> {
+interface UserAvatarProps
+  extends Omit<AvatarProps, "src" | "alt" | "children"> {
   user: UserData;
   showInitials?: boolean;
 }
@@ -39,7 +40,11 @@ export function UserAvatar({
 
   const avatarInitials = showInitials
     ? getAvatarInitials({
-        name: user.name ?? (user.firstName && user.surname ? `${user.firstName} ${user.surname}` : null),
+        name:
+          user.name ??
+          (user.firstName && user.surname
+            ? `${user.firstName} ${user.surname}`
+            : null),
         email: user.email,
       })
     : "";
@@ -51,7 +56,7 @@ export function UserAvatar({
       surname: user.surname,
       email: user.email,
     },
-    "User"
+    "User",
   );
 
   return (

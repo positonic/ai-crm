@@ -87,7 +87,8 @@ export default function ExpandedView({ sessions, eventId }: ExpandedViewProps) {
             {timeSessions.map((session) => {
               const color = session.sessionType?.color ?? "#94a3b8";
               const hasSpeakers =
-                session.sessionSpeakers.length > 0 || session.speakers.length > 0;
+                session.sessionSpeakers.length > 0 ||
+                session.speakers.length > 0;
 
               return (
                 <Link
@@ -112,7 +113,9 @@ export default function ExpandedView({ sessions, eventId }: ExpandedViewProps) {
                     <Text size="sm" c="dimmed">
                       {formatTime(session.startTime)} -{" "}
                       {formatTime(session.endTime)}
-                      {session.venue ? ` \u2022 ${session.venue.name}${session.room ? ` - ${session.room.name}` : ""}` : ""}
+                      {session.venue
+                        ? ` \u2022 ${session.venue.name}${session.room ? ` - ${session.room.name}` : ""}`
+                        : ""}
                     </Text>
 
                     {/* Description */}
@@ -217,11 +220,7 @@ export default function ExpandedView({ sessions, eventId }: ExpandedViewProps) {
                           })}
                           {/* Legacy text-only speakers */}
                           {session.speakers.map((speakerName) => (
-                            <Group
-                              key={speakerName}
-                              gap="sm"
-                              align="center"
-                            >
+                            <Group key={speakerName} gap="sm" align="center">
                               <Avatar size={40} radius="xl">
                                 {speakerName.charAt(0).toUpperCase()}
                               </Avatar>

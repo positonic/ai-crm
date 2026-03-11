@@ -11,12 +11,12 @@ export async function generateMetadata() {
 export default async function MyProfilePage() {
   // Check authentication
   const session = await auth();
-  
+
   // Must be authenticated to view own profile
   if (!session?.user) {
     redirect("/signin?callbackUrl=/profiles/me");
   }
-  
+
   // Redirect to the actual profile page with the user's ID
   redirect(`/profiles/${session.user.id}`);
 }

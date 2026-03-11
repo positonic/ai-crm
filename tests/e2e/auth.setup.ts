@@ -31,13 +31,15 @@ async function signIn(
   // Fill credentials.
   // Mantine Tabs renders ALL panels in the DOM so both "Email" fields exist.
   // Scope to the <form> that contains the "Sign In" submit button.
-  const signInForm = page
-    .locator("form")
-    .filter({ has: page.getByRole("button", { name: "Sign In", exact: true }) });
+  const signInForm = page.locator("form").filter({
+    has: page.getByRole("button", { name: "Sign In", exact: true }),
+  });
   await signInForm.getByLabel("Email").fill(email);
   await signInForm.getByLabel("Password").fill(password);
 
-  await signInForm.getByRole("button", { name: "Sign In", exact: true }).click();
+  await signInForm
+    .getByRole("button", { name: "Sign In", exact: true })
+    .click();
 
   // Wait until we leave the sign-in page (redirect to dashboard or callback)
   await expect(page).not.toHaveURL(/\/signin/, { timeout: 15_000 });

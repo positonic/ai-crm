@@ -69,8 +69,9 @@ function parsePraiseCommand(text: string): {
   }
 
   // Remove @ prefix and convert to lowercase
-  const usernames = usernameMatches
-    .map(mention => mention.substring(1).toLowerCase());
+  const usernames = usernameMatches.map((mention) =>
+    mention.substring(1).toLowerCase(),
+  );
 
   // Deduplicate usernames (in case same person mentioned multiple times)
   const uniqueUsernames = [...new Set(usernames)];
@@ -312,7 +313,8 @@ async function processPraiseCommand(
 
   // Calculate kudos transfer per recipient (5% of sender's kudos split among all)
   const totalTransferAmount = senderKudos * 0.05;
-  const transferAmountPerRecipient = totalTransferAmount / recipientUsernames.length;
+  const transferAmountPerRecipient =
+    totalTransferAmount / recipientUsernames.length;
 
   // Check if sender has sufficient kudos
   if (senderKudos < totalTransferAmount) {
@@ -373,7 +375,7 @@ async function processPraiseCommand(
       message: `Praised ${recipientUsernames.length} people`,
       data: {
         senderId: sender.id,
-        recipients: recipientResults.map(r => ({
+        recipients: recipientResults.map((r) => ({
           username: r.username,
           found: !!r.user,
         })),
@@ -384,7 +386,7 @@ async function processPraiseCommand(
 
     // Determine if this is from a group (public) or DM (private)
     const isPublic = isGroupMessage(message);
-    const senderName = isPublic ? sender.name ?? "Someone" : undefined;
+    const senderName = isPublic ? (sender.name ?? "Someone") : undefined;
 
     // Cross-post to channel for each recipient
     for (let i = 0; i < recipientUsernames.length; i++) {
@@ -415,20 +417,21 @@ async function processPraiseCommand(
     }
 
     // Build success message
-    const foundRecipients = recipientResults.filter(r => r.user);
-    const notFoundRecipients = recipientResults.filter(r => !r.user);
+    const foundRecipients = recipientResults.filter((r) => r.user);
+    const notFoundRecipients = recipientResults.filter((r) => !r.user);
 
     let responseMessage = "";
 
     if (foundRecipients.length > 0) {
       const recipientDisplays = foundRecipients.map(
-        r => r.user?.name ?? `@${r.username}`
+        (r) => r.user?.name ?? `@${r.username}`,
       );
-      const recipientList = recipientDisplays.length === 1
-        ? recipientDisplays[0]
-        : recipientDisplays.length === 2
-        ? `${recipientDisplays[0]} and ${recipientDisplays[1]}`
-        : `${recipientDisplays.slice(0, -1).join(", ")}, and ${recipientDisplays[recipientDisplays.length - 1]}`;
+      const recipientList =
+        recipientDisplays.length === 1
+          ? recipientDisplays[0]
+          : recipientDisplays.length === 2
+            ? `${recipientDisplays[0]} and ${recipientDisplays[1]}`
+            : `${recipientDisplays.slice(0, -1).join(", ")}, and ${recipientDisplays[recipientDisplays.length - 1]}`;
 
       responseMessage = `✅ Praise recorded! You praised ${recipientList} for: "${praiseMessage}"`;
 
@@ -438,7 +441,9 @@ async function processPraiseCommand(
     }
 
     if (notFoundRecipients.length > 0) {
-      const notFoundList = notFoundRecipients.map(r => `@${r.username}`).join(", ");
+      const notFoundList = notFoundRecipients
+        .map((r) => `@${r.username}`)
+        .join(", ");
       responseMessage += `\n\n⚠️ Note: Couldn't find ${notFoundList} in the system, but praise was still recorded.`;
     }
 
@@ -466,7 +471,7 @@ async function processPraiseCommand(
 async function captureTelegramChatId(
   _telegramUserId: number,
   telegramUsername: string,
-  chatId: number
+  chatId: number,
 ): Promise<void> {
   try {
     // Find user by their Telegram handle in profile
@@ -488,12 +493,12 @@ async function captureTelegramChatId(
           data: { telegramChatId: chatIdStr },
         });
         console.log(
-          `[Webhook] Captured chat ID ${chatId} for user with handle @${telegramUsername}`
+          `[Webhook] Captured chat ID ${chatId} for user with handle @${telegramUsername}`,
         );
       }
     } else {
       console.log(
-        `[Webhook] No user profile found for Telegram handle @${telegramUsername} - user needs to add their handle to their profile`
+        `[Webhook] No user profile found for Telegram handle @${telegramUsername} - user needs to add their handle to their profile`,
       );
     }
   } catch (error) {
@@ -540,7 +545,7 @@ export async function POST(request: NextRequest) {
       await captureTelegramChatId(
         message.from.id,
         message.from.username,
-        message.chat.id
+        message.chat.id,
       );
     }
 

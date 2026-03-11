@@ -17,8 +17,16 @@ interface InviteModalProps {
   onClose: () => void;
   title: string;
   description?: string;
-  form: UseFormReturnType<{ email: string; firstName: string; expiresAt: Date | undefined }>;
-  onSubmit: (values: { email: string; firstName: string; expiresAt: Date | undefined }) => void;
+  form: UseFormReturnType<{
+    email: string;
+    firstName: string;
+    expiresAt: Date | undefined;
+  }>;
+  onSubmit: (values: {
+    email: string;
+    firstName: string;
+    expiresAt: Date | undefined;
+  }) => void;
   isLoading: boolean;
   emailPlaceholder?: string;
   extraFields?: ReactNode;

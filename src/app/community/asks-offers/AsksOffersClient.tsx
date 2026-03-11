@@ -48,18 +48,21 @@ export default function AsksOffersClient() {
   const [createType, setCreateType] = useState<"ASK" | "OFFER">("ASK");
 
   // Fetch available events for the dropdown
-  const { data: availableEvents, isLoading: loadingEvents } = api.event.getAvailableEvents.useQuery();
+  const { data: availableEvents, isLoading: loadingEvents } =
+    api.event.getAvailableEvents.useQuery();
 
   // Fetch all asks and offers
-  const { data: asksData = [], isLoading: asksLoading } = api.askOffer.getAllAsksOffers.useQuery({
-    type: "ASK",
-    onlyActive: true,
-  });
+  const { data: asksData = [], isLoading: asksLoading } =
+    api.askOffer.getAllAsksOffers.useQuery({
+      type: "ASK",
+      onlyActive: true,
+    });
 
-  const { data: offersData = [], isLoading: offersLoading } = api.askOffer.getAllAsksOffers.useQuery({
-    type: "OFFER",
-    onlyActive: true,
-  });
+  const { data: offersData = [], isLoading: offersLoading } =
+    api.askOffer.getAllAsksOffers.useQuery({
+      type: "OFFER",
+      onlyActive: true,
+    });
 
   // Mutations for asks/offers
   const deleteMutation = api.askOffer.delete.useMutation({
@@ -90,7 +93,7 @@ export default function AsksOffersClient() {
 
   const renderAskOfferCard = (
     item: (typeof asksData)[0],
-    type: "ASK" | "OFFER"
+    type: "ASK" | "OFFER",
   ) => {
     const isOwn = isOwnAskOffer(item.userId);
 
@@ -100,20 +103,24 @@ export default function AsksOffersClient() {
         p="md"
         withBorder
         component={Link}
-        href={item.eventId ? `/events/${item.eventId}/asks-offers/${item.id}` : `/community/asks-offers/${item.id}`}
+        href={
+          item.eventId
+            ? `/events/${item.eventId}/asks-offers/${item.id}`
+            : `/community/asks-offers/${item.id}`
+        }
         style={{
-          textDecoration: 'none',
-          color: 'inherit',
-          cursor: 'pointer',
-          transition: 'transform 0.1s ease, box-shadow 0.1s ease'
+          textDecoration: "none",
+          color: "inherit",
+          cursor: "pointer",
+          transition: "transform 0.1s ease, box-shadow 0.1s ease",
         }}
         onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
-          e.currentTarget.style.transform = 'translateY(-2px)';
-          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+          e.currentTarget.style.transform = "translateY(-2px)";
+          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
         }}
         onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = '';
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "";
         }}
       >
         <Group justify="space-between" align="flex-start" mb="xs">
@@ -213,11 +220,20 @@ export default function AsksOffersClient() {
         )}
 
         <Group justify="flex-end" mt="sm">
-          <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+          <div
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+          >
             <LikeButton
               updateId={item.id}
               initialLikeCount={item.likes.length}
-              initialHasLiked={session?.user ? item.likes.some(like => like.userId === session.user.id) : false}
+              initialHasLiked={
+                session?.user
+                  ? item.likes.some((like) => like.userId === session.user.id)
+                  : false
+              }
               userId={session?.user?.id}
               likeType="askOffer"
             />
@@ -231,9 +247,7 @@ export default function AsksOffersClient() {
     ...asksData.map((ask) => ({ ...ask, itemType: "ASK" as const })),
     ...offersData.map((offer) => ({ ...offer, itemType: "OFFER" as const })),
   ].sort((a, b) => {
-    return (
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
   const isLoading = asksLoading || offersLoading;
@@ -267,10 +281,11 @@ export default function AsksOffersClient() {
   };
 
   // Format events for the select dropdown
-  const eventOptions = availableEvents?.map((event) => ({
-    value: event.id,
-    label: event.name,
-  })) ?? [];
+  const eventOptions =
+    availableEvents?.map((event) => ({
+      value: event.id,
+      label: event.name,
+    })) ?? [];
 
   if (isLoading) {
     return (
@@ -351,7 +366,7 @@ export default function AsksOffersClient() {
             ) : (
               <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
                 {allAsksOffers.map((item) =>
-                  renderAskOfferCard(item, item.itemType)
+                  renderAskOfferCard(item, item.itemType),
                 )}
               </SimpleGrid>
             )}
@@ -396,7 +411,8 @@ export default function AsksOffersClient() {
       >
         <Stack gap="md">
           <Text size="sm" c="dimmed">
-            Optionally associate this {createType.toLowerCase()} with an event, or create it as a community-wide post:
+            Optionally associate this {createType.toLowerCase()} with an event,
+            or create it as a community-wide post:
           </Text>
           <Select
             label="Event (Optional)"
@@ -409,11 +425,7 @@ export default function AsksOffersClient() {
             disabled={loadingEvents}
             nothingFoundMessage="No events available"
           />
-          <Button
-            variant="light"
-            onClick={handleSkipEvent}
-            fullWidth
-          >
+          <Button variant="light" onClick={handleSkipEvent} fullWidth>
             Continue without event (community-wide)
           </Button>
         </Stack>

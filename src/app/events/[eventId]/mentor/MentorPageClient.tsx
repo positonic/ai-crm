@@ -2,11 +2,25 @@
 
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
-import { Container, Center, Loader, Text, Stack, Card, Group, Transition } from "@mantine/core";
+import {
+  Container,
+  Center,
+  Loader,
+  Text,
+  Stack,
+  Card,
+  Group,
+  Transition,
+} from "@mantine/core";
 import { IconCheck } from "@tabler/icons-react";
 import AuthForm from "~/app/_components/AuthForm";
 import MentorApplicationForm from "~/app/_components/MentorApplicationForm";
-import type { Event, Application, ApplicationResponse, ApplicationQuestion } from "@prisma/client";
+import type {
+  Event,
+  Application,
+  ApplicationResponse,
+  ApplicationQuestion,
+} from "@prisma/client";
 
 interface ExtendedApplication extends Application {
   responses?: Array<ApplicationResponse & { question: ApplicationQuestion }>;
@@ -29,7 +43,10 @@ export default function MentorPageClient({
   initialUserId,
   invitationToken,
 }: MentorPageClientProps) {
-  console.log('🎫 [MentorPageClient] Received invitation token:', invitationToken);
+  console.log(
+    "🎫 [MentorPageClient] Received invitation token:",
+    invitationToken,
+  );
 
   const { data: session, status } = useSession();
   const [showApplication, setShowApplication] = useState(false);
@@ -119,23 +136,35 @@ export default function MentorPageClient({
                   <Group justify="center" gap="lg">
                     <Group gap="xs">
                       <div className="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-500 to-blue-500 flex items-center justify-center">
-                        <Text size="xs" c="white" fw={600}>1</Text>
+                        <Text size="xs" c="white" fw={600}>
+                          1
+                        </Text>
                       </div>
-                      <Text size="sm" fw={500}>Sign In</Text>
+                      <Text size="sm" fw={500}>
+                        Sign In
+                      </Text>
                     </Group>
                     <div className="w-8 h-0.5 bg-gray-200" />
                     <Group gap="xs">
                       <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
-                        <Text size="xs" c="dimmed" fw={600}>2</Text>
+                        <Text size="xs" c="dimmed" fw={600}>
+                          2
+                        </Text>
                       </div>
-                      <Text size="sm" c="dimmed">Onboard</Text>
+                      <Text size="sm" c="dimmed">
+                        Onboard
+                      </Text>
                     </Group>
                     <div className="w-8 h-0.5 bg-gray-200" />
                     <Group gap="xs">
                       <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
-                        <Text size="xs" c="dimmed" fw={600}>3</Text>
+                        <Text size="xs" c="dimmed" fw={600}>
+                          3
+                        </Text>
                       </div>
-                      <Text size="sm" c="dimmed">Submit</Text>
+                      <Text size="sm" c="dimmed">
+                        Submit
+                      </Text>
                     </Group>
                   </Group>
                 </Card>
@@ -150,19 +179,20 @@ export default function MentorPageClient({
                       Mentor Onboarding
                     </Text>
                     <Text c="dimmed" ta="center">
-                      Thank you for joining as a mentor! Please sign in to complete your onboarding form and help us coordinate your participation in Buenos Aires.
+                      Thank you for joining as a mentor! Please sign in to
+                      complete your onboarding form and help us coordinate your
+                      participation in Buenos Aires.
                     </Text>
                     <Text size="sm" c="dimmed" ta="center">
-                      <strong>Dates:</strong> October 24 – November 14, 2025<br />
+                      <strong>Dates:</strong> October 24 – November 14, 2025
+                      <br />
                       <strong>Location:</strong> Buenos Aires, Argentina
                     </Text>
                   </Stack>
                 </Card>
 
                 {/* Auth Form */}
-                <AuthForm 
-                  callbackUrl="/events/funding-commons-residency-2025/mentor" 
-                />
+                <AuthForm callbackUrl="/events/funding-commons-residency-2025/mentor" />
               </Stack>
             </div>
           )}

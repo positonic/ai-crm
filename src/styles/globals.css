@@ -109,6 +109,46 @@
   }
 }
 
+/* Scrollable nav tabs — hides scrollbar, prevents wrapping */
+@layer components {
+  .nav-tabs-scrollable .mantine-Tabs-list {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .nav-tabs-scrollable .mantine-Tabs-list::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Mobile-only burger strip (below main header) */
+.nav-mobile-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  background: var(--mantine-color-body);
+}
+
+@media (min-width: 768px) {
+  .nav-mobile-strip {
+    display: none;
+  }
+}
+
+.nav-desktop-tabs {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .nav-desktop-tabs {
+    display: block;
+  }
+}
+
 /* Print styles for PDF export */
 @media print {
   /* Hide navigation and interactive elements */

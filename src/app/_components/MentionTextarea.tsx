@@ -1,7 +1,21 @@
 "use client";
 
-import { useState, useRef, useCallback, type KeyboardEvent, type ChangeEvent } from "react";
-import { Textarea, Loader, Paper, Avatar, Text, Group, Stack } from "@mantine/core";
+import {
+  useState,
+  useRef,
+  useCallback,
+  type KeyboardEvent,
+  type ChangeEvent,
+} from "react";
+import {
+  Textarea,
+  Loader,
+  Paper,
+  Avatar,
+  Text,
+  Group,
+  Stack,
+} from "@mantine/core";
 import { api } from "~/trpc/react";
 import { getDisplayName, getInitials } from "~/utils/userDisplay";
 
@@ -44,7 +58,7 @@ export function MentionTextarea({
   // Search users when @ is typed
   const { data: users, isLoading } = api.user.searchUsers.useQuery(
     { query: mentionQuery, limit: 10 },
-    { enabled: showMentions && mentionQuery.length > 0 }
+    { enabled: showMentions && mentionQuery.length > 0 },
   );
 
   const handleTextChange = useCallback(
@@ -74,7 +88,7 @@ export function MentionTextarea({
       // Close mention dropdown
       setShowMentions(false);
     },
-    [onChange]
+    [onChange],
   );
 
   const insertMention = useCallback(
@@ -102,7 +116,7 @@ export function MentionTextarea({
         }
       }, 0);
     },
-    [value, mentionStartPos, onChange]
+    [value, mentionStartPos, onChange],
   );
 
   const handleKeyDown = useCallback(
@@ -130,7 +144,7 @@ export function MentionTextarea({
           break;
       }
     },
-    [showMentions, users, selectedIndex, insertMention]
+    [showMentions, users, selectedIndex, insertMention],
   );
 
   return (
@@ -174,7 +188,10 @@ export function MentionTextarea({
                   p="xs"
                   style={{
                     cursor: "pointer",
-                    backgroundColor: index === selectedIndex ? "var(--mantine-color-gray-1)" : "transparent",
+                    backgroundColor:
+                      index === selectedIndex
+                        ? "var(--mantine-color-gray-1)"
+                        : "transparent",
                   }}
                   onClick={() => insertMention(user)}
                   onMouseEnter={() => setSelectedIndex(index)}
@@ -199,7 +216,9 @@ export function MentionTextarea({
             </Stack>
           ) : (
             <Text size="sm" c="dimmed" p="md" ta="center">
-              {mentionQuery.length === 0 ? "Type to search users..." : "No users found"}
+              {mentionQuery.length === 0
+                ? "Type to search users..."
+                : "No users found"}
             </Text>
           )}
         </Paper>

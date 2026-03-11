@@ -36,7 +36,7 @@ export function LikeButton({
         likes: [],
         hasLiked: initialHasLiked,
       },
-    }
+    },
   );
 
   const askOfferLikesQuery = api.askOffer.getAskOfferLikes.useQuery(
@@ -48,7 +48,7 @@ export function LikeButton({
         likes: [],
         hasLiked: initialHasLiked,
       },
-    }
+    },
   );
 
   const userProjectLikesQuery = api.project.getUserProjectLikes.useQuery(
@@ -60,14 +60,17 @@ export function LikeButton({
         likes: [],
         hasLiked: initialHasLiked,
       },
-    }
+    },
   );
 
   const likesData =
-    likeType === "projectUpdate" ? projectLikesQuery.data :
-    likeType === "askOffer" ? askOfferLikesQuery.data :
-    likeType === "userProject" ? userProjectLikesQuery.data :
-    undefined;
+    likeType === "projectUpdate"
+      ? projectLikesQuery.data
+      : likeType === "askOffer"
+        ? askOfferLikesQuery.data
+        : likeType === "userProject"
+          ? userProjectLikesQuery.data
+          : undefined;
 
   // Like mutation based on type
   const projectLikeMutation = api.project.likeProjectUpdate.useMutation({
@@ -95,7 +98,9 @@ export function LikeButton({
       setOptimisticCount((prev) => prev + 1);
     },
     onSuccess: async () => {
-      await utils.askOffer.getAskOfferLikes.invalidate({ askOfferId: updateId });
+      await utils.askOffer.getAskOfferLikes.invalidate({
+        askOfferId: updateId,
+      });
       await utils.askOffer.getEventAsksOffers.invalidate();
     },
     onError: (error) => {
@@ -135,7 +140,9 @@ export function LikeButton({
       setOptimisticCount((prev) => prev - 1);
     },
     onSuccess: async () => {
-      await utils.askOffer.getAskOfferLikes.invalidate({ askOfferId: updateId });
+      await utils.askOffer.getAskOfferLikes.invalidate({
+        askOfferId: updateId,
+      });
       await utils.askOffer.getEventAsksOffers.invalidate();
     },
     onError: (error) => {
@@ -155,7 +162,9 @@ export function LikeButton({
       setOptimisticCount((prev) => prev + 1);
     },
     onSuccess: async () => {
-      await utils.project.getUserProjectLikes.invalidate({ projectId: updateId });
+      await utils.project.getUserProjectLikes.invalidate({
+        projectId: updateId,
+      });
     },
     onError: (error) => {
       setOptimisticLiked(false);
@@ -174,7 +183,9 @@ export function LikeButton({
       setOptimisticCount((prev) => Math.max(0, prev - 1));
     },
     onSuccess: async () => {
-      await utils.project.getUserProjectLikes.invalidate({ projectId: updateId });
+      await utils.project.getUserProjectLikes.invalidate({
+        projectId: updateId,
+      });
     },
     onError: (error) => {
       setOptimisticLiked(true);

@@ -26,14 +26,21 @@ interface TelegramAuthStatusProps {
   onAuthChanged?: () => void;
 }
 
-export default function TelegramAuthStatus({ onAuthChanged }: TelegramAuthStatusProps) {
+export default function TelegramAuthStatus({
+  onAuthChanged,
+}: TelegramAuthStatusProps) {
   const [setupModalOpened, setSetupModalOpened] = useState(false);
-  
-  const { data: authStatus, refetch } = api.telegramAuth.getAuthStatus.useQuery();
+
+  const { data: authStatus, refetch } =
+    api.telegramAuth.getAuthStatus.useQuery();
   const deleteAuth = api.telegramAuth.deleteAuth.useMutation();
 
   const handleDeleteAuth = async () => {
-    if (confirm("Are you sure you want to remove your Telegram authentication? You'll need to set it up again to import contacts.")) {
+    if (
+      confirm(
+        "Are you sure you want to remove your Telegram authentication? You'll need to set it up again to import contacts.",
+      )
+    ) {
       try {
         await deleteAuth.mutateAsync();
         await refetch();
@@ -50,12 +57,12 @@ export default function TelegramAuthStatus({ onAuthChanged }: TelegramAuthStatus
   };
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     }).format(new Date(date));
   };
 
@@ -74,13 +81,16 @@ export default function TelegramAuthStatus({ onAuthChanged }: TelegramAuthStatus
           <Stack gap="sm">
             <Group>
               <IconShieldX size={20} color="var(--mantine-color-yellow-6)" />
-              <Text fw={500} size="sm">Telegram Not Connected</Text>
+              <Text fw={500} size="sm">
+                Telegram Not Connected
+              </Text>
             </Group>
-            
+
             <Text size="xs" c="dimmed">
-              Set up Telegram authentication to import your contacts automatically.
+              Set up Telegram authentication to import your contacts
+              automatically.
             </Text>
-            
+
             <Button
               size="xs"
               variant="light"
@@ -101,7 +111,9 @@ export default function TelegramAuthStatus({ onAuthChanged }: TelegramAuthStatus
     );
   }
 
-  const daysUntilExpiry = authStatus.expiresAt ? getDaysUntilExpiry(authStatus.expiresAt) : 0;
+  const daysUntilExpiry = authStatus.expiresAt
+    ? getDaysUntilExpiry(authStatus.expiresAt)
+    : 0;
   const isExpiringSoon = daysUntilExpiry <= 7;
 
   return (
@@ -111,9 +123,11 @@ export default function TelegramAuthStatus({ onAuthChanged }: TelegramAuthStatus
           <Group justify="space-between">
             <Group gap="xs">
               <IconShieldCheck size={20} color="var(--mantine-color-green-6)" />
-              <Text fw={500} size="sm">Telegram Connected</Text>
+              <Text fw={500} size="sm">
+                Telegram Connected
+              </Text>
             </Group>
-            
+
             <Group gap="xs">
               <Tooltip label="Reconnect Telegram">
                 <ActionIcon
@@ -124,7 +138,7 @@ export default function TelegramAuthStatus({ onAuthChanged }: TelegramAuthStatus
                   <IconSettings size={14} />
                 </ActionIcon>
               </Tooltip>
-              
+
               <Tooltip label="Remove Telegram authentication">
                 <ActionIcon
                   variant="subtle"
@@ -142,27 +156,33 @@ export default function TelegramAuthStatus({ onAuthChanged }: TelegramAuthStatus
           <Group gap="xs">
             <IconClock size={14} color="var(--mantine-color-dimmed)" />
             <Text size="xs" c="dimmed">
-              Expires in {daysUntilExpiry} days ({authStatus.expiresAt ? formatDate(authStatus.expiresAt) : 'N/A'})
+              Expires in {daysUntilExpiry} days (
+              {authStatus.expiresAt ? formatDate(authStatus.expiresAt) : "N/A"})
             </Text>
           </Group>
 
           {isExpiringSoon && (
-            <Alert 
-              icon={<IconInfoCircle size={14} />} 
-              color="yellow" 
+            <Alert
+              icon={<IconInfoCircle size={14} />}
+              color="yellow"
               variant="light"
             >
               <Text size="xs">
-                Your Telegram authentication expires soon. Consider setting up a new connection.
+                Your Telegram authentication expires soon. Consider setting up a
+                new connection.
               </Text>
             </Alert>
           )}
 
           <Text size="xs" c="dimmed">
-            Connected on {authStatus.createdAt ? formatDate(authStatus.createdAt) : 'Unknown'}
-            {authStatus.updatedAt && authStatus.createdAt && authStatus.updatedAt !== authStatus.createdAt && 
-              ` • Updated ${formatDate(authStatus.updatedAt)}`
-            }
+            Connected on{" "}
+            {authStatus.createdAt
+              ? formatDate(authStatus.createdAt)
+              : "Unknown"}
+            {authStatus.updatedAt &&
+              authStatus.createdAt &&
+              authStatus.updatedAt !== authStatus.createdAt &&
+              ` • Updated ${formatDate(authStatus.updatedAt)}`}
           </Text>
         </Stack>
       </Paper>

@@ -6,20 +6,28 @@ import { z } from "zod";
 // Schema for AI evaluation submission
 const AIEvaluationSchema = z.object({
   applicationId: z.string(),
-  stage: z.enum(["SCREENING", "DETAILED_REVIEW", "VIDEO_REVIEW", "CONSENSUS", "FINAL_DECISION"]),
+  stage: z.enum([
+    "SCREENING",
+    "DETAILED_REVIEW",
+    "VIDEO_REVIEW",
+    "CONSENSUS",
+    "FINAL_DECISION",
+  ]),
   overallScore: z.number().min(0).max(100),
   confidence: z.number().min(1).max(5),
   recommendation: z.enum(["ACCEPT", "REJECT", "WAITLIST", "NEEDS_MORE_INFO"]),
   overallComments: z.string(),
   timeSpentMinutes: z.number().optional(),
-  
+
   // Detailed scores by criteria
-  scores: z.array(z.object({
-    criteriaId: z.string(),
-    score: z.number(),
-    reasoning: z.string(),
-  })),
-  
+  scores: z.array(
+    z.object({
+      criteriaId: z.string(),
+      score: z.number(),
+      reasoning: z.string(),
+    }),
+  ),
+
   // AI-specific metadata
   aiMetadata: z.object({
     modelVersion: z.string(),
@@ -46,58 +54,66 @@ const BatchAIEvaluationSchema = z.object({
 });
 
 // POST: Submit multiple AI evaluations in batch
-async function POST(request: NextRequest, context: { params: Promise<{ eventId: string }> }) {
+async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ eventId: string }> },
+) {
   const { eventId } = await context.params;
-  
+
   try {
-    const body = await request.json() as unknown;
+    const body = (await request.json()) as unknown;
     const batchData = BatchAIEvaluationSchema.parse(body);
-    
+
     // Verify all applications exist and belong to this event
-    const applicationIds = batchData.evaluations.map(e => e.applicationId);
+    const applicationIds = batchData.evaluations.map((e) => e.applicationId);
     const applications = await db.application.findMany({
       where: {
         id: { in: applicationIds },
         eventId: eventId,
       },
-      select: { id: true }
+      select: { id: true },
     });
 
-    const foundApplicationIds = new Set(applications.map(app => app.id));
-    const missingApplicationIds = applicationIds.filter(id => !foundApplicationIds.has(id));
-    
+    const foundApplicationIds = new Set(applications.map((app) => app.id));
+    const missingApplicationIds = applicationIds.filter(
+      (id) => !foundApplicationIds.has(id),
+    );
+
     if (missingApplicationIds.length > 0) {
       return Response.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: "Some applications not found or don't belong to this event",
-          details: { missingApplicationIds }
+          details: { missingApplicationIds },
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     // Get or create AI reviewer user
     let aiReviewer = await db.user.findUnique({
-      where: { email: "ai-reviewer@fundingthecommons.io" }
+      where: { email: "ai-reviewer@fundingthecommons.io" },
     });
-
 
     aiReviewer ??= await db.user.create({
       data: {
         email: "ai-reviewer@fundingthecommons.io",
         name: "AI Reviewer",
-        role: "REVIEWER"
-      }
+        role: "REVIEWER",
+      },
     });
-    const results: Array<{ applicationId: string; evaluationId: string; status: string }> = [];
+    const results: Array<{
+      applicationId: string;
+      evaluationId: string;
+      status: string;
+    }> = [];
     const errors: Array<{ applicationId: string; error: string }> = [];
 
     // Process evaluations in transaction batches for better performance
     const batchSize = 10;
     for (let i = 0; i < batchData.evaluations.length; i += batchSize) {
       const batch = batchData.evaluations.slice(i, i + batchSize);
-      
+
       try {
         await db.$transaction(async (tx) => {
           for (const evaluation of batch) {
@@ -108,9 +124,9 @@ async function POST(request: NextRequest, context: { params: Promise<{ eventId: 
                   applicationId_reviewerId_stage: {
                     applicationId: evaluation.applicationId,
                     reviewerId: aiReviewer.id,
-                    stage: evaluation.stage
-                  }
-                }
+                    stage: evaluation.stage,
+                  },
+                },
               });
               assignment ??= await tx.reviewerAssignment.create({
                 data: {
@@ -119,7 +135,7 @@ async function POST(request: NextRequest, context: { params: Promise<{ eventId: 
                   stage: evaluation.stage,
                   assignedAt: new Date(),
                   completedAt: new Date(),
-                }
+                },
               });
 
               // Create the evaluation
@@ -130,7 +146,8 @@ async function POST(request: NextRequest, context: { params: Promise<{ eventId: 
                   assignmentId: assignment.id,
                   stage: evaluation.stage,
                   status: "COMPLETED",
-                  overallScore: evaluation.overallScore,                  confidence: evaluation.confidence,
+                  overallScore: evaluation.overallScore,
+                  confidence: evaluation.confidence,
                   recommendation: evaluation.recommendation,
                   overallComments: evaluation.overallComments,
                   timeSpentMinutes: evaluation.timeSpentMinutes ?? 0,
@@ -152,37 +169,51 @@ async function POST(request: NextRequest, context: { params: Promise<{ eventId: 
               results.push({
                 applicationId: evaluation.applicationId,
                 evaluationId: newEvaluation.id,
-                status: "created"
+                status: "created",
               });
-
             } catch (evalError) {
-              console.error(`Error processing evaluation for application ${evaluation.applicationId}:`, evalError);
+              console.error(
+                `Error processing evaluation for application ${evaluation.applicationId}:`,
+                evalError,
+              );
               errors.push({
                 applicationId: evaluation.applicationId,
-                error: evalError instanceof Error ? evalError.message : "Unknown error"
+                error:
+                  evalError instanceof Error
+                    ? evalError.message
+                    : "Unknown error",
               });
             }
           }
         });
       } catch (batchError) {
-        console.error(`Error processing batch ${i / batchSize + 1}:`, batchError);
+        console.error(
+          `Error processing batch ${i / batchSize + 1}:`,
+          batchError,
+        );
         // Add all applications in this batch to errors
-        batch.forEach(evaluation => {
+        batch.forEach((evaluation) => {
           errors.push({
             applicationId: evaluation.applicationId,
-            error: batchError instanceof Error ? batchError.message : "Batch processing error"
+            error:
+              batchError instanceof Error
+                ? batchError.message
+                : "Batch processing error",
           });
         });
       }
     }
 
     // Log batch processing statistics
-    console.log(`[MASTRA AI BATCH] Processed ${batchData.evaluations.length} evaluations:`, {
-      successful: results.length,
-      errors: errors.length,
-      batchId: batchData.batchMetadata.batchId,
-      modelVersion: batchData.batchMetadata.modelVersion,
-    });
+    console.log(
+      `[MASTRA AI BATCH] Processed ${batchData.evaluations.length} evaluations:`,
+      {
+        successful: results.length,
+        errors: errors.length,
+        batchId: batchData.batchMetadata.batchId,
+        modelVersion: batchData.batchMetadata.modelVersion,
+      },
+    );
 
     return Response.json({
       success: errors.length === 0,
@@ -195,41 +226,48 @@ async function POST(request: NextRequest, context: { params: Promise<{ eventId: 
         errors: errors.length > 0 ? errors : undefined,
         batchMetadata: batchData.batchMetadata,
         processingStats: {
-          totalProcessingTime: new Date(batchData.batchMetadata.processingEndTime).getTime() - 
-                               new Date(batchData.batchMetadata.processingStartTime).getTime(),
-          averageTimePerEvaluation: batchData.evaluations.length > 0 
-            ? batchData.evaluations.reduce((sum, e) => sum + e.aiMetadata.processingTime, 0) / batchData.evaluations.length
-            : 0,
-          totalTokensUsed: batchData.evaluations.reduce((sum, e) => sum + (e.aiMetadata.tokensUsed ?? 0), 0),
+          totalProcessingTime:
+            new Date(batchData.batchMetadata.processingEndTime).getTime() -
+            new Date(batchData.batchMetadata.processingStartTime).getTime(),
+          averageTimePerEvaluation:
+            batchData.evaluations.length > 0
+              ? batchData.evaluations.reduce(
+                  (sum, e) => sum + e.aiMetadata.processingTime,
+                  0,
+                ) / batchData.evaluations.length
+              : 0,
+          totalTokensUsed: batchData.evaluations.reduce(
+            (sum, e) => sum + (e.aiMetadata.tokensUsed ?? 0),
+            0,
+          ),
         },
         metadata: {
           createdAt: new Date().toISOString(),
           eventId,
-        }
-      }
+        },
+      },
     });
-
   } catch (error) {
     if (error instanceof z.ZodError) {
       return Response.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: "Invalid batch evaluation data",
-          details: error.errors
+          details: error.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     console.error("[MASTRA API] Error creating batch AI evaluations:", error);
-    
+
     return Response.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "Failed to create batch AI evaluations",
-        details: error instanceof Error ? error.message : "Unknown error"
-      }, 
-      { status: 500 }
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
     );
   }
 }

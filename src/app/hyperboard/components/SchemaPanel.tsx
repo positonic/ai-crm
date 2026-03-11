@@ -2,11 +2,7 @@
 
 import { Paper, Stack, Group, Title, Button, Code, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import {
-  IconCode,
-  IconCopy,
-  IconDownload,
-} from "@tabler/icons-react";
+import { IconCode, IconCopy, IconDownload } from "@tabler/icons-react";
 import { type HyperboardConfig } from "../HyperboardPlaygroundClient";
 
 interface SchemaPanelProps {
@@ -84,7 +80,8 @@ export function SchemaPanel({ config }: SchemaPanelProps) {
         {/* Schema Display */}
         <Stack gap="xs">
           <Text size="sm" c="dimmed">
-            Current configuration in JSON format. Use this schema to programmatically generate hyperboards.
+            Current configuration in JSON format. Use this schema to
+            programmatically generate hyperboards.
           </Text>
           <Code block style={{ maxHeight: "500px", overflow: "auto" }}>
             {configJson}

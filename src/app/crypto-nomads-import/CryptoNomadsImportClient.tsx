@@ -1,8 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Container, Title, Textarea, Paper, Alert, LoadingOverlay, Progress, Text, Group, Stack } from "@mantine/core";
-import { IconUpload, IconCheck, IconX, IconAlertCircle } from "@tabler/icons-react";
+import {
+  Button,
+  Container,
+  Title,
+  Textarea,
+  Paper,
+  Alert,
+  LoadingOverlay,
+  Progress,
+  Text,
+  Group,
+  Stack,
+} from "@mantine/core";
+import {
+  IconUpload,
+  IconCheck,
+  IconX,
+  IconAlertCircle,
+} from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 
 interface ImportResult {
@@ -27,7 +44,8 @@ interface EventsData {
 export default function CryptoNomadsImportClient() {
   const [jsonInput, setJsonInput] = useState("");
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
-  const [userImportResult, setUserImportResult] = useState<UserImportResult | null>(null);
+  const [userImportResult, setUserImportResult] =
+    useState<UserImportResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,10 +67,10 @@ export default function CryptoNomadsImportClient() {
     try {
       // Parse the JSON input
       const parsedData = JSON.parse(jsonInput) as EventsData;
-      
+
       // Extract events from the data structure
       let events: unknown[] = [];
-      
+
       if (parsedData.pageProps?.allEvents) {
         events = parsedData.pageProps.allEvents;
       } else if (parsedData.allEvents) {
@@ -60,7 +78,9 @@ export default function CryptoNomadsImportClient() {
       } else if (Array.isArray(parsedData)) {
         events = parsedData;
       } else {
-        throw new Error("Invalid JSON structure. Expected 'allEvents' array or pageProps.allEvents");
+        throw new Error(
+          "Invalid JSON structure. Expected 'allEvents' array or pageProps.allEvents",
+        );
       }
 
       if (events.length === 0) {
@@ -68,11 +88,12 @@ export default function CryptoNomadsImportClient() {
       }
 
       // Call the tRPC endpoint - cast to expected type for the mutation
-      const result = await syncEventsMutation.mutateAsync({ 
-        events: events as Parameters<typeof syncEventsMutation.mutateAsync>[0]['events']
+      const result = await syncEventsMutation.mutateAsync({
+        events: events as Parameters<
+          typeof syncEventsMutation.mutateAsync
+        >[0]["events"],
       });
       setImportResult(result);
-
     } catch (err) {
       if (err instanceof SyntaxError) {
         setError("Invalid JSON format. Please check your input.");
@@ -99,10 +120,10 @@ export default function CryptoNomadsImportClient() {
     try {
       // Parse the JSON input
       const parsedData = JSON.parse(jsonInput) as EventsData;
-      
+
       // Extract events from the data structure
       let events: unknown[] = [];
-      
+
       if (parsedData.pageProps?.allEvents) {
         events = parsedData.pageProps.allEvents;
       } else if (parsedData.allEvents) {
@@ -110,7 +131,9 @@ export default function CryptoNomadsImportClient() {
       } else if (Array.isArray(parsedData)) {
         events = parsedData;
       } else {
-        throw new Error("Invalid JSON structure. Expected 'allEvents' array or pageProps.allEvents");
+        throw new Error(
+          "Invalid JSON structure. Expected 'allEvents' array or pageProps.allEvents",
+        );
       }
 
       if (events.length === 0) {
@@ -118,11 +141,12 @@ export default function CryptoNomadsImportClient() {
       }
 
       // Call the tRPC endpoint for user sync
-      const result = await syncUsersMutation.mutateAsync({ 
-        events: events as Parameters<typeof syncUsersMutation.mutateAsync>[0]['events']
+      const result = await syncUsersMutation.mutateAsync({
+        events: events as Parameters<
+          typeof syncUsersMutation.mutateAsync
+        >[0]["events"],
       });
       setUserImportResult(result);
-
     } catch (err) {
       if (err instanceof SyntaxError) {
         setUserError("Invalid JSON format. Please check your input.");
@@ -144,11 +168,17 @@ export default function CryptoNomadsImportClient() {
     setUserError(null);
   };
 
-  const totalEvents = importResult ? importResult.synced + importResult.skipped : 0;
-  const successRate = totalEvents > 0 ? (importResult!.synced / totalEvents) * 100 : 0;
-  
-  const totalUsers = userImportResult ? userImportResult.synced + userImportResult.skipped : 0;
-  const userSuccessRate = totalUsers > 0 ? (userImportResult!.synced / totalUsers) * 100 : 0;
+  const totalEvents = importResult
+    ? importResult.synced + importResult.skipped
+    : 0;
+  const successRate =
+    totalEvents > 0 ? (importResult!.synced / totalEvents) * 100 : 0;
+
+  const totalUsers = userImportResult
+    ? userImportResult.synced + userImportResult.skipped
+    : 0;
+  const userSuccessRate =
+    totalUsers > 0 ? (userImportResult!.synced / totalUsers) * 100 : 0;
 
   return (
     <Container size="lg" py="xl">
@@ -156,17 +186,18 @@ export default function CryptoNomadsImportClient() {
         <Title order={1} ta="center" c="blue">
           🚀 Crypto Nomads Import System
         </Title>
-        
+
         <Text ta="center" c="dimmed" size="lg">
-          Import events and users from crypto nomads JSON data to Notion databases
+          Import events and users from crypto nomads JSON data to Notion
+          databases
         </Text>
 
         <Paper shadow="md" p="lg" radius="md" pos="relative">
           <LoadingOverlay visible={isLoading || isLoadingUsers} />
-          
+
           <Stack gap="md">
             <Title order={3}>📋 Paste JSON Data</Title>
-            
+
             <Text size="sm" c="dimmed">
               Paste your events JSON data below. Supported formats:
               <br />• <code>{`allEvents: [...]`}</code>
@@ -195,24 +226,24 @@ export default function CryptoNomadsImportClient() {
                 variant="outline"
                 color="gray"
                 onClick={handleClear}
-                disabled={(isLoading || isLoadingUsers) || !jsonInput}
+                disabled={isLoading || isLoadingUsers || !jsonInput}
               >
                 Clear
               </Button>
-              
+
               <Group gap="sm">
                 <Button
                   onClick={handleImport}
-                  disabled={(isLoading || isLoadingUsers) || !jsonInput.trim()}
+                  disabled={isLoading || isLoadingUsers || !jsonInput.trim()}
                   leftSection={<IconUpload size={16} />}
                   loading={isLoading}
                 >
                   Import Events
                 </Button>
-                
+
                 <Button
                   onClick={handleUserImport}
-                  disabled={(isLoading || isLoadingUsers) || !jsonInput.trim()}
+                  disabled={isLoading || isLoadingUsers || !jsonInput.trim()}
                   leftSection={<IconUpload size={16} />}
                   loading={isLoadingUsers}
                   variant="filled"
@@ -305,8 +336,9 @@ export default function CryptoNomadsImportClient() {
                   color="green"
                   variant="light"
                 >
-                  Successfully imported {importResult.synced} events to Notion! 
-                  {importResult.skipped > 0 && ` (${importResult.skipped} were already present)`}
+                  Successfully imported {importResult.synced} events to Notion!
+                  {importResult.skipped > 0 &&
+                    ` (${importResult.skipped} were already present)`}
                 </Alert>
               )}
             </Stack>
@@ -371,8 +403,10 @@ export default function CryptoNomadsImportClient() {
                   color="blue"
                   variant="light"
                 >
-                  Successfully imported {userImportResult.synced} users to Notion Contacts! 
-                  {userImportResult.skipped > 0 && ` (${userImportResult.skipped} were already present)`}
+                  Successfully imported {userImportResult.synced} users to
+                  Notion Contacts!
+                  {userImportResult.skipped > 0 &&
+                    ` (${userImportResult.skipped} were already present)`}
                 </Alert>
               )}
             </Stack>
@@ -383,11 +417,16 @@ export default function CryptoNomadsImportClient() {
           <Stack gap="xs">
             <Title order={4}>💡 Usage Tips</Title>
             <Text size="sm" c="dimmed">
-              • <strong>Events:</strong> Automatically detects duplicate events by name
-              <br />• <strong>Users:</strong> Extracts users from usersGoingObj and creates contacts
-              <br />• <strong>Duplicates:</strong> Users are checked by airtableId to prevent duplicates
-              <br />• <strong>Processing:</strong> Large imports are processed efficiently in batches
-              <br />• <strong>Results:</strong> Check the results section for any errors or skipped items
+              • <strong>Events:</strong> Automatically detects duplicate events
+              by name
+              <br />• <strong>Users:</strong> Extracts users from usersGoingObj
+              and creates contacts
+              <br />• <strong>Duplicates:</strong> Users are checked by
+              airtableId to prevent duplicates
+              <br />• <strong>Processing:</strong> Large imports are processed
+              efficiently in batches
+              <br />• <strong>Results:</strong> Check the results section for
+              any errors or skipped items
             </Text>
           </Stack>
         </Paper>

@@ -14,9 +14,10 @@ interface HyperboardClientProps {
 }
 
 export function HyperboardClient({ eventId }: HyperboardClientProps) {
-  const { data: sponsors, isLoading } = api.sponsor.getSponsorsForHyperboard.useQuery({
-    eventId,
-  });
+  const { data: sponsors, isLoading } =
+    api.sponsor.getSponsorsForHyperboard.useQuery({
+      eventId,
+    });
 
   if (isLoading) {
     return (
@@ -45,7 +46,8 @@ export function HyperboardClient({ eventId }: HyperboardClientProps) {
             Event Hyperboard
           </Title>
           <Text c="dimmed">
-            Visualizing sponsors and their impact. Tile size represents market cap or contribution level.
+            Visualizing sponsors and their impact. Tile size represents market
+            cap or contribution level.
           </Text>
         </div>
 

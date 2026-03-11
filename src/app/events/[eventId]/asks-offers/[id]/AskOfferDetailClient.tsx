@@ -287,11 +287,7 @@ export default function AskOfferDetailClient({
       <Stack gap="xl">
         {/* Back Navigation */}
         <Group>
-          <ActionIcon
-            variant="subtle"
-            size="lg"
-            onClick={() => router.back()}
-          >
+          <ActionIcon variant="subtle" size="lg" onClick={() => router.back()}>
             <IconArrowLeft size={20} />
           </ActionIcon>
           <Text size="sm" c="dimmed">
@@ -306,9 +302,15 @@ export default function AskOfferDetailClient({
             <Group justify="space-between" align="flex-start">
               <Group gap="md">
                 {askOffer.type === "ASK" ? (
-                  <IconHandStop size={32} style={{ color: "var(--mantine-color-red-6)" }} />
+                  <IconHandStop
+                    size={32}
+                    style={{ color: "var(--mantine-color-red-6)" }}
+                  />
                 ) : (
-                  <IconGift size={32} style={{ color: "var(--mantine-color-green-6)" }} />
+                  <IconGift
+                    size={32}
+                    style={{ color: "var(--mantine-color-green-6)" }}
+                  />
                 )}
                 <div>
                   <Badge
@@ -342,7 +344,9 @@ export default function AskOfferDetailClient({
                       color="green"
                       size="sm"
                       leftSection={<IconCheck size={16} />}
-                      onClick={() => markFulfilledMutation.mutate({ id: askOffer.id })}
+                      onClick={() =>
+                        markFulfilledMutation.mutate({ id: askOffer.id })
+                      }
                       loading={markFulfilledMutation.isPending}
                     >
                       Mark Fulfilled
@@ -421,7 +425,8 @@ export default function AskOfferDetailClient({
                     <IconBriefcase size={14} />
                     <Text size="sm" c="dimmed">
                       {askOffer.user.profile.jobTitle}
-                      {askOffer.user.profile.company && ` at ${askOffer.user.profile.company}`}
+                      {askOffer.user.profile.company &&
+                        ` at ${askOffer.user.profile.company}`}
                     </Text>
                   </Group>
                 )}
@@ -549,7 +554,9 @@ export default function AskOfferDetailClient({
               <Stack gap="md">
                 {comments.map((comment) => {
                   const commentHasLiked = session?.user
-                    ? comment.likes.some((like) => like.userId === session.user.id)
+                    ? comment.likes.some(
+                        (like) => like.userId === session.user.id,
+                      )
                     : false;
 
                   return (
@@ -560,7 +567,8 @@ export default function AskOfferDetailClient({
                           <Group gap="sm">
                             <Avatar
                               src={getAvatarUrl({
-                                customAvatarUrl: comment.user.profile?.avatarUrl,
+                                customAvatarUrl:
+                                  comment.user.profile?.avatarUrl,
                                 oauthImageUrl: comment.user.image,
                                 name: comment.user.name,
                               })}
@@ -587,7 +595,11 @@ export default function AskOfferDetailClient({
                                 variant="subtle"
                                 color="red"
                                 size="sm"
-                                onClick={() => deleteCommentMutation.mutate({ commentId: comment.id })}
+                                onClick={() =>
+                                  deleteCommentMutation.mutate({
+                                    commentId: comment.id,
+                                  })
+                                }
                                 loading={deleteCommentMutation.isPending}
                               >
                                 <IconTrash size={14} />
@@ -606,8 +618,19 @@ export default function AskOfferDetailClient({
                               variant="subtle"
                               color={commentHasLiked ? "red" : "gray"}
                               size="xs"
-                              leftSection={commentHasLiked ? <IconHeartFilled size={14} /> : <IconHeart size={14} />}
-                              onClick={() => handleCommentLikeToggle(comment.id, commentHasLiked)}
+                              leftSection={
+                                commentHasLiked ? (
+                                  <IconHeartFilled size={14} />
+                                ) : (
+                                  <IconHeart size={14} />
+                                )
+                              }
+                              onClick={() =>
+                                handleCommentLikeToggle(
+                                  comment.id,
+                                  commentHasLiked,
+                                )
+                              }
                             >
                               {comment.likes.length}
                             </Button>
@@ -616,7 +639,11 @@ export default function AskOfferDetailClient({
                               color="gray"
                               size="xs"
                               leftSection={<IconCornerDownRight size={14} />}
-                              onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                              onClick={() =>
+                                setReplyingTo(
+                                  replyingTo === comment.id ? null : comment.id,
+                                )
+                              }
                             >
                               Reply
                             </Button>
@@ -625,12 +652,18 @@ export default function AskOfferDetailClient({
 
                         {/* Reply Form */}
                         {replyingTo === comment.id && (
-                          <Paper p="sm" bg="gray.0" style={{ marginLeft: "2rem" }}>
+                          <Paper
+                            p="sm"
+                            bg="gray.0"
+                            style={{ marginLeft: "2rem" }}
+                          >
                             <Stack gap="sm">
                               <Textarea
                                 placeholder="Write a reply..."
                                 value={replyContent}
-                                onChange={(e) => setReplyContent(e.currentTarget.value)}
+                                onChange={(e) =>
+                                  setReplyContent(e.currentTarget.value)
+                                }
                                 minRows={2}
                                 size="sm"
                               />
@@ -660,20 +693,34 @@ export default function AskOfferDetailClient({
 
                         {/* Nested Replies */}
                         {comment.replies && comment.replies.length > 0 && (
-                          <Stack gap="sm" style={{ marginLeft: "2rem", borderLeft: "2px solid var(--mantine-color-gray-3)", paddingLeft: "1rem" }}>
+                          <Stack
+                            gap="sm"
+                            style={{
+                              marginLeft: "2rem",
+                              borderLeft:
+                                "2px solid var(--mantine-color-gray-3)",
+                              paddingLeft: "1rem",
+                            }}
+                          >
                             {comment.replies.map((reply) => {
                               const replyHasLiked = session?.user
-                                ? reply.likes.some((like) => like.userId === session.user.id)
+                                ? reply.likes.some(
+                                    (like) => like.userId === session.user.id,
+                                  )
                                 : false;
 
                               return (
                                 <Paper key={reply.id} p="sm" bg="gray.0">
                                   <Stack gap="xs">
-                                    <Group justify="space-between" align="flex-start">
+                                    <Group
+                                      justify="space-between"
+                                      align="flex-start"
+                                    >
                                       <Group gap="xs">
                                         <Avatar
                                           src={getAvatarUrl({
-                                            customAvatarUrl: reply.user.profile?.avatarUrl,
+                                            customAvatarUrl:
+                                              reply.user.profile?.avatarUrl,
                                             oauthImageUrl: reply.user.image,
                                             name: reply.user.name,
                                           })}
@@ -686,7 +733,10 @@ export default function AskOfferDetailClient({
                                           })}
                                         </Avatar>
                                         <Text fw={500} size="xs">
-                                          {getDisplayName(reply.user, "Anonymous")}
+                                          {getDisplayName(
+                                            reply.user,
+                                            "Anonymous",
+                                          )}
                                         </Text>
                                         <Text size="xs" c="dimmed">
                                           {getRelativeTime(reply.createdAt)}
@@ -697,7 +747,11 @@ export default function AskOfferDetailClient({
                                           variant="subtle"
                                           color="red"
                                           size="xs"
-                                          onClick={() => deleteCommentMutation.mutate({ commentId: reply.id })}
+                                          onClick={() =>
+                                            deleteCommentMutation.mutate({
+                                              commentId: reply.id,
+                                            })
+                                          }
                                         >
                                           <IconTrash size={12} />
                                         </ActionIcon>
@@ -710,8 +764,19 @@ export default function AskOfferDetailClient({
                                           variant="subtle"
                                           color={replyHasLiked ? "red" : "gray"}
                                           size="xs"
-                                          leftSection={replyHasLiked ? <IconHeartFilled size={12} /> : <IconHeart size={12} />}
-                                          onClick={() => handleCommentLikeToggle(reply.id, replyHasLiked)}
+                                          leftSection={
+                                            replyHasLiked ? (
+                                              <IconHeartFilled size={12} />
+                                            ) : (
+                                              <IconHeart size={12} />
+                                            )
+                                          }
+                                          onClick={() =>
+                                            handleCommentLikeToggle(
+                                              reply.id,
+                                              replyHasLiked,
+                                            )
+                                          }
                                         >
                                           {reply.likes.length}
                                         </Button>
@@ -751,7 +816,7 @@ export default function AskOfferDetailClient({
             <TextInput
               label="Title"
               placeholder="Brief title..."
-              {...form.getInputProps('title')}
+              {...form.getInputProps("title")}
               required
             />
 
@@ -760,8 +825,12 @@ export default function AskOfferDetailClient({
               placeholder="Provide details... (Use @ to mention users, supports Markdown)"
               minRows={4}
               value={form.values.description}
-              onChange={(value) => form.setFieldValue('description', value)}
-              error={typeof form.errors.description === 'string' ? form.errors.description : undefined}
+              onChange={(value) => form.setFieldValue("description", value)}
+              error={
+                typeof form.errors.description === "string"
+                  ? form.errors.description
+                  : undefined
+              }
               required
             />
 
@@ -769,7 +838,7 @@ export default function AskOfferDetailClient({
               label="Tags"
               placeholder="Add tags..."
               value={form.values.tags}
-              onChange={(tags) => form.setFieldValue('tags', tags)}
+              onChange={(tags) => form.setFieldValue("tags", tags)}
             />
 
             <Group justify="flex-end">

@@ -45,34 +45,30 @@ export function ProjectsClient() {
     technologies: [],
   });
 
-  const {
-    data,
-    isLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = api.profile.getAllFeaturedProjects.useInfiniteQuery(
-    {
-      search: filters.search || undefined,
-      technologies: filters.technologies.length > 0 ? filters.technologies : undefined,
-      limit: 20,
-    },
-    {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-    }
-  );
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    api.profile.getAllFeaturedProjects.useInfiniteQuery(
+      {
+        search: filters.search || undefined,
+        technologies:
+          filters.technologies.length > 0 ? filters.technologies : undefined,
+        limit: 20,
+      },
+      {
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
+    );
 
   const allProjects = data?.pages.flatMap((page) => page.projects) ?? [];
 
   // Get unique technologies from all projects for filter options
   const allTechnologies = Array.from(
-    new Set(
-      allProjects
-        .flatMap((project) => project.technologies)
-    )
+    new Set(allProjects.flatMap((project) => project.technologies)),
   ).map((tech) => ({ value: tech, label: tech }));
 
-  const handleFilterChange = (key: keyof ProjectFilters, value: string | string[]) => {
+  const handleFilterChange = (
+    key: keyof ProjectFilters,
+    value: string | string[],
+  ) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -83,18 +79,23 @@ export function ProjectsClient() {
     });
   };
 
-
   return (
     <Container size="xl" py="xl">
       <Group justify="space-between" mb="xl">
         <div>
-          <Title order={1} mb="xs">Projects Directory</Title>
+          <Title order={1} mb="xs">
+            Projects Directory
+          </Title>
           <Text c="dimmed">
             Discover featured projects from our community members
           </Text>
         </div>
         {session && (
-          <Button component={Link} href="/profile/edit" leftSection={<IconPlus size={16} />}>
+          <Button
+            component={Link}
+            href="/profile/edit"
+            leftSection={<IconPlus size={16} />}
+          >
             Add Your Project
           </Button>
         )}
@@ -110,7 +111,7 @@ export function ProjectsClient() {
                 Clear all
               </Button>
             </Group>
-            
+
             <Stack gap="md">
               <TextInput
                 placeholder="Search projects..."
@@ -143,7 +144,7 @@ export function ProjectsClient() {
               <Text mb="md" c="dimmed">
                 Showing {allProjects.length} featured projects
               </Text>
-              
+
               <Grid>
                 {allProjects.map((project) => (
                   <Grid.Col key={project.id} span={{ base: 12, sm: 6, md: 4 }}>
@@ -155,11 +156,23 @@ export function ProjectsClient() {
                       h="100%"
                       component={Link}
                       href={`/projects/${project.id}`}
-                      style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}
+                      style={{
+                        textDecoration: "none",
+                        color: "inherit",
+                        cursor: "pointer",
+                      }}
                     >
                       <Stack gap="xs">
-                        <Group justify="space-between" align="flex-start" wrap="nowrap">
-                          <Group gap="xs" wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
+                        <Group
+                          justify="space-between"
+                          align="flex-start"
+                          wrap="nowrap"
+                        >
+                          <Group
+                            gap="xs"
+                            wrap="nowrap"
+                            style={{ minWidth: 0, flex: 1 }}
+                          >
                             {project.imageUrl ? (
                               <Image
                                 src={project.imageUrl}
@@ -174,15 +187,30 @@ export function ProjectsClient() {
                               <Avatar
                                 size={24}
                                 radius="sm"
-                                color={["blue", "cyan", "grape", "green", "indigo", "orange", "pink", "teal", "violet"][
-                                  project.id.charCodeAt(0) % 9
-                                ]}
+                                color={
+                                  [
+                                    "blue",
+                                    "cyan",
+                                    "grape",
+                                    "green",
+                                    "indigo",
+                                    "orange",
+                                    "pink",
+                                    "teal",
+                                    "violet",
+                                  ][project.id.charCodeAt(0) % 9]
+                                }
                                 style={{ flexShrink: 0 }}
                               >
                                 {project.title.charAt(0).toUpperCase()}
                               </Avatar>
                             )}
-                            <Text fw={500} size="sm" lineClamp={1} style={{ minWidth: 0 }}>
+                            <Text
+                              fw={500}
+                              size="sm"
+                              lineClamp={1}
+                              style={{ minWidth: 0 }}
+                            >
                               {project.title}
                             </Text>
                           </Group>
@@ -195,7 +223,7 @@ export function ProjectsClient() {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     e.preventDefault();
-                                    window.open(project.liveUrl!, '_blank');
+                                    window.open(project.liveUrl!, "_blank");
                                   }}
                                 >
                                   <IconExternalLink size={12} />
@@ -210,7 +238,10 @@ export function ProjectsClient() {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     e.preventDefault();
-                                    window.open(getPrimaryRepoUrl(project)!, '_blank');
+                                    window.open(
+                                      getPrimaryRepoUrl(project)!,
+                                      "_blank",
+                                    );
                                   }}
                                 >
                                   <IconBrandGithub size={12} />
@@ -274,12 +305,19 @@ export function ProjectsClient() {
                 <Paper p="xl" radius="md" withBorder>
                   <Center>
                     <Stack align="center" gap="md">
-                      <Text size="lg" fw={500}>No projects found</Text>
+                      <Text size="lg" fw={500}>
+                        No projects found
+                      </Text>
                       <Text c="dimmed" ta="center">
-                        No projects match your current filters. Try adjusting your search criteria.
+                        No projects match your current filters. Try adjusting
+                        your search criteria.
                       </Text>
                       {session && (
-                        <Button component={Link} href="/profile/edit" leftSection={<IconPlus size={16} />}>
+                        <Button
+                          component={Link}
+                          href="/profile/edit"
+                          leftSection={<IconPlus size={16} />}
+                        >
                           Add the First Project
                         </Button>
                       )}

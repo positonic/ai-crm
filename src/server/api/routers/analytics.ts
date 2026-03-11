@@ -1,15 +1,22 @@
 /**
  * Analytics Router - Secure, Anonymized Data Access
- * 
+ *
  * Provides analytics endpoints for researchers like David Dao
  * with built-in PII protection, rate limiting, and audit logging.
  */
 
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { checkResearcherAccess, logAnalyticsAccess, checkRateLimit } from "~/utils/analyticsAuth";
+import {
+  checkResearcherAccess,
+  logAnalyticsAccess,
+  checkRateLimit,
+} from "~/utils/analyticsAuth";
 import { sanitizeTextForAnalysis } from "~/utils/textSanitization";
-import { generateParticipantId, generateEventContextId } from "~/utils/anonymization";
+import {
+  generateParticipantId,
+  generateEventContextId,
+} from "~/utils/anonymization";
 
 /**
  * Interface for experience level tracking
@@ -27,29 +34,42 @@ interface ExperienceLevels {
 const MIN_AGGREGATION_THRESHOLD = 5;
 
 export const analyticsRouter = createTRPCRouter({
-  
   /**
    * Get sanitized text corpus for Broad Listening analysis
    * Returns all text responses grouped by question type with PII removed
    */
   getApplicationTextCorpus: protectedProcedure
-    .input(z.object({
-      eventId: z.string(),
-      questionKeys: z.array(z.string()).optional(), // Specific questions to include
-      includeMetadata: z.boolean().default(true),
-      sanitizationLevel: z.enum(['standard', 'strict']).default('standard'),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(),
+        questionKeys: z.array(z.string()).optional(), // Specific questions to include
+        includeMetadata: z.boolean().default(true),
+        sanitizationLevel: z.enum(["standard", "strict"]).default("standard"),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       checkResearcherAccess(ctx.session.user.role);
-      
+
       // Rate limiting
-      await checkRateLimit(ctx.db, ctx.session.user.id, 'APPLICATION_TEXT_CORPUS');
-      
+      await checkRateLimit(
+        ctx.db,
+        ctx.session.user.id,
+        "APPLICATION_TEXT_CORPUS",
+      );
+
       // Get applications with responses
       const applications = await ctx.db.application.findMany({
         where: {
           eventId: input.eventId,
-          status: { in: ["SUBMITTED", "UNDER_REVIEW", "ACCEPTED", "REJECTED", "WAITLISTED"] },
+          status: {
+            in: [
+              "SUBMITTED",
+              "UNDER_REVIEW",
+              "ACCEPTED",
+              "REJECTED",
+              "WAITLISTED",
+            ],
+          },
         },
         include: {
           responses: {
@@ -62,31 +82,39 @@ export const analyticsRouter = createTRPCRouter({
                 },
               },
             },
-            where: input.questionKeys ? {
-              question: {
-                questionKey: { in: input.questionKeys },
-              },
-            } : undefined,
+            where: input.questionKeys
+              ? {
+                  question: {
+                    questionKey: { in: input.questionKeys },
+                  },
+                }
+              : undefined,
           },
         },
       });
 
       // Group responses by question type and sanitize
-      const textCorpus: Record<string, Array<{
-        text: string;
-        originalLength: number;
-        participantId: string;
-      }>> = {};
+      const textCorpus: Record<
+        string,
+        Array<{
+          text: string;
+          originalLength: number;
+          participantId: string;
+        }>
+      > = {};
 
       let totalResponses = 0;
 
       for (const application of applications) {
-        const participantId = generateParticipantId(application.userId ?? application.id, input.eventId);
-        
+        const participantId = generateParticipantId(
+          application.userId ?? application.id,
+          input.eventId,
+        );
+
         for (const response of application.responses) {
           const questionKey = response.question.questionKey;
           // Only include text-based responses
-          if (!['TEXT', 'TEXTAREA'].includes(response.question.questionType)) {
+          if (!["TEXT", "TEXTAREA"].includes(response.question.questionType)) {
             continue;
           }
 
@@ -96,7 +124,7 @@ export const analyticsRouter = createTRPCRouter({
           const sanitizedText = sanitizeTextForAnalysis(response.answer, {
             preserveEmailStructure: false,
             preserveUrlStructure: false,
-            preserveNameStructure: input.sanitizationLevel === 'standard',
+            preserveNameStructure: input.sanitizationLevel === "standard",
           });
 
           if (sanitizedText.trim().length > 0) {
@@ -121,23 +149,26 @@ export const analyticsRouter = createTRPCRouter({
       const result = {
         eventContext: generateEventContextId(input.eventId),
         questionTypes: filteredCorpus,
-        metadata: input.includeMetadata ? {
-          totalApplications: applications.length,
-          totalResponses,
-          questionCount: Object.keys(filteredCorpus).length,
-          averageResponseLength: Math.round(
-            Object.values(filteredCorpus)
-              .flat()
-              .reduce((sum, r) => sum + r.originalLength, 0) / totalResponses || 0
-          ),
-          sanitizationLevel: input.sanitizationLevel,
-        } : undefined,
+        metadata: input.includeMetadata
+          ? {
+              totalApplications: applications.length,
+              totalResponses,
+              questionCount: Object.keys(filteredCorpus).length,
+              averageResponseLength: Math.round(
+                Object.values(filteredCorpus)
+                  .flat()
+                  .reduce((sum, r) => sum + r.originalLength, 0) /
+                  totalResponses || 0,
+              ),
+              sanitizationLevel: input.sanitizationLevel,
+            }
+          : undefined,
       };
 
       // Log access
       await logAnalyticsAccess(ctx.db, {
         userId: ctx.session.user.id,
-        endpoint: 'APPLICATION_TEXT_CORPUS',
+        endpoint: "APPLICATION_TEXT_CORPUS",
         eventId: input.eventId,
         dataRequested: `${Object.keys(filteredCorpus).length} question types, ${totalResponses} responses`,
         requestParams: input,
@@ -152,25 +183,44 @@ export const analyticsRouter = createTRPCRouter({
    * Returns aggregated gender/region/experience data
    */
   getDemographicsBreakdown: protectedProcedure
-    .input(z.object({
-      eventId: z.string(),
-      status: z.enum(["DRAFT", "SUBMITTED", "UNDER_REVIEW", "ACCEPTED", "REJECTED", "WAITLISTED", "CANCELLED"]).optional(),
-      applicationType: z.enum(["RESIDENT", "MENTOR", "SPEAKER"]).optional(),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(),
+        status: z
+          .enum([
+            "DRAFT",
+            "SUBMITTED",
+            "UNDER_REVIEW",
+            "ACCEPTED",
+            "REJECTED",
+            "WAITLISTED",
+            "CANCELLED",
+          ])
+          .optional(),
+        applicationType: z.enum(["RESIDENT", "MENTOR", "SPEAKER"]).optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       checkResearcherAccess(ctx.session.user.role);
-      
-      await checkRateLimit(ctx.db, ctx.session.user.id, 'DEMOGRAPHICS_BREAKDOWN');
+
+      await checkRateLimit(
+        ctx.db,
+        ctx.session.user.id,
+        "DEMOGRAPHICS_BREAKDOWN",
+      );
 
       // Import demographics utilities
-      const { isLatamCountry, normalizeGender, calculatePercentage } = await import("~/utils/demographics");
+      const { isLatamCountry, normalizeGender, calculatePercentage } =
+        await import("~/utils/demographics");
 
       // Get applications with responses
       const applications = await ctx.db.application.findMany({
         where: {
           eventId: input.eventId,
           ...(input.status && { status: input.status }),
-          ...(input.applicationType && { applicationType: input.applicationType }),
+          ...(input.applicationType && {
+            applicationType: input.applicationType,
+          }),
         },
         include: {
           responses: {
@@ -190,12 +240,13 @@ export const analyticsRouter = createTRPCRouter({
         const result = {
           eventContext: generateEventContextId(input.eventId),
           totalParticipants: 0,
-          message: "Insufficient data for demographics analysis (minimum 5 participants required)",
+          message:
+            "Insufficient data for demographics analysis (minimum 5 participants required)",
         };
 
         await logAnalyticsAccess(ctx.db, {
           userId: ctx.session.user.id,
-          endpoint: 'DEMOGRAPHICS_BREAKDOWN',
+          endpoint: "DEMOGRAPHICS_BREAKDOWN",
           eventId: input.eventId,
           dataRequested: "Demographics (insufficient data)",
           requestParams: input,
@@ -217,42 +268,44 @@ export const analyticsRouter = createTRPCRouter({
 
       // Experience level tracking
       const experienceLevels: ExperienceLevels = {
-        junior: 0,      // 0-2 years
-        mid: 0,         // 3-7 years
-        senior: 0,      // 8+ years
+        junior: 0, // 0-2 years
+        mid: 0, // 3-7 years
+        senior: 0, // 8+ years
         unspecified: 0,
       };
 
       for (const application of applications) {
         const responseMap = new Map(
-          application.responses.map(r => [r.question.questionKey, r.answer])
+          application.responses.map((r) => [r.question.questionKey, r.answer]),
         );
 
         // Process gender data
-        const genderResponse = responseMap.get('gender') ?? responseMap.get('sex') ?? '';
+        const genderResponse =
+          responseMap.get("gender") ?? responseMap.get("sex") ?? "";
         const normalizedGender = normalizeGender(genderResponse);
-        
+
         switch (normalizedGender) {
-          case 'male':
+          case "male":
             maleCount++;
             break;
-          case 'female':
+          case "female":
             femaleCount++;
             break;
-          case 'other':
+          case "other":
             otherGenderCount++;
             break;
-          case 'prefer_not_to_say':
+          case "prefer_not_to_say":
             preferNotToSayCount++;
             break;
-          case 'unspecified':
+          case "unspecified":
             unspecifiedGenderCount++;
             break;
         }
 
         // Process nationality/region data
-        const nationalityResponse = responseMap.get('nationality') ?? responseMap.get('country') ?? '';
-        
+        const nationalityResponse =
+          responseMap.get("nationality") ?? responseMap.get("country") ?? "";
+
         if (!nationalityResponse) {
           unspecifiedRegionCount++;
         } else if (isLatamCountry(nationalityResponse)) {
@@ -262,9 +315,12 @@ export const analyticsRouter = createTRPCRouter({
         }
 
         // Process experience data
-        const experienceResponse = responseMap.get('years_of_experience') ?? responseMap.get('experience') ?? '';
+        const experienceResponse =
+          responseMap.get("years_of_experience") ??
+          responseMap.get("experience") ??
+          "";
         const experienceYears = parseInt(experienceResponse);
-        
+
         if (isNaN(experienceYears)) {
           experienceLevels.unspecified++;
         } else if (experienceYears <= 2) {
@@ -311,14 +367,17 @@ export const analyticsRouter = createTRPCRouter({
             junior: calculatePercentage(experienceLevels.junior, total),
             mid: calculatePercentage(experienceLevels.mid, total),
             senior: calculatePercentage(experienceLevels.senior, total),
-            unspecified: calculatePercentage(experienceLevels.unspecified, total),
+            unspecified: calculatePercentage(
+              experienceLevels.unspecified,
+              total,
+            ),
           },
         },
       };
 
       await logAnalyticsAccess(ctx.db, {
         userId: ctx.session.user.id,
-        endpoint: 'DEMOGRAPHICS_BREAKDOWN',
+        endpoint: "DEMOGRAPHICS_BREAKDOWN",
         eventId: input.eventId,
         dataRequested: `Demographics for ${total} participants`,
         requestParams: input,
@@ -333,21 +392,31 @@ export const analyticsRouter = createTRPCRouter({
    * Returns skills frequency data for visualization
    */
   getSkillsWordCloud: protectedProcedure
-    .input(z.object({
-      eventId: z.string(),
-      minOccurrences: z.number().min(1).default(2),
-      limit: z.number().min(1).max(100).default(50),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(),
+        minOccurrences: z.number().min(1).default(2),
+        limit: z.number().min(1).max(100).default(50),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       checkResearcherAccess(ctx.session.user.role);
-      
-      await checkRateLimit(ctx.db, ctx.session.user.id, 'SKILLS_WORD_CLOUD');
+
+      await checkRateLimit(ctx.db, ctx.session.user.id, "SKILLS_WORD_CLOUD");
 
       // Get applications with skills responses
       const applications = await ctx.db.application.findMany({
         where: {
           eventId: input.eventId,
-          status: { in: ["SUBMITTED", "UNDER_REVIEW", "ACCEPTED", "REJECTED", "WAITLISTED"] },
+          status: {
+            in: [
+              "SUBMITTED",
+              "UNDER_REVIEW",
+              "ACCEPTED",
+              "REJECTED",
+              "WAITLISTED",
+            ],
+          },
         },
         include: {
           responses: {
@@ -360,7 +429,9 @@ export const analyticsRouter = createTRPCRouter({
             },
             where: {
               question: {
-                questionKey: { in: ["technical_skills", "skills", "expertise"] },
+                questionKey: {
+                  in: ["technical_skills", "skills", "expertise"],
+                },
               },
             },
           },
@@ -373,7 +444,7 @@ export const analyticsRouter = createTRPCRouter({
 
       for (const application of applications) {
         let hasSkills = false;
-        
+
         for (const response of application.responses) {
           try {
             // Try to parse as JSON array (for technical_skills)
@@ -389,7 +460,10 @@ export const analyticsRouter = createTRPCRouter({
             }
           } catch {
             // If not JSON, treat as comma-separated text
-            const skills = response.answer.split(/[,\n]/).map(s => s.trim()).filter(Boolean);
+            const skills = response.answer
+              .split(/[,\n]/)
+              .map((s) => s.trim())
+              .filter(Boolean);
             if (skills.length > 0) {
               hasSkills = true;
               for (const skill of skills) {
@@ -398,7 +472,7 @@ export const analyticsRouter = createTRPCRouter({
             }
           }
         }
-        
+
         if (hasSkills) {
           totalParticipants++;
         }
@@ -428,7 +502,7 @@ export const analyticsRouter = createTRPCRouter({
 
       await logAnalyticsAccess(ctx.db, {
         userId: ctx.session.user.id,
-        endpoint: 'SKILLS_WORD_CLOUD',
+        endpoint: "SKILLS_WORD_CLOUD",
         eventId: input.eventId,
         dataRequested: `${filteredSkills.length} skills from ${totalParticipants} participants`,
         requestParams: input,
@@ -443,15 +517,17 @@ export const analyticsRouter = createTRPCRouter({
    * Returns submission patterns over time
    */
   getApplicationTimeline: protectedProcedure
-    .input(z.object({
-      eventId: z.string(),
-      granularity: z.enum(['day', 'week', 'hour']).default('day'),
-      includeStatus: z.boolean().default(true),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(),
+        granularity: z.enum(["day", "week", "hour"]).default("day"),
+        includeStatus: z.boolean().default(true),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       checkResearcherAccess(ctx.session.user.role);
-      
-      await checkRateLimit(ctx.db, ctx.session.user.id, 'APPLICATION_TIMELINE');
+
+      await checkRateLimit(ctx.db, ctx.session.user.id, "APPLICATION_TIMELINE");
 
       const applications = await ctx.db.application.findMany({
         where: {
@@ -464,7 +540,7 @@ export const analyticsRouter = createTRPCRouter({
           applicationType: true,
         },
         orderBy: {
-          submittedAt: 'asc',
+          submittedAt: "asc",
         },
       });
 
@@ -477,7 +553,7 @@ export const analyticsRouter = createTRPCRouter({
 
         await logAnalyticsAccess(ctx.db, {
           userId: ctx.session.user.id,
-          endpoint: 'APPLICATION_TIMELINE',
+          endpoint: "APPLICATION_TIMELINE",
           eventId: input.eventId,
           dataRequested: "Timeline (insufficient data)",
           requestParams: input,
@@ -487,25 +563,30 @@ export const analyticsRouter = createTRPCRouter({
       }
 
       // Group submissions by time period
-      const timeGroups: Record<string, {
-        timestamp: string;
-        count: number;
-        statusBreakdown?: Record<string, number>;
-        typeBreakdown?: Record<string, number>;
-      }> = {};
+      const timeGroups: Record<
+        string,
+        {
+          timestamp: string;
+          count: number;
+          statusBreakdown?: Record<string, number>;
+          typeBreakdown?: Record<string, number>;
+        }
+      > = {};
 
       for (const app of applications) {
         if (!app.submittedAt) continue;
 
         let timeKey: string;
-        if (input.granularity === 'hour') {
-          timeKey = app.submittedAt.toISOString().substring(0, 13) + ':00:00.000Z';
-        } else if (input.granularity === 'week') {
+        if (input.granularity === "hour") {
+          timeKey =
+            app.submittedAt.toISOString().substring(0, 13) + ":00:00.000Z";
+        } else if (input.granularity === "week") {
           const weekStart = new Date(app.submittedAt);
           weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-          timeKey = weekStart.toISOString().substring(0, 10) + 'T00:00:00.000Z';
+          timeKey = weekStart.toISOString().substring(0, 10) + "T00:00:00.000Z";
         } else {
-          timeKey = app.submittedAt.toISOString().substring(0, 10) + 'T00:00:00.000Z';
+          timeKey =
+            app.submittedAt.toISOString().substring(0, 10) + "T00:00:00.000Z";
         }
 
         timeGroups[timeKey] ??= {
@@ -522,17 +603,19 @@ export const analyticsRouter = createTRPCRouter({
           const typeBreakdown = timeGroup.typeBreakdown!;
           statusBreakdown[app.status] = (statusBreakdown[app.status] ?? 0) + 1;
 
-          typeBreakdown[app.applicationType] = (typeBreakdown[app.applicationType] ?? 0) + 1;
+          typeBreakdown[app.applicationType] =
+            (typeBreakdown[app.applicationType] ?? 0) + 1;
         }
       }
 
       const timeline = Object.values(timeGroups).sort(
-        (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        (a, b) =>
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
       );
 
       // Remove breakdowns if not requested
       if (!input.includeStatus) {
-        timeline.forEach(item => {
+        timeline.forEach((item) => {
           delete item.statusBreakdown;
           delete item.typeBreakdown;
         });
@@ -553,7 +636,7 @@ export const analyticsRouter = createTRPCRouter({
 
       await logAnalyticsAccess(ctx.db, {
         userId: ctx.session.user.id,
-        endpoint: 'APPLICATION_TIMELINE',
+        endpoint: "APPLICATION_TIMELINE",
         eventId: input.eventId,
         dataRequested: `Timeline with ${timeline.length} data points`,
         requestParams: input,
@@ -568,14 +651,16 @@ export const analyticsRouter = createTRPCRouter({
    * Returns aggregated review statistics without exposing individual reviewer data
    */
   getReviewMetrics: protectedProcedure
-    .input(z.object({
-      eventId: z.string(),
-      includeTimeline: z.boolean().default(false),
-    }))
+    .input(
+      z.object({
+        eventId: z.string(),
+        includeTimeline: z.boolean().default(false),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       checkResearcherAccess(ctx.session.user.role);
-      
-      await checkRateLimit(ctx.db, ctx.session.user.id, 'REVIEW_METRICS');
+
+      await checkRateLimit(ctx.db, ctx.session.user.id, "REVIEW_METRICS");
 
       // Get evaluation data
       const evaluations = await ctx.db.applicationEvaluation.findMany({
@@ -615,7 +700,7 @@ export const analyticsRouter = createTRPCRouter({
 
         await logAnalyticsAccess(ctx.db, {
           userId: ctx.session.user.id,
-          endpoint: 'REVIEW_METRICS',
+          endpoint: "REVIEW_METRICS",
           eventId: input.eventId,
           dataRequested: "Review metrics (insufficient data)",
           requestParams: input,
@@ -625,36 +710,45 @@ export const analyticsRouter = createTRPCRouter({
       }
 
       // Calculate metrics
-      const completedEvaluations = evaluations.filter(e => e.completedAt);
+      const completedEvaluations = evaluations.filter((e) => e.completedAt);
       const totalTimeSpent = completedEvaluations
-        .filter(e => e.timeSpentMinutes)
+        .filter((e) => e.timeSpentMinutes)
         .reduce((sum, e) => sum + (e.timeSpentMinutes ?? 0), 0);
 
       const scoreDistribution = completedEvaluations
-        .filter(e => e.overallScore !== null)
-        .reduce((acc, e) => {
-          const score = Math.floor(e.overallScore!);
-          acc[score] = (acc[score] ?? 0) + 1;
-          return acc;
-        }, {} as Record<number, number>);
+        .filter((e) => e.overallScore !== null)
+        .reduce(
+          (acc, e) => {
+            const score = Math.floor(e.overallScore!);
+            acc[score] = (acc[score] ?? 0) + 1;
+            return acc;
+          },
+          {} as Record<number, number>,
+        );
 
       const recommendationCounts = completedEvaluations
-        .filter(e => e.recommendation)
-        .reduce((acc, e) => {
-          acc[e.recommendation!] = (acc[e.recommendation!] ?? 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
+        .filter((e) => e.recommendation)
+        .reduce(
+          (acc, e) => {
+            acc[e.recommendation!] = (acc[e.recommendation!] ?? 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>,
+        );
 
-      const stageBreakdown = assignments.reduce((acc, a) => {
-        acc[a.stage] = (acc[a.stage] ?? 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      const stageBreakdown = assignments.reduce(
+        (acc, a) => {
+          acc[a.stage] = (acc[a.stage] ?? 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
 
       let timeline = undefined;
       if (input.includeTimeline && completedEvaluations.length > 0) {
         // Group by day
         const timelineData: Record<string, number> = {};
-        completedEvaluations.forEach(e => {
+        completedEvaluations.forEach((e) => {
           if (e.completedAt) {
             const day = e.completedAt.toISOString().substring(0, 10);
             timelineData[day] = (timelineData[day] ?? 0) + 1;
@@ -670,27 +764,30 @@ export const analyticsRouter = createTRPCRouter({
         eventContext: generateEventContextId(input.eventId),
         totalEvaluations: evaluations.length,
         completedEvaluations: completedEvaluations.length,
-        averageTimePerReview: completedEvaluations.length > 0 
-          ? Math.round(totalTimeSpent / completedEvaluations.length) 
-          : 0,
+        averageTimePerReview:
+          completedEvaluations.length > 0
+            ? Math.round(totalTimeSpent / completedEvaluations.length)
+            : 0,
         totalReviewHours: Math.round(totalTimeSpent / 60),
         scoreDistribution,
         recommendationBreakdown: recommendationCounts,
         stageBreakdown,
-        averageConfidence: completedEvaluations.length > 0
-          ? Math.round(
-              completedEvaluations
-                .filter(e => e.confidence)
-                .reduce((sum, e) => sum + (e.confidence ?? 0), 0) /
-              completedEvaluations.filter(e => e.confidence).length * 10
-            ) / 10
-          : null,
+        averageConfidence:
+          completedEvaluations.length > 0
+            ? Math.round(
+                (completedEvaluations
+                  .filter((e) => e.confidence)
+                  .reduce((sum, e) => sum + (e.confidence ?? 0), 0) /
+                  completedEvaluations.filter((e) => e.confidence).length) *
+                  10,
+              ) / 10
+            : null,
         timeline,
       };
 
       await logAnalyticsAccess(ctx.db, {
         userId: ctx.session.user.id,
-        endpoint: 'REVIEW_METRICS',
+        endpoint: "REVIEW_METRICS",
         eventId: input.eventId,
         dataRequested: `Review metrics for ${evaluations.length} evaluations`,
         requestParams: input,

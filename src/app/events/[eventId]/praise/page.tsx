@@ -33,17 +33,20 @@ export default function PraisePage({ params }: PraisePageProps) {
     void params.then(({ eventId: id }) => setEventId(id));
   }, [params]);
 
-  const { data: receivedPraise, isLoading: loadingReceived } = api.praise.getMyReceivedPraise.useQuery();
-  const { data: sentPraise, isLoading: loadingSent } = api.praise.getMySentPraise.useQuery();
+  const { data: receivedPraise, isLoading: loadingReceived } =
+    api.praise.getMyReceivedPraise.useQuery();
+  const { data: sentPraise, isLoading: loadingSent } =
+    api.praise.getMySentPraise.useQuery();
   const { data: stats } = api.praise.getMyStats.useQuery();
-  const { data: transactions, isLoading: loadingTransactions } = api.praise.getAllTransactions.useQuery({
-    limit: 100,
-  });
+  const { data: transactions, isLoading: loadingTransactions } =
+    api.praise.getAllTransactions.useQuery({
+      limit: 100,
+    });
 
   // Get event details
   const { isLoading: eventLoading } = api.event.getEvent.useQuery(
     { id: eventId },
-    { enabled: !!eventId }
+    { enabled: !!eventId },
   );
 
   if (eventLoading || !eventId) {
@@ -58,7 +61,9 @@ export default function PraisePage({ params }: PraisePageProps) {
 
   return (
     <Container size="xl" py="xl">
-      <Title order={1} mb="xl">Praise</Title>
+      <Title order={1} mb="xl">
+        Praise
+      </Title>
 
       <Tabs value={activeTab} onChange={setActiveTab}>
         <Tabs.List>
@@ -75,12 +80,20 @@ export default function PraisePage({ params }: PraisePageProps) {
           {stats ? (
             <Group grow>
               <Paper p="lg" withBorder>
-                <Text size="sm" c="dimmed" mb="xs">Praise Received</Text>
-                <Text size="2xl" fw={700}>{stats.receivedCount}</Text>
+                <Text size="sm" c="dimmed" mb="xs">
+                  Praise Received
+                </Text>
+                <Text size="2xl" fw={700}>
+                  {stats.receivedCount}
+                </Text>
               </Paper>
               <Paper p="lg" withBorder>
-                <Text size="sm" c="dimmed" mb="xs">Praise Sent</Text>
-                <Text size="2xl" fw={700}>{stats.sentCount}</Text>
+                <Text size="sm" c="dimmed" mb="xs">
+                  Praise Sent
+                </Text>
+                <Text size="2xl" fw={700}>
+                  {stats.sentCount}
+                </Text>
               </Paper>
             </Group>
           ) : (
@@ -108,11 +121,14 @@ export default function PraisePage({ params }: PraisePageProps) {
                         radius="xl"
                       />
                       <Text fw={500}>
-                        {getDisplayName(transaction.recipient) ?? transaction.recipientName}
+                        {getDisplayName(transaction.recipient) ??
+                          transaction.recipientName}
                       </Text>
                     </Group>
                     <Text size="sm" c="dimmed">
-                      {formatDistanceToNow(new Date(transaction.createdAt), { addSuffix: true })}
+                      {formatDistanceToNow(new Date(transaction.createdAt), {
+                        addSuffix: true,
+                      })}
                     </Text>
                   </Group>
                   {transaction.message && (
@@ -150,12 +166,18 @@ export default function PraisePage({ params }: PraisePageProps) {
                         radius="xl"
                       />
                       <div>
-                        <Text fw={500}>{getDisplayName(praise.sender, "Unknown")}</Text>
-                        <Text size="xs" c="dimmed">{praise.sender.email}</Text>
+                        <Text fw={500}>
+                          {getDisplayName(praise.sender, "Unknown")}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {praise.sender.email}
+                        </Text>
                       </div>
                     </Group>
                     <Text size="sm" c="dimmed">
-                      {formatDistanceToNow(new Date(praise.createdAt), { addSuffix: true })}
+                      {formatDistanceToNow(new Date(praise.createdAt), {
+                        addSuffix: true,
+                      })}
                     </Text>
                   </Group>
                   {praise.message && (
@@ -193,12 +215,18 @@ export default function PraisePage({ params }: PraisePageProps) {
                         radius="xl"
                       />
                       <div>
-                        <Text fw={500}>{getDisplayName(praise.recipient, "Unknown")}</Text>
-                        <Text size="xs" c="dimmed">{praise.recipient?.email}</Text>
+                        <Text fw={500}>
+                          {getDisplayName(praise.recipient, "Unknown")}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {praise.recipient?.email}
+                        </Text>
                       </div>
                     </Group>
                     <Text size="sm" c="dimmed">
-                      {formatDistanceToNow(new Date(praise.createdAt), { addSuffix: true })}
+                      {formatDistanceToNow(new Date(praise.createdAt), {
+                        addSuffix: true,
+                      })}
                     </Text>
                   </Group>
                   {praise.message && (

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Container,
@@ -14,36 +14,45 @@ import {
   Alert,
   Center,
   Loader,
-} from '@mantine/core';
-import { IconBrandGithub, IconArrowLeft, IconInfoCircle, IconShare } from '@tabler/icons-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { api } from '~/trpc/react';
-import { TechnologyBadge } from '~/app/_components/TechnologyBadge';
-import { MarkdownRenderer } from '~/app/_components/MarkdownRenderer';
+} from "@mantine/core";
+import {
+  IconBrandGithub,
+  IconArrowLeft,
+  IconInfoCircle,
+  IconShare,
+} from "@tabler/icons-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { api } from "~/trpc/react";
+import { TechnologyBadge } from "~/app/_components/TechnologyBadge";
+import { MarkdownRenderer } from "~/app/_components/MarkdownRenderer";
 
 interface ProjectDetailClientProps {
   slug: string;
 }
 
 const getDifficultyColor = (difficulty?: string) => {
-  if (!difficulty) return 'gray';
-  
+  if (!difficulty) return "gray";
+
   switch (difficulty.toLowerCase()) {
-    case 'easy':
-      return 'green';
-    case 'medium':
-      return 'yellow';
-    case 'hard':
-      return 'red';
+    case "easy":
+      return "green";
+    case "medium":
+      return "yellow";
+    case "hard":
+      return "red";
     default:
-      return 'gray';
+      return "gray";
   }
 };
 
 export function ProjectDetailClient({ slug }: ProjectDetailClientProps) {
   const router = useRouter();
-  const { data: project, isLoading, error } = api.projectIdea.getBySlug.useQuery({ slug });
+  const {
+    data: project,
+    isLoading,
+    error,
+  } = api.projectIdea.getBySlug.useQuery({ slug });
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -62,22 +71,24 @@ export function ProjectDetailClient({ slug }: ProjectDetailClientProps) {
     }
   };
 
-  const githubUrl = project ? 
-    `https://github.com/fundingthecommons/project-ideas/blob/main/projects/${slug}.md` :
-    '';
+  const githubUrl = project
+    ? `https://github.com/fundingthecommons/project-ideas/blob/main/projects/${slug}.md`
+    : "";
 
   const breadcrumbItems = [
-    { title: 'Project Ideas', href: '/project-ideas' },
-    { title: project?.title ?? 'Loading...', href: '#' },
-  ].map((item, index) => (
+    { title: "Project Ideas", href: "/project-ideas" },
+    { title: project?.title ?? "Loading...", href: "#" },
+  ].map((item, index) =>
     index === 0 ? (
       <Link key={index} href={item.href} passHref legacyBehavior>
         <Anchor>{item.title}</Anchor>
       </Link>
     ) : (
-      <Text key={index} c="dimmed">{item.title}</Text>
-    )
-  ));
+      <Text key={index} c="dimmed">
+        {item.title}
+      </Text>
+    ),
+  );
 
   if (isLoading) {
     return (
@@ -106,13 +117,14 @@ export function ProjectDetailClient({ slug }: ProjectDetailClientProps) {
             >
               Back to Projects
             </Button>
-            
-            <Alert 
-              icon={<IconInfoCircle size={16} />} 
-              title="Project not found" 
+
+            <Alert
+              icon={<IconInfoCircle size={16} />}
+              title="Project not found"
               color="red"
             >
-              The project you&apos;re looking for doesn&apos;t exist or couldn&apos;t be loaded.
+              The project you&apos;re looking for doesn&apos;t exist or
+              couldn&apos;t be loaded.
             </Alert>
           </Stack>
         </Container>
@@ -137,14 +149,16 @@ export function ProjectDetailClient({ slug }: ProjectDetailClientProps) {
             >
               Back to Projects
             </Button>
-            
-            <Breadcrumbs>
-              {breadcrumbItems}
-            </Breadcrumbs>
+
+            <Breadcrumbs>{breadcrumbItems}</Breadcrumbs>
           </Group>
 
           {/* Project Header */}
-          <Paper p="xl" radius="lg" className="bg-theme-surface-primary border-theme-light">
+          <Paper
+            p="xl"
+            radius="lg"
+            className="bg-theme-surface-primary border-theme-light"
+          >
             <Stack gap="lg">
               {/* Title and Meta */}
               <div>
@@ -152,17 +166,17 @@ export function ProjectDetailClient({ slug }: ProjectDetailClientProps) {
                   <Title order={1} size="h1">
                     {project.title}
                   </Title>
-                  
+
                   <Group gap="xs">
                     {project.category && (
                       <Badge variant="light" size="lg">
                         {project.category}
                       </Badge>
                     )}
-                    
+
                     {project.difficulty && (
-                      <Badge 
-                        variant="filled" 
+                      <Badge
+                        variant="filled"
                         size="lg"
                         color={getDifficultyColor(project.difficulty)}
                       >
@@ -209,7 +223,7 @@ export function ProjectDetailClient({ slug }: ProjectDetailClientProps) {
                 >
                   View on GitHub
                 </Button>
-                
+
                 <Button
                   variant="light"
                   leftSection={<IconShare size={16} />}
@@ -222,7 +236,11 @@ export function ProjectDetailClient({ slug }: ProjectDetailClientProps) {
           </Paper>
 
           {/* Project Content */}
-          <Paper p="xl" radius="lg" className="bg-theme-surface-primary border-theme-light">
+          <Paper
+            p="xl"
+            radius="lg"
+            className="bg-theme-surface-primary border-theme-light"
+          >
             <MarkdownRenderer content={project.content} />
           </Paper>
 
@@ -231,13 +249,14 @@ export function ProjectDetailClient({ slug }: ProjectDetailClientProps) {
             <Group justify="space-between" align="center">
               <div>
                 <Text size="sm" c="dimmed">
-                  Last updated: {new Date(project.lastSynced).toLocaleDateString()}
+                  Last updated:{" "}
+                  {new Date(project.lastSynced).toLocaleDateString()}
                 </Text>
                 <Text size="xs" c="dimmed">
                   Source: {project.githubPath}
                 </Text>
               </div>
-              
+
               <Group gap="xs">
                 <Text size="xs" c="dimmed">
                   Found an issue?

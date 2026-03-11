@@ -39,16 +39,16 @@ import { notifications } from "@mantine/notifications";
 
 // Layout styles for image rendering
 const SINGLE_IMAGE_LAYOUT_STYLE = {
-  flexDirection: 'row' as const,
+  flexDirection: "row" as const,
 };
 
 const SINGLE_IMAGE_PAPER_STYLE = {
-  overflow: 'hidden',
-  cursor: 'pointer',
-  transition: 'transform 0.2s ease',
+  overflow: "hidden",
+  cursor: "pointer",
+  transition: "transform 0.2s ease",
   flexShrink: 0,
-  width: 'calc(100% / 3)',
-  minWidth: 'calc(100% / 3)',
+  width: "calc(100% / 3)",
+  minWidth: "calc(100% / 3)",
 };
 
 const SINGLE_IMAGE_STYLE = {
@@ -60,10 +60,10 @@ const SINGLE_IMAGE_STYLE = {
 const TEXT_CONTENT_CONTAINER_STYLE = { flex: 1, minWidth: 0 };
 
 const MULTI_IMAGE_PAPER_STYLE = {
-  overflow: 'hidden',
-  cursor: 'pointer',
-  transition: 'transform 0.2s ease',
-  aspectRatio: '16/9',
+  overflow: "hidden",
+  cursor: "pointer",
+  transition: "transform 0.2s ease",
+  aspectRatio: "16/9",
 };
 
 const MULTI_IMAGE_STYLE = {
@@ -72,7 +72,11 @@ const MULTI_IMAGE_STYLE = {
   objectFit: "cover" as const,
 };
 
-export default function UpdateDetailPage({ params }: { params: Promise<{ updateId: string }> }) {
+export default function UpdateDetailPage({
+  params,
+}: {
+  params: Promise<{ updateId: string }>;
+}) {
   const resolvedParams = use(params);
   const { data: session } = useSession();
   const router = useRouter();
@@ -88,7 +92,7 @@ export default function UpdateDetailPage({ params }: { params: Promise<{ updateI
     {
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
-    }
+    },
   );
 
   // Fetch user metrics for author
@@ -98,13 +102,15 @@ export default function UpdateDetailPage({ params }: { params: Promise<{ updateI
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       staleTime: 60000,
-    }
+    },
   );
 
   // Create comment mutation
   const createComment = api.project.createUpdateComment.useMutation({
     onSuccess: async () => {
-      await utils.project.getUpdateById.refetch({ updateId: resolvedParams.updateId });
+      await utils.project.getUpdateById.refetch({
+        updateId: resolvedParams.updateId,
+      });
       setCommentInput("");
       setShowCommentInput(false);
       notifications.show({
@@ -124,13 +130,18 @@ export default function UpdateDetailPage({ params }: { params: Promise<{ updateI
 
   const getRelativeTime = useCallback((date: Date) => {
     const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - new Date(date).getTime()) / 1000);
+    const diffInSeconds = Math.floor(
+      (now.getTime() - new Date(date).getTime()) / 1000,
+    );
 
-    if (diffInSeconds < 60) return 'just now';
+    if (diffInSeconds < 60) return "just now";
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w ago`;
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800)
+      return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    if (diffInSeconds < 2592000)
+      return `${Math.floor(diffInSeconds / 604800)}w ago`;
     return new Date(date).toLocaleDateString();
   }, []);
 
@@ -169,7 +180,7 @@ export default function UpdateDetailPage({ params }: { params: Promise<{ updateI
             <Button
               variant="subtle"
               leftSection={<IconArrowLeft size={16} />}
-              onClick={() => router.push('/community/updates')}
+              onClick={() => router.push("/community/updates")}
             >
               Back to Updates
             </Button>
@@ -186,7 +197,7 @@ export default function UpdateDetailPage({ params }: { params: Promise<{ updateI
         <Button
           variant="subtle"
           leftSection={<IconArrowLeft size={16} />}
-          onClick={() => router.push('/community/updates')}
+          onClick={() => router.push("/community/updates")}
           w="fit-content"
         >
           Back to Updates
@@ -226,7 +237,7 @@ export default function UpdateDetailPage({ params }: { params: Promise<{ updateI
                     fw={600}
                     size="md"
                   >
-                    {update.author.name ?? 'Anonymous'}
+                    {update.author.name ?? "Anonymous"}
                   </Text>
                   <Text c="dimmed" size="sm">
                     •
@@ -246,7 +257,9 @@ export default function UpdateDetailPage({ params }: { params: Promise<{ updateI
                       kudos={userMetrics[update.author.id]!.kudos}
                       updates={userMetrics[update.author.id]!.updates}
                       projects={userMetrics[update.author.id]!.projects}
-                      praiseReceived={userMetrics[update.author.id]!.praiseReceived}
+                      praiseReceived={
+                        userMetrics[update.author.id]!.praiseReceived
+                      }
                       size="xs"
                     />
                   </Box>
@@ -286,7 +299,11 @@ export default function UpdateDetailPage({ params }: { params: Promise<{ updateI
             ) : update.imageUrls.length > 0 ? (
               <>
                 <SimpleGrid
-                  cols={{ base: 1, sm: 2, md: update.imageUrls.length >= 3 ? 3 : 2 }}
+                  cols={{
+                    base: 1,
+                    sm: 2,
+                    md: update.imageUrls.length >= 3 ? 3 : 2,
+                  }}
                   spacing="md"
                 >
                   {update.imageUrls.map((url, imgIndex) => (
@@ -318,7 +335,7 @@ export default function UpdateDetailPage({ params }: { params: Promise<{ updateI
                   <Anchor key={urlIndex} href={url} target="_blank" size="sm">
                     <Group gap={4}>
                       <IconBrandGithub size={16} />
-                      GitHub {update.githubUrls.length > 1 ? urlIndex + 1 : ''}
+                      GitHub {update.githubUrls.length > 1 ? urlIndex + 1 : ""}
                     </Group>
                   </Anchor>
                 ))}
@@ -326,7 +343,7 @@ export default function UpdateDetailPage({ params }: { params: Promise<{ updateI
                   <Anchor key={urlIndex} href={url} target="_blank" size="sm">
                     <Group gap={4}>
                       <IconExternalLink size={16} />
-                      Demo {update.demoUrls.length > 1 ? urlIndex + 1 : ''}
+                      Demo {update.demoUrls.length > 1 ? urlIndex + 1 : ""}
                     </Group>
                   </Anchor>
                 ))}
@@ -351,7 +368,13 @@ export default function UpdateDetailPage({ params }: { params: Promise<{ updateI
               <LikeButton
                 updateId={update.id}
                 initialLikeCount={update.likes.length}
-                initialHasLiked={session?.user ? update.likes.some(like => like.userId === session.user.id) : false}
+                initialHasLiked={
+                  session?.user
+                    ? update.likes.some(
+                        (like) => like.userId === session.user.id,
+                      )
+                    : false
+                }
                 userId={session?.user?.id}
               />
             </Group>
