@@ -117,24 +117,6 @@ export default function DeliberationsAdminClient() {
     },
   });
 
-  const updateStatus = api.deliberation.updateDeliberationStatus.useMutation({
-    onSuccess: () => {
-      notifications.show({
-        title: "Status updated",
-        message: "Deliberation status has been updated.",
-        color: "green",
-      });
-      void utils.deliberation.getDeliberation.invalidate();
-    },
-    onError: (error) => {
-      notifications.show({
-        title: "Error",
-        message: error.message,
-        color: "red",
-      });
-    },
-  });
-
   const triggerClustering = api.deliberation.triggerClustering.useMutation({
     onSuccess: (data) => {
       notifications.show({
