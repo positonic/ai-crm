@@ -23,8 +23,12 @@ Separate AI-heavy workloads from the Next.js platform to avoid Vercel function t
 
 ```
 POST /transcribe
-  Input:  { audioUrl: string } OR { text: string }
+  Input:  { audioUrl: string (https-only; must pass SSRF checks below) }
+          OR { text: string }
   Output: { jobId: string, status: "processing" }
+
+  Implementers MUST enforce all audioUrl checks below and return 400
+  for any disallowed URL BEFORE creating the jobId/status response.
 
   audioUrl validation (SSRF prevention — enforce BEFORE creating jobId):
     - Scheme:       only https (reject http, file, ftp, data, etc.)

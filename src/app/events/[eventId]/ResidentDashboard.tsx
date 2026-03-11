@@ -47,6 +47,7 @@ import { ProjectManager } from "~/app/_components/ProjectManager";
 interface ResidentDashboardProps {
   eventId: string;
   eventName: string;
+  featureDeliberation?: boolean;
   userApplication: {
     status: string;
   } | null;
@@ -55,6 +56,7 @@ interface ResidentDashboardProps {
 export default function ResidentDashboard({
   eventId,
   eventName,
+  featureDeliberation,
   userApplication: _userApplication,
 }: ResidentDashboardProps) {
   const { data: session } = useSession();
@@ -80,10 +82,10 @@ export default function ResidentDashboard({
       eventId,
     });
 
-  // Check for active deliberation
+  // Check for active deliberation (only when feature flag is enabled)
   const { data: deliberation } = api.deliberation.getDeliberation.useQuery(
     { eventId },
-    { enabled: !!eventId },
+    { enabled: !!eventId && !!featureDeliberation },
   );
 
   const userProjects = userProfile?.projects ?? [];
@@ -220,7 +222,7 @@ export default function ResidentDashboard({
                 >
                   Asks & Offers
                 </Tabs.Tab>
-                {deliberation && (
+                {featureDeliberation && deliberation && (
                   <Tabs.Tab
                     value="priorities"
                     leftSection={<IconTarget size={20} />}
@@ -246,7 +248,7 @@ export default function ResidentDashboard({
                 <AsksOffersTab eventId={eventId} session={session} />
               </Tabs.Panel>
 
-              {deliberation && (
+              {featureDeliberation && deliberation && (
                 <Tabs.Panel value="priorities" pt="lg">
                   <Card withBorder p="lg">
                     <Stack gap="md" align="center">
