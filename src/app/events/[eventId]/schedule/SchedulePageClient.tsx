@@ -77,6 +77,7 @@ export default function SchedulePageClient({
   const [viewMode, setViewMode] = useState<
     "simple" | "expanded" | "grid" | "by-floor"
   >(() => {
+    if (embed) return "simple";
     const view = searchParams.get("view");
     if (view === "expanded" || view === "grid" || view === "by-floor")
       return view;

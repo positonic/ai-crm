@@ -50,6 +50,9 @@ export function withMastraAuth<T extends unknown[]>(
 export function validateTranscriptionApiKey(
   request: Request | NextRequest,
 ): boolean {
+  if (!env.TRANSCRIPTION_API_KEY) {
+    throw new Error("TRANSCRIPTION_API_KEY is not set");
+  }
   const apiKey = request.headers.get("x-api-key");
   if (!apiKey) return false;
   return apiKey === env.TRANSCRIPTION_API_KEY;
