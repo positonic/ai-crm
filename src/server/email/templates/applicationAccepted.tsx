@@ -164,7 +164,8 @@ export const ApplicationAcceptedTemplate: React.FC<ApplicationAcceptedProps> = (
           </Text>
           <Text style={floorLeadItem}>
             <strong>Floor 9:</strong>{' '}
-            <a href="mailto:lexibenak@gmail.com" style={link}>lexibenak@gmail.com</a>
+            <a href="mailto:lexibenak@gmail.com" style={link}>lexibenak@gmail.com</a> or{' '}
+            <a href="mailto:dev@sodhiraro.com" style={link}>dev@sodhiraro.com</a>
           </Text>
           <Text style={floorLeadItem}>
             <strong>Floor 11:</strong>{' '}
