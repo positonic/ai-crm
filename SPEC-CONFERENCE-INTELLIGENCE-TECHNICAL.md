@@ -369,7 +369,7 @@ model Deliberation {
   analysisResult Json?
 
   event         Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  transcripts   FloorTranscript[]
+  transcripts   Transcription[]
   topicClusters TopicCluster[]
   priorities    DeliberationPriority[]
 

@@ -129,6 +129,8 @@ export default function PriorityCard({
             size="lg"
             onClick={() => voteMutation.mutate({ priorityId: priority.id })}
             loading={voteMutation.isPending}
+            aria-label={`Toggle vote for ${priority.title}`}
+            aria-pressed={priority.hasVoted}
           >
             <IconArrowUp size={18} />
           </ActionIcon>

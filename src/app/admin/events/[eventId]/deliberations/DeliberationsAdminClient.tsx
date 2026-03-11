@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Alert,
   Container,
   Title,
   Text,
@@ -19,6 +20,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import {
+  IconAlertCircle,
   IconArrowLeft,
   IconPlus,
   IconLock,
@@ -52,11 +54,15 @@ export default function DeliberationsAdminClient() {
 
   const utils = api.useUtils();
 
-  const { data: deliberation, isLoading } =
-    api.deliberation.getDeliberation.useQuery(
-      { eventId },
-      { enabled: !!eventId },
-    );
+  const {
+    data: deliberation,
+    isLoading,
+    isError,
+    error,
+  } = api.deliberation.getDeliberation.useQuery(
+    { eventId },
+    { enabled: !!eventId },
+  );
 
   const { data: priorities } = api.deliberation.getPriorities.useQuery(
     { deliberationId: deliberation?.id ?? "", sortBy: "votes" },
@@ -143,6 +149,34 @@ export default function DeliberationsAdminClient() {
       <Center h="60vh">
         <Loader size="lg" />
       </Center>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Container size="lg" py="xl">
+        <Stack gap="xl">
+          <Group gap="xs">
+            <Button
+              component={Link}
+              href={`/admin/events/${eventId}`}
+              variant="subtle"
+              size="xs"
+              leftSection={<IconArrowLeft size={14} />}
+            >
+              Back to Event
+            </Button>
+          </Group>
+          <Alert
+            icon={<IconAlertCircle size={16} />}
+            title="Failed to load deliberation"
+            color="red"
+            variant="light"
+          >
+            {error?.message ?? "An unexpected error occurred. Please try again later."}
+          </Alert>
+        </Stack>
+      </Container>
     );
   }
 

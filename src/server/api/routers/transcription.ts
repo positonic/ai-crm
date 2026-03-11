@@ -72,6 +72,13 @@ export const transcriptionRouter = createTRPCRouter({
         });
       }
 
+      if (!transcription.eventId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Transcription has no associated event for authorization",
+        });
+      }
+
       await assertDeliberationAdmin(
         ctx.db,
         ctx.session.user.id,
