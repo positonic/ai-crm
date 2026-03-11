@@ -40,9 +40,9 @@ export default function RootLayout({
               <HeaderBar />
               {children}
               <AIChatFABLazy />
+              <GitHubCorner />
             </TRPCReactProvider>
             <ThemeToggle />
-            <GitHubCorner />
           </SessionProvider>
         </ThemeProvider>
       </body>

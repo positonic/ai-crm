@@ -6,7 +6,6 @@ import {
   IconUsers,
   IconChartBar,
   IconMenu2,
-  IconX,
 } from "@tabler/icons-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
