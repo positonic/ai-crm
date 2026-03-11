@@ -10,6 +10,7 @@ import {
   assertDeliberationAdmin,
 } from "~/server/api/utils/deliberationAuth";
 import { getTopicClusteringService } from "~/server/services/topicClustering";
+import { getDeliberationAnalysisService } from "~/server/services/deliberationAnalysis";
 
 export const deliberationRouter = createTRPCRouter({
   // ─── Queries ──────────────────────────────────────────────
@@ -499,6 +500,39 @@ export const deliberationRouter = createTRPCRouter({
       );
 
       return { success: true, clusterCount: clusters.length };
+    }),
+
+  triggerAnalysis: protectedProcedure
+    .input(z.object({ deliberationId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const deliberation = await ctx.db.deliberation.findUnique({
+        where: { id: input.deliberationId },
+        select: { eventId: true },
+      });
+      if (!deliberation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Deliberation not found",
+        });
+      }
+
+      await assertDeliberationAdmin(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        deliberation.eventId,
+      );
+
+      const service = getDeliberationAnalysisService();
+      const result = await service.analyzeDeliberation(
+        input.deliberationId,
+        ctx.db,
+      );
+
+      return {
+        success: true,
+        statistics: result.statistics,
+      };
     }),
 
   moderatePriority: protectedProcedure

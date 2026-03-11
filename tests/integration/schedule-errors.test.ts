@@ -95,7 +95,7 @@ describe("Schedule Router Error Scenarios", () => {
 
       // Create a session with a linked speaker
       const adminCaller = createTestCaller("admin", { id: admin.id });
-      const startTime = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       await adminCaller.schedule.createSession({
@@ -193,7 +193,7 @@ describe("Schedule Router Error Scenarios", () => {
       );
 
       const caller = createTestCaller("admin", { id: admin.id });
-      const startTime = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       const session = await caller.schedule.createSession({
@@ -226,7 +226,7 @@ describe("Schedule Router Error Scenarios", () => {
       );
 
       const adminCaller = createTestCaller("admin", { id: admin.id });
-      const startTime = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       const session = await adminCaller.schedule.createSession({

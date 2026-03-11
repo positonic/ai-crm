@@ -37,7 +37,7 @@ describe("Schedule Router", () => {
 
       const caller = createTestCaller("admin", { id: admin.id });
 
-      const startTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       const result = await caller.schedule.createSession({
@@ -82,7 +82,7 @@ describe("Schedule Router", () => {
 
       const caller = createTestCaller("user", { id: floorLead.id });
 
-      const startTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       const result = await caller.schedule.createSession({
@@ -133,7 +133,7 @@ describe("Schedule Router", () => {
 
       const caller = createTestCaller("user", { id: floorLead.id });
 
-      const startTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       try {
@@ -167,7 +167,7 @@ describe("Schedule Router", () => {
         db,
       );
 
-      const startTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       const adminCaller = createTestCaller("admin", { id: admin.id });
@@ -238,7 +238,7 @@ describe("Schedule Router", () => {
 
       const caller = createTestCaller("user", { id: floorLead.id });
 
-      const startTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       try {

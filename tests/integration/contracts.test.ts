@@ -86,7 +86,7 @@ describe("API Response Shape Contracts", () => {
 
       // Create a session with a linked speaker
       const adminCaller = createTestCaller("admin", { id: admin.id });
-      const startTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
       await adminCaller.schedule.createSession({
