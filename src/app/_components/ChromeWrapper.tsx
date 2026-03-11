@@ -9,7 +9,9 @@ import type { ReactNode } from "react";
  */
 export function ChromeWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const isStandalone = pathname.includes("/schedule-card/");
+  const isStandalone =
+    pathname.includes("/schedule-card/") ||
+    pathname.includes("/schedule-cards/");
 
   if (isStandalone) return null;
 

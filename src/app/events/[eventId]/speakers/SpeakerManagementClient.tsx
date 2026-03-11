@@ -37,7 +37,9 @@ import {
   IconSend,
   IconPresentation,
   IconSearch,
+  IconId,
 } from "@tabler/icons-react";
+import Link from "next/link";
 import { api } from "~/trpc/react";
 import ApplicationDetailsDrawer from "~/app/admin/events/[eventId]/applications/ApplicationDetailsDrawer";
 import {
@@ -62,7 +64,12 @@ export default function SpeakerManagementClient({ eventId }: Props) {
   const [appSearch, setAppSearch] = useState("");
 
   // URL hash-based tab linking
-  const validMainTabs = ["applications", "invitations", "sessions"];
+  const validMainTabs = [
+    "applications",
+    "invitations",
+    "sessions",
+    "speaker-cards",
+  ];
   useEffect(() => {
     const hash = window.location.hash.slice(1);
     if (hash && validMainTabs.includes(hash)) {
@@ -108,6 +115,10 @@ export default function SpeakerManagementClient({ eventId }: Props) {
 
   const { data: sessionsData, isLoading: loadingSessions } =
     api.schedule.getSessionsWithSlidesStatus.useQuery({ eventId });
+
+  // ── Venues for speaker cards tab ──
+  const { data: filtersData } =
+    api.schedule.getEventScheduleFilters.useQuery({ eventId });
 
   const sendSlidesReminder = api.schedule.sendSlidesReminder.useMutation({
     onSuccess: (result) => {
@@ -463,6 +474,12 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                 {sessionRows.length}
               </Badge>
             )}
+          </Tabs.Tab>
+          <Tabs.Tab
+            value="speaker-cards"
+            leftSection={<IconId size={16} />}
+          >
+            Speaker Cards
           </Tabs.Tab>
         </Tabs.List>
 
@@ -968,6 +985,48 @@ export default function SpeakerManagementClient({ eventId }: Props) {
               )}
             </>
           )}
+        </Tabs.Panel>
+
+        {/* ── Speaker Cards Tab ── */}
+        <Tabs.Panel value="speaker-cards">
+          <Stack gap="md">
+            <Text size="sm" c="dimmed">
+              View printable session cards for each floor. Each link opens a
+              standalone page with all session cards for that venue.
+            </Text>
+            {filtersData?.venues && filtersData.venues.length > 0 ? (
+              <Stack gap="sm">
+                {filtersData.venues.map((venue) => (
+                  <Card key={venue.id} withBorder p="md">
+                    <Group justify="space-between" align="center">
+                      <Stack gap={2}>
+                        <Text fw={600}>{venue.name}</Text>
+                        {venue.rooms.length > 0 && (
+                          <Text size="xs" c="dimmed">
+                            {venue.rooms.length} room
+                            {venue.rooms.length !== 1 ? "s" : ""}
+                          </Text>
+                        )}
+                      </Stack>
+                      <Button
+                        component={Link}
+                        href={`/events/${eventId}/schedule-cards/${venue.id}`}
+                        target="_blank"
+                        variant="light"
+                        leftSection={<IconId size={16} />}
+                      >
+                        View Cards
+                      </Button>
+                    </Group>
+                  </Card>
+                ))}
+              </Stack>
+            ) : (
+              <Text c="dimmed" ta="center" py="xl">
+                No venues configured for this event.
+              </Text>
+            )}
+          </Stack>
         </Tabs.Panel>
       </Tabs>
 

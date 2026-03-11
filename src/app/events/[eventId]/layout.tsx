@@ -19,7 +19,9 @@ export default async function EventLayout({
     headersList.get("x-invoke-path") ??
     headersList.get("referer") ??
     "";
-  const isScheduleCard = pathname.includes("/schedule-card/");
+  const isScheduleCard =
+    pathname.includes("/schedule-card/") ||
+    pathname.includes("/schedule-cards/");
 
   if (isScheduleCard) {
     return <>{children}</>;
