@@ -297,8 +297,8 @@ export default function EventDetailClient({
         )}
 
         {/* Main Content */}
-        <Tabs value={activeTab} onChange={setActiveTab}>
-          <Tabs.List grow>
+        <Tabs value={activeTab} onChange={setActiveTab} className="nav-tabs-scrollable">
+          <Tabs.List>
             <Tabs.Tab value="overview">
               Event Overview
             </Tabs.Tab>

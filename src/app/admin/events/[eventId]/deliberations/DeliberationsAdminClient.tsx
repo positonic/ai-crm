@@ -362,7 +362,7 @@ export default function DeliberationsAdminClient() {
                             </Badge>
                           </Table.Td>
                           <Table.Td>
-                            {t.uploadedBy.name ?? "Unknown"}
+                            {t.uploadedBy?.name ?? "Unknown"}
                           </Table.Td>
                           <Table.Td>
                             <Text size="xs" c="dimmed">
