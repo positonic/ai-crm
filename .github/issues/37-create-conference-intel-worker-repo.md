@@ -56,6 +56,48 @@ POST /analyze
   Output: { rankedPriorities, blindSpots, blockerThemes, resourceRecommendations, synthesis }
 ```
 
+### Authentication & request verification
+
+All endpoints (`/transcribe`, `/cluster`, `/analyze`, `GET /jobs/:jobId`) MUST be protected by auth middleware. Anonymous access is not permitted.
+
+#### API-key authentication (minimum requirement)
+
+- Middleware checks `Authorization: Bearer <token>` or `X-API-Key: <key>` header on every request
+- Reject with `401 Unauthorized` (missing/malformed) or `403 Forbidden` (invalid key)
+- Keys stored as environment variables (`WORKER_API_KEY`); support multiple keys via comma-separated list (`WORKER_API_KEYS`) for rotation
+- Rate-limit per key (optional but recommended)
+
+#### Signed-token authentication (recommended for production)
+
+- Accept `Authorization: Bearer <jwt>` where the JWT is signed with a shared secret (`WORKER_JWT_SECRET`)
+- Verify signature (HS256), expiry (`exp`), and issuer (`iss`) claims
+- Include `sub` (caller identity) for audit logging
+- Reject with `401` on invalid/expired tokens
+
+#### Webhook / job-result callback verification
+
+When the worker posts job results back to the platform (or any external callback):
+
+- Sign the callback payload with HMAC-SHA256 using a shared secret (`WEBHOOK_SIGNING_SECRET`)
+- Include the signature in a `X-Signature-256` header: `sha256=<hex-digest>`
+- The receiving side MUST verify the signature before accepting the payload
+- Include a `X-Timestamp` header; reject callbacks older than 5 minutes to prevent replay attacks
+
+#### Environment configuration
+
+```
+WORKER_API_KEY=<primary-api-key>
+WORKER_API_KEYS=<key1>,<key2>           # Optional: multiple keys for rotation
+WORKER_JWT_SECRET=<jwt-signing-secret>  # Optional: for JWT auth mode
+WEBHOOK_SIGNING_SECRET=<hmac-secret>    # For signing outbound callbacks
+```
+
+#### Implementation notes
+
+- Auth middleware should be applied at the router level (e.g., Hono `app.use('*', authMiddleware)` or Express `app.use(authMiddleware)`) so all route handlers are protected by default
+- The `/health` endpoint (if added) may be excluded from auth for load-balancer probes
+- Log authentication failures with request metadata (IP, timestamp) but never log secrets or full tokens
+
 ### Shared types
 
 Consider a small shared types package or just duplicate the interfaces (simpler for POC).
@@ -66,6 +108,9 @@ Consider a small shared types package or just duplicate the interfaces (simpler 
 conference-intel-worker/
   src/
     index.ts          -- entry point / router
+    middleware/
+      auth.ts         -- API-key / JWT verification middleware
+      webhook.ts      -- HMAC signature generation for outbound callbacks
     transcribe.ts     -- Whisper integration
     cluster.ts        -- GPT-4o topic extraction
     analyze.ts        -- signal merge + synthesis
@@ -73,6 +118,7 @@ conference-intel-worker/
   README.md           -- contributor guide
   package.json
   tsconfig.json
+  .env.example        -- documents all required/optional env vars
 ```
 
 ### Acceptance criteria
@@ -80,5 +126,8 @@ conference-intel-worker/
 - [ ] Repo created under fundingthecommons org
 - [ ] README with purpose, setup instructions, API docs
 - [ ] Basic project structure
+- [ ] Auth middleware rejects requests without valid API key / token (401/403)
+- [ ] Outbound webhook callbacks signed with HMAC-SHA256
+- [ ] `.env.example` documents `WORKER_API_KEY`, `WORKER_JWT_SECRET`, `WEBHOOK_SIGNING_SECRET`
 - [ ] At least one endpoint working (transcribe or cluster)
 - [ ] Deployable (Cloudflare Workers or Railway)
