@@ -212,6 +212,34 @@ export const deliberationRouter = createTRPCRouter({
       return deliberation;
     }),
 
+  getAnalysisResultsAdmin: protectedProcedure
+    .input(z.object({ deliberationId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const deliberation = await ctx.db.deliberation.findUnique({
+        where: { id: input.deliberationId },
+        select: {
+          eventId: true,
+          analysisResult: true,
+        },
+      });
+
+      if (!deliberation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Deliberation not found",
+        });
+      }
+
+      await assertDeliberationAdmin(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        deliberation.eventId,
+      );
+
+      return deliberation.analysisResult;
+    }),
+
   // ─── Mutations ────────────────────────────────────────────
 
   createDeliberation: protectedProcedure
