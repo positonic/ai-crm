@@ -51,6 +51,7 @@ import {
   IconAlertCircle,
   IconMessageCircle,
   IconLayoutGrid,
+  IconInfoCircle,
 } from "@tabler/icons-react";
 import Papa from "papaparse";
 import Link from "next/link";
@@ -3249,7 +3250,49 @@ function CsvUploadModal({
     <Modal
       opened={opened}
       onClose={handleClose}
-      title="Import Schedule from CSV"
+      title={
+        <Group gap="xs">
+          <Text fw={600}>Import Schedule from CSV</Text>
+          <Tooltip
+            multiline
+            w={360}
+            withArrow
+            label={
+              <Stack gap={4}>
+                <Text size="xs" fw={600}>
+                  How it works
+                </Text>
+                <Text size="xs">
+                  Upload a CSV with your schedule data. Columns are
+                  auto-detected by header name and can be overridden manually.
+                </Text>
+                <Text size="xs" fw={600} mt={4}>
+                  Supported columns
+                </Text>
+                <Text size="xs">
+                  Title, Date, Start Time, End Time, Speakers, Session Type,
+                  Track, Description, Facilitator, Room / Location
+                </Text>
+                <Text size="xs" fw={600} mt={4}>
+                  Tips
+                </Text>
+                <Text size="xs">
+                  If no Title column, the first line of Description is used as
+                  the title. Duration like &quot;(45 mins)&quot; in the Location column
+                  auto-calculates end times. Time ranges like &quot;11 AM - 6 PM&quot;
+                  are parsed automatically. Speakers can be separated by commas
+                  or newlines.
+                </Text>
+              </Stack>
+            }
+          >
+            <IconInfoCircle
+              size={18}
+              style={{ opacity: 0.5, cursor: "help" }}
+            />
+          </Tooltip>
+        </Group>
+      }
       size="xl"
     >
       <Stepper active={activeStep} allowNextStepsSelect={false} size="sm">
@@ -3258,7 +3301,6 @@ function CsvUploadModal({
           <Stack gap="md" mt="md">
             <FileInput
               label="CSV File"
-              description="Expected columns: Title, Date, Start Time, End Time, Speakers, Session Type, Track, Description. Duration can be embedded in a Location column (e.g. &quot;Room A (45 mins)&quot;)."
               placeholder="Choose a .csv file"
               accept=".csv,.tsv,.txt"
               value={csvFile}
