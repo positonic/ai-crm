@@ -1,6 +1,6 @@
 import { type PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
-import { isAdminOrStaff } from "./scheduleAuth";
+import { isAdminOrStaff, isEventFloorOwner } from "./scheduleAuth";
 
 /**
  * Check if user has an accepted application for the event.
@@ -48,12 +48,15 @@ export async function assertDeliberationAccess(
   if (isAdminOrStaff(userRole)) return;
 
   const accepted = await isAcceptedAttendee(db, userId, eventId);
-  if (!accepted) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Accepted attendee access required",
-    });
-  }
+  if (accepted) return;
+
+  const floorOwner = await isEventFloorOwner(db, userId, eventId);
+  if (floorOwner) return;
+
+  throw new TRPCError({
+    code: "FORBIDDEN",
+    message: "Accepted attendee access required",
+  });
 }
 
 /**
