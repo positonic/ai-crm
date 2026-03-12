@@ -296,6 +296,12 @@ export default function SchedulePageClient({
   const [activeDay, setActiveDay] = useState<string | null>(null);
   const selectedDay = activeDay ?? days[0] ?? null;
 
+  useEffect(() => {
+    if (activeDay && !days.includes(activeDay)) {
+      setActiveDay(null);
+    }
+  }, [activeDay, days]);
+
   const timeSlots = useMemo(() => {
     if (!selectedDay) return undefined;
     const daySessions = sessionsByDay.get(selectedDay);

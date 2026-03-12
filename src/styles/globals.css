@@ -188,3 +188,10 @@
     content: none; /* Don't show URLs in this design */
   }
 }
+
+/* Move theme toggle above action buttons on mobile */
+@media (max-width: 768px) {
+  .theme-toggle-btn {
+    bottom: 5rem !important;
+  }
+}

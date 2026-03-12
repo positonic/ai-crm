@@ -21,11 +21,12 @@ export function ThemeToggle() {
         radius="xl"
         variant="filled"
         color={isDark ? "yellow" : "dark"}
+        className="theme-toggle-btn"
         style={{
           position: "fixed",
           bottom: "2rem",
           right: "2rem",
-          zIndex: 1000,
+          zIndex: 999,
           transition: "all 200ms ease",
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
         }}

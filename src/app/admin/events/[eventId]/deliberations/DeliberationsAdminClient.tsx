@@ -480,7 +480,7 @@ export default function DeliberationsAdminClient() {
                 {/* AT Protocol URIs after publication */}
                 {deliberation.status === "PUBLISHED" &&
                   deliberation.summaryUri && (
-                    <Paper p="sm" radius="sm" withBorder bg="var(--mantine-color-dark-6)">
+                    <Paper p="sm" radius="sm" withBorder bg="var(--mantine-color-default-hover)">
                       <Stack gap="xs">
                         <Group gap="xs">
                           <IconCheck size={14} color="var(--mantine-color-green-6)" />
