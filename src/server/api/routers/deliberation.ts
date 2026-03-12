@@ -632,6 +632,46 @@ export const deliberationRouter = createTRPCRouter({
       };
     }),
 
+  makeResultsPublic: protectedProcedure
+    .input(z.object({ deliberationId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const deliberation = await ctx.db.deliberation.findUnique({
+        where: { id: input.deliberationId },
+        select: { eventId: true, status: true, analysisResult: true },
+      });
+      if (!deliberation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Deliberation not found",
+        });
+      }
+
+      await assertDeliberationAdmin(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        deliberation.eventId,
+      );
+
+      if (!deliberation.analysisResult) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Run analysis before publishing results",
+        });
+      }
+
+      if (deliberation.status === "PUBLISHED") {
+        return { success: true, alreadyPublished: true };
+      }
+
+      await ctx.db.deliberation.update({
+        where: { id: input.deliberationId },
+        data: { status: "PUBLISHED" },
+      });
+
+      return { success: true, alreadyPublished: false };
+    }),
+
   publishResults: protectedProcedure
     .input(z.object({ deliberationId: z.string() }))
     .mutation(async ({ ctx, input }) => {
@@ -653,14 +693,11 @@ export const deliberationRouter = createTRPCRouter({
         deliberation.eventId,
       );
 
-      if (
-        deliberation.status !== "CLOSED" &&
-        deliberation.status !== "ANALYZING"
-      ) {
+      if (deliberation.status === "COLLECTING") {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message:
-            "Deliberation must be closed or analyzed before publishing to DDS",
+            "Close submissions before publishing to DDS",
         });
       }
 

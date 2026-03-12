@@ -18,9 +18,6 @@ import {
   Center,
   Stepper,
   Tooltip,
-  Progress,
-  SimpleGrid,
-  ThemeIcon,
 } from "@mantine/core";
 import {
   IconAlertCircle,
@@ -32,82 +29,12 @@ import {
   IconChartDots,
   IconRocket,
   IconCheck,
-  IconAlertTriangle,
-  IconCoin,
 } from "@tabler/icons-react";
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { api } from "~/trpc/react";
 import { notifications } from "@mantine/notifications";
-
-// Types matching deliberationAnalysis service output
-interface ClassifiedPriority {
-  priorityId: string;
-  title: string;
-  classification: "convergent" | "blind_spot" | "aspirational";
-  reasoning: string;
-  voteCount: number;
-  relatedTopicLabels: string[];
-}
-
-interface BlockerTheme {
-  theme: string;
-  description: string;
-  affectedPriorities: string[];
-  frequency: number;
-}
-
-interface ResourceRecommendation {
-  category: string;
-  recommendation: string;
-  relatedPriorities: string[];
-  urgency: string;
-}
-
-interface AnalysisResult {
-  synthesis: string;
-  classifiedPriorities: ClassifiedPriority[];
-  blockerThemes: BlockerTheme[];
-  resourceRecommendations: ResourceRecommendation[];
-  statistics: {
-    totalPriorities: number;
-    totalVotes: number;
-    totalBlockers: number;
-    totalResources: number;
-    topicClusterCount: number;
-    convergentCount: number;
-    blindSpotCount: number;
-    aspirationalCount: number;
-  };
-  generatedAt: string;
-}
-
-function getSignalBadge(classification: string) {
-  switch (classification) {
-    case "convergent":
-      return { color: "green", label: "Convergent" };
-    case "blind_spot":
-      return { color: "orange", label: "Blind Spot" };
-    case "aspirational":
-      return { color: "blue", label: "Aspirational" };
-    default:
-      return { color: "gray", label: classification };
-  }
-}
-
-function getUrgencyColor(urgency: string) {
-  switch (urgency) {
-    case "high":
-      return "red";
-    case "medium":
-      return "orange";
-    case "low":
-      return "blue";
-    default:
-      return "gray";
-  }
-}
 
 const STATUS_STEPS = [
   "COLLECTING",
@@ -150,19 +77,6 @@ export default function DeliberationsAdminClient() {
     { deliberationId: deliberation?.id ?? "" },
     { enabled: !!deliberation?.id },
   );
-
-  const { data: topicClusters } = api.deliberation.getTopicClusters.useQuery(
-    { deliberationId: deliberation?.id ?? "" },
-    { enabled: !!deliberation?.id },
-  );
-
-  const { data: analysisResultRaw } =
-    api.deliberation.getAnalysisResultsAdmin.useQuery(
-      { deliberationId: deliberation?.id ?? "" },
-      { enabled: !!deliberation?.id },
-    );
-
-  const analysis = analysisResultRaw as AnalysisResult | null;
 
   const createDeliberation = api.deliberation.createDeliberation.useMutation({
     onSuccess: () => {
@@ -462,6 +376,15 @@ export default function DeliberationsAdminClient() {
                           Run Clustering
                         </Button>
                       </Tooltip>
+                      <Button
+                        component={Link}
+                        href={`/admin/events/${eventId}/analysis`}
+                        variant="light"
+                        color="violet"
+                        leftSection={<IconBrain size={14} />}
+                      >
+                        View Analysis
+                      </Button>
                     </>
                   )}
                   {deliberation.status === "CLOSED" && (
@@ -493,33 +416,64 @@ export default function DeliberationsAdminClient() {
                       >
                         Run Analysis
                       </Button>
+                      <Button
+                        component={Link}
+                        href={`/admin/events/${eventId}/analysis`}
+                        variant="light"
+                        color="violet"
+                        leftSection={<IconExternalLink size={14} />}
+                      >
+                        View Analysis
+                      </Button>
                     </>
                   )}
                   {deliberation.status === "ANALYZING" && (
-                    <Button
-                      variant="light"
-                      color="teal"
-                      leftSection={<IconRocket size={14} />}
-                      onClick={() =>
-                        publishResults.mutate({
-                          deliberationId: deliberation.id,
-                        })
-                      }
-                      loading={publishResults.isPending}
-                    >
-                      Publish to AT Protocol
-                    </Button>
+                    <>
+                      <Button
+                        variant="light"
+                        color="teal"
+                        leftSection={<IconRocket size={14} />}
+                        onClick={() =>
+                          publishResults.mutate({
+                            deliberationId: deliberation.id,
+                          })
+                        }
+                        loading={publishResults.isPending}
+                      >
+                        Publish to AT Protocol
+                      </Button>
+                      <Button
+                        component={Link}
+                        href={`/admin/events/${eventId}/analysis`}
+                        variant="light"
+                        color="violet"
+                        leftSection={<IconExternalLink size={14} />}
+                      >
+                        View Analysis
+                      </Button>
+                    </>
                   )}
                   {deliberation.status === "PUBLISHED" && (
-                    <Button
-                      component={Link}
-                      href={`/events/${eventId}/deliberation/results`}
-                      variant="light"
-                      color="violet"
-                      leftSection={<IconExternalLink size={14} />}
-                    >
-                      View Results
-                    </Button>
+                    <>
+                      <Button
+                        component={Link}
+                        href={`/events/${eventId}/deliberation/results`}
+                        variant="light"
+                        color="violet"
+                        leftSection={<IconExternalLink size={14} />}
+                      >
+                        View Public Results
+                      </Button>
+                      <Button
+                        component={Link}
+                        href={`/admin/events/${eventId}/analysis`}
+                        variant="light"
+                        color="violet"
+                        leftSection={<IconBrain size={14} />}
+                      >
+                        View Analysis
+                      </Button>
+                    </>
                   )}
                 </Group>
 
@@ -613,291 +567,6 @@ export default function DeliberationsAdminClient() {
                 </Stack>
               </Group>
             </Paper>
-
-            {/* Topic Clusters */}
-            {topicClusters && topicClusters.length > 0 && (
-              <Paper p="lg" radius="md" withBorder>
-                <Stack gap="md">
-                  <Group gap="xs">
-                    <Title order={4}>Topic Clusters</Title>
-                    <Badge size="sm" variant="light">
-                      {topicClusters.length}
-                    </Badge>
-                  </Group>
-                  <SimpleGrid cols={{ base: 1, sm: 2 }}>
-                    {topicClusters.map((cluster) => (
-                      <Paper
-                        key={cluster.id}
-                        p="sm"
-                        radius="sm"
-                        withBorder
-                      >
-                        <Stack gap="xs">
-                          <Group justify="space-between" align="center">
-                            <Text fw={600} size="sm">
-                              {cluster.label}
-                            </Text>
-                            <Badge size="sm" variant="light" color="blue">
-                              {cluster.mentionCount} mentions
-                            </Badge>
-                          </Group>
-                          {cluster.keywords.length > 0 && (
-                            <Group gap={4}>
-                              {cluster.keywords.map((kw: string) => (
-                                <Badge
-                                  key={kw}
-                                  size="xs"
-                                  variant="outline"
-                                  color="gray"
-                                >
-                                  {kw}
-                                </Badge>
-                              ))}
-                            </Group>
-                          )}
-                          {cluster.sourceExcerpts.length > 0 && (
-                            <Text size="xs" c="dimmed" lineClamp={2} fs="italic">
-                              {cluster.sourceExcerpts[0]}
-                            </Text>
-                          )}
-                        </Stack>
-                      </Paper>
-                    ))}
-                  </SimpleGrid>
-                </Stack>
-              </Paper>
-            )}
-
-            {/* Analysis Results Preview */}
-            {analysis && (
-              <>
-                {/* Statistics Overview */}
-                {analysis.statistics && (
-                  <Paper p="lg" radius="md" withBorder>
-                    <Stack gap="md">
-                      <Title order={4}>Analysis Statistics</Title>
-                      <Group gap="xl">
-                        <Stack gap={2}>
-                          <Text size="xl" fw={700} c="green">
-                            {analysis.statistics.convergentCount}
-                          </Text>
-                          <Text size="xs" c="dimmed">
-                            Convergent
-                          </Text>
-                        </Stack>
-                        <Stack gap={2}>
-                          <Text size="xl" fw={700} c="orange">
-                            {analysis.statistics.blindSpotCount}
-                          </Text>
-                          <Text size="xs" c="dimmed">
-                            Blind Spots
-                          </Text>
-                        </Stack>
-                        <Stack gap={2}>
-                          <Text size="xl" fw={700} c="blue">
-                            {analysis.statistics.aspirationalCount}
-                          </Text>
-                          <Text size="xs" c="dimmed">
-                            Aspirational
-                          </Text>
-                        </Stack>
-                        <Stack gap={2}>
-                          <Text size="xl" fw={700}>
-                            {analysis.statistics.totalBlockers}
-                          </Text>
-                          <Text size="xs" c="dimmed">
-                            Blockers
-                          </Text>
-                        </Stack>
-                        <Stack gap={2}>
-                          <Text size="xl" fw={700}>
-                            {analysis.statistics.totalResources}
-                          </Text>
-                          <Text size="xs" c="dimmed">
-                            Resources
-                          </Text>
-                        </Stack>
-                      </Group>
-                      <Text size="xs" c="dimmed">
-                        Generated {new Date(analysis.generatedAt).toLocaleString()}
-                      </Text>
-                    </Stack>
-                  </Paper>
-                )}
-
-                {/* Classified Priorities */}
-                {analysis.classifiedPriorities.length > 0 && (
-                  <Paper p="lg" radius="md" withBorder>
-                    <Stack gap="md">
-                      <Group gap="xs">
-                        <Title order={4}>Classified Priorities</Title>
-                        <Group gap="xs" ml="auto">
-                          <Badge color="green" variant="light" size="xs">
-                            Convergent = discussed + voted
-                          </Badge>
-                          <Badge color="orange" variant="light" size="xs">
-                            Blind Spot = discussed only
-                          </Badge>
-                          <Badge color="blue" variant="light" size="xs">
-                            Aspirational = voted only
-                          </Badge>
-                        </Group>
-                      </Group>
-                      {analysis.classifiedPriorities.map((p, i) => {
-                        const badge = getSignalBadge(p.classification);
-                        const maxVotes = Math.max(
-                          ...analysis.classifiedPriorities.map((cp) => cp.voteCount),
-                          1,
-                        );
-                        return (
-                          <Paper key={p.priorityId} p="sm" radius="sm" withBorder>
-                            <Stack gap="xs">
-                              <Group justify="space-between">
-                                <Group gap="xs">
-                                  <Text fw={600} size="sm">
-                                    {String(i + 1)}. {p.title}
-                                  </Text>
-                                  <Badge
-                                    color={badge.color}
-                                    variant="light"
-                                    size="sm"
-                                  >
-                                    {badge.label}
-                                  </Badge>
-                                </Group>
-                                <Text size="sm" c="dimmed">
-                                  {p.voteCount} votes
-                                </Text>
-                              </Group>
-                              <Progress
-                                value={(p.voteCount / maxVotes) * 100}
-                                color={badge.color}
-                                size="sm"
-                              />
-                              <Text size="xs" c="dimmed">
-                                {p.reasoning}
-                              </Text>
-                              {p.relatedTopicLabels.length > 0 && (
-                                <Group gap={4}>
-                                  <Text size="xs" c="dimmed">
-                                    Matched topics:
-                                  </Text>
-                                  {p.relatedTopicLabels.map((t) => (
-                                    <Badge
-                                      key={t}
-                                      size="xs"
-                                      variant="outline"
-                                      color="gray"
-                                    >
-                                      {t}
-                                    </Badge>
-                                  ))}
-                                </Group>
-                              )}
-                            </Stack>
-                          </Paper>
-                        );
-                      })}
-                    </Stack>
-                  </Paper>
-                )}
-
-                {/* Blocker Themes */}
-                {analysis.blockerThemes.length > 0 && (
-                  <Paper p="lg" radius="md" withBorder>
-                    <Stack gap="md">
-                      <Group gap="xs">
-                        <ThemeIcon size="sm" variant="light" color="orange">
-                          <IconAlertTriangle size={14} />
-                        </ThemeIcon>
-                        <Title order={4}>Blocker Themes</Title>
-                      </Group>
-                      <SimpleGrid cols={{ base: 1, sm: 2 }}>
-                        {analysis.blockerThemes.map((bt, i) => (
-                          <Paper key={i} p="sm" radius="sm" withBorder>
-                            <Stack gap="xs">
-                              <Group justify="space-between">
-                                <Text fw={500} size="sm">
-                                  {bt.theme}
-                                </Text>
-                                <Badge size="sm" variant="light" color="orange">
-                                  {bt.frequency}x
-                                </Badge>
-                              </Group>
-                              <Text size="xs" c="dimmed">
-                                {bt.description}
-                              </Text>
-                              <Group gap={4}>
-                                {bt.affectedPriorities.map((ap) => (
-                                  <Badge
-                                    key={ap}
-                                    size="xs"
-                                    variant="outline"
-                                    color="gray"
-                                  >
-                                    {ap}
-                                  </Badge>
-                                ))}
-                              </Group>
-                            </Stack>
-                          </Paper>
-                        ))}
-                      </SimpleGrid>
-                    </Stack>
-                  </Paper>
-                )}
-
-                {/* Resource Recommendations */}
-                {analysis.resourceRecommendations.length > 0 && (
-                  <Paper p="lg" radius="md" withBorder>
-                    <Stack gap="md">
-                      <Group gap="xs">
-                        <ThemeIcon size="sm" variant="light" color="teal">
-                          <IconCoin size={14} />
-                        </ThemeIcon>
-                        <Title order={4}>Resource Recommendations</Title>
-                      </Group>
-                      {analysis.resourceRecommendations.map((r, i) => (
-                        <Paper key={i} p="sm" radius="sm" withBorder>
-                          <Group gap="xs" align="flex-start">
-                            <Badge variant="light" color="teal" size="sm">
-                              {r.category}
-                            </Badge>
-                            <Badge
-                              variant="light"
-                              color={getUrgencyColor(r.urgency)}
-                              size="xs"
-                            >
-                              {r.urgency}
-                            </Badge>
-                            <Stack gap={2} style={{ flex: 1 }}>
-                              <Text size="sm">{r.recommendation}</Text>
-                              {r.relatedPriorities.length > 0 && (
-                                <Text size="xs" c="dimmed">
-                                  Related: {r.relatedPriorities.join(", ")}
-                                </Text>
-                              )}
-                            </Stack>
-                          </Group>
-                        </Paper>
-                      ))}
-                    </Stack>
-                  </Paper>
-                )}
-
-                {/* Synthesis */}
-                {analysis.synthesis && (
-                  <Paper p="lg" radius="md" withBorder>
-                    <Stack gap="md">
-                      <Title order={4}>Synthesis</Title>
-                      <Text size="sm" style={{ whiteSpace: "pre-line" }}>
-                        {analysis.synthesis}
-                      </Text>
-                    </Stack>
-                  </Paper>
-                )}
-              </>
-            )}
 
             {/* Transcripts */}
             {transcripts && transcripts.length > 0 && (

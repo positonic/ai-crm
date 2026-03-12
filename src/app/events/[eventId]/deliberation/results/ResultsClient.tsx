@@ -27,38 +27,45 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { api } from "~/trpc/react";
 
-interface PrioritySignal {
+interface ClassifiedPriority {
+  priorityId: string;
   title: string;
-  voteCount: number;
-  signalStrength: number;
   classification: "convergent" | "blind_spot" | "aspirational";
-  matchedTopics?: string[];
-}
-
-interface BlindSpot {
-  topicLabel: string;
-  keywords: string[];
-  mentionCount: number;
+  reasoning: string;
+  voteCount: number;
+  relatedTopicLabels: string[];
 }
 
 interface BlockerTheme {
   theme: string;
-  blockers: string[];
-  count: number;
+  description: string;
+  affectedPriorities: string[];
+  frequency: number;
 }
 
 interface ResourceRecommendation {
   category: string;
-  description: string;
-  priority: string;
+  recommendation: string;
+  relatedPriorities: string[];
+  urgency: string;
 }
 
 interface AnalysisResult {
-  rankedPriorities?: PrioritySignal[];
-  blindSpots?: BlindSpot[];
+  classifiedPriorities?: ClassifiedPriority[];
   blockerThemes?: BlockerTheme[];
   resourceRecommendations?: ResourceRecommendation[];
   synthesis?: string;
+  statistics?: {
+    totalPriorities: number;
+    totalVotes: number;
+    totalBlockers: number;
+    totalResources: number;
+    topicClusterCount: number;
+    convergentCount: number;
+    blindSpotCount: number;
+    aspirationalCount: number;
+  };
+  generatedAt?: string;
 }
 
 function getSignalBadge(classification: string) {
@@ -174,14 +181,18 @@ export default function ResultsClient() {
           </Group>
         </Paper>
 
-        {/* Ranked Priorities */}
-        {analysis?.rankedPriorities && analysis.rankedPriorities.length > 0 && (
+        {/* Classified Priorities */}
+        {analysis?.classifiedPriorities && analysis.classifiedPriorities.length > 0 && (
           <Stack gap="md">
-            <Title order={3}>Ranked Priorities</Title>
-            {analysis.rankedPriorities.map((p, i) => {
+            <Title order={3}>Classified Priorities</Title>
+            {analysis.classifiedPriorities.map((p, i) => {
               const badge = getSignalBadge(p.classification);
+              const maxVotes = Math.max(
+                ...analysis.classifiedPriorities!.map((cp) => cp.voteCount),
+                1,
+              );
               return (
-                <Paper key={i} p="md" radius="md" withBorder>
+                <Paper key={p.priorityId} p="md" radius="md" withBorder>
                   <Stack gap="xs">
                     <Group justify="space-between">
                       <Group gap="xs">
@@ -197,16 +208,19 @@ export default function ResultsClient() {
                       </Text>
                     </Group>
                     <Progress
-                      value={p.signalStrength}
+                      value={(p.voteCount / maxVotes) * 100}
                       color={badge.color}
                       size="sm"
                     />
-                    {p.matchedTopics && p.matchedTopics.length > 0 && (
+                    <Text size="xs" c="dimmed">
+                      {p.reasoning}
+                    </Text>
+                    {p.relatedTopicLabels.length > 0 && (
                       <Group gap={4}>
                         <Text size="xs" c="dimmed">
                           Matched topics:
                         </Text>
-                        {p.matchedTopics.map((t) => (
+                        {p.relatedTopicLabels.map((t) => (
                           <Badge
                             key={t}
                             size="xs"
@@ -222,40 +236,6 @@ export default function ResultsClient() {
                 </Paper>
               );
             })}
-          </Stack>
-        )}
-
-        {/* Blind Spots */}
-        {analysis?.blindSpots && analysis.blindSpots.length > 0 && (
-          <Stack gap="md">
-            <Title order={3}>Blind Spots</Title>
-            <Text size="sm" c="dimmed">
-              Topics heavily discussed but not submitted as priorities.
-            </Text>
-            <SimpleGrid cols={{ base: 1, sm: 2 }}>
-              {analysis.blindSpots.map((bs, i) => (
-                <Paper key={i} p="md" radius="md" withBorder>
-                  <Stack gap="xs">
-                    <Text fw={500}>{bs.topicLabel}</Text>
-                    <Group gap={4}>
-                      {bs.keywords.map((kw) => (
-                        <Badge
-                          key={kw}
-                          size="xs"
-                          variant="outline"
-                          color="orange"
-                        >
-                          {kw}
-                        </Badge>
-                      ))}
-                    </Group>
-                    <Text size="xs" c="dimmed">
-                      {bs.mentionCount} mentions in transcripts
-                    </Text>
-                  </Stack>
-                </Paper>
-              ))}
-            </SimpleGrid>
           </Stack>
         )}
 
@@ -275,14 +255,24 @@ export default function ResultsClient() {
                     <Group justify="space-between">
                       <Text fw={500}>{bt.theme}</Text>
                       <Badge size="sm" variant="light" color="orange">
-                        {bt.count}
+                        {bt.frequency}x
                       </Badge>
                     </Group>
-                    {bt.blockers.map((b, j) => (
-                      <Text key={j} size="sm" c="dimmed">
-                        &bull; {b}
-                      </Text>
-                    ))}
+                    <Text size="xs" c="dimmed">
+                      {bt.description}
+                    </Text>
+                    <Group gap={4}>
+                      {bt.affectedPriorities.map((ap) => (
+                        <Badge
+                          key={ap}
+                          size="xs"
+                          variant="outline"
+                          color="gray"
+                        >
+                          {ap}
+                        </Badge>
+                      ))}
+                    </Group>
                   </Stack>
                 </Paper>
               ))}
@@ -306,11 +296,26 @@ export default function ResultsClient() {
                     <Badge variant="light" color="teal" size="sm">
                       {r.category}
                     </Badge>
+                    <Badge
+                      variant="light"
+                      color={
+                        r.urgency === "high"
+                          ? "red"
+                          : r.urgency === "medium"
+                            ? "orange"
+                            : "blue"
+                      }
+                      size="xs"
+                    >
+                      {r.urgency}
+                    </Badge>
                     <Stack gap={2} style={{ flex: 1 }}>
-                      <Text size="sm">{r.description}</Text>
-                      <Text size="xs" c="dimmed">
-                        Related to: {r.priority}
-                      </Text>
+                      <Text size="sm">{r.recommendation}</Text>
+                      {r.relatedPriorities.length > 0 && (
+                        <Text size="xs" c="dimmed">
+                          Related: {r.relatedPriorities.join(", ")}
+                        </Text>
+                      )}
                     </Stack>
                   </Group>
                 </Paper>
