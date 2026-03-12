@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import { type PrismaClient } from "@prisma/client";
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -13,14 +14,38 @@ import { getTopicClusteringService } from "~/server/services/topicClustering";
 import { getDeliberationAnalysisService } from "~/server/services/deliberationAnalysis";
 import { createDDSPublicationService } from "~/server/services/dds";
 
+/**
+ * Resolve event identifier - accepts both CUID and slug.
+ * Returns the actual event ID or null if not found.
+ */
+async function resolveEventId(
+  db: PrismaClient,
+  identifier: string,
+): Promise<string | null> {
+  const eventById = await db.event.findUnique({
+    where: { id: identifier },
+    select: { id: true },
+  });
+  if (eventById) return eventById.id;
+
+  const eventBySlug = await db.event.findUnique({
+    where: { slug: identifier },
+    select: { id: true },
+  });
+  return eventBySlug?.id ?? null;
+}
+
 export const deliberationRouter = createTRPCRouter({
   // ─── Queries ──────────────────────────────────────────────
 
   getDeliberation: publicProcedure
     .input(z.object({ eventId: z.string() }))
     .query(async ({ ctx, input }) => {
+      const resolvedId = await resolveEventId(ctx.db, input.eventId);
+      if (!resolvedId) return null;
+
       const deliberation = await ctx.db.deliberation.findFirst({
-        where: { eventId: input.eventId },
+        where: { eventId: resolvedId },
         orderBy: { createdAt: "desc" },
         include: {
           _count: {
@@ -199,16 +224,24 @@ export const deliberationRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const resolvedId = await resolveEventId(ctx.db, input.eventId);
+      if (!resolvedId) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Event not found",
+        });
+      }
+
       await assertDeliberationAdmin(
         ctx.db,
         ctx.session.user.id,
         ctx.session.user.role,
-        input.eventId,
+        resolvedId,
       );
 
       return ctx.db.deliberation.create({
         data: {
-          eventId: input.eventId,
+          eventId: resolvedId,
           title: input.title,
           description: input.description,
           closesAt: input.closesAt,
