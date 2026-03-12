@@ -251,10 +251,14 @@ export default function SessionDetailPage() {
         {/* Back link + edit button */}
         <Group justify="space-between" align="center">
           <Anchor
+            component={Link}
+            href={`/events/${params.eventId}/schedule`}
             size="sm"
             c="dimmed"
-            onClick={() => router.back()}
-            style={{ cursor: "pointer" }}
+            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+              e.preventDefault();
+              router.back();
+            }}
           >
             <Group gap={4}>
               <IconArrowLeft size={14} />
