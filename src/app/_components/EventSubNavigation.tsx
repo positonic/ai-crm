@@ -253,6 +253,7 @@ export default function EventSubNavigation({
     if (subPath.startsWith("/participants")) return "participants";
     if (subPath.startsWith("/projects")) return "event-projects";
     if (subPath.startsWith("/transcriptions")) return "transcriptions";
+    if (subPath.startsWith("/deliberation")) return "deliberation";
     if (subPath === "" || subPath === "/") return "dashboard";
     return null;
   };
@@ -391,6 +392,17 @@ export default function EventSubNavigation({
                 level="sub"
               >
                 Transcriptions
+              </NavigationTab>
+            )}
+
+            {featureFlags?.featureDeliberation !== false && (
+              <NavigationTab
+                value="deliberation"
+                href={`${basePath}/deliberation`}
+                icon={<IconBulb size={16} />}
+                level="sub"
+              >
+                Deliberation
               </NavigationTab>
             )}
           </NavigationTabs>

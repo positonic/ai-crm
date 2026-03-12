@@ -42,6 +42,7 @@ export default async function EventLayout({
     featureImpactAnalytics: true,
     featureScheduleManagement: true,
     featureSpeakerVetting: true,
+    featureDeliberation: true,
   } as const;
 
   let event = await db.event.findUnique({
