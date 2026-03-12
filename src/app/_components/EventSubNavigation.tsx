@@ -44,6 +44,7 @@ interface EventSubNavigationProps {
     featureSponsorManagement?: boolean;
     featureMentorVetting?: boolean;
     featureFloorManagement?: boolean;
+    featureDeliberation?: boolean;
   };
   isFloorOwner?: boolean;
   isAdmin?: boolean;
@@ -95,6 +96,8 @@ export default function EventSubNavigation({
         return "select-rubric";
       if (pathname.startsWith(`${adminBasePath}/onboarding`))
         return "onboarding";
+      if (pathname.startsWith(`${adminBasePath}/deliberations`))
+        return "deliberations";
       if (pathname.startsWith(`${basePath}/schedule`)) return "schedule";
       if (pathname === adminBasePath || pathname === `${adminBasePath}/`)
         return "overview";
@@ -199,6 +202,17 @@ export default function EventSubNavigation({
                   level="sub"
                 >
                   Manage Schedule
+                </NavigationTab>
+              )}
+
+              {featureFlags?.featureDeliberation !== false && (
+                <NavigationTab
+                  value="deliberations"
+                  href={`${adminBasePath}/deliberations`}
+                  icon={<IconBulb size={16} />}
+                  level="sub"
+                >
+                  Deliberation
                 </NavigationTab>
               )}
             </NavigationTabs>

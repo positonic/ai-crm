@@ -18,6 +18,7 @@ import {
   Center,
   Stepper,
   Tooltip,
+  Accordion,
 } from "@mantine/core";
 import {
   IconAlertCircle,
@@ -74,6 +75,11 @@ export default function DeliberationsAdminClient() {
   );
 
   const { data: transcripts } = api.transcription.getByDeliberation.useQuery(
+    { deliberationId: deliberation?.id ?? "" },
+    { enabled: !!deliberation?.id },
+  );
+
+  const { data: topicClusters } = api.deliberation.getTopicClusters.useQuery(
     { deliberationId: deliberation?.id ?? "" },
     { enabled: !!deliberation?.id },
   );
@@ -258,6 +264,17 @@ export default function DeliberationsAdminClient() {
         </Group>
 
         <Title order={2}>Deliberation Management</Title>
+
+        {deliberation && (
+          <Stack gap={4}>
+            <Text fw={600}>{deliberation.title}</Text>
+            {deliberation.description && (
+              <Text size="sm" c="dimmed">
+                {deliberation.description}
+              </Text>
+            )}
+          </Stack>
+        )}
 
         {!deliberation ? (
           /* No deliberation yet — create form */
@@ -514,6 +531,65 @@ export default function DeliberationsAdminClient() {
                 </Stack>
               </Group>
             </Paper>
+
+            {/* Topic Clusters */}
+            {topicClusters && topicClusters.length > 0 && (
+              <Accordion variant="default">
+                <Accordion.Item value="topic-clusters">
+                  <Accordion.Control>
+                    <Group gap="xs">
+                      <Title order={4}>Topic Clusters</Title>
+                      <Badge size="sm" variant="light">
+                        {topicClusters.length}
+                      </Badge>
+                    </Group>
+                  </Accordion.Control>
+                  <Accordion.Panel>
+                    <Group gap="sm" mt="sm" align="stretch" grow>
+                      {topicClusters.map((cluster) => (
+                        <Paper
+                          key={cluster.id}
+                          p="sm"
+                          radius="sm"
+                          withBorder
+                          style={{ flexBasis: "calc(50% - 6px)", maxWidth: "calc(50% - 6px)" }}
+                        >
+                          <Stack gap="xs">
+                            <Group justify="space-between" align="center">
+                              <Text fw={600} size="sm">
+                                {cluster.label}
+                              </Text>
+                              <Badge size="sm" variant="light" color="blue">
+                                {cluster.mentionCount} mentions
+                              </Badge>
+                            </Group>
+                            {cluster.keywords.length > 0 && (
+                              <Group gap={4}>
+                                {cluster.keywords.map((kw: string) => (
+                                  <Badge
+                                    key={kw}
+                                    size="xs"
+                                    variant="outline"
+                                    color="gray"
+                                  >
+                                    {kw}
+                                  </Badge>
+                                ))}
+                              </Group>
+                            )}
+                            {cluster.sourceExcerpts.length > 0 && (
+                              <Text size="xs" c="dimmed" lineClamp={2} fs="italic">
+                                {cluster.sourceExcerpts[0]}
+                              </Text>
+                            )}
+                          </Stack>
+                        </Paper>
+                      ))}
+                    </Group>
+                  </Accordion.Panel>
+                </Accordion.Item>
+              </Accordion>
+            )}
 
             {/* Transcripts */}
             {transcripts && transcripts.length > 0 && (
