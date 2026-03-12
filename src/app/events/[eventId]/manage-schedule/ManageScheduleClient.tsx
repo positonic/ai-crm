@@ -280,7 +280,7 @@ function extractDurationMinutes(text: string | undefined): number | null {
   return match ? parseInt(match[1]!, 10) : null;
 }
 
-const JUNK_TITLE_PATTERNS =
+const JUNK_WORD_PATTERNS =
   /^(food|lunch|break|dinner|breakfast|pie time|is|served|registration|check[- ]?in|coffee|tea|networking)$/i;
 
 function isJunkRow(
@@ -293,13 +293,41 @@ function isJunkRow(
   });
   if (allEmpty) return true;
 
+  // Check if all text columns contain only junk words (e.g., "FOOD;IS;SERVED")
+  const textKeys: (keyof ColumnMapping)[] = [
+    "title",
+    "description",
+    "presenters",
+    "facilitator",
+  ];
+  const textValues = textKeys
+    .map((k) => (mapping[k] ? row[mapping[k]]?.trim() : undefined))
+    .filter(Boolean);
+  if (
+    textValues.length > 0 &&
+    textValues.every((v) => JUNK_WORD_PATTERNS.test(v!))
+  )
+    return true;
+
   const title = mapping.title ? row[mapping.title]?.trim() : undefined;
+  const desc = mapping.description
+    ? row[mapping.description]?.trim()
+    : undefined;
   const time = mapping.startTime ? row[mapping.startTime]?.trim() : undefined;
 
-  if (title && JUNK_TITLE_PATTERNS.test(title) && !time) return true;
+  // Single junk word as title with no real description
+  if (title && JUNK_WORD_PATTERNS.test(title) && !desc && !time) return true;
 
-  // Detect repeated header rows mid-file
-  if (mapping.title && title?.toLowerCase() === mapping.title.toLowerCase())
+  // Detect repeated header rows mid-file (values match column header names)
+  const headerNames = Object.values(mapping).filter(
+    (v): v is string => v != null,
+  );
+  const rowValues = headerNames.map((h) => row[h]?.trim().toLowerCase());
+  const headerLower = headerNames.map((h) => h.toLowerCase());
+  if (
+    rowValues.length > 0 &&
+    rowValues.every((v) => !v || headerLower.includes(v))
+  )
     return true;
 
   return false;
@@ -410,16 +438,28 @@ function parseCsvRows(
     const warnings: string[] = [];
     const errors: string[] = [];
 
+    // Description (parse early so it can be used as title fallback)
+    const rawDescription = mapping.description
+      ? (row[mapping.description]?.trim() ?? "")
+      : "";
+
     // Title
     const rawTitle = mapping.title ? row[mapping.title]?.trim() : undefined;
     let title = rawTitle ?? "";
-    if (!title || title === "\u2014" || title === "\u2014" || title === "-") {
-      const presenter = mapping.presenters
-        ? row[mapping.presenters]?.trim()
-        : undefined;
-      title = presenter ?? "TBD";
-      if (!rawTitle)
-        warnings.push("No title found, using presenter name or TBD");
+    if (!title || title === "\u2014" || title === "-") {
+      // Fallback: use first line of description as title
+      if (rawDescription) {
+        const firstLine = rawDescription.split(/\n/)[0]?.trim() ?? "";
+        title = firstLine;
+      }
+      if (!title) {
+        const presenter = mapping.presenters
+          ? row[mapping.presenters]?.trim()
+          : undefined;
+        title = presenter ?? "TBD";
+        if (!rawTitle)
+          warnings.push("No title found, using presenter name or TBD");
+      }
     }
 
     // Date/Time
@@ -476,10 +516,12 @@ function parseCsvRows(
       warnings.push(`Track "${trackName}" not found — will be created`);
     }
 
-    // Description
-    const description = mapping.description
-      ? (row[mapping.description]?.trim() ?? "")
-      : "";
+    // Description: use remaining lines if first line was used as title
+    const description =
+      !rawTitle && rawDescription
+        ? rawDescription.split(/\n/).slice(1).join("\n").trim() ??
+          rawDescription
+        : rawDescription;
 
     // Order
     const orderStr = mapping.order ? row[mapping.order] : undefined;
@@ -3216,6 +3258,7 @@ function CsvUploadModal({
           <Stack gap="md" mt="md">
             <FileInput
               label="CSV File"
+              description="Expected columns: Title, Date, Start Time, End Time, Speakers, Session Type, Track, Description. Duration can be embedded in a Location column (e.g. &quot;Room A (45 mins)&quot;)."
               placeholder="Choose a .csv file"
               accept=".csv,.tsv,.txt"
               value={csvFile}
