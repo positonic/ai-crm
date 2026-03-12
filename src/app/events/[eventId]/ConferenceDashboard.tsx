@@ -17,6 +17,7 @@ import {
   Collapse,
   Anchor,
   ThemeIcon,
+  SimpleGrid,
 } from "@mantine/core";
 import {
   IconCalendar,
@@ -906,88 +907,92 @@ export default function ConferenceDashboard({
           </Card>
         )}
 
-        {/* Floor Lead: Manage Floors */}
-        {(isFloorOwner || isAdmin) && (
-          <Card withBorder>
-            <Stack gap="sm">
-              <Title order={4}>Manage Floors</Title>
-              <Text size="sm" c="dimmed">
-                Create and manage sessions for your assigned floors.
-              </Text>
-              <Group>
-                <Button
-                  component={Link}
-                  href={`/events/${eventSlug}/manage-schedule`}
-                  leftSection={<IconSettings size={16} />}
-                  variant="light"
-                >
-                  Manage Floors
-                </Button>
-                <Button
-                  leftSection={<IconUserPlus size={16} />}
-                  variant="light"
-                  color="teal"
-                  onClick={openAddSpeaker}
-                >
-                  Add Speaker
-                </Button>
-              </Group>
-            </Stack>
-          </Card>
-        )}
-
         <AddSpeakerModal
           eventId={eventId}
           opened={addSpeakerOpened}
           onClose={closeAddSpeaker}
         />
 
-        {/* Everyone: Event Schedule */}
-        <Card withBorder>
-          <Stack gap="sm">
-            <Title order={4}>Event Schedule</Title>
-            <Text size="sm" c="dimmed">
-              View the full conference schedule with all sessions and speakers.
-            </Text>
-            <Group>
-              <Button
-                component={Link}
-                href={`/events/${eventSlug}/schedule`}
-                leftSection={<IconCalendar size={16} />}
-                variant="light"
-              >
-                View Schedule
-              </Button>
-            </Group>
-          </Stack>
-        </Card>
+        {/* Action cards - 2 per row */}
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg">
+          {/* Floor Lead: Manage Floors */}
+          {(isFloorOwner || isAdmin) && (
+            <Card withBorder>
+              <Stack gap="sm">
+                <Title order={4}>Manage Floors</Title>
+                <Text size="sm" c="dimmed">
+                  Create and manage sessions for your assigned floors.
+                </Text>
+                <Group>
+                  <Button
+                    component={Link}
+                    href={`/events/${eventSlug}/manage-schedule`}
+                    leftSection={<IconSettings size={16} />}
+                    variant="light"
+                  >
+                    Manage Floors
+                  </Button>
+                  <Button
+                    leftSection={<IconUserPlus size={16} />}
+                    variant="light"
+                    color="teal"
+                    onClick={openAddSpeaker}
+                  >
+                    Add Speaker
+                  </Button>
+                </Group>
+              </Stack>
+            </Card>
+          )}
 
-        {/* Deliberation - show if active deliberation exists */}
-        <DeliberationCard eventId={eventId} eventSlug={eventSlug} />
-
-        {/* Submit Speaker Application - show for floor leads who aren't speakers yet */}
-        {!hasSpeakerApplication && !isSpeaker && (
+          {/* Everyone: Event Schedule */}
           <Card withBorder>
             <Stack gap="sm">
-              <Title order={4}>Become a Speaker</Title>
+              <Title order={4}>Event Schedule</Title>
               <Text size="sm" c="dimmed">
-                Interested in speaking at this event? Submit a speaker
-                application to be considered.
+                View the full conference schedule with all sessions and
+                speakers.
               </Text>
               <Group>
                 <Button
                   component={Link}
-                  href={`/events/${eventSlug}/apply`}
-                  leftSection={<IconMicrophone size={16} />}
+                  href={`/events/${eventSlug}/schedule`}
+                  leftSection={<IconCalendar size={16} />}
                   variant="light"
-                  color="teal"
                 >
-                  Submit Speaker Application
+                  View Schedule
                 </Button>
               </Group>
             </Stack>
           </Card>
-        )}
+
+          {/* Deliberation - show if active deliberation exists */}
+          <DeliberationCard eventId={eventId} eventSlug={eventSlug} />
+
+          {/* Submit Speaker Application - show for floor leads who aren't speakers yet */}
+          {!hasSpeakerApplication && !isSpeaker && (
+            <Card withBorder>
+              <Stack gap="sm">
+                <Title order={4}>Become a Speaker</Title>
+                <Text size="sm" c="dimmed">
+                  Interested in speaking at this event? Submit a speaker
+                  application to be considered.
+                </Text>
+                <Group>
+                  <Button
+                    component={Link}
+                    href={`/events/${eventSlug}/apply`}
+                    leftSection={<IconMicrophone size={16} />}
+                    variant="light"
+                    color="teal"
+                  >
+                    Submit Speaker Application
+                  </Button>
+                </Group>
+              </Stack>
+            </Card>
+          )}
+        </SimpleGrid>
       </Stack>
     </Container>
   );
