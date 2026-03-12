@@ -8,6 +8,7 @@ export interface SlidesReminderProps {
   sessionTitle: string;
   sessionUrl: string;
   contactEmail: string;
+  speakerCouponCode?: string;
 }
 
 export const SlidesReminderTemplate: React.FC<SlidesReminderProps> = ({
@@ -16,6 +17,7 @@ export const SlidesReminderTemplate: React.FC<SlidesReminderProps> = ({
   sessionTitle,
   sessionUrl,
   contactEmail,
+  speakerCouponCode,
 }) => {
   const previewText = `Reminder: Please upload your slides for ${eventName}`;
 
@@ -36,6 +38,18 @@ export const SlidesReminderTemplate: React.FC<SlidesReminderProps> = ({
           <Text style={detailsText}>Session: {sessionTitle}</Text>
           <Text style={detailsText}>Event: {eventName}</Text>
         </Section>
+
+        {speakerCouponCode && (
+          <Section style={couponBox}>
+            <Text style={couponHeading}>
+              Your Complimentary Presenter Registration Code
+            </Text>
+            <Text style={couponCodeStyle}>{speakerCouponCode}</Text>
+            <Text style={couponNote}>
+              This code provides complimentary access (2 uses).
+            </Text>
+          </Section>
+        )}
 
         <Text style={paragraph}>
           Please upload your slides by visiting your session page using the
@@ -127,6 +141,37 @@ const button = {
 const link = {
   color: "#2563eb",
   textDecoration: "underline",
+};
+
+const couponBox = {
+  backgroundColor: "#f0fdf4",
+  borderRadius: "8px",
+  padding: "20px",
+  margin: "24px 0",
+  border: "1px solid #86efac",
+  textAlign: "center" as const,
+};
+
+const couponHeading = {
+  fontSize: "16px",
+  fontWeight: "bold" as const,
+  color: "#15803d",
+  margin: "0 0 12px",
+};
+
+const couponCodeStyle = {
+  fontSize: "22px",
+  fontWeight: "bold" as const,
+  color: "#166534",
+  letterSpacing: "2px",
+  fontFamily: "monospace, Courier New",
+  margin: "0 0 8px",
+};
+
+const couponNote = {
+  fontSize: "13px",
+  color: "#6b7280",
+  margin: "0",
 };
 
 const signature = {

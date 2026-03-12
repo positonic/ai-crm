@@ -81,6 +81,14 @@ export default function SessionDetailPage() {
   const isAdmin =
     userSession?.user?.role === "admin" || userSession?.user?.role === "staff";
 
+  // Resolve text speaker names to user profiles
+  const textSpeakerNames = session?.speakers ?? [];
+  const { data: resolvedSpeakers } =
+    api.schedule.resolveTextSpeakers.useQuery(
+      { eventId: params.eventId, names: textSpeakerNames },
+      { enabled: textSpeakerNames.length > 0 },
+    );
+
   // Edit modal state
   const [editOpened, { open: openEdit, close: closeEdit }] =
     useDisclosure(false);
@@ -533,32 +541,98 @@ export default function SessionDetailPage() {
               );
             })}
             {/* Legacy text-only speakers */}
-            {session.speakers.map((speakerName) => (
-              <Paper key={speakerName} p="md" withBorder radius="md">
-                <Group gap="md" align="center" justify="space-between">
-                  <Group gap="md" align="center">
-                    <Avatar size={64} radius="xl">
-                      {speakerName.charAt(0).toUpperCase()}
-                    </Avatar>
-                    <Text fw={700} size="lg">
-                      {speakerName}
-                    </Text>
-                  </Group>
-                  {canManage && !isSpeakerOnly && (
-                    <Tooltip label="Connect to a user profile">
-                      <Button
-                        variant="light"
-                        size="xs"
-                        leftSection={<IconLink size={14} />}
-                        onClick={() => handleLinkTextSpeaker(speakerName)}
+            {session.speakers.map((speakerName) => {
+              const resolved = resolvedSpeakers?.[speakerName];
+              if (resolved) {
+                // Matched to a user profile — render as clickable card
+                const avatarSrc =
+                  resolved.profile?.avatarUrl ?? resolved.image ?? undefined;
+                const displayName =
+                  [resolved.firstName, resolved.surname]
+                    .filter(Boolean)
+                    .join(" ") ||
+                  (resolved.name ?? speakerName);
+                const titleParts = [
+                  resolved.profile?.jobTitle,
+                  resolved.profile?.company,
+                ].filter(Boolean);
+                const titleLine =
+                  titleParts.length > 0 ? titleParts.join(", ") : null;
+
+                return (
+                  <Paper
+                    key={speakerName}
+                    p="md"
+                    withBorder
+                    radius="md"
+                    component={Link}
+                    href={`/profiles/${resolved.userId}`}
+                    style={{
+                      textDecoration: "none",
+                      color: "inherit",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Group gap="md" align="flex-start" wrap="nowrap">
+                      <Avatar
+                        src={avatarSrc}
+                        size={64}
+                        radius="xl"
+                        style={{ flexShrink: 0 }}
                       >
-                        Link profile
-                      </Button>
-                    </Tooltip>
-                  )}
-                </Group>
-              </Paper>
-            ))}
+                        {displayName.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <Stack gap={4} style={{ minWidth: 0, flex: 1 }}>
+                        <Text fw={700} size="lg" c="blue">
+                          {displayName}
+                        </Text>
+                        {titleLine && (
+                          <Text size="sm" c="dimmed">
+                            {titleLine}
+                          </Text>
+                        )}
+                        {resolved.profile?.bio && (
+                          <Text
+                            size="sm"
+                            style={{ lineHeight: 1.6, marginTop: 4 }}
+                          >
+                            {resolved.profile.bio}
+                          </Text>
+                        )}
+                      </Stack>
+                    </Group>
+                  </Paper>
+                );
+              }
+
+              // No match — render as plain text with admin link button
+              return (
+                <Paper key={speakerName} p="md" withBorder radius="md">
+                  <Group gap="md" align="center" justify="space-between">
+                    <Group gap="md" align="center">
+                      <Avatar size={64} radius="xl">
+                        {speakerName.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <Text fw={700} size="lg">
+                        {speakerName}
+                      </Text>
+                    </Group>
+                    {canManage && !isSpeakerOnly && (
+                      <Tooltip label="Connect to a user profile">
+                        <Button
+                          variant="light"
+                          size="xs"
+                          leftSection={<IconLink size={14} />}
+                          onClick={() => handleLinkTextSpeaker(speakerName)}
+                        >
+                          Link profile
+                        </Button>
+                      </Tooltip>
+                    )}
+                  </Group>
+                </Paper>
+              );
+            })}
           </Stack>
         )}
       </Stack>

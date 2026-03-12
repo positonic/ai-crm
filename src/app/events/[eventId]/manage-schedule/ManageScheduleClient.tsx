@@ -567,6 +567,108 @@ function parseCsvRows(
   });
 }
 
+function UnlinkedSpeakersPanel({ eventId }: { eventId: string }) {
+  const utils = api.useUtils();
+  const { data: unlinkedSessions, isLoading } =
+    api.schedule.getUnlinkedSessions.useQuery({ eventId });
+
+  const linkMutation = api.schedule.linkSpeakerToSession.useMutation({
+    onSuccess: () => {
+      notifications.show({
+        title: "Speaker linked",
+        message: "Speaker has been connected to the session",
+        color: "green",
+      });
+      void utils.schedule.getUnlinkedSessions.invalidate({ eventId });
+    },
+    onError: (error: { message: string }) => {
+      notifications.show({
+        title: "Error",
+        message: error.message,
+        color: "red",
+      });
+    },
+  });
+
+  if (isLoading || !unlinkedSessions || unlinkedSessions.length === 0) {
+    return null;
+  }
+
+  return (
+    <Alert
+      variant="light"
+      color="yellow"
+      icon={<IconAlertCircle size={20} />}
+      title={`${unlinkedSessions.length} session${unlinkedSessions.length === 1 ? "" : "s"} with unlinked speakers`}
+      radius="md"
+    >
+      <Text size="sm" mb="sm">
+        These sessions appear to have speaker names as titles but no linked
+        speaker profiles. Click &quot;Link&quot; to connect them.
+      </Text>
+      <Stack gap="xs">
+        {unlinkedSessions.map(({ session, candidates }) => (
+          <Paper key={session.id} p="xs" withBorder radius="sm">
+            <Group justify="space-between" align="center" wrap="nowrap">
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <Text fw={600} size="sm" truncate>
+                  {session.title}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {session.venue?.name}
+                  {session.sessionType ? ` · ${session.sessionType.name}` : ""}
+                </Text>
+              </div>
+              <Group gap="xs" wrap="nowrap">
+                {candidates.map((candidate) => (
+                  <Button
+                    key={candidate.userId}
+                    size="xs"
+                    variant={
+                      candidate.confidence === "exact" ? "filled" : "light"
+                    }
+                    color={
+                      candidate.confidence === "exact" ? "green" : "gray"
+                    }
+                    leftSection={
+                      <Avatar
+                        src={
+                          candidate.profile?.avatarUrl ??
+                          candidate.image ??
+                          undefined
+                        }
+                        size={20}
+                        radius="xl"
+                      >
+                        {(candidate.firstName ?? candidate.name ?? "?")
+                          .charAt(0)
+                          .toUpperCase()}
+                      </Avatar>
+                    }
+                    onClick={() =>
+                      linkMutation.mutate({
+                        sessionId: session.id,
+                        userId: candidate.userId,
+                      })
+                    }
+                    loading={linkMutation.isPending}
+                  >
+                    Link{" "}
+                    {[candidate.firstName, candidate.surname]
+                      .filter(Boolean)
+                      .join(" ") || candidate.name}
+                    {candidate.confidence === "partial" ? " (?)" : ""}
+                  </Button>
+                ))}
+              </Group>
+            </Group>
+          </Paper>
+        ))}
+      </Stack>
+    </Alert>
+  );
+}
+
 export default function ManageScheduleClient({
   eventId,
   showWelcome,
@@ -629,6 +731,8 @@ export default function ManageScheduleClient({
             </Text>
           </Alert>
         )}
+        {floorsData.isAdmin && <UnlinkedSpeakersPanel eventId={eventId} />}
+
         <Group justify="space-between">
           <div>
             <Title order={2}>Manage Floors</Title>

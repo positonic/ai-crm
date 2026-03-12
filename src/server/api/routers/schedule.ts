@@ -36,6 +36,7 @@ const eventSelect = {
   endDate: true,
   location: true,
   type: true,
+  lumaEventId: true,
 } as const;
 
 /**
@@ -641,6 +642,112 @@ export const scheduleRouter = createTRPCRouter({
             confidence: isExact ? ("exact" as const) : ("partial" as const),
           };
         });
+      }
+
+      return results;
+    }),
+
+  // Resolve text speaker names to user profiles (public, for session pages)
+  resolveTextSpeakers: publicProcedure
+    .input(
+      z.object({
+        eventId: z.string(),
+        names: z.array(z.string()).min(1).max(200),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const event = await resolveEventId(ctx.db, input.eventId);
+      const results: Record<
+        string,
+        {
+          userId: string;
+          firstName: string | null;
+          surname: string | null;
+          name: string | null;
+          image: string | null;
+          profile: {
+            avatarUrl: string | null;
+            bio: string | null;
+            jobTitle: string | null;
+            company: string | null;
+          } | null;
+        } | null
+      > = {};
+
+      for (const rawName of input.names) {
+        const cleanName = rawName.replace(/\s*\([^)]*\)\s*/g, "").trim();
+        if (!cleanName) {
+          results[rawName] = null;
+          continue;
+        }
+
+        const parts = cleanName.split(/\s+/);
+        const firstName = parts[0] ?? "";
+        const surname = parts.length > 1 ? parts.slice(1).join(" ") : "";
+
+        const orConditions = [];
+        if (firstName) {
+          orConditions.push({
+            firstName: { contains: firstName, mode: "insensitive" as const },
+          });
+        }
+        if (surname) {
+          orConditions.push({
+            surname: { contains: surname, mode: "insensitive" as const },
+          });
+        }
+        orConditions.push({
+          name: { contains: cleanName, mode: "insensitive" as const },
+        });
+
+        const users = await ctx.db.user.findMany({
+          where: {
+            AND: [
+              {
+                applications: {
+                  some: {
+                    eventId: event.id,
+                    userId: { not: null },
+                  },
+                },
+              },
+              { OR: orConditions },
+            ],
+          },
+          select: {
+            ...userSelectFields,
+            profile: {
+              select: {
+                avatarUrl: true,
+                bio: true,
+                jobTitle: true,
+                company: true,
+              },
+            },
+          },
+          take: 3,
+        });
+
+        // Only return exact matches (first + last name both match)
+        const exactMatch = users.find((u) => {
+          const uFirst = (u.firstName ?? "").toLowerCase();
+          const uSurname = (u.surname ?? "").toLowerCase();
+          return (
+            uFirst === firstName.toLowerCase() &&
+            uSurname === surname.toLowerCase()
+          );
+        });
+
+        results[rawName] = exactMatch
+          ? {
+              userId: exactMatch.id,
+              firstName: exactMatch.firstName,
+              surname: exactMatch.surname,
+              name: exactMatch.name,
+              image: exactMatch.image,
+              profile: exactMatch.profile,
+            }
+          : null;
       }
 
       return results;
@@ -1444,6 +1551,117 @@ export const scheduleRouter = createTRPCRouter({
       }
 
       return { canManage: false, isSpeakerOnly: false };
+    }),
+
+  // Get sessions with no linked speakers for admin bulk-linking
+  getUnlinkedSessions: protectedProcedure
+    .input(z.object({ eventId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const event = await resolveEventId(ctx.db, input.eventId);
+      await assertAdminOrEventFloorOwner(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        event.id,
+      );
+
+      // Find sessions with no sessionSpeakers and no text speakers
+      const sessions = await ctx.db.scheduleSession.findMany({
+        where: {
+          event: { id: event.id },
+          isPublished: true,
+          sessionSpeakers: { none: {} },
+          speakers: { isEmpty: true },
+        },
+        select: {
+          id: true,
+          title: true,
+          startTime: true,
+          venue: { select: { name: true } },
+          sessionType: { select: { name: true } },
+        },
+        orderBy: { startTime: "asc" },
+      });
+
+      // For each session, try to fuzzy-match the title to a user
+      const results = await Promise.all(
+        sessions.map(async (session) => {
+          const cleanName = session.title
+            .replace(/\s*\([^)]*\)\s*/g, "")
+            .trim();
+          const parts = cleanName.split(/\s+/);
+          if (parts.length < 2) {
+            return { session, candidates: [] };
+          }
+          const firstName = parts[0] ?? "";
+          const surname = parts.slice(1).join(" ");
+
+          const orConditions = [];
+          if (firstName) {
+            orConditions.push({
+              firstName: {
+                contains: firstName,
+                mode: "insensitive" as const,
+              },
+            });
+          }
+          if (surname) {
+            orConditions.push({
+              surname: {
+                contains: surname,
+                mode: "insensitive" as const,
+              },
+            });
+          }
+          orConditions.push({
+            name: { contains: cleanName, mode: "insensitive" as const },
+          });
+
+          const users = await ctx.db.user.findMany({
+            where: {
+              AND: [
+                {
+                  applications: {
+                    some: {
+                      eventId: event.id,
+                      userId: { not: null },
+                    },
+                  },
+                },
+                { OR: orConditions },
+              ],
+            },
+            select: {
+              ...userSelectFields,
+              profile: {
+                select: { avatarUrl: true, jobTitle: true, company: true },
+              },
+            },
+            take: 3,
+          });
+
+          const candidates = users.map((u) => {
+            const uFirst = (u.firstName ?? "").toLowerCase();
+            const uSurname = (u.surname ?? "").toLowerCase();
+            const isExact =
+              uFirst === firstName.toLowerCase() &&
+              uSurname === surname.toLowerCase();
+            return {
+              userId: u.id,
+              firstName: u.firstName,
+              surname: u.surname,
+              name: u.name,
+              image: u.image,
+              profile: u.profile,
+              confidence: isExact ? ("exact" as const) : ("partial" as const),
+            };
+          });
+
+          return { session, candidates };
+        }),
+      );
+
+      return results.filter((r) => r.candidates.length > 0);
     }),
 
   // Link a user to a session as a speaker and optionally remove a text speaker name
@@ -2359,6 +2577,38 @@ export const scheduleRouter = createTRPCRouter({
         const speakerName = user.firstName ?? user.name ?? user.email;
         const sessionUrl = `${baseUrl}/events/${eventPath}/schedule/${session.id}`;
 
+        // Create Luma coupon code if the event has a Luma event ID
+        let speakerCouponCode: string | undefined;
+        if (event.lumaEventId) {
+          try {
+            const { getLumaService, generateSpeakerCouponCode } = await import(
+              "~/server/services/luma"
+            );
+            const lumaService = getLumaService();
+            if (lumaService) {
+              const couponCode = generateSpeakerCouponCode(
+                user.firstName,
+                user.surname,
+              );
+              const couponResult = await lumaService.createCoupon({
+                eventId: event.lumaEventId,
+                code: couponCode,
+                percentOff: 100,
+                remainingCount: 2,
+              });
+              if (couponResult.success) {
+                speakerCouponCode = couponResult.code;
+              } else {
+                console.error(
+                  `Luma coupon creation failed for slides reminder (user ${user.id}): ${couponResult.error}`,
+                );
+              }
+            }
+          } catch (error) {
+            console.error("Error creating Luma coupon for slides reminder:", error);
+          }
+        }
+
         try {
           const result = await emailService.sendEmail({
             to: user.email,
@@ -2369,6 +2619,7 @@ export const scheduleRouter = createTRPCRouter({
               sessionTitle: session.title,
               sessionUrl,
               contactEmail,
+              speakerCouponCode,
             },
             eventId: event.id,
             userId: ctx.session.user.id,

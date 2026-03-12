@@ -125,6 +125,24 @@ export default function SchedulePageClient({
     eventId,
   });
 
+  // Collect all unique text speaker names across sessions for profile resolution
+  const allTextSpeakerNames = useMemo(() => {
+    if (!scheduleData?.sessions) return [];
+    const names = new Set<string>();
+    for (const session of scheduleData.sessions) {
+      for (const name of session.speakers) {
+        names.add(name);
+      }
+    }
+    return Array.from(names);
+  }, [scheduleData?.sessions]);
+
+  const { data: resolvedSpeakers } =
+    api.schedule.resolveTextSpeakers.useQuery(
+      { eventId, names: allTextSpeakerNames },
+      { enabled: allTextSpeakerNames.length > 0 },
+    );
+
   const handleSetViewMode = useCallback(
     (mode: "simple" | "expanded" | "grid" | "by-floor") => {
       setViewMode(mode);
@@ -759,7 +777,7 @@ export default function SchedulePageClient({
         </div>
       ) : viewMode === "expanded" ? (
         <div className="schedule-layout">
-          <ExpandedView sessions={daySessions} eventId={eventId} />
+          <ExpandedView sessions={daySessions} eventId={eventId} resolvedSpeakers={resolvedSpeakers} />
           {/* Filter sidebar */}
           <div className="schedule-sidebar">
             <Stack gap="md">

@@ -7,9 +7,27 @@ import { useRouter } from "next/navigation";
 import { getDisplayName } from "~/utils/userDisplay";
 import { type ScheduleSession } from "./SchedulePageClient";
 
+export type ResolvedSpeakerMap = Record<
+  string,
+  {
+    userId: string;
+    firstName: string | null;
+    surname: string | null;
+    name: string | null;
+    image: string | null;
+    profile: {
+      avatarUrl: string | null;
+      bio: string | null;
+      jobTitle: string | null;
+      company: string | null;
+    } | null;
+  } | null
+>;
+
 interface ExpandedViewProps {
   sessions: ScheduleSession[];
   eventId: string;
+  resolvedSpeakers?: ResolvedSpeakerMap;
 }
 
 function formatTime(date: Date): string {
@@ -45,7 +63,7 @@ function SpeakerBio({ bio }: { bio: string }) {
   );
 }
 
-export default function ExpandedView({ sessions, eventId }: ExpandedViewProps) {
+export default function ExpandedView({ sessions, eventId, resolvedSpeakers }: ExpandedViewProps) {
   const router = useRouter();
 
   if (sessions.length === 0) {
@@ -219,16 +237,69 @@ export default function ExpandedView({ sessions, eventId }: ExpandedViewProps) {
                             );
                           })}
                           {/* Legacy text-only speakers */}
-                          {session.speakers.map((speakerName) => (
-                            <Group key={speakerName} gap="sm" align="center">
-                              <Avatar size={40} radius="xl">
-                                {speakerName.charAt(0).toUpperCase()}
-                              </Avatar>
-                              <Text fw={600} size="sm">
-                                {speakerName}
-                              </Text>
-                            </Group>
-                          ))}
+                          {session.speakers.map((speakerName) => {
+                            const resolved = resolvedSpeakers?.[speakerName];
+                            const avatarSrc = resolved
+                              ? (resolved.profile?.avatarUrl ??
+                                resolved.image ??
+                                undefined)
+                              : undefined;
+                            const displayName = resolved
+                              ? ([resolved.firstName, resolved.surname]
+                                  .filter(Boolean)
+                                  .join(" ") ||
+                                (resolved.name ?? speakerName))
+                              : speakerName;
+
+                            return (
+                              <Group
+                                key={speakerName}
+                                gap="sm"
+                                align="center"
+                              >
+                                <Avatar
+                                  src={avatarSrc}
+                                  size={40}
+                                  radius="xl"
+                                >
+                                  {displayName.charAt(0).toUpperCase()}
+                                </Avatar>
+                                {resolved ? (
+                                  <Text
+                                    fw={600}
+                                    size="sm"
+                                    c="blue"
+                                    style={{ cursor: "pointer" }}
+                                    onClick={(e: React.MouseEvent) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      router.push(
+                                        `/profiles/${resolved.userId}`,
+                                      );
+                                    }}
+                                    onMouseEnter={(
+                                      e: React.MouseEvent<HTMLSpanElement>,
+                                    ) => {
+                                      e.currentTarget.style.textDecoration =
+                                        "underline";
+                                    }}
+                                    onMouseLeave={(
+                                      e: React.MouseEvent<HTMLSpanElement>,
+                                    ) => {
+                                      e.currentTarget.style.textDecoration =
+                                        "none";
+                                    }}
+                                  >
+                                    {displayName}
+                                  </Text>
+                                ) : (
+                                  <Text fw={600} size="sm">
+                                    {speakerName}
+                                  </Text>
+                                )}
+                              </Group>
+                            );
+                          })}
                         </Stack>
                       </div>
                     )}
