@@ -203,7 +203,7 @@ const COLUMN_ALIASES: Record<keyof ColumnMapping, string[]> = {
     "session",
   ],
   date: ["date", "day", "session date"],
-  startTime: ["start time", "start", "begin", "from"],
+  startTime: ["start time", "start", "begin", "from", "time"],
   endTime: ["end time", "end", "to", "until"],
   presenters: [
     "presenter(s) names",
@@ -336,40 +336,47 @@ function parseCsvDateTime(
   timeStr: string | undefined,
   year: number,
 ): Date | null {
-  if (!dateStr || !timeStr) return null;
+  if (!timeStr) return null;
 
-  const dateTrimmed = dateStr.trim();
   const timeTrimmed = timeStr.trim();
 
-  // Parse date: "March 14", "Mar 14", "3/14", "03/14"
+  // Parse date if provided: "March 14", "Mar 14", "3/14", "03/14"
   let month: number | null = null;
   let day: number | null = null;
 
-  // Try "Month Day" format (March 14)
-  const monthDayMatch = /^(\w+)\s+(\d{1,2})$/.exec(dateTrimmed);
-  if (monthDayMatch) {
-    const monthName = monthDayMatch[1]!.toLowerCase();
-    month = MONTH_NAMES[monthName] ?? null;
-    day = parseInt(monthDayMatch[2]!, 10);
-  }
+  if (dateStr) {
+    const dateTrimmed = dateStr.trim();
 
-  // Try "M/D" or "MM/DD" format
-  if (month === null) {
-    const slashMatch = /^(\d{1,2})[/-](\d{1,2})$/.exec(dateTrimmed);
-    if (slashMatch) {
-      month = parseInt(slashMatch[1]!, 10) - 1; // 0-indexed
-      day = parseInt(slashMatch[2]!, 10);
+    // Try "Month Day" format (March 14)
+    const monthDayMatch = /^(\w+)\s+(\d{1,2})$/.exec(dateTrimmed);
+    if (monthDayMatch) {
+      const monthName = monthDayMatch[1]!.toLowerCase();
+      month = MONTH_NAMES[monthName] ?? null;
+      day = parseInt(monthDayMatch[2]!, 10);
     }
+
+    // Try "M/D" or "MM/DD" format
+    if (month === null) {
+      const slashMatch = /^(\d{1,2})[/-](\d{1,2})$/.exec(dateTrimmed);
+      if (slashMatch) {
+        month = parseInt(slashMatch[1]!, 10) - 1; // 0-indexed
+        day = parseInt(slashMatch[2]!, 10);
+      }
+    }
+
+    if (month === null || day === null) return null;
+  } else {
+    // No date column — default to Jan 1 so time-only parsing works
+    month = 0;
+    day = 1;
   }
 
-  if (month === null || day === null) return null;
-
-  // Parse time: "10:00 AM", "3:50 PM", "14:30"
-  const timeMatch = /^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i.exec(timeTrimmed);
+  // Parse time: "10:00 AM", "3:50 PM", "14:30", "11 AM", "6 PM"
+  const timeMatch = /^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i.exec(timeTrimmed);
   if (!timeMatch) return null;
 
   let hours = parseInt(timeMatch[1]!, 10);
-  const minutes = parseInt(timeMatch[2]!, 10);
+  const minutes = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
   const ampm = timeMatch[3]?.toUpperCase();
 
   if (ampm === "PM" && hours !== 12) hours += 12;
