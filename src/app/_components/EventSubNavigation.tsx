@@ -15,6 +15,7 @@ import {
   IconClipboardList,
   IconUserCheck,
   IconExternalLink,
+  IconFileText,
 } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
@@ -237,6 +238,7 @@ export default function EventSubNavigation({
     if (subPath.startsWith("/asks-offers")) return "asks-offers";
     if (subPath.startsWith("/participants")) return "participants";
     if (subPath.startsWith("/projects")) return "event-projects";
+    if (subPath.startsWith("/transcriptions")) return "transcriptions";
     if (subPath === "" || subPath === "/") return "dashboard";
     return null;
   };
@@ -366,6 +368,17 @@ export default function EventSubNavigation({
                   Speakers
                 </NavigationTab>
               )}
+
+            {showManageSchedule && (
+              <NavigationTab
+                value="transcriptions"
+                href={`${basePath}/transcriptions`}
+                icon={<IconFileText size={16} />}
+                level="sub"
+              >
+                Transcriptions
+              </NavigationTab>
+            )}
           </NavigationTabs>
 
           {isAdmin && (
