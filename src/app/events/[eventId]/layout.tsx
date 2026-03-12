@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { db } from "~/server/db";
 import { auth } from "~/server/auth";
 import EventSubNavigation from "~/app/_components/EventSubNavigation";
+import { ChromeWrapper } from "~/app/_components/ChromeWrapper";
 
 interface EventLayoutProps {
   children: React.ReactNode;
@@ -67,14 +68,16 @@ export default async function EventLayout({
 
   return (
     <>
-      <EventSubNavigation
-        eventId={event?.slug ?? eventId}
-        eventName={event?.name}
-        eventType={event?.type ?? undefined}
-        featureFlags={event ?? undefined}
-        isFloorOwner={isFloorOwner}
-        isAdmin={isAdmin}
-      />
+      <ChromeWrapper>
+        <EventSubNavigation
+          eventId={event?.slug ?? eventId}
+          eventName={event?.name}
+          eventType={event?.type ?? undefined}
+          featureFlags={event ?? undefined}
+          isFloorOwner={isFloorOwner}
+          isAdmin={isAdmin}
+        />
+      </ChromeWrapper>
       {children}
     </>
   );
