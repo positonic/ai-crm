@@ -22,11 +22,25 @@
 }
 
 @media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  .fc-page {
+    margin: 0;
+    padding: 0;
+  }
+
   .fc-card-wrapper {
     page-break-after: always;
+    break-after: page;
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 
   .fc-card-wrapper:last-child {
     page-break-after: auto;
+    break-after: auto;
   }
 }
