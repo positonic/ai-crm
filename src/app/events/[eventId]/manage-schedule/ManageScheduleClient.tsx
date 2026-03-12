@@ -31,6 +31,7 @@ import {
   Tooltip,
   SegmentedControl,
   Divider,
+  Anchor,
 } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
@@ -3324,6 +3325,17 @@ function CsvUploadModal({
               onChange={handleFileChange}
               leftSection={<IconUpload size={16} />}
             />
+            <Anchor
+              href="/csvs/SpeakerSessionUploadExampleFormat.csv"
+              download
+              size="sm"
+              c="dimmed"
+            >
+              <Group gap={4}>
+                <IconDownload size={14} />
+                Download example CSV format
+              </Group>
+            </Anchor>
 
             {rawData.length > 0 && (
               <>

@@ -45,7 +45,6 @@ import Link from "next/link";
 import { api } from "~/trpc/react";
 import { getDisplayName } from "~/utils/userDisplay";
 import { AddSpeakerModal } from "./AddSpeakerModal";
-import TranscriptionsTab from "./TranscriptionsTab";
 
 function getStatusColor(status: string): string {
   switch (status) {
@@ -942,11 +941,6 @@ export default function ConferenceDashboard({
           opened={addSpeakerOpened}
           onClose={closeAddSpeaker}
         />
-
-        {/* Admin/Floor Lead: Transcriptions */}
-        {(isAdmin || isFloorOwner) && (
-          <TranscriptionsTab eventId={eventId} />
-        )}
 
         {/* Everyone: Event Schedule */}
         <Card withBorder>
