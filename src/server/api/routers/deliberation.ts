@@ -249,6 +249,41 @@ export const deliberationRouter = createTRPCRouter({
       });
     }),
 
+  linkEventTranscriptions: protectedProcedure
+    .input(z.object({ deliberationId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const deliberation = await ctx.db.deliberation.findUnique({
+        where: { id: input.deliberationId },
+        select: { eventId: true },
+      });
+      if (!deliberation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Deliberation not found",
+        });
+      }
+
+      await assertDeliberationAdmin(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        deliberation.eventId,
+      );
+
+      // Link all event transcriptions that aren't already linked to a deliberation
+      const result = await ctx.db.transcription.updateMany({
+        where: {
+          eventId: deliberation.eventId,
+          deliberationId: null,
+        },
+        data: {
+          deliberationId: input.deliberationId,
+        },
+      });
+
+      return { linked: result.count };
+    }),
+
   submitPriority: protectedProcedure
     .input(
       z.object({

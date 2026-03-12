@@ -173,6 +173,26 @@ export default function DeliberationsAdminClient() {
     },
   });
 
+  const linkTranscriptions =
+    api.deliberation.linkEventTranscriptions.useMutation({
+      onSuccess: (data) => {
+        notifications.show({
+          title: "Transcriptions linked",
+          message: `Linked ${String(data.linked)} transcription(s) to this deliberation.`,
+          color: "green",
+        });
+        void utils.deliberation.getDeliberation.invalidate();
+        void utils.transcription.getByDeliberation.invalidate();
+      },
+      onError: (err) => {
+        notifications.show({
+          title: "Error linking transcriptions",
+          message: err.message,
+          color: "red",
+        });
+      },
+    });
+
   const moderatePriority = api.deliberation.moderatePriority.useMutation({
     onSuccess: () => {
       void utils.deliberation.getPriorities.invalidate();
@@ -469,6 +489,20 @@ export default function DeliberationsAdminClient() {
                   <Text size="xs" c="dimmed">
                     Transcripts
                   </Text>
+                  {deliberation._count.transcripts === 0 && (
+                    <Button
+                      size="xs"
+                      variant="light"
+                      onClick={() =>
+                        linkTranscriptions.mutate({
+                          deliberationId: deliberation.id,
+                        })
+                      }
+                      loading={linkTranscriptions.isPending}
+                    >
+                      Link Event Transcriptions
+                    </Button>
+                  )}
                 </Stack>
                 <Stack gap={2}>
                   <Text size="xl" fw={700}>
