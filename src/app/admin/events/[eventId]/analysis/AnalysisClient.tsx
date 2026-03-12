@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Anchor,
   Container,
   Title,
   Text,
@@ -22,6 +23,7 @@ import {
   IconBrain,
   IconRocket,
   IconExternalLink,
+  IconCheck,
 } from "@tabler/icons-react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -68,6 +70,10 @@ interface AnalysisResult {
     aspirationalCount: number;
   };
   generatedAt: string;
+}
+
+function atUriToWebUrl(atUri: string): string {
+  return `https://pdsls.dev/${atUri.replace("://", "/")}`;
 }
 
 function getSignalBadge(classification: string) {
@@ -323,6 +329,52 @@ export default function AnalysisClient() {
             )}
           </Group>
         </Group>
+
+        {/* AT Protocol Records */}
+        {deliberation.summaryUri && (
+          <Paper p="lg" radius="md" withBorder>
+            <Stack gap="md">
+              <Group gap="xs">
+                <IconCheck size={16} color="var(--mantine-color-green-6)" />
+                <Title order={4}>Published AT Protocol Records</Title>
+              </Group>
+              <Stack gap="xs">
+                {deliberation.summaryUri && (
+                  <Group gap="xs">
+                    <Text size="sm" fw={500} w={100}>Summary:</Text>
+                    <Anchor href={atUriToWebUrl(deliberation.summaryUri)} target="_blank" size="xs" style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
+                      {deliberation.summaryUri} <IconExternalLink size={12} style={{ display: "inline" }} />
+                    </Anchor>
+                  </Group>
+                )}
+                {deliberation.pcaUri && (
+                  <Group gap="xs">
+                    <Text size="sm" fw={500} w={100}>PCA:</Text>
+                    <Anchor href={atUriToWebUrl(deliberation.pcaUri)} target="_blank" size="xs" style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
+                      {deliberation.pcaUri} <IconExternalLink size={12} style={{ display: "inline" }} />
+                    </Anchor>
+                  </Group>
+                )}
+                {deliberation.activityUri && (
+                  <Group gap="xs">
+                    <Text size="sm" fw={500} w={100}>Activity:</Text>
+                    <Anchor href={atUriToWebUrl(deliberation.activityUri)} target="_blank" size="xs" style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
+                      {deliberation.activityUri} <IconExternalLink size={12} style={{ display: "inline" }} />
+                    </Anchor>
+                  </Group>
+                )}
+                {deliberation.boardUri && (
+                  <Group gap="xs">
+                    <Text size="sm" fw={500} w={100}>Board:</Text>
+                    <Anchor href={atUriToWebUrl(deliberation.boardUri)} target="_blank" size="xs" style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
+                      {deliberation.boardUri} <IconExternalLink size={12} style={{ display: "inline" }} />
+                    </Anchor>
+                  </Group>
+                )}
+              </Stack>
+            </Stack>
+          </Paper>
+        )}
 
         {/* Topic Clusters */}
         {topicClusters && topicClusters.length > 0 && (

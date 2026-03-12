@@ -16,7 +16,8 @@
       "Bash(exponential actions:*)",
       "Bash(ln -s ../../code/ai-tooling/claude-home/.claude/skills/exponential ~/.claude/skills/exponential)",
       "Bash(find /Users/james/code/impactful-events -type f \\\\\\(-name *deliberation* -o -name *priority* -o -name *intelligence* -o -name *whisper* -o -name *transcri* -o -name *topic* \\\\\\))",
-      "WebFetch(domain:biomejs.dev)"
+      "WebFetch(domain:biomejs.dev)",
+      "WebSearch"
     ],
     "additionalDirectories": [
       "/tmp",

@@ -64,6 +64,7 @@ export class DDSPublicationService {
     }
 
     try {
+      console.log(`[DDS] Attempting login: handle=${handle}, pdsUrl=${this.pdsUrl}, passwordLength=${appPassword.length}`);
       const agent = new AtpAgent({ service: this.pdsUrl });
       const response = await agent.login({
         identifier: handle.replace(/^@/, ""),
@@ -75,8 +76,10 @@ export class DDSPublicationService {
       }
 
       const did = response.data.did;
+      console.log(`[DDS] Login successful: did=${did}`);
       return { agent, did };
     } catch (error) {
+      console.error(`[DDS] Login failed:`, error);
       Sentry.captureException(error, {
         tags: { service: "dds", operation: "platform_login" },
       });

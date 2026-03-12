@@ -68,6 +68,11 @@ interface AnalysisResult {
   generatedAt?: string;
 }
 
+function atUriToWebUrl(atUri: string): string {
+  // Convert at://did:plc:xxx/collection/rkey to https://pdsls.dev/at/did:plc:xxx/collection/rkey
+  return `https://pdsls.dev/${atUri.replace("://", "/")}`;
+}
+
 function getSignalBadge(classification: string) {
   switch (classification) {
     case "convergent":
@@ -346,7 +351,7 @@ export default function ResultsClient() {
                     <Text size="sm" fw={500}>
                       Summary:
                     </Text>
-                    <Anchor href={results.summaryUri} target="_blank" size="sm">
+                    <Anchor href={atUriToWebUrl(results.summaryUri)} target="_blank" size="sm">
                       <Group gap={4}>
                         {results.summaryUri}
                         <IconExternalLink size={12} />
@@ -359,7 +364,7 @@ export default function ResultsClient() {
                     <Text size="sm" fw={500}>
                       Topic Analysis:
                     </Text>
-                    <Anchor href={results.pcaUri} target="_blank" size="sm">
+                    <Anchor href={atUriToWebUrl(results.pcaUri)} target="_blank" size="sm">
                       <Group gap={4}>
                         {results.pcaUri}
                         <IconExternalLink size={12} />
@@ -373,7 +378,7 @@ export default function ResultsClient() {
                       Activity Cert:
                     </Text>
                     <Anchor
-                      href={results.activityUri}
+                      href={atUriToWebUrl(results.activityUri)}
                       target="_blank"
                       size="sm"
                     >
