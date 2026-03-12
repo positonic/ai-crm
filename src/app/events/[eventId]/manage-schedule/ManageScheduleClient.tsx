@@ -766,6 +766,25 @@ function AllFloorsView({ eventId, venues, isAdmin }: AllFloorsViewProps) {
     },
   });
 
+  const bulkDeleteMutation = api.schedule.bulkDeleteSessions.useMutation({
+    onSuccess: (data) => {
+      notifications.show({
+        title: "Deleted",
+        message: `${String(data.deletedCount)} session${data.deletedCount !== 1 ? "s" : ""} deleted`,
+        color: "green",
+      });
+      void utils.schedule.getAllFloorSessions.invalidate({ eventId });
+      void utils.schedule.getMyFloors.invalidate({ eventId });
+    },
+    onError: (err: { message: string }) => {
+      notifications.show({
+        title: "Error",
+        message: err.message,
+        color: "red",
+      });
+    },
+  });
+
   const detailSessionVenue = useMemo(() => {
     if (!detailSession?.venueId) return undefined;
     return venues.find((v) => v.id === detailSession.venueId);
@@ -840,11 +859,13 @@ function AllFloorsView({ eventId, venues, isAdmin }: AllFloorsViewProps) {
               tracks={filterData?.tracks ?? []}
               onEdit={() => setSessionView("cards")}
               onDelete={(id) => deleteSessionMutation.mutate({ id })}
+              onBulkDelete={(ids) => bulkDeleteMutation.mutate({ ids })}
               onOpenComments={(id, title) => {
                 setCommentSessionId(id);
                 setCommentSessionTitle(title);
               }}
               isDeleting={deleteSessionMutation.isPending}
+              isBulkDeleting={bulkDeleteMutation.isPending}
               onViewDetail={setDetailSession}
               showFloorColumn
             />
@@ -1033,6 +1054,26 @@ function FloorManager({ eventId, venueId, venue, isAdmin }: FloorManagerProps) {
       void utils.schedule.getMyFloors.invalidate({ eventId });
     },
     onError: (err) => {
+      notifications.show({
+        title: "Error",
+        message: err.message,
+        color: "red",
+      });
+    },
+  });
+
+  const bulkDeleteMutation = api.schedule.bulkDeleteSessions.useMutation({
+    onSuccess: (data) => {
+      notifications.show({
+        title: "Deleted",
+        message: `${String(data.deletedCount)} session${data.deletedCount !== 1 ? "s" : ""} deleted`,
+        color: "green",
+      });
+      void utils.schedule.getFloorSessions.invalidate({ eventId, venueId });
+      void utils.schedule.getAllFloorSessions.invalidate({ eventId });
+      void utils.schedule.getMyFloors.invalidate({ eventId });
+    },
+    onError: (err: { message: string }) => {
       notifications.show({
         title: "Error",
         message: err.message,
@@ -1346,11 +1387,13 @@ function FloorManager({ eventId, venueId, venue, isAdmin }: FloorManagerProps) {
                 setSessionView("cards");
               }}
               onDelete={(id) => deleteSessionMutation.mutate({ id })}
+              onBulkDelete={(ids) => bulkDeleteMutation.mutate({ ids })}
               onOpenComments={(id, title) => {
                 setCommentSessionId(id);
                 setCommentSessionTitle(title);
               }}
               isDeleting={deleteSessionMutation.isPending}
+              isBulkDeleting={bulkDeleteMutation.isPending}
               onViewDetail={setDetailSession}
             />
           )}

@@ -10,6 +10,8 @@ import {
   TextInput,
   Select,
   Avatar,
+  Checkbox,
+  Button,
 } from "@mantine/core";
 import {
   IconEdit,
@@ -29,8 +31,10 @@ interface SessionTableViewProps {
   tracks: Array<{ id: string; name: string; color: string }>;
   onEdit: (session: FloorSession) => void;
   onDelete: (sessionId: string) => void;
+  onBulkDelete?: (sessionIds: string[]) => void;
   onOpenComments: (sessionId: string, sessionTitle: string) => void;
   isDeleting: boolean;
+  isBulkDeleting?: boolean;
   onViewDetail?: (session: FloorSession) => void;
   showFloorColumn?: boolean;
 }
@@ -73,8 +77,10 @@ export function SessionTableView({
   tracks,
   onEdit,
   onDelete,
+  onBulkDelete,
   onOpenComments,
   isDeleting,
+  isBulkDeleting,
   onViewDetail,
   showFloorColumn,
 }: SessionTableViewProps) {
@@ -83,6 +89,7 @@ export function SessionTableView({
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const [trackFilter, setTrackFilter] = useState<string | null>(null);
   const [floorFilter, setFloorFilter] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortStatus, setSortStatus] = useState<
     DataTableSortStatus<FloorSession>
   >({
@@ -263,6 +270,32 @@ export function SessionTableView({
         )}
       </Group>
 
+      {/* Bulk actions bar */}
+      {onBulkDelete && selectedIds.size > 0 && (
+        <Group gap="sm" mb="sm">
+          <Text size="sm" fw={500}>
+            {selectedIds.size} selected
+          </Text>
+          <Button
+            size="xs"
+            color="red"
+            variant="light"
+            leftSection={<IconTrash size={14} />}
+            loading={isBulkDeleting}
+            onClick={() => onBulkDelete(Array.from(selectedIds))}
+          >
+            Delete selected
+          </Button>
+          <Button
+            size="xs"
+            variant="subtle"
+            onClick={() => setSelectedIds(new Set())}
+          >
+            Clear selection
+          </Button>
+        </Group>
+      )}
+
       <DataTable
         minHeight={200}
         noRecordsText="No sessions match your filters"
@@ -275,6 +308,58 @@ export function SessionTableView({
         }
         style={onViewDetail ? { cursor: "pointer" } : undefined}
         columns={[
+          ...(onBulkDelete
+            ? [
+                {
+                  accessor: "select" as const,
+                  title: (
+                    <Checkbox
+                      size="xs"
+                      checked={
+                        filteredSessions.length > 0 &&
+                        filteredSessions.every((s) => selectedIds.has(s.id))
+                      }
+                      indeterminate={
+                        filteredSessions.some((s) => selectedIds.has(s.id)) &&
+                        !filteredSessions.every((s) => selectedIds.has(s.id))
+                      }
+                      onChange={() => {
+                        const allSelected = filteredSessions.every((s) =>
+                          selectedIds.has(s.id),
+                        );
+                        if (allSelected) {
+                          setSelectedIds(new Set());
+                        } else {
+                          setSelectedIds(
+                            new Set(filteredSessions.map((s) => s.id)),
+                          );
+                        }
+                      }}
+                    />
+                  ),
+                  width: 40,
+                  render: (session: FloorSession) => (
+                    <Checkbox
+                      size="xs"
+                      checked={selectedIds.has(session.id)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        e.stopPropagation();
+                        setSelectedIds((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(session.id)) {
+                            next.delete(session.id);
+                          } else {
+                            next.add(session.id);
+                          }
+                          return next;
+                        });
+                      }}
+                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                    />
+                  ),
+                },
+              ]
+            : []),
           {
             accessor: "title",
             title: "Title",

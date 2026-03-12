@@ -63,7 +63,9 @@ export default function ScheduleCard({ session }: ScheduleCardProps) {
   const dateStr = formatDate(session.startTime);
   const timeStr = formatTime(session.startTime);
 
-  const venueDisplay = [session.venue?.name, session.room?.name]
+  // Strip parenthetical suffixes from venue name e.g. "FLOOR 14 (FLOURISHING)" → "FLOOR 14"
+  const cleanVenueName = session.venue?.name.replace(/\s*\(.*?\)\s*/g, "").trim();
+  const venueDisplay = [cleanVenueName, session.room?.name]
     .filter(Boolean)
     .join("\n");
 
@@ -81,8 +83,10 @@ export default function ScheduleCard({ session }: ScheduleCardProps) {
         <div className="sc-content">
           <div className="sc-time">{timeStr}</div>
 
-          {session.sessionType && (
-            <div className="sc-type">{session.sessionType.name.toUpperCase()}</div>
+          {(session.sessionType ?? session.track) && (
+            <div className="sc-type">
+              {(session.sessionType?.name ?? session.track?.name ?? "").toUpperCase()}
+            </div>
           )}
 
           <h1 className="sc-title">{session.title}</h1>

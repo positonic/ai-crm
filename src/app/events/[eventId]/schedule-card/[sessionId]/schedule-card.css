@@ -1,64 +1,62 @@
 .sc-page {
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: #ffffff;
-  padding: 2rem;
+  padding: 2.5rem 3rem;
 }
 
 .sc-card {
   width: 100%;
-  max-width: 800px;
   background: #ffffff;
 }
 
 @media print {
   @page {
-    size: A4;
+    size: A4 portrait;
     margin: 0;
   }
 
   .sc-page {
     height: 297mm;
-    padding: 15mm 20mm;
+    width: 210mm;
+    padding: 14mm 18mm;
     page-break-after: always;
     break-after: page;
+    overflow: hidden;
   }
 
   .sc-card {
-    max-width: none;
+    height: 100%;
   }
 }
 
-/* Top bar */
+/* Top bar — Geist Mono 600 25px */
 .sc-topbar {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding-bottom: 2rem;
-  border-bottom: 3px solid #000000;
-  margin-bottom: 3rem;
+  margin-bottom: 4rem;
 }
 
 .sc-topbar-day,
 .sc-topbar-date {
-  font-weight: 900;
-  font-size: 1.25rem;
-  letter-spacing: 0.02em;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-weight: 600;
+  font-size: 25px;
+  letter-spacing: 0em;
   color: #000000;
+  text-transform: uppercase;
 }
 
 .sc-topbar-venue {
-  font-family: monospace;
-  font-size: 0.85rem;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #000000;
   text-align: center;
   white-space: pre-line;
-  line-height: 1.4;
+  line-height: 1.6;
 }
 
 /* Content area */
@@ -67,31 +65,38 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 1rem;
 }
 
+/* Time — Geist 600 40px */
 .sc-time {
-  font-size: 2.5rem;
-  font-weight: 700;
+  font-family: var(--font-geist-sans), ui-sans-serif, sans-serif;
+  font-size: 40px;
+  font-weight: 600;
   color: #000000;
+  margin-bottom: 2.5rem;
+}
+
+/* Session type label */
+.sc-type {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: #000000;
+  text-transform: uppercase;
   margin-bottom: 0.5rem;
 }
 
-.sc-type {
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  color: #000000;
-  text-transform: uppercase;
-}
-
+/* Title — Geist 600 58px, line-height 95%, letter-spacing -0.04em */
 .sc-title {
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  font-weight: 900;
-  line-height: 1.1;
+  font-family: var(--font-geist-sans), ui-sans-serif, sans-serif;
+  font-size: 58px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
   color: #000000;
-  margin: 1rem 0 2rem;
-  max-width: 700px;
+  margin: 0 0 3rem;
+  width: 100%;
 }
 
 /* Speakers */
@@ -104,16 +109,22 @@
 
 .sc-speaker {
   text-align: center;
+  text-decoration: none;
 }
 
 .sc-speaker-name {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-family: var(--font-geist-sans), ui-sans-serif, sans-serif;
+  font-size: 20px;
+  font-weight: 600;
   color: #000000;
+  text-decoration: none;
 }
 
 .sc-speaker-company {
-  font-size: 1rem;
-  color: #999999;
-  margin-top: 0.15rem;
+  font-family: var(--font-geist-sans), ui-sans-serif, sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.4);
+  margin-top: 0.1rem;
+  text-decoration: none;
 }

@@ -845,6 +845,23 @@ export const scheduleRouter = createTRPCRouter({
       return ctx.db.scheduleSession.delete({ where: { id: input.id } });
     }),
 
+  // Bulk delete sessions (admin or staff only)
+  bulkDeleteSessions: protectedProcedure
+    .input(z.object({ ids: z.array(z.string()).min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      if (!isAdminOrStaff(ctx.session.user.role)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins and staff can bulk delete sessions.",
+        });
+      }
+      // SessionSpeaker and SessionComment have onDelete: Cascade
+      const result = await ctx.db.scheduleSession.deleteMany({
+        where: { id: { in: input.ids } },
+      });
+      return { deletedCount: result.count };
+    }),
+
   // ──────────────────────────────────────────
   // Session slides
   // ──────────────────────────────────────────
