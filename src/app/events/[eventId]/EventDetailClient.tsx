@@ -26,6 +26,7 @@ import {
   IconEdit,
   IconMicrophone,
   IconTarget,
+  IconFileText,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -34,6 +35,7 @@ import DynamicApplicationForm from "~/app/_components/DynamicApplicationForm";
 import { getEventContent } from "~/utils/eventContent";
 import { normalizeEventType } from "~/types/event";
 import { getDisplayName } from "~/utils/userDisplay";
+import TranscriptionsTab from "./TranscriptionsTab";
 
 type Application = {
   id: string;
@@ -174,6 +176,12 @@ export default function EventDetailClient({
   // Check if user is admin/staff
   const isAdmin =
     session?.user?.role === "admin" || session?.user?.role === "staff";
+
+  // Check if user is a floor lead for this event
+  const { data: isFloorOwner } = api.schedule.isFloorOwner.useQuery(
+    { eventId: event.id },
+    { enabled: !!session?.user },
+  );
 
   const utils = api.useUtils();
 
@@ -390,6 +398,14 @@ export default function EventDetailClient({
                 <Group gap="xs">
                   <IconTarget size={14} />
                   Priorities
+                </Group>
+              </Tabs.Tab>
+            )}
+            {(isAdmin || isFloorOwner) && (
+              <Tabs.Tab value="transcriptions">
+                <Group gap="xs">
+                  <IconFileText size={14} />
+                  Transcriptions
                 </Group>
               </Tabs.Tab>
             )}
@@ -1129,6 +1145,12 @@ export default function EventDetailClient({
                   </Button>
                 </Stack>
               </Paper>
+            </Tabs.Panel>
+          )}
+
+          {(isAdmin || isFloorOwner) && (
+            <Tabs.Panel value="transcriptions" mt="md">
+              <TranscriptionsTab eventId={event.id} />
             </Tabs.Panel>
           )}
         </Tabs>

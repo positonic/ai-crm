@@ -364,6 +364,7 @@ function parseCsvDateTime(
   dateStr: string | undefined,
   timeStr: string | undefined,
   year: number,
+  defaultDate?: { month: number; day: number },
 ): Date | null {
   if (!timeStr) return null;
 
@@ -395,9 +396,9 @@ function parseCsvDateTime(
 
     if (month === null || day === null) return null;
   } else {
-    // No date column — default to Jan 1 so time-only parsing works
-    month = 0;
-    day = 1;
+    // No date column — default to event start date so sessions land on the right day
+    month = defaultDate?.month ?? 0;
+    day = defaultDate?.day ?? 1;
   }
 
   // Parse time: "10:00 AM", "3:50 PM", "14:30", "11 AM", "6 PM"
@@ -432,6 +433,7 @@ function parseCsvRows(
   sessionTypes: { id: string; name: string }[],
   tracks: { id: string; name: string }[],
   existingSessions: { title: string; startTime: Date; endTime: Date }[],
+  defaultDate?: { month: number; day: number },
 ): ParsedCsvSession[] {
   return rawData
     .filter((row) => !isJunkRow(row, mapping))
@@ -476,12 +478,12 @@ function parseCsvRows(
     // Check if start time column contains a range like "11 AM - 6 PM"
     const timeRange = parseTimeRange(startTimeStr);
     if (timeRange) {
-      startTime = parseCsvDateTime(dateStr, timeRange.start, year);
-      endTime = parseCsvDateTime(dateStr, timeRange.end, year);
+      startTime = parseCsvDateTime(dateStr, timeRange.start, year, defaultDate);
+      endTime = parseCsvDateTime(dateStr, timeRange.end, year, defaultDate);
     } else {
-      startTime = parseCsvDateTime(dateStr, startTimeStr, year);
+      startTime = parseCsvDateTime(dateStr, startTimeStr, year, defaultDate);
       endTime = endTimeStr
-        ? parseCsvDateTime(dateStr, endTimeStr, year)
+        ? parseCsvDateTime(dateStr, endTimeStr, year, defaultDate)
         : null;
     }
 
@@ -1269,6 +1271,7 @@ function FloorManager({ eventId, venueId, venue, isAdmin }: FloorManagerProps) {
                 ? d.getUTCFullYear()
                 : new Date().getUTCFullYear();
             })()}
+            eventStartDate={sessionsData?.event?.startDate}
           />
           <CreateSessionButton
             eventId={eventId}
@@ -2897,6 +2900,7 @@ interface CsvUploadButtonProps {
   tracks: { id: string; name: string; color: string }[];
   existingSessions: { title: string; startTime: Date; endTime: Date }[];
   eventYear: number;
+  eventStartDate?: Date | string | null;
 }
 
 function CsvUploadButton({
@@ -2906,6 +2910,7 @@ function CsvUploadButton({
   tracks,
   existingSessions,
   eventYear,
+  eventStartDate,
 }: CsvUploadButtonProps) {
   const [opened, { open, close }] = useDisclosure(false);
 
@@ -2927,6 +2932,7 @@ function CsvUploadButton({
         tracks={tracks}
         existingSessions={existingSessions}
         eventYear={eventYear}
+        eventStartDate={eventStartDate}
       />
     </>
   );
@@ -2941,6 +2947,7 @@ interface CsvUploadModalProps {
   tracks: { id: string; name: string; color: string }[];
   existingSessions: { title: string; startTime: Date; endTime: Date }[];
   eventYear: number;
+  eventStartDate?: Date | string | null;
 }
 
 function CsvUploadModal({
@@ -2952,6 +2959,7 @@ function CsvUploadModal({
   tracks,
   existingSessions,
   eventYear,
+  eventStartDate,
 }: CsvUploadModalProps) {
   const [activeStep, setActiveStep] = useState(0);
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -3132,6 +3140,13 @@ function CsvUploadModal({
   }, []);
 
   const handleParseAndPreview = useCallback(() => {
+    // Compute default date from event start date for CSVs without a date column
+    const eventDate = eventStartDate ? new Date(eventStartDate) : null;
+    const defaultDate =
+      eventDate && !isNaN(eventDate.getTime())
+        ? { month: eventDate.getUTCMonth(), day: eventDate.getUTCDate() }
+        : undefined;
+
     const parsed = parseCsvRows(
       rawData,
       columnMapping,
@@ -3139,6 +3154,7 @@ function CsvUploadModal({
       sessionTypes,
       tracks,
       existingSessions,
+      defaultDate,
     );
     setParsedSessions(parsed);
 
@@ -3170,6 +3186,7 @@ function CsvUploadModal({
     rawData,
     columnMapping,
     eventYear,
+    eventStartDate,
     sessionTypes,
     tracks,
     existingSessions,

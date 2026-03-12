@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { assertDeliberationAdmin } from "~/server/api/utils/deliberationAuth";
+import { assertAdminOrEventFloorOwner } from "~/server/api/utils/scheduleAuth";
 
 export const transcriptionRouter = createTRPCRouter({
   getByDeliberation: protectedProcedure
@@ -44,7 +45,7 @@ export const transcriptionRouter = createTRPCRouter({
   getByEvent: protectedProcedure
     .input(z.object({ eventId: z.string() }))
     .query(async ({ ctx, input }) => {
-      await assertDeliberationAdmin(
+      await assertAdminOrEventFloorOwner(
         ctx.db,
         ctx.session.user.id,
         ctx.session.user.role,
@@ -59,6 +60,7 @@ export const transcriptionRouter = createTRPCRouter({
           status: true,
           source: true,
           audioFileName: true,
+          sessionId: true,
           createdAt: true,
           updatedAt: true,
           uploadedBy: { select: { id: true, name: true } },
@@ -93,7 +95,7 @@ export const transcriptionRouter = createTRPCRouter({
         });
       }
 
-      await assertDeliberationAdmin(
+      await assertAdminOrEventFloorOwner(
         ctx.db,
         ctx.session.user.id,
         ctx.session.user.role,
@@ -101,5 +103,49 @@ export const transcriptionRouter = createTRPCRouter({
       );
 
       return transcription;
+    }),
+
+  create: protectedProcedure
+    .input(
+      z.object({
+        eventId: z.string(),
+        sessionId: z.string().optional(),
+        title: z.string().min(1),
+        transcript: z.string().min(1),
+        notes: z.string().optional(),
+        transcriptionType: z.enum(["session", "interview", "other"]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertAdminOrEventFloorOwner(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        input.eventId,
+      );
+
+      const title =
+        input.transcriptionType === "interview"
+          ? `[Interview] ${input.title}`
+          : input.transcriptionType === "other"
+            ? `[Other] ${input.title}`
+            : input.title;
+
+      return ctx.db.transcription.create({
+        data: {
+          eventId: input.eventId,
+          sessionId:
+            input.transcriptionType === "session"
+              ? input.sessionId
+              : undefined,
+          title,
+          transcript: input.transcript,
+          notes: input.notes,
+          source: "MANUAL",
+          status: "COMPLETED",
+          processedAt: new Date(),
+          uploadedById: ctx.session.user.id,
+        },
+      });
     }),
 });
