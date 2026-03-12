@@ -440,9 +440,13 @@ export default function EventPage({ params }: EventPageProps) {
     return (
       <ResidentDashboard
         eventId={resolvedEventId}
+        eventSlug={eventId}
         eventName={event.name}
+        eventType={event.type}
         featureDeliberation={event.featureDeliberation ?? false}
         userApplication={userApplication ?? null}
+        hasSpeakerApplication={hasSpeakerApplication}
+        speakerApplicationStatus={speakerApplication?.status ?? null}
       />
     );
   }

@@ -36,6 +36,8 @@ import {
   IconWorld,
   IconHandStop,
   IconTarget,
+  IconClipboardList,
+  IconChecks,
 } from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import Link from "next/link";
@@ -46,18 +48,26 @@ import { ProjectManager } from "~/app/_components/ProjectManager";
 
 interface ResidentDashboardProps {
   eventId: string;
+  eventSlug: string;
   eventName: string;
+  eventType: string;
   featureDeliberation?: boolean;
   userApplication: {
     status: string;
   } | null;
+  hasSpeakerApplication: boolean;
+  speakerApplicationStatus: string | null;
 }
 
 export default function ResidentDashboard({
   eventId,
+  eventSlug,
   eventName,
+  eventType,
   featureDeliberation,
   userApplication: _userApplication,
+  hasSpeakerApplication,
+  speakerApplicationStatus,
 }: ResidentDashboardProps) {
   const { data: session } = useSession();
 
@@ -103,6 +113,72 @@ export default function ResidentDashboard({
             things together.
           </Text>
         </div>
+
+        {/* EIR Application Card */}
+        {eventType === "EIR" && (
+          <Card shadow="sm" padding="lg" radius="md" withBorder>
+            {hasSpeakerApplication ? (
+              <Group wrap="nowrap" gap="md">
+                <IconChecks size={28} color="var(--mantine-color-teal-6)" />
+                <Stack gap={4} style={{ flex: 1 }}>
+                  <Group gap="xs">
+                    <Text fw={600}>Your Application</Text>
+                    <Badge
+                      color={
+                        speakerApplicationStatus === "ACCEPTED"
+                          ? "teal"
+                          : speakerApplicationStatus === "REJECTED"
+                            ? "red"
+                            : speakerApplicationStatus === "SUBMITTED"
+                              ? "blue"
+                              : "gray"
+                      }
+                      variant="light"
+                      size="sm"
+                    >
+                      {speakerApplicationStatus ?? "Draft"}
+                    </Badge>
+                  </Group>
+                  <Text size="sm" c="dimmed">
+                    {speakerApplicationStatus === "DRAFT"
+                      ? "You have a draft application. Continue where you left off."
+                      : speakerApplicationStatus === "SUBMITTED"
+                        ? "Your application has been submitted and is under review."
+                        : speakerApplicationStatus === "ACCEPTED"
+                          ? "Congratulations! Your application has been accepted."
+                          : "View your application details."}
+                  </Text>
+                </Stack>
+                <Button
+                  component={Link}
+                  href={`/events/${eventSlug}/apply`}
+                  variant={speakerApplicationStatus === "DRAFT" ? "filled" : "light"}
+                  leftSection={<IconClipboardList size={16} />}
+                >
+                  {speakerApplicationStatus === "DRAFT" ? "Continue Application" : "View Application"}
+                </Button>
+              </Group>
+            ) : (
+              <Group wrap="nowrap" gap="md">
+                <IconClipboardList size={28} color="var(--mantine-color-blue-6)" />
+                <Stack gap={4} style={{ flex: 1 }}>
+                  <Text fw={600}>Apply to {eventName}</Text>
+                  <Text size="sm" c="dimmed">
+                    Interested in participating? Submit your application to join.
+                  </Text>
+                </Stack>
+                <Button
+                  component={Link}
+                  href={`/events/${eventSlug}/apply`}
+                  variant="filled"
+                  leftSection={<IconClipboardList size={16} />}
+                >
+                  Apply Now
+                </Button>
+              </Group>
+            )}
+          </Card>
+        )}
 
         <Grid gutter="xl">
           {/* Profile Section - Show completion widget only if profile is under 70% */}

@@ -360,8 +360,8 @@ export default function SpeakerApplicationForm({
     },
   );
 
-  // Dynamic step count: show Step 4 only if event has questions
-  const totalSteps = eventQuestions && eventQuestions.length > 0 ? 4 : 3;
+  // Dynamic step count: show Step 4 (About You) only if event has questions and is not EIR
+  const totalSteps = !isEIR && eventQuestions && eventQuestions.length > 0 ? 4 : 3;
 
   const form = useForm<SpeakerApplicationData>({
     validate: zodResolver(speakerApplicationSchema),
@@ -1261,7 +1261,7 @@ export default function SpeakerApplicationForm({
                 <Group gap="md" align="center">
                   <IconUser size={28} color="var(--mantine-color-blue-6)" />
                   <div>
-                    <Title order={3}>Speaker Profile</Title>
+                    <Title order={3}>{isEIR ? "Your Profile" : "Speaker Profile"}</Title>
                     <Text size="sm" c="dimmed">
                       Tell us about yourself
                     </Text>
@@ -1362,7 +1362,7 @@ export default function SpeakerApplicationForm({
                   </Grid.Col>
                   <Grid.Col span={12}>
                     <Textarea
-                      label="Speaker Bio"
+                      label={isEIR ? "Your Bio" : "Speaker Bio"}
                       placeholder="Tell the audience about yourself, your background, and your expertise..."
                       description="This bio may be displayed on the conference website (minimum 20 characters)"
                       minRows={4}
@@ -1373,7 +1373,7 @@ export default function SpeakerApplicationForm({
                   </Grid.Col>
                   <Grid.Col span={12}>
                     <Textarea
-                      label="Previous Speaking Experience"
+                      label={isEIR ? "Relevant experience" : "Previous Speaking Experience"}
                       placeholder="Share any conferences, meetups, podcasts, or other events where you have spoken before..."
                       description="Optional, but helps us understand your experience level"
                       minRows={3}
@@ -1436,7 +1436,7 @@ export default function SpeakerApplicationForm({
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, sm: 6 }}>
                   <TextInput
-                    label="Past Talk Recording"
+                    label={isEIR ? "Your introductory video" : "Past Talk Recording"}
                     placeholder="https://youtube.com/watch?v=..."
                     description="Link to a previous talk, presentation, or video"
                     leftSection={<IconVideo size={16} />}
