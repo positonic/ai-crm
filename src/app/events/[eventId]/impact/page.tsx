@@ -21,10 +21,10 @@ import {
   SimpleGrid,
   Stack,
   RingProgress,
+  Anchor,
 } from "@mantine/core";
 import {
   IconChartBar,
-  IconTable,
   IconActivity,
   IconUsers,
   IconSparkles,
@@ -35,6 +35,10 @@ import {
   IconArrowUp,
   IconArrowDown,
   IconLayoutGrid,
+  IconWorld,
+  IconExternalLink,
+  IconAlertTriangle,
+  IconCoin,
 } from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import { Hyperboard } from "~/app/_components/Hyperboard";
@@ -43,6 +47,7 @@ import { UserAvatar } from "~/app/_components/UserAvatar";
 import { getDisplayName } from "~/utils/userDisplay";
 import Link from "next/link";
 import { getKudosTier, KUDOS_CONSTANTS } from "~/utils/kudosCalculation";
+import { normalizeEventType } from "~/types/event";
 
 type SortField =
   | "projects"
@@ -63,20 +68,30 @@ export default function ImpactPage({ params }: ImpactPageProps) {
   const [eventId, setEventId] = useState<string>("");
   const [sortField, setSortField] = useState<SortField>("kudos");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-  const [activeTab, setActiveTab] = useState<string>("stats");
+  const [activeTab, setActiveTab] = useState<string | null>(null);
 
   // Await params in Next.js 15
   useEffect(() => {
     void params.then(({ eventId: id }) => setEventId(id));
   }, [params]);
 
-  // Handle URL tab parameter
+  // Get event details
+  const { data: event, isLoading: eventLoading } = api.event.getEvent.useQuery(
+    { id: eventId },
+    { enabled: !!eventId },
+  );
+
+  const isConference = normalizeEventType(event?.type) === "CONFERENCE";
+
+  // Set default tab once event loads
   useEffect(() => {
-    const tab = searchParams.get("tab");
-    if (tab) {
-      setActiveTab(tab);
+    const urlTab = searchParams.get("tab");
+    if (urlTab) {
+      setActiveTab(urlTab);
+    } else if (event && !activeTab) {
+      setActiveTab(isConference ? "hypersphere" : "stats");
     }
-  }, [searchParams]);
+  }, [searchParams, event, activeTab, isConference]);
 
   // Update URL when tab changes
   const handleTabChange = (value: string | null) => {
@@ -86,60 +101,65 @@ export default function ImpactPage({ params }: ImpactPageProps) {
     }
   };
 
-  // Get event details
-  const { isLoading: eventLoading } = api.event.getEvent.useQuery(
-    { id: eventId },
-    { enabled: !!eventId },
-  );
-
-  // Get resident projects
+  // Get resident projects (residency only)
   const { data: residentProjects } =
     api.application.getResidentProjects.useQuery(
       { eventId },
-      { enabled: !!eventId },
+      { enabled: !!eventId && !isConference },
     );
 
-  // Get accepted residents
+  // Get accepted residents (residency only)
   const { data: residentsData } = api.application.getAcceptedResidents.useQuery(
     { eventId },
-    { enabled: !!eventId },
+    { enabled: !!eventId && !isConference },
   );
 
-  // Get sponsors for hyperboard
+  // Get sponsors for hyperboard (residency only)
   const { data: sponsors } = api.sponsor.getSponsorsForHyperboard.useQuery(
     { eventId },
-    { enabled: !!eventId },
+    { enabled: !!eventId && !isConference },
   );
 
-  // Get residents for kudosboard (sized by kudos)
+  // Get residents for kudosboard / hyperboard
   const { data: residentsKudosboard } =
     api.application.getResidentsForKudosboard.useQuery(
       { eventId },
       { enabled: !!eventId },
     );
 
-  // Get projects for hyperboard
+  // Get projects for hyperboard (residency only)
   const { data: projectsHyperboard } =
     api.application.getProjectsForHyperboard.useQuery(
       { eventId },
-      { enabled: !!eventId },
+      { enabled: !!eventId && !isConference },
     );
 
-  // Get combined hyperboard (sponsors + residents)
+  // Get combined hyperboard (residency only)
   const { data: combinedHyperboard } =
     api.application.getCombinedHyperboard.useQuery(
       { eventId },
-      { enabled: !!eventId },
+      { enabled: !!eventId && !isConference },
     );
 
-  // Get activity timeline
+  // Get activity timeline (residency only)
   const { data: activityTimeline, isLoading: activityLoading } =
-    api.kudos.getActivityTimeline.useQuery({ limit: 50 });
+    api.kudos.getActivityTimeline.useQuery(
+      { limit: 50 },
+      { enabled: !isConference },
+    );
 
-  // Get praise transactions for residency leaderboard
-  const { data: transactions } = api.praise.getAllTransactions.useQuery({
-    limit: 100,
-  });
+  // Get praise transactions for residency leaderboard (residency only)
+  const { data: transactions } = api.praise.getAllTransactions.useQuery(
+    { limit: 100 },
+    { enabled: !isConference },
+  );
+
+  // Get Hypersphere data (AT Protocol records + network stats)
+  const { data: hypersphereData, isLoading: hypersphereLoading } =
+    api.hypercerts.getEventHypersphereData.useQuery(
+      { eventId },
+      { enabled: !!eventId, staleTime: 5 * 60 * 1000 },
+    );
 
   // Get all project updates count
   const totalUpdates = useMemo(() => {
@@ -242,7 +262,7 @@ export default function ImpactPage({ params }: ImpactPageProps) {
     );
   };
 
-  if (eventLoading || !eventId) {
+  if (eventLoading || !eventId || !activeTab) {
     return (
       <Container size="lg" py="xl">
         <Center>
@@ -255,43 +275,59 @@ export default function ImpactPage({ params }: ImpactPageProps) {
   return (
     <Container size="xl" py="xl">
       <Title order={1} mb="xl">
-        Residency Impact
+        {isConference ? "Impact" : "Residency Impact"}
       </Title>
 
       <Tabs value={activeTab} onChange={handleTabChange}>
         <Tabs.List>
-          <Tabs.Tab value="stats" leftSection={<IconChartBar size={16} />}>
-            Statistics
+          <Tabs.Tab value="hypersphere" leftSection={<IconWorld size={16} />}>
+            Hypersphere
           </Tabs.Tab>
-          <Tabs.Tab value="activity" leftSection={<IconActivity size={16} />}>
-            Activity Timeline
-          </Tabs.Tab>
-          <Tabs.Tab value="leaderboard" leftSection={<IconUsers size={16} />}>
-            Residency Leaderboard
-          </Tabs.Tab>
-          <Tabs.Tab
-            value="sponsor-hyperboard"
-            leftSection={<IconTable size={16} />}
-          >
-            Sponsor Hyperboard
-          </Tabs.Tab>
+          {!isConference && (
+            <Tabs.Tab value="stats" leftSection={<IconChartBar size={16} />}>
+              Statistics
+            </Tabs.Tab>
+          )}
+          {!isConference && (
+            <Tabs.Tab value="activity" leftSection={<IconActivity size={16} />}>
+              Activity Timeline
+            </Tabs.Tab>
+          )}
+          {!isConference && (
+            <Tabs.Tab value="leaderboard" leftSection={<IconUsers size={16} />}>
+              Residency Leaderboard
+            </Tabs.Tab>
+          )}
+          {!isConference && (
+            <Tabs.Tab
+              value="sponsor-hyperboard"
+              leftSection={<IconSparkles size={16} />}
+            >
+              Sponsor Hyperboard
+            </Tabs.Tab>
+          )}
           <Tabs.Tab value="kudosboard" leftSection={<IconSparkles size={16} />}>
-            Residents Hyperboard
+            {isConference ? "Hyperboard" : "Residents Hyperboard"}
           </Tabs.Tab>
-          <Tabs.Tab
-            value="projects-hyperboard"
-            leftSection={<IconBriefcase size={16} />}
-          >
-            Projects Hyperboard
-          </Tabs.Tab>
-          <Tabs.Tab
-            value="combined-hyperboard"
-            leftSection={<IconLayoutGrid size={16} />}
-          >
-            Combined Hyperboard
-          </Tabs.Tab>
+          {!isConference && (
+            <Tabs.Tab
+              value="projects-hyperboard"
+              leftSection={<IconBriefcase size={16} />}
+            >
+              Projects Hyperboard
+            </Tabs.Tab>
+          )}
+          {!isConference && (
+            <Tabs.Tab
+              value="combined-hyperboard"
+              leftSection={<IconLayoutGrid size={16} />}
+            >
+              Combined Hyperboard
+            </Tabs.Tab>
+          )}
         </Tabs.List>
 
+        {!isConference && (
         <Tabs.Panel value="stats" pt="xl">
           <SimpleGrid cols={{ base: 1, sm: 2, lg: 3, xl: 5 }} spacing="lg">
             {/* Residents Card */}
@@ -546,7 +582,9 @@ export default function ImpactPage({ params }: ImpactPageProps) {
             }
           `}</style>
         </Tabs.Panel>
+        )}
 
+        {!isConference && (
         <Tabs.Panel value="activity" pt="xl">
           {activityLoading ? (
             <Center py="xl">
@@ -653,7 +691,9 @@ export default function ImpactPage({ params }: ImpactPageProps) {
             </Timeline>
           )}
         </Tabs.Panel>
+        )}
 
+        {!isConference && (
         <Tabs.Panel value="leaderboard" pt="xl">
           {eventLoading ? (
             <Center py="xl">
@@ -785,7 +825,9 @@ export default function ImpactPage({ params }: ImpactPageProps) {
             </Card>
           )}
         </Tabs.Panel>
+        )}
 
+        {!isConference && (
         <Tabs.Panel value="sponsor-hyperboard" pt="xl">
           {sponsors && sponsors.length > 0 ? (
             <Hyperboard
@@ -804,6 +846,7 @@ export default function ImpactPage({ params }: ImpactPageProps) {
             <Text c="dimmed">No sponsors found for this event.</Text>
           )}
         </Tabs.Panel>
+        )}
 
         <Tabs.Panel value="kudosboard" pt="xl">
           {residentsKudosboard && residentsKudosboard.length > 0 ? (
@@ -823,6 +866,8 @@ export default function ImpactPage({ params }: ImpactPageProps) {
           )}
         </Tabs.Panel>
 
+        {!isConference && (
+        <>
         <Tabs.Panel value="projects-hyperboard" pt="xl">
           {projectsHyperboard && projectsHyperboard.length > 0 ? (
             <Hyperboard
@@ -889,7 +934,451 @@ export default function ImpactPage({ params }: ImpactPageProps) {
             )}
           </Box>
         </Tabs.Panel>
+        </>
+        )}
+
+        {/* Hypersphere Tab */}
+        <Tabs.Panel value="hypersphere" pt="xl">
+          {hypersphereLoading ? (
+            <Center py="xl">
+              <Loader />
+            </Center>
+          ) : !hypersphereData?.activityCert &&
+            !hypersphereData?.deliberation &&
+            !hypersphereData?.networkStats ? (
+            <Paper p="xl" radius="md" withBorder>
+              <Stack gap="md" align="center">
+                <ThemeIcon size={48} variant="light" color="gray">
+                  <IconWorld size={28} />
+                </ThemeIcon>
+                <Text c="dimmed" ta="center">
+                  No Hypersphere data available for this event yet.
+                </Text>
+              </Stack>
+            </Paper>
+          ) : (
+            <Stack gap="xl">
+              {/* Network Stats */}
+              {hypersphereData?.networkStats && (
+                <Stack gap="md">
+                  <Title order={3}>Hypersphere Network</Title>
+                  <Paper p="lg" radius="md" withBorder>
+                    <Text
+                      size="sm"
+                      style={{ whiteSpace: "pre-line" }}
+                      c="dimmed"
+                    >
+                      {hypersphereData.networkStats}
+                    </Text>
+                  </Paper>
+                </Stack>
+              )}
+
+              {/* Activity Cert */}
+              {hypersphereData?.activityCert && (
+                <Stack gap="md">
+                  <Title order={3}>Activity Cert</Title>
+                  <Paper p="lg" radius="md" withBorder>
+                    <Stack gap="md">
+                      <Group justify="space-between" align="flex-start">
+                        <Stack gap={4}>
+                          <Text fw={600} size="lg">
+                            {hypersphereData.activityCert.value.title}
+                          </Text>
+                          {hypersphereData.activityCert.value.workScope && (
+                            <Badge variant="light" color="blue" size="sm">
+                              {hypersphereData.activityCert.value.workScope}
+                            </Badge>
+                          )}
+                        </Stack>
+                        <Anchor
+                          href={atUriToWebUrl(hypersphereData.activityCert.uri)}
+                          target="_blank"
+                          size="sm"
+                        >
+                          <Group gap={4}>
+                            View on AT Protocol
+                            <IconExternalLink size={14} />
+                          </Group>
+                        </Anchor>
+                      </Group>
+
+                      {(hypersphereData.activityCert.value.startDate ??
+                        hypersphereData.activityCert.value.endDate) && (
+                        <Text size="sm" c="dimmed">
+                          {hypersphereData.activityCert.value.startDate &&
+                            new Date(
+                              hypersphereData.activityCert.value.startDate,
+                            ).toLocaleDateString()}
+                          {hypersphereData.activityCert.value.endDate &&
+                            ` — ${new Date(hypersphereData.activityCert.value.endDate).toLocaleDateString()}`}
+                        </Text>
+                      )}
+
+                      {/* Contributors grouped by role */}
+                      {hypersphereData.activityCert.value.contributors &&
+                        hypersphereData.activityCert.value.contributors.length >
+                          0 && (
+                          <Stack gap="sm">
+                            <Divider />
+                            <Text fw={500} size="sm">
+                              Contributors (
+                              {
+                                hypersphereData.activityCert.value.contributors
+                                  .length
+                              }
+                              )
+                            </Text>
+                            {Object.entries(
+                              hypersphereData.activityCert.value.contributors.reduce<
+                                Record<string, string[]>
+                              >((acc, c) => {
+                                const role =
+                                  c.contributionDetails?.role ?? "Contributor";
+                                acc[role] ??= [];
+                                const name =
+                                  c.contributorIdentity.displayName ??
+                                  "Anonymous";
+                                acc[role].push(name);
+                                return acc;
+                              }, {}),
+                            ).map(([role, names]) => (
+                              <Stack key={role} gap={4}>
+                                <Text size="xs" fw={500} c="dimmed">
+                                  {role}s ({names.length})
+                                </Text>
+                                <Group gap={4}>
+                                  {names.map((name, i) => (
+                                    <Badge
+                                      key={`${name}-${String(i)}`}
+                                      variant="outline"
+                                      color="gray"
+                                      size="sm"
+                                    >
+                                      {name}
+                                    </Badge>
+                                  ))}
+                                </Group>
+                              </Stack>
+                            ))}
+                          </Stack>
+                        )}
+                    </Stack>
+                  </Paper>
+                </Stack>
+              )}
+
+              {/* Deliberation Results */}
+              {hypersphereData?.deliberation && (
+                <Stack gap="md">
+                  <Title order={3}>Deliberation Intelligence</Title>
+
+                  {/* Synthesis */}
+                  {hypersphereData.deliberation.summary?.value.synthesis && (
+                    <Paper p="lg" radius="md" withBorder>
+                      <Stack gap="xs">
+                        <Text fw={500}>Synthesis</Text>
+                        <Text
+                          size="sm"
+                          c="dimmed"
+                          style={{ whiteSpace: "pre-line" }}
+                        >
+                          {
+                            hypersphereData.deliberation.summary.value
+                              .synthesis
+                          }
+                        </Text>
+                      </Stack>
+                    </Paper>
+                  )}
+
+                  {/* Statistics */}
+                  {hypersphereData.deliberation.summary?.value.statistics && (
+                    <SimpleGrid cols={{ base: 2, sm: 4 }}>
+                      {[
+                        {
+                          label: "Priorities",
+                          value:
+                            hypersphereData.deliberation.summary.value
+                              .statistics.totalPriorities,
+                          color: "blue",
+                        },
+                        {
+                          label: "Votes",
+                          value:
+                            hypersphereData.deliberation.summary.value
+                              .statistics.totalVotes,
+                          color: "green",
+                        },
+                        {
+                          label: "Topic Clusters",
+                          value:
+                            hypersphereData.deliberation.summary.value
+                              .statistics.topicClusterCount,
+                          color: "violet",
+                        },
+                        {
+                          label: "Convergent",
+                          value:
+                            hypersphereData.deliberation.summary.value
+                              .statistics.convergentCount,
+                          color: "teal",
+                        },
+                        {
+                          label: "Aspirational",
+                          value:
+                            hypersphereData.deliberation.summary.value
+                              .statistics.aspirationalCount,
+                          color: "indigo",
+                        },
+                        {
+                          label: "Blind Spots",
+                          value:
+                            hypersphereData.deliberation.summary.value
+                              .statistics.blindSpotCount,
+                          color: "orange",
+                        },
+                        {
+                          label: "Blockers",
+                          value:
+                            hypersphereData.deliberation.summary.value
+                              .statistics.totalBlockers,
+                          color: "red",
+                        },
+                        {
+                          label: "Recommendations",
+                          value:
+                            hypersphereData.deliberation.summary.value
+                              .statistics.totalResources,
+                          color: "cyan",
+                        },
+                      ].map((stat) => (
+                        <Paper key={stat.label} p="md" radius="md" withBorder>
+                          <Stack gap={4} align="center">
+                            <Text size="xl" fw={700} c={stat.color}>
+                              {stat.value ?? 0}
+                            </Text>
+                            <Text size="xs" c="dimmed">
+                              {stat.label}
+                            </Text>
+                          </Stack>
+                        </Paper>
+                      ))}
+                    </SimpleGrid>
+                  )}
+
+                  {/* Topic Clusters */}
+                  {hypersphereData.deliberation.pca?.value.topicClusters &&
+                    hypersphereData.deliberation.pca.value.topicClusters
+                      .length > 0 && (
+                      <Stack gap="sm">
+                        <Text fw={500}>Topic Clusters</Text>
+                        <SimpleGrid cols={{ base: 1, sm: 2 }}>
+                          {hypersphereData.deliberation.pca.value.topicClusters.map(
+                            (cluster) => (
+                              <Paper
+                                key={cluster.label}
+                                p="md"
+                                radius="md"
+                                withBorder
+                              >
+                                <Stack gap="xs">
+                                  <Group justify="space-between">
+                                    <Text fw={500} size="sm">
+                                      {cluster.label}
+                                    </Text>
+                                    <Badge
+                                      size="sm"
+                                      variant="light"
+                                      color="violet"
+                                    >
+                                      {cluster.mentionCount} mentions
+                                    </Badge>
+                                  </Group>
+                                  <Group gap={4}>
+                                    {cluster.keywords.map((kw) => (
+                                      <Badge
+                                        key={kw}
+                                        size="xs"
+                                        variant="outline"
+                                        color="gray"
+                                      >
+                                        {kw}
+                                      </Badge>
+                                    ))}
+                                  </Group>
+                                </Stack>
+                              </Paper>
+                            ),
+                          )}
+                        </SimpleGrid>
+                      </Stack>
+                    )}
+
+                  {/* Blocker Themes */}
+                  {hypersphereData.deliberation.summary?.value.blockerThemes &&
+                    hypersphereData.deliberation.summary.value.blockerThemes
+                      .length > 0 && (
+                      <Stack gap="sm">
+                        <Group gap="xs">
+                          <ThemeIcon
+                            size="sm"
+                            variant="light"
+                            color="orange"
+                          >
+                            <IconAlertTriangle size={14} />
+                          </ThemeIcon>
+                          <Text fw={500}>Blocker Themes</Text>
+                        </Group>
+                        <SimpleGrid cols={{ base: 1, sm: 2 }}>
+                          {hypersphereData.deliberation.summary.value.blockerThemes.map(
+                            (bt) => (
+                              <Paper
+                                key={bt.theme}
+                                p="md"
+                                radius="md"
+                                withBorder
+                              >
+                                <Stack gap="xs">
+                                  <Group justify="space-between">
+                                    <Text fw={500} size="sm">
+                                      {bt.theme}
+                                    </Text>
+                                    <Badge
+                                      size="sm"
+                                      variant="light"
+                                      color="orange"
+                                    >
+                                      {bt.frequency}x
+                                    </Badge>
+                                  </Group>
+                                  <Text size="xs" c="dimmed">
+                                    {bt.description}
+                                  </Text>
+                                  <Group gap={4}>
+                                    {bt.affectedPriorities.map((ap) => (
+                                      <Badge
+                                        key={ap}
+                                        size="xs"
+                                        variant="outline"
+                                        color="gray"
+                                      >
+                                        {ap}
+                                      </Badge>
+                                    ))}
+                                  </Group>
+                                </Stack>
+                              </Paper>
+                            ),
+                          )}
+                        </SimpleGrid>
+                      </Stack>
+                    )}
+
+                  {/* Resource Recommendations */}
+                  {hypersphereData.deliberation.summary?.value
+                    .resourceRecommendations &&
+                    hypersphereData.deliberation.summary.value
+                      .resourceRecommendations.length > 0 && (
+                      <Stack gap="sm">
+                        <Group gap="xs">
+                          <ThemeIcon size="sm" variant="light" color="teal">
+                            <IconCoin size={14} />
+                          </ThemeIcon>
+                          <Text fw={500}>Resource Recommendations</Text>
+                        </Group>
+                        {hypersphereData.deliberation.summary.value.resourceRecommendations.map(
+                          (r, i) => (
+                            <Paper key={i} p="md" radius="md" withBorder>
+                              <Group gap="xs" align="flex-start">
+                                <Badge variant="light" color="teal" size="sm">
+                                  {r.category}
+                                </Badge>
+                                <Badge
+                                  variant="light"
+                                  color={
+                                    r.urgency === "high"
+                                      ? "red"
+                                      : r.urgency === "medium"
+                                        ? "orange"
+                                        : "blue"
+                                  }
+                                  size="xs"
+                                >
+                                  {r.urgency}
+                                </Badge>
+                                <Stack gap={2} style={{ flex: 1 }}>
+                                  <Text size="sm">{r.recommendation}</Text>
+                                  {r.relatedPriorities.length > 0 && (
+                                    <Text size="xs" c="dimmed">
+                                      Related:{" "}
+                                      {r.relatedPriorities.join(", ")}
+                                    </Text>
+                                  )}
+                                </Stack>
+                              </Group>
+                            </Paper>
+                          ),
+                        )}
+                      </Stack>
+                    )}
+
+                  {/* Verifiable Record Links */}
+                  <Paper p="md" radius="md" withBorder>
+                    <Stack gap="xs">
+                      <Text fw={500} size="sm">
+                        Verifiable Records
+                      </Text>
+                      {hypersphereData.deliberation.summary && (
+                        <Group gap="xs">
+                          <Text size="xs" c="dimmed">
+                            Summary:
+                          </Text>
+                          <Anchor
+                            href={atUriToWebUrl(
+                              hypersphereData.deliberation.summary.uri,
+                            )}
+                            target="_blank"
+                            size="xs"
+                          >
+                            <Group gap={4}>
+                              View record
+                              <IconExternalLink size={12} />
+                            </Group>
+                          </Anchor>
+                        </Group>
+                      )}
+                      {hypersphereData.deliberation.pca && (
+                        <Group gap="xs">
+                          <Text size="xs" c="dimmed">
+                            Topic Analysis:
+                          </Text>
+                          <Anchor
+                            href={atUriToWebUrl(
+                              hypersphereData.deliberation.pca.uri,
+                            )}
+                            target="_blank"
+                            size="xs"
+                          >
+                            <Group gap={4}>
+                              View record
+                              <IconExternalLink size={12} />
+                            </Group>
+                          </Anchor>
+                        </Group>
+                      )}
+                    </Stack>
+                  </Paper>
+                </Stack>
+              )}
+            </Stack>
+          )}
+        </Tabs.Panel>
       </Tabs>
     </Container>
   );
+}
+
+function atUriToWebUrl(atUri: string): string {
+  return `https://pdsls.dev/${atUri.replace("://", "/")}`;
 }
