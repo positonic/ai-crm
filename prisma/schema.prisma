@@ -770,6 +770,7 @@ enum EmailType {
 
   // Speaker/session related
   SLIDES_REMINDER   // Reminder to upload session slides
+  SESSION_DETAILS_REMINDER // Reminder with session details (date, time, venue, room)
 
   // Legacy (for backward compatibility)
   MISSING_INFO    // Deprecated: Use APPLICATION_MISSING_INFO

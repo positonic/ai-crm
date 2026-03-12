@@ -12,6 +12,7 @@ import { MagicLinkTemplate } from "./magicLink";
 import { FloorOwnerAssignedTemplate } from "./floorOwnerAssigned";
 import { SpeakerInvitedTemplate } from "./speakerInvited";
 import { SlidesReminderTemplate } from "./slidesReminder";
+import { SessionDetailsReminderTemplate } from "./sessionDetailsReminder";
 
 // Template registry with all available templates
 export const templates = {
@@ -31,6 +32,7 @@ export const templates = {
   // Speaker templates
   speakerInvited: SpeakerInvitedTemplate,
   slidesReminder: SlidesReminderTemplate,
+  sessionDetailsReminder: SessionDetailsReminderTemplate,
 
   // Authentication templates
   passwordReset: PasswordReset,
@@ -57,6 +59,7 @@ export const templateToEmailType = {
   floorOwnerAssigned: "FLOOR_OWNER_ASSIGNED",
   speakerInvited: "INVITATION_EVENT_ROLE",
   slidesReminder: "SLIDES_REMINDER",
+  sessionDetailsReminder: "SESSION_DETAILS_REMINDER",
   passwordReset: "PASSWORD_RESET",
   magicLink: "MAGIC_LINK",
   updateCommentNotification: "UPDATE_COMMENT",
@@ -79,6 +82,7 @@ export { AskOfferCommentNotificationTemplate } from "./askOfferCommentNotificati
 export { FloorOwnerAssignedTemplate } from "./floorOwnerAssigned";
 export { SpeakerInvitedTemplate } from "./speakerInvited";
 export { SlidesReminderTemplate } from "./slidesReminder";
+export { SessionDetailsReminderTemplate } from "./sessionDetailsReminder";
 
 // Export prop types
 export type { ApplicationAcceptedProps } from "./applicationAccepted";
@@ -95,3 +99,4 @@ export type { AskOfferCommentNotificationProps } from "./askOfferCommentNotifica
 export type { FloorOwnerAssignedProps } from "./floorOwnerAssigned";
 export type { SpeakerInvitedProps } from "./speakerInvited";
 export type { SlidesReminderProps } from "./slidesReminder";
+export type { SessionDetailsReminderProps } from "./sessionDetailsReminder";

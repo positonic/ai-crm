@@ -111,6 +111,9 @@ export default function SpeakerManagementClient({ eventId }: Props) {
   // ── Sessions with slides status ──
   const [sessionsSearch, setSessionsSearch] = useState("");
   const [showMissingSlidesOnly, setShowMissingSlidesOnly] = useState(false);
+  const [sessionsFloorFilter, setSessionsFloorFilter] = useState<string | null>(
+    null,
+  );
   const [selectedReminders, setSelectedReminders] = useState<string[]>([]);
 
   const { data: sessionsData, isLoading: loadingSessions } =
@@ -137,6 +140,25 @@ export default function SpeakerManagementClient({ eventId }: Props) {
       });
     },
   });
+
+  const sendSessionDetailsReminder =
+    api.schedule.sendSessionDetailsReminder.useMutation({
+      onSuccess: (result) => {
+        notifications.show({
+          title: "Session details sent",
+          message: `${result.successCount} email${result.successCount !== 1 ? "s" : ""} sent${result.failureCount > 0 ? `, ${result.failureCount} failed` : ""}`,
+          color: result.failureCount > 0 ? "yellow" : "green",
+        });
+        setSelectedReminders([]);
+      },
+      onError: (error) => {
+        notifications.show({
+          title: "Error",
+          message: error.message,
+          color: "red",
+        });
+      },
+    });
 
   // ── Application Queries ──
   const {
@@ -251,8 +273,12 @@ export default function SpeakerManagementClient({ eventId }: Props) {
       slidesUrl: string | null;
       slidesFileName: string | null;
       slidesUploadedAt: Date | null;
+      venueId: string | null;
+      venueName: string | null;
     }> = [];
     for (const session of sessionsData.sessions) {
+      const venueId = session.venueId ?? null;
+      const venueName = session.venue?.name ?? null;
       if (session.sessionSpeakers.length === 0) {
         rows.push({
           key: session.id,
@@ -264,6 +290,8 @@ export default function SpeakerManagementClient({ eventId }: Props) {
           slidesUrl: session.slidesUrl,
           slidesFileName: session.slidesFileName,
           slidesUploadedAt: session.slidesUploadedAt,
+          venueId,
+          venueName,
         });
       } else {
         for (const sp of session.sessionSpeakers) {
@@ -278,6 +306,8 @@ export default function SpeakerManagementClient({ eventId }: Props) {
             slidesUrl: session.slidesUrl,
             slidesFileName: session.slidesFileName,
             slidesUploadedAt: session.slidesUploadedAt,
+            venueId,
+            venueName,
           });
         }
       }
@@ -287,6 +317,9 @@ export default function SpeakerManagementClient({ eventId }: Props) {
 
   const filteredSessionRows = useMemo(() => {
     let rows = sessionRows;
+    if (sessionsFloorFilter) {
+      rows = rows.filter((r) => r.venueId === sessionsFloorFilter);
+    }
     if (showMissingSlidesOnly) {
       rows = rows.filter((r) => !r.slidesUrl);
     }
@@ -300,7 +333,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
       );
     }
     return rows;
-  }, [sessionRows, showMissingSlidesOnly, sessionsSearch]);
+  }, [sessionRows, sessionsFloorFilter, showMissingSlidesOnly, sessionsSearch]);
 
   // ── Loading ──
   if (inv.isLoading || loadingApplications || loadingSpeakers) {
@@ -402,6 +435,26 @@ export default function SpeakerManagementClient({ eventId }: Props) {
       eventId,
       reminders: [{ sessionId, speakerUserId }],
     });
+  };
+
+  // All rows with a speaker email (for session details reminder)
+  const emailableRows = filteredSessionRows.filter(
+    (r) => !!r.speakerEmail && !!r.speakerUserId,
+  );
+
+  const handleBulkSessionDetailsRemind = () => {
+    const reminders = selectedReminders
+      .map((key) => {
+        const row = sessionRows.find((r) => r.key === key);
+        if (!row?.speakerUserId) return null;
+        return { sessionId: row.sessionId, speakerUserId: row.speakerUserId };
+      })
+      .filter(
+        (r): r is { sessionId: string; speakerUserId: string } => r !== null,
+      );
+
+    if (reminders.length === 0) return;
+    sendSessionDetailsReminder.mutate({ eventId, reminders });
   };
 
   const missingSlidesCount = sessionRows.filter((r) => !r.slidesUrl).length;
@@ -823,6 +876,22 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                     onChange={(e) => setSessionsSearch(e.currentTarget.value)}
                     style={{ flex: 1 }}
                   />
+                  <Select
+                    placeholder="All floors"
+                    data={
+                      filtersData?.venues?.map((v) => ({
+                        value: v.id,
+                        label: v.name,
+                      })) ?? []
+                    }
+                    value={sessionsFloorFilter}
+                    onChange={(val) => {
+                      setSessionsFloorFilter(val);
+                      setSelectedReminders([]);
+                    }}
+                    clearable
+                    w={250}
+                  />
                   <Switch
                     label="Missing slides only"
                     checked={showMissingSlidesOnly}
@@ -849,7 +918,19 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                         onClick={handleBulkRemind}
                         loading={sendSlidesReminder.isPending}
                       >
-                        Send Reminder to {selectedReminders.length} Speaker
+                        Send Slides Reminder to{" "}
+                        {selectedReminders.length} Speaker
+                        {selectedReminders.length !== 1 ? "s" : ""}
+                      </Button>
+                      <Button
+                        leftSection={<IconMail size={14} />}
+                        size="sm"
+                        variant="light"
+                        onClick={handleBulkSessionDetailsRemind}
+                        loading={sendSessionDetailsReminder.isPending}
+                      >
+                        Send Session Details to{" "}
+                        {selectedReminders.length} Speaker
                         {selectedReminders.length !== 1 ? "s" : ""}
                       </Button>
                       <Button
@@ -870,27 +951,53 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                 </Text>
               ) : (
                 <>
-                  {remindableRows.length > 0 && (
-                    <Group mb="md">
-                      <Checkbox
-                        checked={
-                          selectedReminders.length === remindableRows.length &&
-                          remindableRows.length > 0
-                        }
-                        indeterminate={
-                          selectedReminders.length > 0 &&
-                          selectedReminders.length < remindableRows.length
-                        }
-                        onChange={() => {
-                          setSelectedReminders((prev) =>
-                            prev.length === remindableRows.length
-                              ? []
-                              : remindableRows.map((r) => r.key),
-                          );
-                        }}
-                        label={`Select all without slides (${remindableRows.length})`}
-                        size="sm"
-                      />
+                  {(remindableRows.length > 0 ||
+                    emailableRows.length > 0) && (
+                    <Group mb="md" gap="lg">
+                      {emailableRows.length > 0 && (
+                        <Checkbox
+                          checked={
+                            selectedReminders.length ===
+                              emailableRows.length &&
+                            emailableRows.length > 0
+                          }
+                          indeterminate={
+                            selectedReminders.length > 0 &&
+                            selectedReminders.length < emailableRows.length
+                          }
+                          onChange={() => {
+                            setSelectedReminders((prev) =>
+                              prev.length === emailableRows.length
+                                ? []
+                                : emailableRows.map((r) => r.key),
+                            );
+                          }}
+                          label={`Select all speakers (${emailableRows.length})`}
+                          size="sm"
+                        />
+                      )}
+                      {remindableRows.length > 0 && (
+                        <Checkbox
+                          checked={
+                            selectedReminders.length ===
+                              remindableRows.length &&
+                            remindableRows.length > 0
+                          }
+                          indeterminate={
+                            selectedReminders.length > 0 &&
+                            selectedReminders.length < remindableRows.length
+                          }
+                          onChange={() => {
+                            setSelectedReminders((prev) =>
+                              prev.length === remindableRows.length
+                                ? []
+                                : remindableRows.map((r) => r.key),
+                            );
+                          }}
+                          label={`Select all without slides (${remindableRows.length})`}
+                          size="sm"
+                        />
+                      )}
                     </Group>
                   )}
 
@@ -899,6 +1006,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                       <Table.Tr>
                         <Table.Th w={40} />
                         <Table.Th>Session</Table.Th>
+                        <Table.Th>Floor</Table.Th>
                         <Table.Th>Speaker</Table.Th>
                         <Table.Th>Email</Table.Th>
                         <Table.Th>Slides</Table.Th>
@@ -911,7 +1019,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                         return (
                           <Table.Tr key={row.key}>
                             <Table.Td>
-                              {canRemind && (
+                              {row.speakerEmail && row.speakerUserId && (
                                 <Checkbox
                                   checked={selectedReminders.includes(row.key)}
                                   onChange={() => {
@@ -928,6 +1036,11 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                             <Table.Td>
                               <Text size="sm" fw={500}>
                                 {row.sessionTitle}
+                              </Text>
+                            </Table.Td>
+                            <Table.Td>
+                              <Text size="sm" c="dimmed">
+                                {row.venueName ?? "—"}
                               </Text>
                             </Table.Td>
                             <Table.Td>

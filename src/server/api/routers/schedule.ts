@@ -2553,6 +2553,12 @@ export const scheduleRouter = createTRPCRouter({
           slidesUrl: true,
           slidesFileName: true,
           slidesUploadedAt: true,
+          startTime: true,
+          endTime: true,
+          venueId: true,
+          venue: { select: { id: true, name: true } },
+          roomId: true,
+          room: { select: { id: true, name: true } },
           sessionSpeakers: {
             include: {
               user: {
@@ -2715,6 +2721,208 @@ export const scheduleRouter = createTRPCRouter({
             emailType: "slides_reminder",
             recipient: user.email,
             templateName: "slidesReminder",
+          });
+          failureCount++;
+        }
+      }
+
+      return { successCount, failureCount };
+    }),
+
+  sendTestSlidesReminder: protectedProcedure
+    .input(
+      z.object({
+        to: z.string().email(),
+        includeCouponCode: z.boolean().default(true),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!isAdminOrStaff(ctx.session.user.role)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Admin access required",
+        });
+      }
+
+      const emailService = getEmailService(ctx.db);
+
+      const result = await emailService.sendEmail({
+        to: input.to,
+        templateName: "slidesReminder",
+        templateData: {
+          speakerName: "Jane Doe",
+          eventName: "Intelligence at the Frontier",
+          sessionTitle: "Building Decentralized Public Goods Infrastructure",
+          sessionDate: "Saturday, March 15, 2026",
+          sessionTime: "2:00 PM – 2:30 PM",
+          sessionUrl: "https://platform.fundingthecommons.io/events/intelligence-at-the-frontier/schedule/test-session",
+          contactEmail: "info@fundingthecommons.io",
+          speakerCouponCode: input.includeCouponCode
+            ? "SPEAKER-JDOE-TEST"
+            : undefined,
+        },
+        userId: ctx.session.user.id,
+      });
+
+      return result;
+    }),
+
+  sendSessionDetailsReminder: protectedProcedure
+    .input(
+      z.object({
+        eventId: z.string(),
+        reminders: z.array(
+          z.object({
+            sessionId: z.string(),
+            speakerUserId: z.string(),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const event = await resolveEventId(ctx.db, input.eventId);
+
+      const admin = isAdminOrStaff(ctx.session.user.role);
+      const floorOwner = await isEventFloorOwner(
+        ctx.db,
+        event.id,
+        ctx.session.user.id,
+      );
+
+      if (!admin && !floorOwner) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Admin or floor owner access required",
+        });
+      }
+
+      const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+      const eventPath = event.slug ?? event.id;
+      const contactEmail =
+        process.env.CONTACT_EMAIL ?? "info@fundingthecommons.io";
+
+      const emailService = getEmailService(ctx.db);
+      let successCount = 0;
+      let failureCount = 0;
+
+      for (const reminder of input.reminders) {
+        const session = await ctx.db.scheduleSession.findUnique({
+          where: { id: reminder.sessionId },
+          select: {
+            id: true,
+            title: true,
+            startTime: true,
+            endTime: true,
+            venue: { select: { name: true } },
+            room: { select: { name: true } },
+          },
+        });
+
+        if (!session) {
+          failureCount++;
+          continue;
+        }
+
+        const user = await ctx.db.user.findUnique({
+          where: { id: reminder.speakerUserId },
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            surname: true,
+            name: true,
+          },
+        });
+
+        if (!user?.email) {
+          failureCount++;
+          continue;
+        }
+
+        const speakerName = user.firstName ?? user.name ?? user.email;
+        const sessionUrl = `${baseUrl}/events/${eventPath}/schedule/${session.id}`;
+
+        const sessionDate = session.startTime.toLocaleDateString("en-US", {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+        const sessionStartTime = session.startTime.toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+        });
+        const sessionEndTime = session.endTime.toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+        });
+
+        // Create Luma coupon code if the event has a Luma event ID
+        let speakerCouponCode: string | undefined;
+        if (event.lumaEventId) {
+          try {
+            const { getLumaService, generateSpeakerCouponCode } = await import(
+              "~/server/services/luma"
+            );
+            const lumaService = getLumaService();
+            if (lumaService) {
+              const couponCode = generateSpeakerCouponCode(
+                user.firstName,
+                user.surname,
+              );
+              const couponResult = await lumaService.createCoupon({
+                eventId: event.lumaEventId,
+                code: couponCode,
+                percentOff: 100,
+                remainingCount: 2,
+              });
+              if (couponResult.success) {
+                speakerCouponCode = couponResult.code;
+              } else {
+                console.error(
+                  `Luma coupon creation failed for session details reminder (user ${user.id}): ${couponResult.error}`,
+                );
+              }
+            }
+          } catch (error) {
+            console.error(
+              "Error creating Luma coupon for session details reminder:",
+              error,
+            );
+          }
+        }
+
+        try {
+          const result = await emailService.sendEmail({
+            to: user.email,
+            templateName: "sessionDetailsReminder",
+            templateData: {
+              speakerName,
+              eventName: event.name,
+              sessionTitle: session.title,
+              sessionDate,
+              sessionTime: `${sessionStartTime} – ${sessionEndTime}`,
+              sessionUrl,
+              contactEmail,
+              venueName: session.venue?.name,
+              roomName: session.room?.name,
+              speakerCouponCode,
+            },
+            eventId: event.id,
+            userId: ctx.session.user.id,
+          });
+
+          if (result.success) {
+            successCount++;
+          } else {
+            failureCount++;
+          }
+        } catch (error) {
+          captureEmailError(error, {
+            userId: ctx.session.user.id,
+            emailType: "session_details_reminder",
+            recipient: user.email,
+            templateName: "sessionDetailsReminder",
           });
           failureCount++;
         }
