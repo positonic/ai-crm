@@ -190,6 +190,7 @@ interface ColumnMapping {
   description: string | null;
   facilitator: string | null;
   order: string | null;
+  room: string | null;
 }
 
 const COLUMN_ALIASES: Record<keyof ColumnMapping, string[]> = {
@@ -215,8 +216,15 @@ const COLUMN_ALIASES: Record<keyof ColumnMapping, string[]> = {
   type: ["type", "session type", "format", "talk type", "category"],
   curator: ["curator", "track", "topic", "stream"],
   description: ["description", "abstract", "summary", "details"],
-  facilitator: ["facilitator / moderator", "facilitator", "moderator", "chair"],
+  facilitator: [
+    "facilitator / moderator",
+    "facilitator",
+    "facilitators",
+    "moderator",
+    "chair",
+  ],
   order: ["sort order", "order", "position", "#", "no"],
+  room: ["room", "location", "venue", "space", "room name"],
 };
 
 function detectColumns(headers: string[]): ColumnMapping {
@@ -231,6 +239,7 @@ function detectColumns(headers: string[]): ColumnMapping {
     description: null,
     facilitator: null,
     order: null,
+    room: null,
   };
 
   for (const header of headers) {
@@ -247,6 +256,53 @@ function detectColumns(headers: string[]): ColumnMapping {
   }
 
   return mapping;
+}
+
+function isJunkHeaderRow(headers: string[]): boolean {
+  return headers.every((h) => h === "" || /^_\d+$/.test(h));
+}
+
+function parseTimeRange(
+  timeStr: string | undefined,
+): { start: string; end: string } | null {
+  if (!timeStr) return null;
+  const match =
+    /^(\d{1,2}(?::\d{2})?\s*(?:AM|PM)?)\s*[-\u2013\u2014]\s*(\d{1,2}(?::\d{2})?\s*(?:AM|PM)?)$/i.exec(
+      timeStr.trim(),
+    );
+  if (!match) return null;
+  return { start: match[1]!.trim(), end: match[2]!.trim() };
+}
+
+function extractDurationMinutes(text: string | undefined): number | null {
+  if (!text) return null;
+  const match = /\((\d+)\s*min(?:s|utes?)?\)/i.exec(text);
+  return match ? parseInt(match[1]!, 10) : null;
+}
+
+const JUNK_TITLE_PATTERNS =
+  /^(food|lunch|break|dinner|breakfast|pie time|is|served|registration|check[- ]?in|coffee|tea|networking)$/i;
+
+function isJunkRow(
+  row: Record<string, string>,
+  mapping: ColumnMapping,
+): boolean {
+  const allEmpty = Object.values(mapping).every((headerName: string | null) => {
+    if (!headerName) return true;
+    return !row[headerName]?.trim();
+  });
+  if (allEmpty) return true;
+
+  const title = mapping.title ? row[mapping.title]?.trim() : undefined;
+  const time = mapping.startTime ? row[mapping.startTime]?.trim() : undefined;
+
+  if (title && JUNK_TITLE_PATTERNS.test(title) && !time) return true;
+
+  // Detect repeated header rows mid-file
+  if (mapping.title && title?.toLowerCase() === mapping.title.toLowerCase())
+    return true;
+
+  return false;
 }
 
 const MONTH_NAMES: Record<string, number> = {
@@ -326,10 +382,9 @@ function parseCsvDateTime(
 
 function extractPresenterNames(raw: string | undefined): string[] {
   if (!raw) return [];
-  // Handle entries like "Metagov curation (incl. Joshua Tan (Public AI / Metagov), Aviv Ovadya)"
-  // Split on comma but be careful with parentheses
+  // Split on newlines first, then commas (careful with parentheses)
   return raw
-    .split(/,(?![^(]*\))/)
+    .split(/[\n\r]+|,(?![^(]*\))/)
     .map((s) => s.trim())
     .filter(Boolean);
 }
@@ -342,14 +397,16 @@ function parseCsvRows(
   tracks: { id: string; name: string }[],
   existingSessions: { title: string; startTime: Date; endTime: Date }[],
 ): ParsedCsvSession[] {
-  return rawData.map((row, index) => {
+  return rawData
+    .filter((row) => !isJunkRow(row, mapping))
+    .map((row, index) => {
     const warnings: string[] = [];
     const errors: string[] = [];
 
     // Title
     const rawTitle = mapping.title ? row[mapping.title]?.trim() : undefined;
     let title = rawTitle ?? "";
-    if (!title || title === "—" || title === "\u2014" || title === "-") {
+    if (!title || title === "\u2014" || title === "\u2014" || title === "-") {
       const presenter = mapping.presenters
         ? row[mapping.presenters]?.trim()
         : undefined;
@@ -360,10 +417,34 @@ function parseCsvRows(
 
     // Date/Time
     const dateStr = mapping.date ? row[mapping.date] : undefined;
-    const startTimeStr = mapping.startTime ? row[mapping.startTime] : undefined;
+    const startTimeStr = mapping.startTime
+      ? row[mapping.startTime]
+      : undefined;
     const endTimeStr = mapping.endTime ? row[mapping.endTime] : undefined;
-    const startTime = parseCsvDateTime(dateStr, startTimeStr, year);
-    const endTime = parseCsvDateTime(dateStr, endTimeStr, year);
+
+    let startTime: Date | null = null;
+    let endTime: Date | null = null;
+
+    // Check if start time column contains a range like "11 AM - 6 PM"
+    const timeRange = parseTimeRange(startTimeStr);
+    if (timeRange) {
+      startTime = parseCsvDateTime(dateStr, timeRange.start, year);
+      endTime = parseCsvDateTime(dateStr, timeRange.end, year);
+    } else {
+      startTime = parseCsvDateTime(dateStr, startTimeStr, year);
+      endTime = endTimeStr
+        ? parseCsvDateTime(dateStr, endTimeStr, year)
+        : null;
+    }
+
+    // If no end time, try to extract duration from room/location column
+    if (startTime && !endTime) {
+      const roomRaw = mapping.room ? row[mapping.room] : undefined;
+      const durationMinutes = extractDurationMinutes(roomRaw);
+      if (durationMinutes) {
+        endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
+      }
+    }
 
     if (!startTime) errors.push("Could not parse start time");
     if (!endTime) errors.push("Could not parse end time");
@@ -2837,6 +2918,7 @@ function CsvUploadModal({
     description: null,
     facilitator: null,
     order: null,
+    room: null,
   });
   const [parsedSessions, setParsedSessions] = useState<ParsedCsvSession[]>([]);
   const [newTypesToCreate, setNewTypesToCreate] = useState<
@@ -2938,6 +3020,7 @@ function CsvUploadModal({
       description: null,
       facilitator: null,
       order: null,
+      room: null,
     });
     setParsedSessions([]);
     setNewTypesToCreate([]);
@@ -2969,9 +3052,28 @@ function CsvUploadModal({
         return;
       }
 
-      const headers = result.meta.fields ?? [];
+      let headers = result.meta.fields ?? [];
+      let data = result.data;
+
+      // If headers are all empty/auto-generated (_1, _2), use first data row as headers
+      if (isJunkHeaderRow(headers) && data.length > 0) {
+        const realHeaderRow = data[0]!;
+        const oldKeys = headers;
+        const realHeaders = oldKeys.map((k) => (realHeaderRow[k] ?? "").trim());
+        data = data.slice(1).map((row) => {
+          const newRow: Record<string, string> = {};
+          for (let i = 0; i < oldKeys.length; i++) {
+            const key = oldKeys[i]!;
+            const realKey = realHeaders[i] ?? `Column ${i + 1}`;
+            newRow[realKey] = row[key] ?? "";
+          }
+          return newRow;
+        });
+        headers = realHeaders.map((h, i) => h || `Column ${i + 1}`);
+      }
+
       setRawHeaders(headers);
-      setRawData(result.data);
+      setRawData(data);
 
       const detected = detectColumns(headers);
       setColumnMapping(detected);
@@ -3082,7 +3184,17 @@ function CsvUploadModal({
   ).length;
   const errorCount = parsedSessions.filter((s) => s.status === "error").length;
 
-  const columnOptions = rawHeaders.map((h) => ({ value: h, label: h }));
+  const columnOptions = rawHeaders.map((h) => {
+    const sample = rawData
+      .slice(0, 5)
+      .map((row) => row[h]?.trim())
+      .find((v) => v && v.length > 0);
+    const displayName = h || "(unnamed)";
+    const label = sample
+      ? `${displayName} (e.g., ${sample.length > 30 ? sample.slice(0, 30) + "\u2026" : sample})`
+      : displayName;
+    return { value: h, label };
+  });
 
   return (
     <Modal
@@ -3205,6 +3317,28 @@ function CsvUploadModal({
                     value={columnMapping.description}
                     onChange={(v) =>
                       setColumnMapping((m) => ({ ...m, description: v }))
+                    }
+                    clearable
+                    size="xs"
+                  />
+                </Group>
+                <Group grow>
+                  <Select
+                    label="Facilitator"
+                    data={columnOptions}
+                    value={columnMapping.facilitator}
+                    onChange={(v) =>
+                      setColumnMapping((m) => ({ ...m, facilitator: v }))
+                    }
+                    clearable
+                    size="xs"
+                  />
+                  <Select
+                    label="Room / Location"
+                    data={columnOptions}
+                    value={columnMapping.room}
+                    onChange={(v) =>
+                      setColumnMapping((m) => ({ ...m, room: v }))
                     }
                     clearable
                     size="xs"
