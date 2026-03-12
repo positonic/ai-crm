@@ -973,7 +973,7 @@ export const scheduleRouter = createTRPCRouter({
   // Room mutations (floor lead or admin)
   // ──────────────────────────────────────────
 
-  // Create a room within a venue (max 3 per venue)
+  // Create a room within a venue (max 10 per venue)
   createRoom: protectedProcedure
     .input(
       z.object({

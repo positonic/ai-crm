@@ -1016,7 +1016,7 @@ function FloorManager({ eventId, venueId, venue, isAdmin }: FloorManagerProps) {
             <IconDoor size={18} />
             <Title order={4}>Rooms</Title>
             <Badge size="sm" variant="light">
-              {venue?.rooms?.length ?? 0} / 3
+              {venue?.rooms?.length ?? 0} / 10
             </Badge>
           </Group>
         </Group>
@@ -1051,7 +1051,7 @@ function FloorManager({ eventId, venueId, venue, isAdmin }: FloorManagerProps) {
             No rooms. Sessions will be scheduled at the floor level.
           </Text>
         )}
-        {(venue?.rooms?.length ?? 0) < 3 && (
+        {(venue?.rooms?.length ?? 0) < 10 && (
           <Group gap="xs">
             <TextInput
               placeholder="Room name"
