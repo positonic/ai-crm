@@ -1030,6 +1030,68 @@ export const scheduleRouter = createTRPCRouter({
       });
     }),
 
+  setSlidesLink: protectedProcedure
+    .input(
+      z.object({
+        sessionId: z.string(),
+        slidesUrl: z.string().url(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const session = await ctx.db.scheduleSession.findUnique({
+        where: { id: input.sessionId },
+        select: {
+          slidesUrl: true,
+          sessionSpeakers: {
+            where: { userId: ctx.session.user.id },
+            select: { id: true },
+          },
+        },
+      });
+
+      if (!session) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Session not found",
+        });
+      }
+
+      const isAdmin =
+        ctx.session.user.role === "admin" || ctx.session.user.role === "staff";
+      const isSpeaker = session.sessionSpeakers.length > 0;
+
+      if (!isAdmin && !isSpeaker) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only session speakers or admins can set slides link",
+        });
+      }
+
+      // If replacing an uploaded file (Vercel Blob), delete the old blob
+      if (session.slidesUrl?.includes(".vercel-storage.com")) {
+        try {
+          const { del } = await import("@vercel/blob");
+          await del(session.slidesUrl, {
+            token: process.env.PLATFORM_READ_WRITE_TOKEN,
+          });
+        } catch {
+          console.error(
+            "Failed to delete old slides blob, continuing with link update",
+          );
+        }
+      }
+
+      return ctx.db.scheduleSession.update({
+        where: { id: input.sessionId },
+        data: {
+          slidesUrl: input.slidesUrl,
+          slidesFileName: null,
+          slidesUploadedAt: new Date(),
+          slidesUploadedById: ctx.session.user.id,
+        },
+      });
+    }),
+
   // ──────────────────────────────────────────
   // Venue mutations (admin only for create/delete, owner for update)
   // ──────────────────────────────────────────
@@ -2550,7 +2612,7 @@ export const scheduleRouter = createTRPCRouter({
       for (const reminder of input.reminders) {
         const session = await ctx.db.scheduleSession.findUnique({
           where: { id: reminder.sessionId },
-          select: { id: true, title: true },
+          select: { id: true, title: true, startTime: true, endTime: true },
         });
 
         if (!session) {
@@ -2576,6 +2638,21 @@ export const scheduleRouter = createTRPCRouter({
 
         const speakerName = user.firstName ?? user.name ?? user.email;
         const sessionUrl = `${baseUrl}/events/${eventPath}/schedule/${session.id}`;
+
+        const sessionDate = session.startTime.toLocaleDateString("en-US", {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+        const sessionStartTime = session.startTime.toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+        });
+        const sessionEndTime = session.endTime.toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+        });
 
         // Create Luma coupon code if the event has a Luma event ID
         let speakerCouponCode: string | undefined;
@@ -2617,6 +2694,8 @@ export const scheduleRouter = createTRPCRouter({
               speakerName,
               eventName: event.name,
               sessionTitle: session.title,
+              sessionDate,
+              sessionTime: `${sessionStartTime} – ${sessionEndTime}`,
               sessionUrl,
               contactEmail,
               speakerCouponCode,

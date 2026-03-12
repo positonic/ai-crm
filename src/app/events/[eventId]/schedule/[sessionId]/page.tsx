@@ -16,6 +16,8 @@ import {
   Button,
   Tooltip,
   FileButton,
+  TextInput,
+  SegmentedControl,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
@@ -159,8 +161,31 @@ export default function SessionDetailPage() {
     ? splitName(linkingTextSpeaker)
     : null;
 
-  // Slides upload state
+  // Slides upload/link state
   const [uploadingSlides, setUploadingSlides] = useState(false);
+  const [slidesMode, setSlidesMode] = useState<string>("upload");
+  const [slidesLinkInput, setSlidesLinkInput] = useState("");
+
+  const setSlidesLinkMutation = api.schedule.setSlidesLink.useMutation({
+    onSuccess: () => {
+      notifications.show({
+        title: "Slides link saved",
+        message: "Your slides link has been saved successfully.",
+        color: "green",
+      });
+      setSlidesLinkInput("");
+      void utils.schedule.getSession.invalidate({
+        sessionId: params.sessionId,
+      });
+    },
+    onError: (error) => {
+      notifications.show({
+        title: "Error",
+        message: error.message,
+        color: "red",
+      });
+    },
+  });
 
   const removeSlideMutation = api.schedule.removeSessionSlides.useMutation({
     onSuccess: () => {
@@ -384,11 +409,11 @@ export default function SessionDetailPage() {
                         rel="noopener noreferrer"
                         fw={500}
                       >
-                        {session.slidesFileName ?? "Download slides"}
+                        {session.slidesFileName ?? session.slidesUrl}
                       </Anchor>
                       {session.slidesUploadedAt && (
                         <Text size="xs" c="dimmed">
-                          Uploaded{" "}
+                          {session.slidesFileName ? "Uploaded" : "Added"}{" "}
                           {new Date(
                             session.slidesUploadedAt,
                           ).toLocaleDateString("en-US", {
@@ -420,7 +445,7 @@ export default function SessionDetailPage() {
               </Paper>
             )}
 
-            {/* Upload area — only for speakers and admins */}
+            {/* Upload/link area — only for speakers and admins */}
             {canUploadSlides && (
               <Paper
                 p="md"
@@ -429,26 +454,69 @@ export default function SessionDetailPage() {
                 style={{ borderStyle: "dashed" }}
               >
                 <Stack align="center" gap="sm">
-                  {!session.slidesUrl && (
-                    <Text size="sm" c="dimmed">
-                      Upload your presentation slides
-                    </Text>
-                  )}
-                  <FileButton onChange={(file) => void handleFileUpload(file)}>
-                    {(props) => (
-                      <Button
-                        {...props}
-                        variant="light"
-                        loading={uploadingSlides}
-                        leftSection={<IconUpload size={16} />}
+                  <SegmentedControl
+                    value={slidesMode}
+                    onChange={setSlidesMode}
+                    data={[
+                      { label: "Upload File", value: "upload" },
+                      { label: "Paste Link", value: "link" },
+                    ]}
+                    size="xs"
+                  />
+
+                  {slidesMode === "upload" ? (
+                    <>
+                      {!session.slidesUrl && (
+                        <Text size="sm" c="dimmed">
+                          Upload your presentation slides
+                        </Text>
+                      )}
+                      <FileButton
+                        onChange={(file) => void handleFileUpload(file)}
                       >
-                        {session.slidesUrl ? "Replace slides" : "Upload slides"}
+                        {(props) => (
+                          <Button
+                            {...props}
+                            variant="light"
+                            loading={uploadingSlides}
+                            leftSection={<IconUpload size={16} />}
+                          >
+                            {session.slidesUrl
+                              ? "Replace slides"
+                              : "Upload slides"}
+                          </Button>
+                        )}
+                      </FileButton>
+                      <Text size="xs" c="dimmed">
+                        Max 50MB. Any file type accepted.
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <TextInput
+                        placeholder="https://docs.google.com/presentation/d/..."
+                        value={slidesLinkInput}
+                        onChange={(e) =>
+                          setSlidesLinkInput(e.currentTarget.value)
+                        }
+                        leftSection={<IconLink size={16} />}
+                        style={{ width: "100%" }}
+                      />
+                      <Button
+                        variant="light"
+                        onClick={() =>
+                          setSlidesLinkMutation.mutate({
+                            sessionId: params.sessionId,
+                            slidesUrl: slidesLinkInput,
+                          })
+                        }
+                        loading={setSlidesLinkMutation.isPending}
+                        disabled={!slidesLinkInput}
+                      >
+                        Save Link
                       </Button>
-                    )}
-                  </FileButton>
-                  <Text size="xs" c="dimmed">
-                    Max 50MB. Any file type accepted.
-                  </Text>
+                    </>
+                  )}
                 </Stack>
               </Paper>
             )}

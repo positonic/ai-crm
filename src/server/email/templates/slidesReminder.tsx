@@ -8,6 +8,8 @@ export interface SlidesReminderProps {
   sessionTitle: string;
   sessionUrl: string;
   contactEmail: string;
+  sessionDate?: string;
+  sessionTime?: string;
   speakerCouponCode?: string;
 }
 
@@ -17,6 +19,8 @@ export const SlidesReminderTemplate: React.FC<SlidesReminderProps> = ({
   sessionTitle,
   sessionUrl,
   contactEmail,
+  sessionDate,
+  sessionTime,
   speakerCouponCode,
 }) => {
   const previewText = `Reminder: Please upload your slides for ${eventName}`;
@@ -36,6 +40,8 @@ export const SlidesReminderTemplate: React.FC<SlidesReminderProps> = ({
         <Section style={detailsBox}>
           <Text style={detailsHeading}>Session Details</Text>
           <Text style={detailsText}>Session: {sessionTitle}</Text>
+          {sessionDate && <Text style={detailsText}>Date: {sessionDate}</Text>}
+          {sessionTime && <Text style={detailsText}>Time: {sessionTime}</Text>}
           <Text style={detailsText}>Event: {eventName}</Text>
         </Section>
 
