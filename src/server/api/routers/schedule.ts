@@ -2730,8 +2730,8 @@ export const scheduleRouter = createTRPCRouter({
       const admin = isAdminOrStaff(ctx.session.user.role);
       const floorOwner = await isEventFloorOwner(
         ctx.db,
-        event.id,
         ctx.session.user.id,
+        event.id,
       );
 
       if (!admin && !floorOwner) {
@@ -2741,8 +2741,22 @@ export const scheduleRouter = createTRPCRouter({
         });
       }
 
+      // Floor leads only see sessions in their venues
+      const venueFilter =
+        admin
+          ? {}
+          : {
+              venueId: {
+                in: await getUserOwnedVenueIds(
+                  ctx.db,
+                  ctx.session.user.id,
+                  event.id,
+                ),
+              },
+            };
+
       const sessions = await ctx.db.scheduleSession.findMany({
-        where: { eventId: event.id },
+        where: { eventId: event.id, ...venueFilter },
         select: {
           id: true,
           title: true,
@@ -2791,8 +2805,8 @@ export const scheduleRouter = createTRPCRouter({
       const admin = isAdminOrStaff(ctx.session.user.role);
       const floorOwner = await isEventFloorOwner(
         ctx.db,
-        event.id,
         ctx.session.user.id,
+        event.id,
       );
 
       if (!admin && !floorOwner) {
@@ -3025,8 +3039,8 @@ export const scheduleRouter = createTRPCRouter({
       const admin = isAdminOrStaff(ctx.session.user.role);
       const floorOwner = await isEventFloorOwner(
         ctx.db,
-        event.id,
         ctx.session.user.id,
+        event.id,
       );
 
       if (!admin && !floorOwner) {

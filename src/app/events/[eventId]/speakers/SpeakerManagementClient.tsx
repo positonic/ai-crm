@@ -433,10 +433,10 @@ export default function SpeakerManagementClient({ eventId }: Props) {
       applySearchFilter(applyFloorFilter(apps));
 
     return {
-      all: filteredAppsByTab.all,
-      accepted: filteredAppsByTab.accepted,
-      rejected: filteredAppsByTab.rejected,
-      invited: filteredAppsByTab.invited,
+      all: applyFilters(allApplications),
+      accepted: applyFilters(acceptedApplications),
+      rejected: applyFilters(rejectedApplications),
+      invited: applyFilters(invitedApplications),
     };
   }, [
     floorFilter,

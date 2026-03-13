@@ -766,7 +766,7 @@ export default function SchedulePageClient({
                           checked={activeTracks.includes(track.id)}
                           onChange={() => toggleTrack(track.id)}
                           label={
-                            <Group gap={8} wrap="nowrap">
+                            <Group gap={8}>
                               <div
                                 style={{
                                   width: 10,
@@ -928,7 +928,7 @@ export default function SchedulePageClient({
                           checked={activeTracks.includes(track.id)}
                           onChange={() => toggleTrack(track.id)}
                           label={
-                            <Group gap={8} wrap="nowrap">
+                            <Group gap={8}>
                               <div
                                 style={{
                                   width: 10,
@@ -1092,7 +1092,7 @@ export default function SchedulePageClient({
                           checked={activeTracks.includes(track.id)}
                           onChange={() => toggleTrack(track.id)}
                           label={
-                            <Group gap={8} wrap="nowrap">
+                            <Group gap={8}>
                               <div
                                 style={{
                                   width: 10,
