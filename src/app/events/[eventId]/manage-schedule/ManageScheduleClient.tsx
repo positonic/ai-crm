@@ -53,6 +53,7 @@ import {
   IconMessageCircle,
   IconLayoutGrid,
   IconInfoCircle,
+  IconExternalLink,
 } from "@tabler/icons-react";
 import Papa from "papaparse";
 import Link from "next/link";
@@ -1147,6 +1148,7 @@ function AllFloorsView({ eventId, venues, isAdmin }: AllFloorsViewProps) {
               }
               isUpdating={updateSessionMutation.isPending}
               venues={venues.map((v) => ({ id: v.id, name: v.name }))}
+              eventId={eventId}
             />
           )}
         </>
@@ -1724,6 +1726,7 @@ function FloorManager({ eventId, venueId, venue, allVenues, isAdmin }: FloorMana
                 updateSessionMutation.mutate(data)
               }
               isUpdating={updateSessionMutation.isPending}
+              eventId={eventId}
             />
           )}
 
@@ -1923,6 +1926,18 @@ function SessionCard({
                 </ActionIcon>
               </Tooltip>
             )}
+            <Tooltip label="View session page">
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                component="a"
+                href={`/events/${eventId}/schedule/${session.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <IconExternalLink size={16} />
+              </ActionIcon>
+            </Tooltip>
             <ActionIcon variant="subtle" color="blue" onClick={openEdit}>
               <IconEdit size={16} />
             </ActionIcon>

@@ -23,6 +23,7 @@ import {
   IconDoor,
   IconCheck,
   IconX,
+  IconExternalLink,
 } from "@tabler/icons-react";
 import { DataTable, type DataTableSortStatus } from "mantine-datatable";
 import { getDisplayName } from "~/utils/userDisplay";
@@ -70,6 +71,7 @@ interface SessionTableViewProps {
   onUpdateSession?: (data: SessionUpdateData) => void;
   isUpdating?: boolean;
   venues?: Array<{ id: string; name: string }>;
+  eventId: string;
 }
 
 function formatTime(date: Date): string {
@@ -129,6 +131,7 @@ export function SessionTableView({
   onUpdateSession,
   isUpdating,
   venues,
+  eventId,
 }: SessionTableViewProps) {
   const [search, setSearch] = useState("");
   const [roomFilter, setRoomFilter] = useState<string | null>(null);
@@ -1037,9 +1040,21 @@ export function SessionTableView({
             ) : (
               ""
             ),
-            width: 70,
+            width: 100,
             render: (session) => (
               <Group gap={4} wrap="nowrap">
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="sm"
+                  component="a"
+                  href={`/events/${eventId}/schedule/${session.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                >
+                  <IconExternalLink size={14} />
+                </ActionIcon>
                 <ActionIcon
                   variant="subtle"
                   color="blue"

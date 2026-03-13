@@ -446,7 +446,8 @@ export function SpeakerSelector({
                   target="_blank"
                   size="xs"
                   fw={500}
-                  style={{ color: "inherit", textDecoration: "none" }}
+                  underline="hover"
+                  style={{ color: "inherit" }}
                 >
                   {getDisplayName(speakerWithRole.user, "Unknown")}
                 </Anchor>

@@ -44,7 +44,7 @@ import {
 import { api } from "~/trpc/react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+
 import { MarkdownRenderer } from "~/app/_components/MarkdownRenderer";
 import { getDisplayName } from "~/utils/userDisplay";
 import { UserAvatar } from "~/app/_components/UserAvatar";
@@ -55,7 +55,6 @@ interface ProfileDisplayClientProps {
 
 export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
   const { data: session } = useSession();
-  const router = useRouter();
   const {
     data: profileData,
     isLoading,
@@ -141,10 +140,11 @@ export function ProfileDisplayClient({ userId }: ProfileDisplayClientProps) {
     <Container size="lg" py="xl">
       {/* Back button */}
       <Button
+        component={Link}
+        href="/profiles"
         variant="subtle"
         leftSection={<IconArrowLeft size={16} />}
         mb="xl"
-        onClick={() => router.back()}
       >
         Back to Directory
       </Button>
