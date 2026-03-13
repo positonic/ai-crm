@@ -23,6 +23,7 @@ interface QuickAddSpeakerModalProps {
   onSpeakerCreated: (user: QuickAddSpeakerResult) => void;
   prefillFirstName?: string;
   prefillLastName?: string;
+  sessionTitle?: string;
 }
 
 export function QuickAddSpeakerModal({
@@ -33,6 +34,7 @@ export function QuickAddSpeakerModal({
   onSpeakerCreated,
   prefillFirstName,
   prefillLastName,
+  sessionTitle,
 }: QuickAddSpeakerModalProps) {
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -87,6 +89,7 @@ export function QuickAddSpeakerModal({
       firstName: firstName.trim(),
       lastName: lastName.trim() || undefined,
       venueId,
+      sessionTitle,
     });
   };
 

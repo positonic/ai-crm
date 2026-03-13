@@ -1528,6 +1528,7 @@ export const scheduleRouter = createTRPCRouter({
         firstName: z.string().min(1),
         lastName: z.string().optional(),
         venueId: z.string().optional(),
+        sessionTitle: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -1605,6 +1606,52 @@ export const scheduleRouter = createTRPCRouter({
           data: [{ applicationId: application.id, venueId: input.venueId }],
           skipDuplicates: true,
         });
+      }
+
+      // Send speaker invited email (fire-and-forget)
+      if (user.email) {
+        try {
+          const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+          const speakerName = [input.firstName, input.lastName]
+            .filter(Boolean)
+            .join(" ");
+          const invitedByName =
+            ctx.session.user.name ?? ctx.session.user.email ?? "An administrator";
+
+          let venueName: string | undefined;
+          if (input.venueId) {
+            const venue = await ctx.db.scheduleVenue.findUnique({
+              where: { id: input.venueId },
+              select: { name: true },
+            });
+            venueName = venue?.name ?? undefined;
+          }
+
+          const emailService = getEmailService(ctx.db);
+          await emailService.sendEmail({
+            to: user.email,
+            templateName: "speakerInvited",
+            templateData: {
+              speakerName,
+              eventName: event.name,
+              talkTitle: input.sessionTitle ?? "your upcoming session",
+              venueName,
+              invitedByName,
+              profileUrl: `${baseUrl}/events/${event.slug}`,
+              contactEmail:
+                process.env.ADMIN_EMAIL ?? "beth@fundingthecommons.io",
+            },
+            eventId: event.id,
+            userId: user.id,
+          });
+        } catch (error) {
+          captureEmailError(error, {
+            userId: user.id,
+            emailType: "speaker_invited",
+            recipient: user.email,
+            templateName: "speakerInvited",
+          });
+        }
       }
 
       return user;

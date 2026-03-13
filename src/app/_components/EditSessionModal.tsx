@@ -324,6 +324,7 @@ interface SpeakerSelectorProps {
   venueId?: string;
   isAdmin?: boolean;
   eventId: string;
+  sessionTitle?: string;
 }
 
 export function SpeakerSelector({
@@ -336,6 +337,7 @@ export function SpeakerSelector({
   venueId,
   isAdmin,
   eventId,
+  sessionTitle,
 }: SpeakerSelectorProps) {
   const useFloorSearch = venueId && !isAdmin;
   const [quickAddOpened, { open: openQuickAdd, close: closeQuickAdd }] =
@@ -491,6 +493,7 @@ export function SpeakerSelector({
         onSpeakerCreated={handleQuickAddSuccess}
         prefillFirstName={prefillParts?.first}
         prefillLastName={prefillParts?.last}
+        sessionTitle={sessionTitle}
       />
     </Stack>
   );
@@ -679,6 +682,7 @@ export default function EditSessionModal({
               venueId={venueId}
               isAdmin={isAdmin}
               eventId={eventId}
+              sessionTitle={title}
             />
             {rooms.length > 0 && (
               <Select

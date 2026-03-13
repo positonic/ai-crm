@@ -718,6 +718,7 @@ export default function SessionDetailPage() {
           onSpeakerCreated={handleSpeakerCreated}
           prefillFirstName={prefillParts?.first}
           prefillLastName={prefillParts?.last}
+          sessionTitle={session.title}
         />
       )}
 
