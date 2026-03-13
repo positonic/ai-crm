@@ -14,26 +14,14 @@ import {
 import { checkTelegramAuthRateLimit } from "~/server/utils/telegramCleanup";
 import { captureAuthError, captureApiError } from "~/utils/errorCapture";
 
-// Note: Auth sessions now stored in database for persistence across server restarts
-// Clean up expired auth sessions every 5 minutes
-import { db } from "~/server/db";
-
-// Database cleanup function using global db instance
-const cleanupExpiredSessions = async () => {
-  const now = new Date();
+// On-demand cleanup of expired auth sessions (called during startAuth).
+// Module-level timers (setTimeout/setInterval) are incompatible with serverless
+// environments — they fire during cold starts before the DB is ready and don't
+// persist across invocations.
+const cleanupExpiredSessions = async (db: { telegramAuthSession: { deleteMany: (args: { where: { expiresAt: { lt: Date } } }) => Promise<unknown> } }) => {
   try {
-    // Safety check to ensure model exists
-    if (!db?.telegramAuthSession) {
-      console.warn("TelegramAuthSession model not available for cleanup");
-      return;
-    }
-
     await db.telegramAuthSession.deleteMany({
-      where: {
-        expiresAt: {
-          lt: now,
-        },
-      },
+      where: { expiresAt: { lt: new Date() } },
     });
   } catch (error) {
     console.error("Failed to cleanup expired Telegram auth sessions:", error);
@@ -44,11 +32,6 @@ const cleanupExpiredSessions = async () => {
   }
 };
 
-// Clean up expired auth sessions every 5 minutes, with initial delay
-setTimeout(() => {
-  void cleanupExpiredSessions();
-  setInterval(() => void cleanupExpiredSessions(), 5 * 60 * 1000);
-}, 30000); // 30 second initial delay to ensure db is ready
 interface TelegramClientInterface {
   connect: () => Promise<void>;
   start: (options: {
@@ -125,6 +108,9 @@ export const telegramAuthRouter = createTRPCRouter({
     }
 
     // No longer need global API credentials - users provide their own
+
+    // Clean up expired auth sessions on-demand (replaces module-level timer)
+    void cleanupExpiredSessions(ctx.db);
 
     // Check if user already has active auth
     const existingAuth = await ctx.db.telegramAuth.findUnique({

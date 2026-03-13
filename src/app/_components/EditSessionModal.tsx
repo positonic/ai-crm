@@ -679,8 +679,9 @@ export default function EditSessionModal({
                 label="Start Time"
                 value={startTime}
                 onChange={(val) => {
-                  if (val instanceof Date && !isNaN(val.getTime())) {
-                    setStartTime(val);
+                  const date = typeof val === "string" ? new Date(val) : val;
+                  if (date && !isNaN(date.getTime())) {
+                    setStartTime(date);
                   } else {
                     setStartTime(null);
                   }
@@ -691,8 +692,9 @@ export default function EditSessionModal({
                 label="End Time"
                 value={endTime}
                 onChange={(val) => {
-                  if (val instanceof Date && !isNaN(val.getTime())) {
-                    setEndTime(val);
+                  const date = typeof val === "string" ? new Date(val) : val;
+                  if (date && !isNaN(date.getTime())) {
+                    setEndTime(date);
                   } else {
                     setEndTime(null);
                   }
@@ -725,7 +727,7 @@ export default function EditSessionModal({
               eventId={eventId}
               sessionTitle={title}
               sessionDate={
-                startTime instanceof Date && !isNaN(startTime.getTime())
+                startTime && !isNaN(startTime.getTime())
                   ? startTime.toLocaleDateString("en-US", {
                       weekday: "long",
                       month: "long",
@@ -735,9 +737,9 @@ export default function EditSessionModal({
                   : undefined
               }
               sessionTime={
-                startTime instanceof Date &&
+                startTime &&
                 !isNaN(startTime.getTime()) &&
-                endTime instanceof Date &&
+                endTime &&
                 !isNaN(endTime.getTime())
                   ? `${startTime.toLocaleTimeString("en-US", {
                       hour: "numeric",
