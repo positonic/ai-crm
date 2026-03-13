@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import {
   Badge,
   Group,
@@ -12,6 +12,7 @@ import {
   Avatar,
   Checkbox,
   Button,
+  Loader,
 } from "@mantine/core";
 import {
   IconEdit,
@@ -20,14 +21,40 @@ import {
   IconSearch,
   IconFile,
   IconDoor,
+  IconCheck,
+  IconX,
 } from "@tabler/icons-react";
 import { DataTable, type DataTableSortStatus } from "mantine-datatable";
 import { getDisplayName } from "~/utils/userDisplay";
 import { type FloorSession } from "~/app/_components/EditSessionModal";
 
+type EditableField =
+  | "title"
+  | "room"
+  | "sessionType"
+  | "track"
+  | "time"
+  | "venue";
+
+interface EditingCell {
+  sessionId: string;
+  field: EditableField;
+}
+
+interface SessionUpdateData {
+  id: string;
+  title?: string;
+  roomId?: string | null;
+  sessionTypeId?: string | null;
+  trackId?: string | null;
+  startTime?: Date;
+  endTime?: Date;
+  venueId?: string | null;
+}
+
 interface SessionTableViewProps {
   sessions: FloorSession[];
-  rooms: Array<{ id: string; name: string }>;
+  rooms: Array<{ id: string; name: string; venueId?: string }>;
   sessionTypes: Array<{ id: string; name: string; color: string }>;
   tracks: Array<{ id: string; name: string; color: string }>;
   onEdit: (session: FloorSession) => void;
@@ -40,6 +67,9 @@ interface SessionTableViewProps {
   isBulkAssigningRoom?: boolean;
   onViewDetail?: (session: FloorSession) => void;
   showFloorColumn?: boolean;
+  onUpdateSession?: (data: SessionUpdateData) => void;
+  isUpdating?: boolean;
+  venues?: Array<{ id: string; name: string }>;
 }
 
 function formatTime(date: Date): string {
@@ -58,6 +88,14 @@ function formatDate(date: Date): string {
     day: "numeric",
     timeZone: "UTC",
   });
+}
+
+/** Get HH:mm string in UTC from a Date */
+function toTimeString(date: Date): string {
+  const d = new Date(date);
+  const h = d.getUTCHours().toString().padStart(2, "0");
+  const m = d.getUTCMinutes().toString().padStart(2, "0");
+  return `${h}:${m}`;
 }
 
 function getDurationMinutes(start: Date, end: Date): number {
@@ -88,6 +126,9 @@ export function SessionTableView({
   isBulkAssigningRoom,
   onViewDetail,
   showFloorColumn,
+  onUpdateSession,
+  isUpdating,
+  venues,
 }: SessionTableViewProps) {
   const [search, setSearch] = useState("");
   const [roomFilter, setRoomFilter] = useState<string | null>(null);
@@ -102,6 +143,102 @@ export function SessionTableView({
     columnAccessor: "startTime",
     direction: "asc",
   });
+
+  // Inline editing state
+  const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editStartTime, setEditStartTime] = useState("");
+  const [editEndTime, setEditEndTime] = useState("");
+  const titleInputRef = useRef<HTMLInputElement>(null);
+
+  const isEditing = useCallback(
+    (sessionId: string, field: EditableField) =>
+      editingCell?.sessionId === sessionId && editingCell.field === field,
+    [editingCell],
+  );
+
+  const startEditing = useCallback(
+    (session: FloorSession, field: EditableField, e: React.MouseEvent) => {
+      if (!onUpdateSession) return;
+      e.stopPropagation();
+      if (field === "title") {
+        setEditTitle(session.title);
+      } else if (field === "time") {
+        setEditStartTime(toTimeString(session.startTime));
+        setEditEndTime(toTimeString(session.endTime));
+      }
+      setEditingCell({ sessionId: session.id, field });
+    },
+    [onUpdateSession],
+  );
+
+  const cancelEditing = useCallback(() => {
+    setEditingCell(null);
+  }, []);
+
+  const saveTitle = useCallback(
+    (sessionId: string) => {
+      const trimmed = editTitle.trim();
+      if (trimmed && onUpdateSession) {
+        onUpdateSession({ id: sessionId, title: trimmed });
+      }
+      setEditingCell(null);
+    },
+    [editTitle, onUpdateSession],
+  );
+
+  const saveTime = useCallback(
+    (session: FloorSession) => {
+      if (!onUpdateSession) return;
+      const baseDate = new Date(session.startTime);
+      const year = baseDate.getUTCFullYear();
+      const month = baseDate.getUTCMonth();
+      const day = baseDate.getUTCDate();
+
+      const [startH, startM] = editStartTime.split(":").map(Number);
+      const [endH, endM] = editEndTime.split(":").map(Number);
+
+      if (
+        startH == null ||
+        startM == null ||
+        endH == null ||
+        endM == null ||
+        isNaN(startH) ||
+        isNaN(startM) ||
+        isNaN(endH) ||
+        isNaN(endM)
+      ) {
+        setEditingCell(null);
+        return;
+      }
+
+      const newStart = new Date(Date.UTC(year, month, day, startH, startM));
+      const newEnd = new Date(Date.UTC(year, month, day, endH, endM));
+
+      if (newEnd > newStart) {
+        onUpdateSession({
+          id: session.id,
+          startTime: newStart,
+          endTime: newEnd,
+        });
+      }
+      setEditingCell(null);
+    },
+    [editStartTime, editEndTime, onUpdateSession],
+  );
+
+  const handleSelectChange = useCallback(
+    (
+      sessionId: string,
+      field: "roomId" | "sessionTypeId" | "trackId" | "venueId",
+      value: string | null,
+    ) => {
+      if (!onUpdateSession) return;
+      onUpdateSession({ id: sessionId, [field]: value });
+      setEditingCell(null);
+    },
+    [onUpdateSession],
+  );
 
   const filteredSessions = useMemo(() => {
     let result = [...sessions];
@@ -195,6 +332,18 @@ export function SessionTableView({
     [rooms],
   );
 
+  const roomOptionsByVenue = useMemo(() => {
+    const map = new Map<string, Array<{ value: string; label: string }>>();
+    for (const r of rooms) {
+      if (r.venueId) {
+        const list = map.get(r.venueId) ?? [];
+        list.push({ value: r.id, label: r.name });
+        map.set(r.venueId, list);
+      }
+    }
+    return map;
+  }, [rooms]);
+
   const typeOptions = useMemo(
     () => sessionTypes.map((t) => ({ value: t.id, label: t.name })),
     [sessionTypes],
@@ -205,7 +354,10 @@ export function SessionTableView({
     [tracks],
   );
 
-  const floorOptions = useMemo(() => {
+  const venueOptions = useMemo(() => {
+    if (venues) {
+      return venues.map((v) => ({ value: v.id, label: v.name }));
+    }
     const venueMap = new Map<string, string>();
     for (const s of sessions) {
       if (s.venueId && s.venue) {
@@ -216,7 +368,9 @@ export function SessionTableView({
       value: id,
       label: name,
     }));
-  }, [sessions]);
+  }, [sessions, venues]);
+
+  const canEdit = !!onUpdateSession;
 
   return (
     <div className="ms-table-container">
@@ -263,12 +417,12 @@ export function SessionTableView({
             style={{ minWidth: 130 }}
           />
         )}
-        {showFloorColumn && floorOptions.length > 0 && (
+        {showFloorColumn && venueOptions.length > 0 && (
           <Select
             placeholder="Floor"
             size="xs"
             clearable
-            data={floorOptions}
+            data={venueOptions}
             value={floorFilter}
             onChange={setFloorFilter}
             style={{ minWidth: 130 }}
@@ -340,9 +494,15 @@ export function SessionTableView({
         onSortStatusChange={setSortStatus}
         highlightOnHover
         onRowClick={
-          onViewDetail ? ({ record }) => onViewDetail(record) : undefined
+          editingCell
+            ? undefined
+            : onViewDetail
+              ? ({ record }) => onViewDetail(record)
+              : undefined
         }
-        style={onViewDetail ? { cursor: "pointer" } : undefined}
+        style={
+          !editingCell && onViewDetail ? { cursor: "pointer" } : undefined
+        }
         columns={[
           ...(onBulkDelete ?? onBulkAssignRoom
             ? [
@@ -401,18 +561,49 @@ export function SessionTableView({
             title: "Title",
             sortable: true,
             width: 250,
-            render: (session) => (
-              <Group gap={6} wrap="nowrap">
-                <Text size="sm" fw={500} lineClamp={1}>
-                  {session.title}
-                </Text>
-                {!session.isPublished && (
-                  <Badge size="xs" color="yellow" variant="light">
-                    Draft
-                  </Badge>
-                )}
-              </Group>
-            ),
+            render: (session) => {
+              if (isEditing(session.id, "title")) {
+                return (
+                  <Group gap={4} wrap="nowrap">
+                    <TextInput
+                      ref={titleInputRef}
+                      size="xs"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.currentTarget.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") saveTitle(session.id);
+                        if (e.key === "Escape") cancelEditing();
+                      }}
+                      onBlur={() => saveTitle(session.id)}
+                      autoFocus
+                      style={{ flex: 1 }}
+                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                    />
+                  </Group>
+                );
+              }
+              return (
+                <Group
+                  gap={6}
+                  wrap="nowrap"
+                  onClick={
+                    canEdit
+                      ? (e) => startEditing(session, "title", e)
+                      : undefined
+                  }
+                  style={canEdit ? { cursor: "text" } : undefined}
+                >
+                  <Text size="sm" fw={500} lineClamp={1}>
+                    {session.title}
+                  </Text>
+                  {!session.isPublished && (
+                    <Badge size="xs" color="yellow" variant="light">
+                      Draft
+                    </Badge>
+                  )}
+                </Group>
+              );
+            },
           },
           ...(showFloorColumn
             ? [
@@ -421,16 +612,48 @@ export function SessionTableView({
                   title: "Floor",
                   sortable: true,
                   width: 120,
-                  render: (session: FloorSession) =>
-                    session.venue ? (
-                      <Badge size="xs" variant="light" color="indigo">
-                        {session.venue.name}
-                      </Badge>
-                    ) : (
-                      <Text size="xs" c="dimmed">
-                        -
-                      </Text>
-                    ),
+                  render: (session: FloorSession) => {
+                    if (isEditing(session.id, "venue")) {
+                      return (
+                        <Select
+                          size="xs"
+                          data={venueOptions}
+                          value={session.venueId}
+                          onChange={(val) =>
+                            handleSelectChange(session.id, "venueId", val)
+                          }
+                          clearable
+                          autoFocus
+                          onClick={(e: React.MouseEvent) =>
+                            e.stopPropagation()
+                          }
+                          onBlur={cancelEditing}
+                          comboboxProps={{ withinPortal: true }}
+                          style={{ minWidth: 100 }}
+                        />
+                      );
+                    }
+                    return (
+                      <div
+                        onClick={
+                          canEdit
+                            ? (e) => startEditing(session, "venue", e)
+                            : undefined
+                        }
+                        style={canEdit ? { cursor: "pointer" } : undefined}
+                      >
+                        {session.venue ? (
+                          <Badge size="xs" variant="light" color="indigo">
+                            {session.venue.name}
+                          </Badge>
+                        ) : (
+                          <Text size="xs" c="dimmed">
+                            -
+                          </Text>
+                        )}
+                      </div>
+                    );
+                  },
                 },
               ]
             : []),
@@ -491,12 +714,91 @@ export function SessionTableView({
           {
             accessor: "time",
             title: "Time",
-            width: 130,
-            render: (session) => (
-              <Text size="xs">
-                {formatTime(session.startTime)} – {formatTime(session.endTime)}
-              </Text>
-            ),
+            width: 160,
+            render: (session) => {
+              if (isEditing(session.id, "time")) {
+                return (
+                  <Group gap={4} wrap="nowrap">
+                    <input
+                      type="time"
+                      value={editStartTime}
+                      onChange={(e) => setEditStartTime(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") cancelEditing();
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      autoFocus
+                      style={{
+                        width: 55,
+                        fontSize: 12,
+                        padding: "2px 4px",
+                        border: "1px solid var(--mantine-color-default-border)",
+                        borderRadius: 4,
+                        background: "var(--mantine-color-body)",
+                        color: "var(--mantine-color-text)",
+                      }}
+                    />
+                    <Text size="xs" c="dimmed">
+                      –
+                    </Text>
+                    <input
+                      type="time"
+                      value={editEndTime}
+                      onChange={(e) => setEditEndTime(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") cancelEditing();
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        width: 55,
+                        fontSize: 12,
+                        padding: "2px 4px",
+                        border: "1px solid var(--mantine-color-default-border)",
+                        borderRadius: 4,
+                        background: "var(--mantine-color-body)",
+                        color: "var(--mantine-color-text)",
+                      }}
+                    />
+                    <ActionIcon
+                      size="xs"
+                      variant="subtle"
+                      color="green"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        saveTime(session);
+                      }}
+                    >
+                      <IconCheck size={12} />
+                    </ActionIcon>
+                    <ActionIcon
+                      size="xs"
+                      variant="subtle"
+                      color="gray"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        cancelEditing();
+                      }}
+                    >
+                      <IconX size={12} />
+                    </ActionIcon>
+                  </Group>
+                );
+              }
+              return (
+                <Text
+                  size="xs"
+                  onClick={
+                    canEdit
+                      ? (e) => startEditing(session, "time", e)
+                      : undefined
+                  }
+                  style={canEdit ? { cursor: "pointer" } : undefined}
+                >
+                  {formatTime(session.startTime)} –{" "}
+                  {formatTime(session.endTime)}
+                </Text>
+              );
+            },
           },
           {
             accessor: "duration",
@@ -515,63 +817,156 @@ export function SessionTableView({
             accessor: "room",
             title: "Room",
             sortable: true,
-            width: 100,
-            render: (session) =>
-              session.room ? (
-                <Badge size="xs" variant="light" color="teal">
-                  {session.room.name}
-                </Badge>
-              ) : (
-                <Text size="xs" c="dimmed">
-                  -
-                </Text>
-              ),
+            width: 130,
+            render: (session) => {
+              if (isEditing(session.id, "room")) {
+                const venueRooms = session.venueId
+                  ? (roomOptionsByVenue.get(session.venueId) ?? roomOptions)
+                  : roomOptions;
+                return (
+                  <Select
+                    size="xs"
+                    data={venueRooms}
+                    value={session.roomId}
+                    onChange={(val) =>
+                      handleSelectChange(session.id, "roomId", val)
+                    }
+                    clearable
+                    autoFocus
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                    onBlur={cancelEditing}
+                    comboboxProps={{ withinPortal: true }}
+                    style={{ minWidth: 100 }}
+                  />
+                );
+              }
+              return (
+                <div
+                  onClick={
+                    canEdit
+                      ? (e) => startEditing(session, "room", e)
+                      : undefined
+                  }
+                  style={canEdit ? { cursor: "pointer" } : undefined}
+                >
+                  {session.room ? (
+                    <Badge size="xs" variant="light" color="teal">
+                      {session.room.name}
+                    </Badge>
+                  ) : (
+                    <Text size="xs" c="dimmed">
+                      -
+                    </Text>
+                  )}
+                </div>
+              );
+            },
           },
           {
             accessor: "sessionType",
             title: "Type",
             sortable: true,
-            width: 110,
-            render: (session) =>
-              session.sessionType ? (
-                <Badge
-                  size="xs"
-                  variant="light"
-                  style={{
-                    backgroundColor: `${session.sessionType.color}20`,
-                    color: session.sessionType.color,
-                  }}
+            width: 140,
+            render: (session) => {
+              if (isEditing(session.id, "sessionType")) {
+                return (
+                  <Select
+                    size="xs"
+                    data={typeOptions}
+                    value={session.sessionTypeId}
+                    onChange={(val) =>
+                      handleSelectChange(session.id, "sessionTypeId", val)
+                    }
+                    clearable
+                    autoFocus
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                    onBlur={cancelEditing}
+                    comboboxProps={{ withinPortal: true }}
+                    style={{ minWidth: 110 }}
+                  />
+                );
+              }
+              return (
+                <div
+                  onClick={
+                    canEdit
+                      ? (e) => startEditing(session, "sessionType", e)
+                      : undefined
+                  }
+                  style={canEdit ? { cursor: "pointer" } : undefined}
                 >
-                  {session.sessionType.name}
-                </Badge>
-              ) : (
-                <Text size="xs" c="dimmed">
-                  -
-                </Text>
-              ),
+                  {session.sessionType ? (
+                    <Badge
+                      size="xs"
+                      variant="light"
+                      style={{
+                        backgroundColor: `${session.sessionType.color}20`,
+                        color: session.sessionType.color,
+                      }}
+                    >
+                      {session.sessionType.name}
+                    </Badge>
+                  ) : (
+                    <Text size="xs" c="dimmed">
+                      -
+                    </Text>
+                  )}
+                </div>
+              );
+            },
           },
           {
             accessor: "track",
             title: "Track",
             sortable: true,
-            width: 110,
-            render: (session) =>
-              session.track ? (
-                <Badge
-                  size="xs"
-                  variant="light"
-                  style={{
-                    backgroundColor: `${session.track.color}20`,
-                    color: session.track.color,
-                  }}
+            width: 140,
+            render: (session) => {
+              if (isEditing(session.id, "track")) {
+                return (
+                  <Select
+                    size="xs"
+                    data={trackOptions}
+                    value={session.trackId}
+                    onChange={(val) =>
+                      handleSelectChange(session.id, "trackId", val)
+                    }
+                    clearable
+                    autoFocus
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                    onBlur={cancelEditing}
+                    comboboxProps={{ withinPortal: true }}
+                    style={{ minWidth: 110 }}
+                  />
+                );
+              }
+              return (
+                <div
+                  onClick={
+                    canEdit
+                      ? (e) => startEditing(session, "track", e)
+                      : undefined
+                  }
+                  style={canEdit ? { cursor: "pointer" } : undefined}
                 >
-                  {session.track.name}
-                </Badge>
-              ) : (
-                <Text size="xs" c="dimmed">
-                  -
-                </Text>
-              ),
+                  {session.track ? (
+                    <Badge
+                      size="xs"
+                      variant="light"
+                      style={{
+                        backgroundColor: `${session.track.color}20`,
+                        color: session.track.color,
+                      }}
+                    >
+                      {session.track.name}
+                    </Badge>
+                  ) : (
+                    <Text size="xs" c="dimmed">
+                      -
+                    </Text>
+                  )}
+                </div>
+              );
+            },
           },
           {
             accessor: "slides",
@@ -630,7 +1025,11 @@ export function SessionTableView({
           },
           {
             accessor: "actions",
-            title: "",
+            title: isUpdating ? (
+              <Loader size={14} />
+            ) : (
+              ""
+            ),
             width: 70,
             render: (session) => (
               <Group gap={4} wrap="nowrap">
