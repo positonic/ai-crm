@@ -32,7 +32,10 @@ import {
   IconEye,
   IconX,
   IconEdit,
+  IconTrash,
+  IconExternalLink,
 } from "@tabler/icons-react";
+import Link from "next/link";
 import { api } from "~/trpc/react";
 import { getDisplayName } from "~/utils/userDisplay";
 
@@ -77,6 +80,9 @@ export default function UsersClient() {
   const [assignRoleModalOpen, setAssignRoleModalOpen] = useState(false);
   const [userDetailModalOpen, setUserDetailModalOpen] = useState(false);
   const [editUserModalOpen, setEditUserModalOpen] = useState(false);
+  const [deleteConfirmUserId, setDeleteConfirmUserId] = useState<string | null>(
+    null,
+  );
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterEventId, setFilterEventId] = useState<string>("");
@@ -157,6 +163,25 @@ export default function UsersClient() {
         message: "User role updated successfully",
         color: "green",
       });
+      void refetchUsers();
+    },
+    onError: (error) => {
+      notifications.show({
+        title: "Error",
+        message: error.message,
+        color: "red",
+      });
+    },
+  });
+
+  const adminDeleteUser = api.user.adminDeleteUser.useMutation({
+    onSuccess: () => {
+      notifications.show({
+        title: "Success",
+        message: "User deleted successfully",
+        color: "green",
+      });
+      setDeleteConfirmUserId(null);
       void refetchUsers();
     },
     onError: (error) => {
@@ -546,6 +571,15 @@ export default function UsersClient() {
                     >
                       <IconUserPlus size={14} />
                     </ActionIcon>
+                    <ActionIcon
+                      variant="light"
+                      color="red"
+                      size="sm"
+                      onClick={() => setDeleteConfirmUserId(user.id)}
+                      title="Delete user"
+                    >
+                      <IconTrash size={14} />
+                    </ActionIcon>
                   </Group>
                 </Table.Td>
               </Table.Tr>
@@ -800,7 +834,7 @@ export default function UsersClient() {
             {/* Applications */}
             <div>
               <Text fw={600} mb="sm">
-                Recent Applications
+                Applications
               </Text>
               {userDetails.applications.length === 0 ? (
                 <Text size="sm" c="dimmed">
@@ -808,28 +842,42 @@ export default function UsersClient() {
                 </Text>
               ) : (
                 <Stack gap="xs">
-                  {userDetails.applications.slice(0, 5).map((application) => (
-                    <Group key={application.id} justify="space-between">
-                      <Group>
-                        <Text size="sm">{application.event.name}</Text>
-                        <Badge
-                          color={
-                            application.status === "ACCEPTED"
-                              ? "green"
-                              : application.status === "REJECTED"
-                                ? "red"
-                                : "blue"
-                          }
-                          variant="light"
-                          size="sm"
-                        >
-                          {application.status}
-                        </Badge>
+                  {userDetails.applications.map((application) => (
+                    <Paper
+                      key={application.id}
+                      component={Link}
+                      href={`/admin/events/${application.event.id}/applications`}
+                      p="xs"
+                      withBorder
+                      style={{ textDecoration: "none", cursor: "pointer" }}
+                    >
+                      <Group justify="space-between">
+                        <Group>
+                          <Text size="sm">{application.event.name}</Text>
+                          <Badge
+                            color={
+                              application.status === "ACCEPTED"
+                                ? "green"
+                                : application.status === "REJECTED"
+                                  ? "red"
+                                  : "blue"
+                            }
+                            variant="light"
+                            size="sm"
+                          >
+                            {application.status}
+                          </Badge>
+                        </Group>
+                        <Group gap="xs">
+                          <Text size="xs" c="dimmed">
+                            {new Date(
+                              application.createdAt,
+                            ).toLocaleDateString()}
+                          </Text>
+                          <IconExternalLink size={14} color="gray" />
+                        </Group>
                       </Group>
-                      <Text size="xs" c="dimmed">
-                        {new Date(application.createdAt).toLocaleDateString()}
-                      </Text>
-                    </Group>
+                    </Paper>
                   ))}
                 </Stack>
               )}
@@ -943,6 +991,57 @@ export default function UsersClient() {
             </Group>
           </Stack>
         </form>
+      </Modal>
+
+      {/* Delete User Confirmation Modal */}
+      <Modal
+        opened={deleteConfirmUserId !== null}
+        onClose={() => setDeleteConfirmUserId(null)}
+        title="Delete User"
+        size="sm"
+      >
+        {(() => {
+          const userToDelete = users?.find(
+            (u) => u.id === deleteConfirmUserId,
+          );
+          return (
+            <Stack>
+              <Text>
+                Are you sure you want to delete{" "}
+                <Text span fw={600}>
+                  {userToDelete
+                    ? getDisplayName(userToDelete, "this user")
+                    : "this user"}
+                </Text>
+                {userToDelete?.email ? ` (${userToDelete.email})` : ""}?
+              </Text>
+              <Text size="sm" c="red">
+                This action cannot be undone.
+              </Text>
+              <Group justify="flex-end">
+                <Button
+                  variant="light"
+                  onClick={() => setDeleteConfirmUserId(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  color="red"
+                  loading={adminDeleteUser.isPending}
+                  onClick={() => {
+                    if (deleteConfirmUserId) {
+                      adminDeleteUser.mutate({
+                        userId: deleteConfirmUserId,
+                      });
+                    }
+                  }}
+                >
+                  Delete
+                </Button>
+              </Group>
+            </Stack>
+          );
+        })()}
       </Modal>
     </>
   );
