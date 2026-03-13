@@ -283,3 +283,45 @@ onChangeSpeakerRole(id, val as ParticipantRole);
 6. Keep client-side PARTICIPANT_ROLES in sync with server-side z.enum() values
 
 ---
+
+## 2026-03-13 - instanceof Expression on Non-Object Type - [Project: impactful-events]
+
+**Error**: The left-hand side of an 'instanceof' expression must be of type 'any', an object type or a type parameter.
+**Project Type**: Next.js + TypeScript + Vercel
+**File**: src/app/_components/EditSessionModal.tsx:682
+**Line**: 682, 694, 730, 738, 740
+**Code Context**:
+```typescript
+// Mantine DateTimePicker onChange type is: (value: DateValue) => void
+// where DateValue = Date | null  (but TS may infer string | Date | null)
+
+// ❌ INCORRECT - instanceof Date fails when val type includes string | null
+onChange={(val) => {
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    setStartTime(val);
+  }
+}}
+```
+**Fix Applied**: Use `typeof` narrowing to handle string case, then null check for Date
+```typescript
+// ✅ CORRECT - typeof narrowing handles string | Date | null union
+onChange={(val) => {
+  const date = typeof val === "string" ? new Date(val) : val;
+  if (date && !isNaN(date.getTime())) {
+    setStartTime(date);
+  } else {
+    setStartTime(null);
+  }
+}}
+
+// ✅ ALSO CORRECT - For state variables typed as Date | null, use truthiness check
+startTime && !isNaN(startTime.getTime())  // instead of: startTime instanceof Date && ...
+```
+**Type Pattern**: TypeScript does not allow `instanceof` on the left-hand side when the type includes primitive types like `string`. Use `typeof` narrowing first to eliminate string, then check for null/Date.
+**Prevention**:
+1. Never use `instanceof Date` on values typed as `string | Date | null` (common in Mantine date picker onChange)
+2. Use `typeof val === "string" ? new Date(val) : val` to normalize string/Date union to Date | null
+3. For `Date | null` state variables, use truthiness check (`val && !isNaN(val.getTime())`) instead of `instanceof Date`
+4. The `instanceof` operator requires the left-hand side to be `any`, an object type, or a type parameter — not a union with primitives
+
+---
