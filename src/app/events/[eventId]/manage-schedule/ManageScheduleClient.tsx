@@ -3194,13 +3194,13 @@ function CreateSessionButton({
             <DateTimePicker
               label="Start Time"
               value={startTime}
-              onChange={(val) => setStartTime(val as Date | null)}
+              onChange={(val) => setStartTime(val ? new Date(val) : null)}
               required
             />
             <DateTimePicker
               label="End Time"
               value={endTime}
-              onChange={(val) => setEndTime(val as Date | null)}
+              onChange={(val) => setEndTime(val ? new Date(val) : null)}
               required
             />
           </Group>

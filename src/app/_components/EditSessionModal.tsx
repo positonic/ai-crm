@@ -678,13 +678,25 @@ export default function EditSessionModal({
               <DateTimePicker
                 label="Start Time"
                 value={startTime}
-                onChange={(val) => setStartTime(val as Date | null)}
+                onChange={(val) => {
+                  if (val instanceof Date && !isNaN(val.getTime())) {
+                    setStartTime(val);
+                  } else {
+                    setStartTime(null);
+                  }
+                }}
                 required
               />
               <DateTimePicker
                 label="End Time"
                 value={endTime}
-                onChange={(val) => setEndTime(val as Date | null)}
+                onChange={(val) => {
+                  if (val instanceof Date && !isNaN(val.getTime())) {
+                    setEndTime(val);
+                  } else {
+                    setEndTime(null);
+                  }
+                }}
                 required
               />
             </Group>
@@ -713,7 +725,7 @@ export default function EditSessionModal({
               eventId={eventId}
               sessionTitle={title}
               sessionDate={
-                startTime
+                startTime instanceof Date && !isNaN(startTime.getTime())
                   ? startTime.toLocaleDateString("en-US", {
                       weekday: "long",
                       month: "long",
@@ -723,7 +735,10 @@ export default function EditSessionModal({
                   : undefined
               }
               sessionTime={
-                startTime && endTime
+                startTime instanceof Date &&
+                !isNaN(startTime.getTime()) &&
+                endTime instanceof Date &&
+                !isNaN(endTime.getTime())
                   ? `${startTime.toLocaleTimeString("en-US", {
                       hour: "numeric",
                       minute: "2-digit",

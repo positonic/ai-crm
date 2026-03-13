@@ -283,6 +283,7 @@ export default function SchedulePageClient({
 
     for (const session of filteredSessions) {
       const d = new Date(session.startTime);
+      if (isNaN(d.getTime())) continue;
       const dayKey = d.toLocaleDateString("en-US", {
         weekday: "long",
         month: "long",

@@ -429,7 +429,8 @@ export function SessionTimeGrid({
     }
     return Array.from(daySet)
       .sort()
-      .map((iso) => new Date(iso));
+      .map((iso) => new Date(iso))
+      .filter((d) => !isNaN(d.getTime()));
   }, [sessions]);
 
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
