@@ -118,6 +118,8 @@ function DraggableSessionBlock({
   onResize,
   gridEarliestMs: _gridEarliestMs,
   headerRows,
+  subCol = 0,
+  totalSubCols = 1,
 }: {
   session: FloorSession;
   startRow: number;
@@ -130,6 +132,8 @@ function DraggableSessionBlock({
   onResize?: (sessionId: string, newStart: Date, newEnd: Date) => void;
   gridEarliestMs: number;
   headerRows: number;
+  subCol?: number;
+  totalSubCols?: number;
 }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: session.id,
@@ -240,6 +244,10 @@ function DraggableSessionBlock({
     [onResize, session.id],
   );
 
+  const hasOverlap = totalSubCols > 1;
+  const widthPercent = hasOverlap ? 100 / totalSubCols : 100;
+  const leftPercent = hasOverlap ? (subCol * 100) / totalSubCols : 0;
+
   const style: React.CSSProperties = {
     gridRow: `${String(displayStartRow)} / ${String(displayEndRow)}`,
     gridColumn: colIndex + 2,
@@ -250,6 +258,12 @@ function DraggableSessionBlock({
       ? `translate(${String(transform.x)}px, ${String(transform.y)}px)`
       : undefined,
     zIndex: isDragging ? 10 : isResizing ? 10 : 1,
+    ...(hasOverlap
+      ? {
+          width: `${String(widthPercent)}%`,
+          marginLeft: `${String(leftPercent)}%`,
+        }
+      : {}),
   };
 
   const speakerNames = [
@@ -541,8 +555,74 @@ export function SessionTimeGrid({
         // Clamp rows to grid bounds
         const clampedStartRow = Math.max(headerRows + 1, startRow);
         const clampedEndRow = Math.min(row - 1 + headerRows + 1, endRow);
-        return { session, startRow: clampedStartRow, endRow: clampedEndRow };
+
+        // Determine column index for overlap grouping
+        let colIdx = 0;
+        if (session.roomId) {
+          const found = columns.findIndex((c) => c.roomId === session.roomId);
+          if (found !== -1) colIdx = found;
+        }
+
+        return {
+          session,
+          startRow: clampedStartRow,
+          endRow: clampedEndRow,
+          colIdx,
+          // Will be filled in by overlap detection below
+          subCol: 0,
+          totalSubCols: 1,
+        };
       });
+
+      // Detect overlapping sessions within the same column and assign sub-columns
+      const colGroups = new Map<number, typeof grid>();
+      for (const item of grid) {
+        const arr = colGroups.get(item.colIdx) ?? [];
+        arr.push(item);
+        colGroups.set(item.colIdx, arr);
+      }
+
+      for (const items of colGroups.values()) {
+        // Sort by startRow, then by endRow descending (longer sessions first)
+        items.sort((a, b) => a.startRow - b.startRow || b.endRow - a.endRow);
+
+        // Assign sub-columns using a greedy column-packing algorithm
+        // Track the end row of each sub-column
+        const subColEnds: number[] = [];
+
+        for (const item of items) {
+          // Find the first sub-column where this session fits (no overlap)
+          let placed = false;
+          for (let sc = 0; sc < subColEnds.length; sc++) {
+            if (subColEnds[sc]! <= item.startRow) {
+              item.subCol = sc;
+              subColEnds[sc] = item.endRow;
+              placed = true;
+              break;
+            }
+          }
+          if (!placed) {
+            item.subCol = subColEnds.length;
+            subColEnds.push(item.endRow);
+          }
+        }
+
+        // Now determine totalSubCols for each session based on its overlap group
+        // Each session's totalSubCols = max number of concurrent sessions it overlaps with
+        for (const item of items) {
+          let maxConcurrent = 1;
+          for (const other of items) {
+            if (other === item) continue;
+            // Check if they overlap in time (rows)
+            if (other.startRow < item.endRow && other.endRow > item.startRow) {
+              maxConcurrent++;
+            }
+          }
+          // But totalSubCols should be at least the max subCol in the overlap cluster + 1
+          // Use the subColEnds length for the whole column as upper bound
+          item.totalSubCols = Math.min(maxConcurrent, subColEnds.length);
+        }
+      }
 
       const memoEnd = performance.now();
       const totalDroppableCells =
@@ -767,17 +847,7 @@ export function SessionTimeGrid({
           )}
 
           {/* Draggable session blocks */}
-          {sessionsGrid.map(({ session, startRow, endRow }) => {
-            let colIndex: number;
-            if (session.roomId) {
-              colIndex = columns.findIndex(
-                (col) => col.roomId === session.roomId,
-              );
-            } else {
-              colIndex = 0;
-            }
-            if (colIndex === -1) colIndex = 0;
-
+          {sessionsGrid.map(({ session, startRow, endRow, colIdx, subCol, totalSubCols }) => {
             const color =
               session.sessionType?.color ?? session.track?.color ?? "#94a3b8";
 
@@ -787,7 +857,7 @@ export function SessionTimeGrid({
                 session={session}
                 startRow={startRow}
                 endRow={endRow}
-                colIndex={colIndex}
+                colIndex={colIdx}
                 color={color}
                 isDragging={activeDragSession?.id === session.id}
                 onOpenComments={onOpenComments}
@@ -795,6 +865,8 @@ export function SessionTimeGrid({
                 onResize={handleResize}
                 gridEarliestMs={gridEarliestMs}
                 headerRows={headerRows}
+                subCol={subCol}
+                totalSubCols={totalSubCols}
               />
             );
           })}

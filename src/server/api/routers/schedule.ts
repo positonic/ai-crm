@@ -444,6 +444,7 @@ export const scheduleRouter = createTRPCRouter({
               .optional(),
             sessionTypeId: z.string().optional(),
             trackId: z.string().optional(),
+            slidesUrl: z.string().optional(),
             order: z.number().default(0),
             isPublished: z.boolean().default(true),
           }),
@@ -562,6 +563,7 @@ export const scheduleRouter = createTRPCRouter({
       z.object({
         eventId: z.string(),
         names: z.array(z.string()).min(1).max(200),
+        emails: z.record(z.string(), z.string()).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -580,7 +582,38 @@ export const scheduleRouter = createTRPCRouter({
       > = {};
 
       for (const rawName of input.names) {
-        // Strip parenthetical org annotation: "Tom Kalil (Renaissance Philanthropy)" → "Tom Kalil"
+        // If we have an email for this name, try exact email lookup first
+        const emailForName = input.emails?.[rawName];
+        if (emailForName) {
+          const userByEmail = await ctx.db.user.findFirst({
+            where: {
+              email: { equals: emailForName, mode: "insensitive" },
+              applications: {
+                some: {
+                  eventId: event.id,
+                  userId: { not: null },
+                },
+              },
+            },
+            select: userSelectFields,
+          });
+          if (userByEmail) {
+            results[rawName] = [
+              {
+                userId: userByEmail.id,
+                firstName: userByEmail.firstName,
+                surname: userByEmail.surname,
+                name: userByEmail.name,
+                email: userByEmail.email,
+                image: userByEmail.image,
+                confidence: "exact",
+              },
+            ];
+            continue;
+          }
+        }
+
+        // Strip parenthetical org annotation: "Tom Kalil (Renaissance Philanthropy)" -> "Tom Kalil"
         const cleanName = rawName.replace(/\s*\([^)]*\)\s*/g, "").trim();
         if (!cleanName) {
           results[rawName] = [];

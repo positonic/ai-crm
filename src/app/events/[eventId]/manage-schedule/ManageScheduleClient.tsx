@@ -72,6 +72,7 @@ import EditSessionModal, {
   SpeakerSelector,
   type SelectedSpeaker,
   type SelectedSpeakerWithRole,
+  type ParticipantRole,
   type FloorSession,
   type VenueRoom,
   localToUTC,
@@ -168,12 +169,15 @@ interface ParsedCsvSession {
   startTime: Date | null;
   endTime: Date | null;
   presenterNames: string[];
+  facilitatorNames: string[];
   matchedSpeakers: SelectedSpeakerWithRole[];
   unmatchedSpeakers: string[];
   sessionTypeName: string | null;
   sessionTypeId: string | null;
   trackName: string | null;
   trackId: string | null;
+  slidesUrl: string | null;
+  speakerEmails: Record<string, string>;
   order: number;
   status: "ready" | "warning" | "error";
   warnings: string[];
@@ -190,10 +194,13 @@ interface ColumnMapping {
   presenters: string | null;
   type: string | null;
   curator: string | null;
+  track: string | null;
   description: string | null;
   facilitator: string | null;
   order: string | null;
   room: string | null;
+  slidesUrl: string | null;
+  speakerEmail: string | null;
 }
 
 const COLUMN_ALIASES: Record<keyof ColumnMapping, string[]> = {
@@ -218,8 +225,19 @@ const COLUMN_ALIASES: Record<keyof ColumnMapping, string[]> = {
     "speaker names",
   ],
   type: ["type", "session type", "format", "talk type", "category"],
-  curator: ["curator", "track", "topic", "stream"],
-  description: ["description", "session description", "abstract", "summary", "details"],
+  curator: ["curator", "topic", "stream"],
+  description: [
+    "description",
+    "session description",
+    "abstract",
+    "narrative/theme",
+    "narrative",
+    "theme",
+    "talk summary",
+    "speaker summary",
+    "summary",
+    "details",
+  ],
   facilitator: [
     "facilitator / moderator",
     "facilitator",
@@ -228,7 +246,18 @@ const COLUMN_ALIASES: Record<keyof ColumnMapping, string[]> = {
     "chair",
   ],
   order: ["sort order", "order", "position", "#", "no"],
-  room: ["room", "location", "venue", "space", "room name"],
+  room: ["room", "location", "venue", "space", "room name", "floor"],
+  slidesUrl: [
+    "slide link",
+    "slides",
+    "slides url",
+    "slides link",
+    "deck link",
+    "deck url",
+    "presentation link",
+  ],
+  speakerEmail: ["speaker email", "email", "presenter email", "speaker e-mail"],
+  track: ["speaker deck track", "deck track", "track name", "track"],
 };
 
 function detectColumns(headers: string[]): ColumnMapping {
@@ -241,10 +270,13 @@ function detectColumns(headers: string[]): ColumnMapping {
     presenters: null,
     type: null,
     curator: null,
+    track: null,
     description: null,
     facilitator: null,
     order: null,
     room: null,
+    slidesUrl: null,
+    speakerEmail: null,
   };
 
   for (const header of headers) {
@@ -538,6 +570,36 @@ function parseCsvRows(
       : undefined;
     const presenterNames = extractPresenterNames(presenterRaw);
 
+    // Facilitators
+    const facilitatorRaw = mapping.facilitator
+      ? row[mapping.facilitator]
+      : undefined;
+    const facilitatorNames = extractPresenterNames(facilitatorRaw);
+
+    // Speaker email (build name → email mapping)
+    const speakerEmails: Record<string, string> = {};
+    const emailRaw = mapping.speakerEmail
+      ? row[mapping.speakerEmail]?.trim()
+      : undefined;
+    if (emailRaw) {
+      // Split on comma/semicolon for multiple emails
+      const emails = emailRaw.split(/[,;]/).map((e) => e.trim()).filter(Boolean);
+      // Associate emails with presenter names in order
+      const allNames = [...presenterNames, ...facilitatorNames];
+      for (let i = 0; i < Math.min(emails.length, allNames.length); i++) {
+        const name = allNames[i];
+        const email = emails[i];
+        if (name && email?.includes("@")) {
+          speakerEmails[name] = email;
+        }
+      }
+    }
+
+    // Slides URL
+    const slidesUrl = mapping.slidesUrl
+      ? row[mapping.slidesUrl]?.trim() ?? null
+      : null;
+
     // Session type
     const typeName = mapping.type ? row[mapping.type]?.trim() : null;
     const sessionTypeId = findMatchingSessionType(typeName, sessionTypes);
@@ -545,8 +607,10 @@ function parseCsvRows(
       warnings.push(`Session type "${typeName}" not found — will be created`);
     }
 
-    // Track (curator)
-    const trackName = mapping.curator ? row[mapping.curator]?.trim() : null;
+    // Track (dedicated track column takes priority, fallback to curator)
+    const trackColName = mapping.track ? row[mapping.track]?.trim() : null;
+    const curatorColName = mapping.curator ? row[mapping.curator]?.trim() : null;
+    const trackName = trackColName ?? curatorColName;
     const trackId = findMatchingTrack(trackName, tracks);
     if (trackName && !trackId) {
       warnings.push(`Track "${trackName}" not found — will be created`);
@@ -584,12 +648,15 @@ function parseCsvRows(
       startTime,
       endTime,
       presenterNames,
+      facilitatorNames,
       matchedSpeakers: [],
-      unmatchedSpeakers: presenterNames,
+      unmatchedSpeakers: [...presenterNames, ...facilitatorNames],
       sessionTypeName: typeName ?? null,
       sessionTypeId,
       trackName: trackName ?? null,
       trackId,
+      slidesUrl: slidesUrl ?? null,
+      speakerEmails,
       order,
       status,
       warnings,
@@ -3153,10 +3220,13 @@ function CsvUploadModal({
     presenters: null,
     type: null,
     curator: null,
+    track: null,
     description: null,
     facilitator: null,
     order: null,
     room: null,
+    slidesUrl: null,
+    speakerEmail: null,
   });
   const [parsedSessions, setParsedSessions] = useState<ParsedCsvSession[]>([]);
   const [newTypesToCreate, setNewTypesToCreate] = useState<
@@ -3197,13 +3267,31 @@ function CsvUploadModal({
       for (const name of session.presenterNames) {
         names.add(name);
       }
+      for (const name of session.facilitatorNames) {
+        names.add(name);
+      }
     }
     return Array.from(names);
   }, [parsedSessions]);
 
+  // Collect speaker email mappings for enhanced matching
+  const speakerEmailMap = useMemo(() => {
+    const emails: Record<string, string> = {};
+    for (const session of parsedSessions) {
+      for (const [name, email] of Object.entries(session.speakerEmails)) {
+        emails[name] = email;
+      }
+    }
+    return emails;
+  }, [parsedSessions]);
+
   // Fuzzy match speakers when we have parsed sessions
   const { data: speakerMatches } = api.schedule.fuzzyMatchSpeakers.useQuery(
-    { eventId, names: speakerNames },
+    {
+      eventId,
+      names: speakerNames,
+      emails: Object.keys(speakerEmailMap).length > 0 ? speakerEmailMap : undefined,
+    },
     { enabled: speakerNames.length > 0 && activeStep >= 1 },
   );
 
@@ -3214,21 +3302,27 @@ function CsvUploadModal({
       prev.map((session) => {
         const matched: SelectedSpeakerWithRole[] = [];
         const unmatched: string[] = [];
-        for (const name of session.presenterNames) {
+        const facilitatorSet = new Set(session.facilitatorNames);
+
+        for (const name of [...session.presenterNames, ...session.facilitatorNames]) {
           const matches = speakerMatches[name];
           const exactMatch = matches?.find((m) => m.confidence === "exact");
+          const role: ParticipantRole = facilitatorSet.has(name) ? "Facilitator" : "Speaker";
           if (exactMatch) {
-            matched.push({
-              user: {
-                id: exactMatch.userId,
-                firstName: exactMatch.firstName,
-                surname: exactMatch.surname,
-                name: exactMatch.name,
-                email: exactMatch.email,
-                image: exactMatch.image,
-              },
-              role: "Speaker",
-            });
+            // Avoid duplicate if same person is both presenter and facilitator
+            if (!matched.some((m) => m.user.id === exactMatch.userId)) {
+              matched.push({
+                user: {
+                  id: exactMatch.userId,
+                  firstName: exactMatch.firstName,
+                  surname: exactMatch.surname,
+                  name: exactMatch.name,
+                  email: exactMatch.email,
+                  image: exactMatch.image,
+                },
+                role,
+              });
+            }
           } else {
             unmatched.push(name);
           }
@@ -3256,10 +3350,13 @@ function CsvUploadModal({
       presenters: null,
       type: null,
       curator: null,
+      track: null,
       description: null,
       facilitator: null,
       order: null,
       room: null,
+      slidesUrl: null,
+      speakerEmail: null,
     });
     setParsedSessions([]);
     setNewTypesToCreate([]);
@@ -3404,6 +3501,7 @@ function CsvUploadModal({
         })),
         sessionTypeId: s.sessionTypeId ?? undefined,
         trackId: s.trackId ?? undefined,
+        slidesUrl: s.slidesUrl ?? undefined,
         order: s.order,
         isPublished: true,
       })),
@@ -3613,11 +3711,21 @@ function CsvUploadModal({
                 </Group>
                 <Group grow>
                   <Select
-                    label="Track / Curator"
+                    label="Curator / Topic"
                     data={columnOptions}
                     value={columnMapping.curator}
                     onChange={(v) =>
                       setColumnMapping((m) => ({ ...m, curator: v }))
+                    }
+                    clearable
+                    size="xs"
+                  />
+                  <Select
+                    label="Track"
+                    data={columnOptions}
+                    value={columnMapping.track}
+                    onChange={(v) =>
+                      setColumnMapping((m) => ({ ...m, track: v }))
                     }
                     clearable
                     size="xs"
@@ -3645,11 +3753,33 @@ function CsvUploadModal({
                     size="xs"
                   />
                   <Select
-                    label="Room / Location"
+                    label="Room / Floor"
                     data={columnOptions}
                     value={columnMapping.room}
                     onChange={(v) =>
                       setColumnMapping((m) => ({ ...m, room: v }))
+                    }
+                    clearable
+                    size="xs"
+                  />
+                </Group>
+                <Group grow>
+                  <Select
+                    label="Slide Link"
+                    data={columnOptions}
+                    value={columnMapping.slidesUrl}
+                    onChange={(v) =>
+                      setColumnMapping((m) => ({ ...m, slidesUrl: v }))
+                    }
+                    clearable
+                    size="xs"
+                  />
+                  <Select
+                    label="Speaker Email"
+                    data={columnOptions}
+                    value={columnMapping.speakerEmail}
+                    onChange={(v) =>
+                      setColumnMapping((m) => ({ ...m, speakerEmail: v }))
                     }
                     clearable
                     size="xs"
