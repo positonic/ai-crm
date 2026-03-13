@@ -5,6 +5,7 @@ import {
   Stack,
   Text,
   Group,
+  Anchor,
   Badge,
   Button,
   TextInput,
@@ -395,7 +396,7 @@ export function SpeakerSelector({
         </Text>
         {useFloorSearch ? (
           <FloorApplicantSearchSelect
-            venueId={venueId}
+            venueId={venueId ?? ""}
             onSelect={onAddLinkedSpeaker}
             excludeUserIds={linkedSpeakers.map((s) => s.user.id)}
             placeholder="Search floor applicants by name or email..."
@@ -440,7 +441,15 @@ export function SpeakerSelector({
                 }
                 style={{ flex: 1, maxWidth: "fit-content" }}
               >
-                {getDisplayName(speakerWithRole.user, "Unknown")}
+                <Anchor
+                  href={`/profiles/${speakerWithRole.user.id}`}
+                  target="_blank"
+                  size="xs"
+                  fw={500}
+                  style={{ color: "inherit", textDecoration: "none" }}
+                >
+                  {getDisplayName(speakerWithRole.user, "Unknown")}
+                </Anchor>
               </Badge>
               <Select
                 size="xs"
