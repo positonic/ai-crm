@@ -248,6 +248,10 @@ export const roleRouter = createTRPCRouter({
           role: true,
           image: true,
           emailVerified: true,
+          isAIReviewer: true,
+          adminNotes: true,
+          adminLabels: true,
+          adminWorkExperience: true,
           userRoles: {
             where: {
               ...(input.eventId && { eventId: input.eventId }),

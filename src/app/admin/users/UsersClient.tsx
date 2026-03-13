@@ -19,13 +19,41 @@ import {
   SimpleGrid,
   Tooltip,
   Menu,
+  Textarea,
+  MultiSelect,
+  Switch,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useDebouncedValue } from "@mantine/hooks";
-import { IconSearch, IconUserPlus, IconEye, IconX } from "@tabler/icons-react";
+import {
+  IconSearch,
+  IconUserPlus,
+  IconEye,
+  IconX,
+  IconEdit,
+} from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import { getDisplayName } from "~/utils/userDisplay";
+
+const ADMIN_LABEL_OPTIONS = [
+  "AI / ML expert",
+  "Designer",
+  "Developer",
+  "Entrepreneur",
+  "Lawyer",
+  "Non-Technical",
+  "Project manager",
+  "REFI",
+  "Regen",
+  "Researcher",
+  "Scientist",
+  "Woman",
+  "Writer",
+  "ZK",
+] as const;
+
+type AdminLabel = (typeof ADMIN_LABEL_OPTIONS)[number];
 
 interface AssignRoleForm {
   userId: string;
@@ -33,9 +61,22 @@ interface AssignRoleForm {
   roleId: string;
 }
 
+interface EditUserForm {
+  userId: string;
+  firstName: string;
+  surname: string;
+  email: string;
+  role: string;
+  isAIReviewer: boolean;
+  adminNotes: string;
+  adminLabels: AdminLabel[];
+  adminWorkExperience: string;
+}
+
 export default function UsersClient() {
   const [assignRoleModalOpen, setAssignRoleModalOpen] = useState(false);
   const [userDetailModalOpen, setUserDetailModalOpen] = useState(false);
+  const [editUserModalOpen, setEditUserModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterEventId, setFilterEventId] = useState<string>("");
@@ -141,6 +182,44 @@ export default function UsersClient() {
     },
   });
 
+  const adminUpdateUser = api.user.adminUpdateUser.useMutation({
+    onSuccess: () => {
+      notifications.show({
+        title: "Success",
+        message: "User updated successfully",
+        color: "green",
+      });
+      setEditUserModalOpen(false);
+      editUserForm.reset();
+      void refetchUsers();
+    },
+    onError: (error) => {
+      notifications.show({
+        title: "Error",
+        message: error.message,
+        color: "red",
+      });
+    },
+  });
+
+  const editUserForm = useForm<EditUserForm>({
+    initialValues: {
+      userId: "",
+      firstName: "",
+      surname: "",
+      email: "",
+      role: "user",
+      isAIReviewer: false,
+      adminNotes: "",
+      adminLabels: [],
+      adminWorkExperience: "",
+    },
+    validate: {
+      email: (value) =>
+        /^\S+@\S+\.\S+$/.test(value) ? null : "Invalid email address",
+    },
+  });
+
   const handleAssignRole = (values: AssignRoleForm) => {
     assignEventRole.mutate(values);
   };
@@ -163,6 +242,37 @@ export default function UsersClient() {
   const openUserDetail = (userId: string) => {
     setSelectedUserId(userId);
     setUserDetailModalOpen(true);
+  };
+
+  const openEditUser = (userId: string) => {
+    const user = users?.find((u) => u.id === userId);
+    if (!user) return;
+    editUserForm.setValues({
+      userId: user.id,
+      firstName: user.firstName ?? "",
+      surname: user.surname ?? "",
+      email: user.email ?? "",
+      role: user.role ?? "user",
+      isAIReviewer: user.isAIReviewer ?? false,
+      adminNotes: user.adminNotes ?? "",
+      adminLabels: (user.adminLabels ?? []) as AdminLabel[],
+      adminWorkExperience: user.adminWorkExperience ?? "",
+    });
+    setEditUserModalOpen(true);
+  };
+
+  const handleEditUser = (values: EditUserForm) => {
+    adminUpdateUser.mutate({
+      userId: values.userId,
+      firstName: values.firstName,
+      surname: values.surname,
+      email: values.email,
+      role: values.role as "user" | "staff" | "admin",
+      isAIReviewer: values.isAIReviewer,
+      adminNotes: values.adminNotes || null,
+      adminLabels: values.adminLabels,
+      adminWorkExperience: values.adminWorkExperience || null,
+    });
   };
 
   const getGlobalRoleBadgeColor = (role: string) => {
@@ -411,6 +521,15 @@ export default function UsersClient() {
                       title="View details"
                     >
                       <IconEye size={14} />
+                    </ActionIcon>
+                    <ActionIcon
+                      variant="light"
+                      color="yellow"
+                      size="sm"
+                      onClick={() => openEditUser(user.id)}
+                      title="Edit user"
+                    >
+                      <IconEdit size={14} />
                     </ActionIcon>
                     <ActionIcon
                       variant="light"
@@ -719,6 +838,111 @@ export default function UsersClient() {
         ) : (
           <Loader />
         )}
+      </Modal>
+
+      {/* Edit User Modal */}
+      <Modal
+        opened={editUserModalOpen}
+        onClose={() => setEditUserModalOpen(false)}
+        title="Edit User"
+        size="lg"
+      >
+        <form onSubmit={editUserForm.onSubmit(handleEditUser)}>
+          <Stack>
+            <Paper withBorder p="md" radius="md">
+              <Text fw={500} mb="sm">
+                Identity
+              </Text>
+              <Group grow>
+                <TextInput
+                  label="First Name"
+                  {...editUserForm.getInputProps("firstName")}
+                />
+                <TextInput
+                  label="Surname"
+                  {...editUserForm.getInputProps("surname")}
+                />
+              </Group>
+              <TextInput
+                label="Email"
+                mt="sm"
+                {...editUserForm.getInputProps("email")}
+              />
+            </Paper>
+
+            <Paper withBorder p="md" radius="md">
+              <Text fw={500} mb="sm">
+                Permissions
+              </Text>
+              <Select
+                label="Global Role"
+                data={[
+                  { value: "user", label: "User" },
+                  { value: "staff", label: "Staff" },
+                  { value: "admin", label: "Admin" },
+                ]}
+                {...editUserForm.getInputProps("role")}
+              />
+              <Switch
+                label="AI Reviewer"
+                mt="sm"
+                checked={editUserForm.values.isAIReviewer}
+                onChange={(e) =>
+                  editUserForm.setFieldValue(
+                    "isAIReviewer",
+                    e.currentTarget.checked,
+                  )
+                }
+              />
+            </Paper>
+
+            <Paper withBorder p="md" radius="md">
+              <Text fw={500} mb="sm">
+                Admin Fields
+              </Text>
+              <MultiSelect
+                label="Labels"
+                data={ADMIN_LABEL_OPTIONS.map((l) => ({
+                  value: l,
+                  label: l,
+                }))}
+                value={editUserForm.values.adminLabels}
+                onChange={(val) =>
+                  editUserForm.setFieldValue(
+                    "adminLabels",
+                    val as AdminLabel[],
+                  )
+                }
+              />
+              <Textarea
+                label="Admin Notes"
+                mt="sm"
+                autosize
+                minRows={3}
+                {...editUserForm.getInputProps("adminNotes")}
+              />
+              <Textarea
+                label="Work Experience"
+                mt="sm"
+                autosize
+                minRows={3}
+                {...editUserForm.getInputProps("adminWorkExperience")}
+              />
+            </Paper>
+
+            <Group justify="flex-end">
+              <Button
+                variant="light"
+                onClick={() => setEditUserModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" loading={adminUpdateUser.isPending}>
+                Save Changes
+              </Button>
+            </Group>
+          </Stack>
+        </form>
       </Modal>
     </>
   );

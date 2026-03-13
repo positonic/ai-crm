@@ -235,6 +235,113 @@ export const userRouter = createTRPCRouter({
       return user;
     }),
 
+  adminUpdateUser: protectedProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        firstName: z.string().optional(),
+        surname: z.string().optional(),
+        email: z
+          .string()
+          .email()
+          .transform((v) => v.toLowerCase().trim())
+          .optional(),
+        role: z.enum(["user", "staff", "admin"]).optional(),
+        isAIReviewer: z.boolean().optional(),
+        adminNotes: z.string().nullable().optional(),
+        adminLabels: z
+          .array(
+            z.enum([
+              "AI / ML expert",
+              "Designer",
+              "Developer",
+              "Entrepreneur",
+              "Lawyer",
+              "Non-Technical",
+              "Project manager",
+              "REFI",
+              "Regen",
+              "Researcher",
+              "Scientist",
+              "Woman",
+              "Writer",
+              "ZK",
+            ]),
+          )
+          .optional(),
+        adminWorkExperience: z.string().nullable().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admin users can update user details",
+        });
+      }
+
+      // Build name field if firstName or surname is being updated
+      const data: Record<string, unknown> = {
+        adminUpdatedBy: ctx.session.user.id,
+        adminUpdatedAt: new Date(),
+      };
+
+      if (input.firstName !== undefined) data.firstName = input.firstName;
+      if (input.surname !== undefined) data.surname = input.surname;
+      if (input.email !== undefined) data.email = input.email;
+      if (input.role !== undefined) data.role = input.role;
+      if (input.isAIReviewer !== undefined)
+        data.isAIReviewer = input.isAIReviewer;
+      if (input.adminNotes !== undefined) data.adminNotes = input.adminNotes;
+      if (input.adminLabels !== undefined)
+        data.adminLabels = input.adminLabels;
+      if (input.adminWorkExperience !== undefined)
+        data.adminWorkExperience = input.adminWorkExperience;
+
+      // Update legacy name field when firstName or surname changes
+      if (input.firstName !== undefined || input.surname !== undefined) {
+        const existing = await ctx.db.user.findUnique({
+          where: { id: input.userId },
+          select: { firstName: true, surname: true },
+        });
+        const firstName = input.firstName ?? existing?.firstName ?? "";
+        const surname = input.surname ?? existing?.surname ?? "";
+        data.name = `${firstName} ${surname}`.trim();
+      }
+
+      try {
+        const user = await ctx.db.user.update({
+          where: { id: input.userId },
+          data,
+          select: {
+            id: true,
+            firstName: true,
+            surname: true,
+            name: true,
+            email: true,
+            role: true,
+            isAIReviewer: true,
+            adminNotes: true,
+            adminLabels: true,
+            adminWorkExperience: true,
+          },
+        });
+        return user;
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          "code" in error &&
+          (error as { code: string }).code === "P2002"
+        ) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "A user with this email already exists",
+          });
+        }
+        throw error;
+      }
+    }),
+
   searchUsers: protectedProcedure
     .input(
       z.object({
