@@ -847,6 +847,7 @@ export default function UsersClient() {
                       key={application.id}
                       component={Link}
                       href={`/admin/events/${application.event.id}/applications`}
+                      target="_blank"
                       p="xs"
                       withBorder
                       style={{ textDecoration: "none", cursor: "pointer" }}

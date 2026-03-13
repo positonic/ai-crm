@@ -347,7 +347,7 @@ export function SpeakerSelector({
   sessionTime,
   roomName,
 }: SpeakerSelectorProps) {
-  const useFloorSearch = venueId && !isAdmin;
+  const useFloorSearch = false;
   const [quickAddOpened, { open: openQuickAdd, close: closeQuickAdd }] =
     useDisclosure(false);
   const [prefillName, setPrefillName] = useState<string | null>(null);
