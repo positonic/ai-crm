@@ -2784,24 +2784,32 @@ function SessionDetailModal({
               </Text>
               <Group gap="xs" wrap="wrap">
                 {session.sessionSpeakers.map((s) => (
-                  <Group key={s.user.id} gap={6} wrap="nowrap">
-                    <Avatar src={s.user.image} size="sm" radius="xl">
-                      {(
-                        s.user.firstName?.[0] ??
-                        s.user.name?.[0] ??
-                        "?"
-                      ).toUpperCase()}
-                    </Avatar>
-                    <Text size="sm">
-                      {getDisplayName(s.user, "Unknown")}
-                      {s.role !== "Speaker" && (
-                        <Text span size="xs" c="dimmed">
-                          {" "}
-                          ({s.role})
-                        </Text>
-                      )}
-                    </Text>
-                  </Group>
+                  <Anchor
+                    key={s.user.id}
+                    href={`/profiles/${s.user.id}`}
+                    underline="never"
+                    target="_blank"
+                    style={{ color: "inherit" }}
+                  >
+                    <Group gap={6} wrap="nowrap">
+                      <Avatar src={s.user.image} size="sm" radius="xl">
+                        {(
+                          s.user.firstName?.[0] ??
+                          s.user.name?.[0] ??
+                          "?"
+                        ).toUpperCase()}
+                      </Avatar>
+                      <Text size="sm">
+                        {getDisplayName(s.user, "Unknown")}
+                        {s.role !== "Speaker" && (
+                          <Text span size="xs" c="dimmed">
+                            {" "}
+                            ({s.role})
+                          </Text>
+                        )}
+                      </Text>
+                    </Group>
+                  </Anchor>
                 ))}
                 {session.speakers.length > 0 && (
                   <Text size="sm" c="dimmed">
