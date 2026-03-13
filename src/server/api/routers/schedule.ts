@@ -1425,7 +1425,16 @@ export const scheduleRouter = createTRPCRouter({
           },
           _count: { select: { sessions: true } },
         },
-        orderBy: { order: "asc" },
+        orderBy: [{ order: "asc" }, { name: "asc" }],
+      });
+
+      // Natural sort: extract leading number from name so "Floor 9" < "Floor 10"
+      venues.sort((a, b) => {
+        if (a.order !== b.order) return a.order - b.order;
+        const numA = parseInt(a.name.replace(/\D/g, ""), 10);
+        const numB = parseInt(b.name.replace(/\D/g, ""), 10);
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        return a.name.localeCompare(b.name);
       });
 
       return { event, venues, isAdmin: admin };

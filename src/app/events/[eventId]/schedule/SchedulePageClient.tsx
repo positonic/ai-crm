@@ -919,27 +919,29 @@ export default function SchedulePageClient({
                     Filter By Track
                   </Text>
                   <Stack gap={6}>
-                    {filterData.tracks.map((track) => (
-                      <Checkbox
-                        key={track.id}
-                        checked={activeTracks.includes(track.id)}
-                        onChange={() => toggleTrack(track.id)}
-                        label={
-                          <Group gap={8}>
-                            <div
-                              style={{
-                                width: 10,
-                                height: 10,
-                                borderRadius: "50%",
-                                backgroundColor: track.color,
-                                flexShrink: 0,
-                              }}
-                            />
-                            <Text size="sm">{track.name}</Text>
-                          </Group>
-                        }
-                      />
-                    ))}
+                    {[...filterData.tracks]
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((track) => (
+                        <Checkbox
+                          key={track.id}
+                          checked={activeTracks.includes(track.id)}
+                          onChange={() => toggleTrack(track.id)}
+                          label={
+                            <Group gap={8} wrap="nowrap">
+                              <div
+                                style={{
+                                  width: 10,
+                                  height: 10,
+                                  borderRadius: "50%",
+                                  backgroundColor: track.color,
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <Text size="sm">{track.name}</Text>
+                            </Group>
+                          }
+                        />
+                      ))}
                   </Stack>
                 </div>
               )}
@@ -1081,27 +1083,29 @@ export default function SchedulePageClient({
                     Filter By Track
                   </Text>
                   <Stack gap={6}>
-                    {filterData.tracks.map((track) => (
-                      <Checkbox
-                        key={track.id}
-                        checked={activeTracks.includes(track.id)}
-                        onChange={() => toggleTrack(track.id)}
-                        label={
-                          <Group gap={8}>
-                            <div
-                              style={{
-                                width: 10,
-                                height: 10,
-                                borderRadius: "50%",
-                                backgroundColor: track.color,
-                                flexShrink: 0,
-                              }}
-                            />
-                            <Text size="sm">{track.name}</Text>
-                          </Group>
-                        }
-                      />
-                    ))}
+                    {[...filterData.tracks]
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((track) => (
+                        <Checkbox
+                          key={track.id}
+                          checked={activeTracks.includes(track.id)}
+                          onChange={() => toggleTrack(track.id)}
+                          label={
+                            <Group gap={8} wrap="nowrap">
+                              <div
+                                style={{
+                                  width: 10,
+                                  height: 10,
+                                  borderRadius: "50%",
+                                  backgroundColor: track.color,
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <Text size="sm">{track.name}</Text>
+                            </Group>
+                          }
+                        />
+                      ))}
                   </Stack>
                 </div>
               )}
