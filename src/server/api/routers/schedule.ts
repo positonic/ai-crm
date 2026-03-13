@@ -576,35 +576,43 @@ export const scheduleRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const event = await resolveEventId(ctx.db, input.eventId);
-      const results: Record<
-        string,
-        Array<{
-          userId: string;
-          firstName: string | null;
-          surname: string | null;
-          name: string | null;
-          email: string | null;
-          image: string | null;
-          confidence: "exact" | "partial";
-        }>
-      > = {};
+
+      // Single query: fetch ALL users who have applied for this event
+      const allApplicants = await ctx.db.user.findMany({
+        where: {
+          applications: {
+            some: {
+              eventId: event.id,
+              userId: { not: null },
+            },
+          },
+        },
+        select: userSelectFields,
+      });
+
+      // Build lookup indices for in-memory matching
+      const emailIndex = new Map<string, typeof allApplicants[number]>();
+      for (const u of allApplicants) {
+        if (u.email) emailIndex.set(u.email.toLowerCase(), u);
+      }
+
+      type MatchResult = {
+        userId: string;
+        firstName: string | null;
+        surname: string | null;
+        name: string | null;
+        email: string | null;
+        image: string | null;
+        confidence: "exact" | "partial";
+      };
+
+      const results: Record<string, MatchResult[]> = {};
 
       for (const rawName of input.names) {
         // If we have an email for this name, try exact email lookup first
         const emailForName = input.emails?.[rawName];
         if (emailForName) {
-          const userByEmail = await ctx.db.user.findFirst({
-            where: {
-              email: { equals: emailForName, mode: "insensitive" },
-              applications: {
-                some: {
-                  eventId: event.id,
-                  userId: { not: null },
-                },
-              },
-            },
-            select: userSelectFields,
-          });
+          const userByEmail = emailIndex.get(emailForName.toLowerCase());
           if (userByEmail) {
             results[rawName] = [
               {
@@ -629,50 +637,26 @@ export const scheduleRouter = createTRPCRouter({
         }
 
         const parts = cleanName.split(/\s+/);
-        const firstName = parts[0] ?? "";
-        const surname = parts.length > 1 ? parts.slice(1).join(" ") : "";
+        const firstName = (parts[0] ?? "").toLowerCase();
+        const surname = parts.length > 1 ? parts.slice(1).join(" ").toLowerCase() : "";
 
-        const orConditions = [];
-        if (firstName) {
-          orConditions.push({
-            firstName: { contains: firstName, mode: "insensitive" as const },
-          });
-        }
-        if (surname) {
-          orConditions.push({
-            surname: { contains: surname, mode: "insensitive" as const },
-          });
-        }
-        // Also try full name match on the "name" field
-        orConditions.push({
-          name: { contains: cleanName, mode: "insensitive" as const },
-        });
-
-        const users = await ctx.db.user.findMany({
-          where: {
-            AND: [
-              {
-                applications: {
-                  some: {
-                    eventId: event.id,
-                    userId: { not: null },
-                  },
-                },
-              },
-              { OR: orConditions },
-            ],
-          },
-          select: userSelectFields,
-          take: 3,
-        });
-
-        results[rawName] = users.map((u) => {
-          // Determine confidence: exact if first+last both match
+        // In-memory fuzzy match against all applicants
+        const matched = allApplicants.filter((u) => {
           const uFirst = (u.firstName ?? "").toLowerCase();
           const uSurname = (u.surname ?? "").toLowerCase();
-          const isExact =
-            uFirst === firstName.toLowerCase() &&
-            uSurname === surname.toLowerCase();
+          const uName = (u.name ?? "").toLowerCase();
+          const cleanLower = cleanName.toLowerCase();
+
+          if (firstName && uFirst.includes(firstName)) return true;
+          if (surname && uSurname.includes(surname)) return true;
+          if (uName.includes(cleanLower)) return true;
+          return false;
+        });
+
+        results[rawName] = matched.slice(0, 3).map((u) => {
+          const uFirst = (u.firstName ?? "").toLowerCase();
+          const uSurname = (u.surname ?? "").toLowerCase();
+          const isExact = uFirst === firstName && uSurname === surname;
           return {
             userId: u.id,
             firstName: u.firstName,
@@ -698,22 +682,45 @@ export const scheduleRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const event = await resolveEventId(ctx.db, input.eventId);
-      const results: Record<
-        string,
-        {
-          userId: string;
-          firstName: string | null;
-          surname: string | null;
-          name: string | null;
-          image: string | null;
+
+      // Single query: fetch ALL users who have applied for this event (with profile)
+      const allApplicants = await ctx.db.user.findMany({
+        where: {
+          applications: {
+            some: {
+              eventId: event.id,
+              userId: { not: null },
+            },
+          },
+        },
+        select: {
+          ...userSelectFields,
           profile: {
-            avatarUrl: string | null;
-            bio: string | null;
-            jobTitle: string | null;
-            company: string | null;
-          } | null;
-        } | null
-      > = {};
+            select: {
+              avatarUrl: true,
+              bio: true,
+              jobTitle: true,
+              company: true,
+            },
+          },
+        },
+      });
+
+      type ResolveResult = {
+        userId: string;
+        firstName: string | null;
+        surname: string | null;
+        name: string | null;
+        image: string | null;
+        profile: {
+          avatarUrl: string | null;
+          bio: string | null;
+          jobTitle: string | null;
+          company: string | null;
+        } | null;
+      } | null;
+
+      const results: Record<string, ResolveResult> = {};
 
       for (const rawName of input.names) {
         const cleanName = rawName.replace(/\s*\([^)]*\)\s*/g, "").trim();
@@ -723,60 +730,14 @@ export const scheduleRouter = createTRPCRouter({
         }
 
         const parts = cleanName.split(/\s+/);
-        const firstName = parts[0] ?? "";
-        const surname = parts.length > 1 ? parts.slice(1).join(" ") : "";
+        const firstName = (parts[0] ?? "").toLowerCase();
+        const surname = parts.length > 1 ? parts.slice(1).join(" ").toLowerCase() : "";
 
-        const orConditions = [];
-        if (firstName) {
-          orConditions.push({
-            firstName: { contains: firstName, mode: "insensitive" as const },
-          });
-        }
-        if (surname) {
-          orConditions.push({
-            surname: { contains: surname, mode: "insensitive" as const },
-          });
-        }
-        orConditions.push({
-          name: { contains: cleanName, mode: "insensitive" as const },
-        });
-
-        const users = await ctx.db.user.findMany({
-          where: {
-            AND: [
-              {
-                applications: {
-                  some: {
-                    eventId: event.id,
-                    userId: { not: null },
-                  },
-                },
-              },
-              { OR: orConditions },
-            ],
-          },
-          select: {
-            ...userSelectFields,
-            profile: {
-              select: {
-                avatarUrl: true,
-                bio: true,
-                jobTitle: true,
-                company: true,
-              },
-            },
-          },
-          take: 3,
-        });
-
-        // Only return exact matches (first + last name both match)
-        const exactMatch = users.find((u) => {
+        // In-memory exact match against all applicants
+        const exactMatch = allApplicants.find((u) => {
           const uFirst = (u.firstName ?? "").toLowerCase();
           const uSurname = (u.surname ?? "").toLowerCase();
-          return (
-            uFirst === firstName.toLowerCase() &&
-            uSurname === surname.toLowerCase()
-          );
+          return uFirst === firstName && uSurname === surname;
         });
 
         results[rawName] = exactMatch
