@@ -354,6 +354,118 @@ export default function SpeakerManagementClient({ eventId }: Props) {
     return rows;
   }, [sessionRows, sessionsFloorFilter, showMissingSlidesOnly, sessionsSearch]);
 
+  // ── Memoized derived computations (must be before early returns) ──
+  const remindableRows = useMemo(
+    () => filteredSessionRows.filter((r) => r.speakerEmail && !r.slidesUrl),
+    [filteredSessionRows],
+  );
+
+  const emailableRows = useMemo(
+    () =>
+      filteredSessionRows.filter(
+        (r) => !!r.speakerEmail && !!r.speakerUserId,
+      ),
+    [filteredSessionRows],
+  );
+
+  const missingSlidesCount = useMemo(
+    () => sessionRows.filter((r) => !r.slidesUrl).length,
+    [sessionRows],
+  );
+
+  const uploadedSlidesCount = useMemo(
+    () => sessionRows.filter((r) => r.slidesUrl).length,
+    [sessionRows],
+  );
+
+  const allApplications = useMemo(
+    () => speakerApplications ?? [],
+    [speakerApplications],
+  );
+
+  const acceptedApplications = useMemo(
+    () => allApplications.filter((app) => app.status === "ACCEPTED"),
+    [allApplications],
+  );
+
+  const rejectedApplications = useMemo(
+    () => allApplications.filter((app) => app.status === "REJECTED"),
+    [allApplications],
+  );
+
+  const pendingApplications = useMemo(
+    () =>
+      allApplications.filter(
+        (app) => !["ACCEPTED", "REJECTED"].includes(app.status),
+      ),
+    [allApplications],
+  );
+
+  const invitedApplications = useMemo(
+    () =>
+      allApplications.filter(
+        (app) =>
+          app.invitationId != null ||
+          invitedEmails.has(app.email.toLowerCase()),
+      ),
+    [allApplications, invitedEmails],
+  );
+
+  const filteredAppsByTab = useMemo(() => {
+    const applyFloorFilter = (apps: typeof allApplications) => {
+      if (!floorFilter) return apps;
+      return apps.filter((app) =>
+        app.venues?.some((av) => av.venue.id === floorFilter),
+      );
+    };
+
+    const applySearchFilter = (apps: typeof allApplications) => {
+      if (!appSearch.trim()) return apps;
+      const q = appSearch.trim().toLowerCase();
+      return apps.filter(
+        (app) =>
+          (app.user?.name?.toLowerCase().includes(q) ?? false) ||
+          app.email.toLowerCase().includes(q),
+      );
+    };
+
+    const applyFilters = (apps: typeof allApplications) =>
+      applySearchFilter(applyFloorFilter(apps));
+
+    return {
+      all: filteredAppsByTab.all,
+      accepted: filteredAppsByTab.accepted,
+      rejected: filteredAppsByTab.rejected,
+      invited: filteredAppsByTab.invited,
+    };
+  }, [
+    floorFilter,
+    appSearch,
+    allApplications,
+    acceptedApplications,
+    rejectedApplications,
+    invitedApplications,
+  ]);
+
+  const currentApplications = useMemo(() => {
+    switch (appTab) {
+      case "accepted":
+        return filteredAppsByTab.accepted;
+      case "rejected":
+        return filteredAppsByTab.rejected;
+      case "invited":
+        return filteredAppsByTab.invited;
+      default:
+        return filteredAppsByTab.all;
+    }
+  }, [appTab, filteredAppsByTab]);
+
+  const activeSpeakerCount = useMemo(
+    () =>
+      currentSpeakers?.filter((user) => user.userRoles.length > 0).length ?? 0,
+    [currentSpeakers],
+  );
+
   // ── Loading ──
   if (inv.isLoading || loadingApplications || loadingSpeakers) {
     return (
@@ -375,64 +487,6 @@ export default function SpeakerManagementClient({ eventId }: Props) {
       </Container>
     );
   }
-
-  // ── Application Helpers ──
-  const allApplications = speakerApplications ?? [];
-  const acceptedApplications = allApplications.filter(
-    (app) => app.status === "ACCEPTED",
-  );
-  const rejectedApplications = allApplications.filter(
-    (app) => app.status === "REJECTED",
-  );
-  const pendingApplications = allApplications.filter(
-    (app) => !["ACCEPTED", "REJECTED"].includes(app.status),
-  );
-  const invitedApplications = allApplications.filter(
-    (app) =>
-      app.invitationId != null || invitedEmails.has(app.email.toLowerCase()),
-  );
-
-  const applyFloorFilter = (apps: typeof allApplications) => {
-    if (!floorFilter) return apps;
-    return apps.filter((app) =>
-      app.venues?.some((av) => av.venue.id === floorFilter),
-    );
-  };
-
-  const applySearchFilter = (apps: typeof allApplications) => {
-    if (!appSearch.trim()) return apps;
-    const q = appSearch.trim().toLowerCase();
-    return apps.filter(
-      (app) =>
-        (app.user?.name?.toLowerCase().includes(q) ?? false) ||
-        app.email.toLowerCase().includes(q),
-    );
-  };
-
-  const applyFilters = (apps: typeof allApplications) =>
-    applySearchFilter(applyFloorFilter(apps));
-
-  const getCurrentTabApplications = () => {
-    switch (appTab) {
-      case "accepted":
-        return applyFilters(acceptedApplications);
-      case "rejected":
-        return applyFilters(rejectedApplications);
-      case "invited":
-        return applyFilters(invitedApplications);
-      default:
-        return applyFilters(allApplications);
-    }
-  };
-  const currentApplications = getCurrentTabApplications();
-
-  const activeSpeakerCount =
-    currentSpeakers?.filter((user) => user.userRoles.length > 0).length ?? 0;
-
-  // Only rows that can receive reminders (has speaker email, no slides)
-  const remindableRows = filteredSessionRows.filter(
-    (r) => r.speakerEmail && !r.slidesUrl,
-  );
 
   const handleBulkRemind = () => {
     const reminders = selectedReminders
@@ -456,11 +510,6 @@ export default function SpeakerManagementClient({ eventId }: Props) {
     });
   };
 
-  // All rows with a speaker email (for session details reminder)
-  const emailableRows = filteredSessionRows.filter(
-    (r) => !!r.speakerEmail && !!r.speakerUserId,
-  );
-
   const handleBulkSessionDetailsRemind = () => {
     const reminders = selectedReminders
       .map((key) => {
@@ -475,9 +524,6 @@ export default function SpeakerManagementClient({ eventId }: Props) {
     if (reminders.length === 0) return;
     sendSessionDetailsReminder.mutate({ eventId, reminders });
   };
-
-  const missingSlidesCount = sessionRows.filter((r) => !r.slidesUrl).length;
-  const uploadedSlidesCount = sessionRows.filter((r) => r.slidesUrl).length;
 
   return (
     <Container size="xl" py="md">
@@ -636,33 +682,33 @@ export default function SpeakerManagementClient({ eventId }: Props) {
               <Tabs.List grow>
                 <Tabs.Tab value="all">
                   All{" "}
-                  {applyFilters(allApplications).length > 0 && (
+                  {filteredAppsByTab.all.length > 0 && (
                     <Badge size="sm" variant="light" ml="xs">
-                      {applyFilters(allApplications).length}
+                      {filteredAppsByTab.all.length}
                     </Badge>
                   )}
                 </Tabs.Tab>
                 <Tabs.Tab value="accepted">
                   Accepted{" "}
-                  {applyFilters(acceptedApplications).length > 0 && (
+                  {filteredAppsByTab.accepted.length > 0 && (
                     <Badge size="sm" variant="light" color="green" ml="xs">
-                      {applyFilters(acceptedApplications).length}
+                      {filteredAppsByTab.accepted.length}
                     </Badge>
                   )}
                 </Tabs.Tab>
                 <Tabs.Tab value="rejected">
                   Rejected{" "}
-                  {applyFilters(rejectedApplications).length > 0 && (
+                  {filteredAppsByTab.rejected.length > 0 && (
                     <Badge size="sm" variant="light" color="red" ml="xs">
-                      {applyFilters(rejectedApplications).length}
+                      {filteredAppsByTab.rejected.length}
                     </Badge>
                   )}
                 </Tabs.Tab>
                 <Tabs.Tab value="invited">
                   Invited{" "}
-                  {applyFilters(invitedApplications).length > 0 && (
+                  {filteredAppsByTab.invited.length > 0 && (
                     <Badge size="sm" variant="light" color="violet" ml="xs">
-                      {applyFilters(invitedApplications).length}
+                      {filteredAppsByTab.invited.length}
                     </Badge>
                   )}
                 </Tabs.Tab>
@@ -670,7 +716,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
 
               <Tabs.Panel value="all" mt="md">
                 <SpeakerApplicationsTable
-                  applications={applyFilters(allApplications)}
+                  applications={filteredAppsByTab.all}
                   selectedApplications={selectedApplications}
                   invitedEmails={invitedEmails}
                   onSelectAll={() => {
@@ -702,7 +748,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
               </Tabs.Panel>
               <Tabs.Panel value="accepted" mt="md">
                 <SpeakerApplicationsTable
-                  applications={applyFilters(acceptedApplications)}
+                  applications={filteredAppsByTab.accepted}
                   selectedApplications={selectedApplications}
                   invitedEmails={invitedEmails}
                   onSelectAll={() => {
@@ -734,7 +780,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
               </Tabs.Panel>
               <Tabs.Panel value="rejected" mt="md">
                 <SpeakerApplicationsTable
-                  applications={applyFilters(rejectedApplications)}
+                  applications={filteredAppsByTab.rejected}
                   selectedApplications={selectedApplications}
                   invitedEmails={invitedEmails}
                   onSelectAll={() => {
@@ -766,7 +812,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
               </Tabs.Panel>
               <Tabs.Panel value="invited" mt="md">
                 <SpeakerApplicationsTable
-                  applications={applyFilters(invitedApplications)}
+                  applications={filteredAppsByTab.invited}
                   selectedApplications={selectedApplications}
                   invitedEmails={invitedEmails}
                   onSelectAll={() => {
