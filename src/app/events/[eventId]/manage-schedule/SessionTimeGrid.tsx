@@ -146,6 +146,7 @@ function DraggableSessionBlock({
     originalStartMs: number;
     originalEndMs: number;
   } | null>(null);
+  const justResizedRef = useRef(false);
 
   const isResizing = resizeDelta !== null;
 
@@ -230,6 +231,11 @@ function DraggableSessionBlock({
 
       resizeRef.current = null;
       setResizeDelta(null);
+      // Suppress the click event that follows pointerup
+      justResizedRef.current = true;
+      requestAnimationFrame(() => {
+        justResizedRef.current = false;
+      });
     },
     [onResize, session.id],
   );
@@ -261,7 +267,7 @@ function DraggableSessionBlock({
       {...(isResizing ? {} : listeners)}
       {...(isResizing ? {} : attributes)}
       onClick={(e: React.MouseEvent) => {
-        if (!isDragging && !isResizing && onViewDetail) {
+        if (!isDragging && !isResizing && !justResizedRef.current && onViewDetail) {
           e.stopPropagation();
           onViewDetail(session);
         }
