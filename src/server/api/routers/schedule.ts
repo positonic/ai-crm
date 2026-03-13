@@ -551,7 +551,7 @@ export const scheduleRouter = createTRPCRouter({
         }
 
         return { created: createdCount, newTypeIds, newTrackIds };
-      });
+      }, { timeout: 30000 });
 
       return result;
     }),

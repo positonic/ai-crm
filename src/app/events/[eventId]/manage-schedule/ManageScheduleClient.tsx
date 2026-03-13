@@ -186,6 +186,7 @@ interface ColumnMapping {
   date: string | null;
   startTime: string | null;
   endTime: string | null;
+  duration: string | null;
   presenters: string | null;
   type: string | null;
   curator: string | null;
@@ -205,8 +206,9 @@ const COLUMN_ALIASES: Record<keyof ColumnMapping, string[]> = {
     "session",
   ],
   date: ["date", "day", "session date"],
-  startTime: ["start time", "start", "begin", "from", "time"],
-  endTime: ["end time", "end", "to", "until"],
+  startTime: ["start time", "session start time", "start", "begin", "from", "time"],
+  endTime: ["end time", "session end time", "end", "to", "until"],
+  duration: ["duration", "dur", "dur.", "length", "minutes", "mins"],
   presenters: [
     "presenter(s) names",
     "presenters",
@@ -217,7 +219,7 @@ const COLUMN_ALIASES: Record<keyof ColumnMapping, string[]> = {
   ],
   type: ["type", "session type", "format", "talk type", "category"],
   curator: ["curator", "track", "topic", "stream"],
-  description: ["description", "abstract", "summary", "details"],
+  description: ["description", "session description", "abstract", "summary", "details"],
   facilitator: [
     "facilitator / moderator",
     "facilitator",
@@ -235,6 +237,7 @@ function detectColumns(headers: string[]): ColumnMapping {
     date: null,
     startTime: null,
     endTime: null,
+    duration: null,
     presenters: null,
     type: null,
     curator: null,
@@ -246,11 +249,17 @@ function detectColumns(headers: string[]): ColumnMapping {
 
   for (const header of headers) {
     const lowerHeader = header.toLowerCase().trim();
+    // Normalize underscores to spaces for matching (e.g., "session_start_time" → "session start time")
+    const normalizedHeader = lowerHeader.replace(/_/g, " ");
     for (const [field, aliases] of Object.entries(COLUMN_ALIASES) as Array<
       [keyof ColumnMapping, string[]]
     >) {
       if (mapping[field]) continue; // Already mapped
-      if (aliases.some((alias) => lowerHeader === alias)) {
+      if (
+        aliases.some(
+          (alias) => lowerHeader === alias || normalizedHeader === alias,
+        )
+      ) {
         mapping[field] = header;
         break;
       }
@@ -278,8 +287,13 @@ function parseTimeRange(
 
 function extractDurationMinutes(text: string | undefined): number | null {
   if (!text) return null;
-  const match = /\((\d+)\s*min(?:s|utes?)?\)/i.exec(text);
-  return match ? parseInt(match[1]!, 10) : null;
+  const trimmed = text.trim();
+  // Match formats: "45m", "45min", "45 min", "45 mins", "45 minutes", "(60 min)"
+  const match = /^\(?(\d+)\s*m(?:in(?:s|utes?)?)?\)?$/i.exec(trimmed);
+  if (match) return parseInt(match[1]!, 10);
+  // Fallback: match duration embedded in text like "(60 min)"
+  const embedded = /\((\d+)\s*min(?:s|utes?)?\)/i.exec(trimmed);
+  return embedded ? parseInt(embedded[1]!, 10) : null;
 }
 
 const JUNK_WORD_PATTERNS =
@@ -371,7 +385,8 @@ function parseCsvDateTime(
 
   const timeTrimmed = timeStr.trim();
 
-  // Parse date if provided: "March 14", "Mar 14", "3/14", "03/14"
+  // Parse date if provided: "March 14", "Mar 14", "3/14", "03/14", "2026-03-15"
+  let parsedYear = year;
   let month: number | null = null;
   let day: number | null = null;
 
@@ -395,6 +410,16 @@ function parseCsvDateTime(
       }
     }
 
+    // Try "YYYY-MM-DD" ISO format (e.g., "2026-03-15")
+    if (month === null) {
+      const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateTrimmed);
+      if (isoMatch) {
+        parsedYear = parseInt(isoMatch[1]!, 10);
+        month = parseInt(isoMatch[2]!, 10) - 1; // 0-indexed
+        day = parseInt(isoMatch[3]!, 10);
+      }
+    }
+
     if (month === null || day === null) return null;
   } else {
     // No date column — default to event start date so sessions land on the right day
@@ -413,16 +438,16 @@ function parseCsvDateTime(
   if (ampm === "PM" && hours !== 12) hours += 12;
   if (ampm === "AM" && hours === 12) hours = 0;
 
-  const date = new Date(Date.UTC(year, month, day, hours, minutes, 0, 0));
+  const date = new Date(Date.UTC(parsedYear, month, day, hours, minutes, 0, 0));
   if (isNaN(date.getTime())) return null;
   return date;
 }
 
 function extractPresenterNames(raw: string | undefined): string[] {
   if (!raw) return [];
-  // Split on newlines first, then commas (careful with parentheses)
+  // Split on newlines, semicolons, or commas (careful with parentheses)
   return raw
-    .split(/[\n\r]+|,(?![^(]*\))/)
+    .split(/[\n\r]+|;|,(?![^(]*\))/)
     .map((s) => s.trim())
     .filter(Boolean);
 }
@@ -488,12 +513,19 @@ function parseCsvRows(
         : null;
     }
 
-    // If no end time, try to extract duration from room/location column
+    // If no end time, try to extract duration from duration column or room/location column
     if (startTime && !endTime) {
+      const durationRaw = mapping.duration ? row[mapping.duration] : undefined;
       const roomRaw = mapping.room ? row[mapping.room] : undefined;
-      const durationMinutes = extractDurationMinutes(roomRaw);
+      const durationMinutes =
+        extractDurationMinutes(durationRaw) ??
+        extractDurationMinutes(roomRaw);
       if (durationMinutes) {
         endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
+      } else {
+        // Default to 30 minutes if no end time or duration provided
+        endTime = new Date(startTime.getTime() + 30 * 60 * 1000);
+        warnings.push("No end time or duration — defaulting to 30 minutes");
       }
     }
 
@@ -2686,7 +2718,6 @@ function SessionDetailModal({
             <Button
               leftSection={<IconEdit size={16} />}
               onClick={() => {
-                onClose();
                 openEdit();
               }}
             >
@@ -3118,6 +3149,7 @@ function CsvUploadModal({
     date: null,
     startTime: null,
     endTime: null,
+    duration: null,
     presenters: null,
     type: null,
     curator: null,
@@ -3220,6 +3252,7 @@ function CsvUploadModal({
       date: null,
       startTime: null,
       endTime: null,
+      duration: null,
       presenters: null,
       type: null,
       curator: null,
@@ -3435,8 +3468,8 @@ function CsvUploadModal({
                   Supported columns
                 </Text>
                 <Text size="xs">
-                  Title, Date, Start Time, End Time, Speakers, Session Type,
-                  Track, Description, Facilitator, Room / Location
+                  Title, Date, Start Time, End Time, Duration, Speakers,
+                  Session Type, Track, Description, Facilitator, Room / Location
                 </Text>
                 <Text size="xs" fw={600} mt={4}>
                   Tips
@@ -3541,6 +3574,16 @@ function CsvUploadModal({
                     value={columnMapping.endTime}
                     onChange={(v) =>
                       setColumnMapping((m) => ({ ...m, endTime: v }))
+                    }
+                    clearable
+                    size="xs"
+                  />
+                  <Select
+                    label="Duration"
+                    data={columnOptions}
+                    value={columnMapping.duration}
+                    onChange={(v) =>
+                      setColumnMapping((m) => ({ ...m, duration: v }))
                     }
                     clearable
                     size="xs"

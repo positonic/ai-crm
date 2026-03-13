@@ -361,7 +361,7 @@ export default function EventSubNavigation({
               </NavigationTab>
             )}
 
-            {featureFlags?.featureImpactAnalytics !== false && (
+            {featureFlags?.featureImpactAnalytics !== false && isAdmin && (
               <NavigationTab
                 value="impact"
                 href={`${basePath}/impact`}

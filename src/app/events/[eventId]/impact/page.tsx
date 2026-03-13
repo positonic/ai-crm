@@ -40,6 +40,7 @@ import {
   IconAlertTriangle,
   IconCoin,
 } from "@tabler/icons-react";
+import { useSession } from "next-auth/react";
 import { api } from "~/trpc/react";
 import { Hyperboard } from "~/app/_components/Hyperboard";
 import { formatDistanceToNow } from "date-fns";
@@ -64,6 +65,7 @@ interface ImpactPageProps {
 
 export default function ImpactPage({ params }: ImpactPageProps) {
   const router = useRouter();
+  const { data: session, status: sessionStatus } = useSession();
   const searchParams = useSearchParams();
   const [eventId, setEventId] = useState<string>("");
   const [sortField, setSortField] = useState<SortField>("kudos");
@@ -262,11 +264,24 @@ export default function ImpactPage({ params }: ImpactPageProps) {
     );
   };
 
-  if (eventLoading || !eventId || !activeTab) {
+  const isAdmin =
+    session?.user?.role === "admin" || session?.user?.role === "staff";
+
+  if (sessionStatus === "loading" || eventLoading || !eventId || !activeTab) {
     return (
       <Container size="lg" py="xl">
         <Center>
           <Loader />
+        </Center>
+      </Container>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <Container size="lg" py="xl">
+        <Center>
+          <Text c="dimmed">You do not have permission to view this page.</Text>
         </Center>
       </Container>
     );
