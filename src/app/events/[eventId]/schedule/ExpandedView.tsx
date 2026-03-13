@@ -28,6 +28,7 @@ interface ExpandedViewProps {
   sessions: ScheduleSession[];
   eventId: string;
   resolvedSpeakers?: ResolvedSpeakerMap;
+  venueColorMap?: Record<string, string>;
 }
 
 function formatTime(date: Date): string {
@@ -63,7 +64,7 @@ function SpeakerBio({ bio }: { bio: string }) {
   );
 }
 
-export default function ExpandedView({ sessions, eventId, resolvedSpeakers }: ExpandedViewProps) {
+export default function ExpandedView({ sessions, eventId, resolvedSpeakers, venueColorMap }: ExpandedViewProps) {
   const router = useRouter();
 
   if (sessions.length === 0) {
@@ -103,7 +104,7 @@ export default function ExpandedView({ sessions, eventId, resolvedSpeakers }: Ex
           </div>
           <Stack gap="md">
             {timeSessions.map((session) => {
-              const color = session.sessionType?.color ?? "#94a3b8";
+              const color = venueColorMap?.[session.venueId ?? ""] ?? session.sessionType?.color ?? "#94a3b8";
               const hasSpeakers =
                 session.sessionSpeakers.length > 0 ||
                 session.speakers.length > 0;

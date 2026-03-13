@@ -390,6 +390,27 @@ export default function SchedulePageClient({
       rooms: v.rooms ?? [],
     })) ?? [];
 
+  // Assign a distinct color to each venue for visual differentiation across floors
+  const VENUE_COLORS = [
+    "#6366f1", // indigo
+    "#10b981", // emerald
+    "#f59e0b", // amber
+    "#ef4444", // red
+    "#8b5cf6", // violet
+    "#06b6d4", // cyan
+    "#ec4899", // pink
+    "#84cc16", // lime
+    "#f97316", // orange
+    "#14b8a6", // teal
+  ];
+  const venueColorMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const [i, v] of venues.entries()) {
+      map[v.id] = VENUE_COLORS[i % VENUE_COLORS.length] ?? "#94a3b8";
+    }
+    return map;
+  }, [venues]);
+
   return (
     <Container size="xl" py={embed ? "sm" : "xl"}>
       {/* Header with title and view toggle - hidden in embed mode */}
@@ -538,10 +559,8 @@ export default function SchedulePageClient({
                           rel={embed ? "noopener noreferrer" : undefined}
                           className="schedule-session-card"
                           style={{
-                            borderLeft: `4px solid ${session.sessionType?.color ?? "#94a3b8"}`,
-                            backgroundColor: session.sessionType?.color
-                              ? `${session.sessionType.color}12`
-                              : undefined,
+                            borderLeft: `4px solid ${venueColorMap[session.venueId ?? ""] ?? session.sessionType?.color ?? "#94a3b8"}`,
+                            backgroundColor: `${venueColorMap[session.venueId ?? ""] ?? session.sessionType?.color ?? "#94a3b8"}12`,
                             textDecoration: "none",
                             color: "inherit",
                             display: "block",
@@ -738,27 +757,29 @@ export default function SchedulePageClient({
                     Filter By Track
                   </Text>
                   <Stack gap={6}>
-                    {filterData.tracks.map((track) => (
-                      <Checkbox
-                        key={track.id}
-                        checked={activeTracks.includes(track.id)}
-                        onChange={() => toggleTrack(track.id)}
-                        label={
-                          <Group gap={8}>
-                            <div
-                              style={{
-                                width: 10,
-                                height: 10,
-                                borderRadius: "50%",
-                                backgroundColor: track.color,
-                                flexShrink: 0,
-                              }}
-                            />
-                            <Text size="sm">{track.name}</Text>
-                          </Group>
-                        }
-                      />
-                    ))}
+                    {[...filterData.tracks]
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((track) => (
+                        <Checkbox
+                          key={track.id}
+                          checked={activeTracks.includes(track.id)}
+                          onChange={() => toggleTrack(track.id)}
+                          label={
+                            <Group gap={8} wrap="nowrap">
+                              <div
+                                style={{
+                                  width: 10,
+                                  height: 10,
+                                  borderRadius: "50%",
+                                  backgroundColor: track.color,
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <Text size="sm">{track.name}</Text>
+                            </Group>
+                          }
+                        />
+                      ))}
                   </Stack>
                 </div>
               )}
@@ -777,7 +798,7 @@ export default function SchedulePageClient({
         </div>
       ) : viewMode === "expanded" ? (
         <div className="schedule-layout">
-          <ExpandedView sessions={daySessions} eventId={eventId} resolvedSpeakers={resolvedSpeakers} />
+          <ExpandedView sessions={daySessions} eventId={eventId} resolvedSpeakers={resolvedSpeakers} venueColorMap={venueColorMap} />
           {/* Filter sidebar */}
           <div className="schedule-sidebar">
             <Stack gap="md">
@@ -930,6 +951,7 @@ export default function SchedulePageClient({
           sessions={daySessions}
           venues={venues}
           eventId={eventId}
+          venueColorMap={venueColorMap}
         />
       ) : viewMode === "by-floor" ? (
         <div className="schedule-layout">
@@ -937,6 +959,7 @@ export default function SchedulePageClient({
             sessions={daySessions}
             venues={venues}
             eventId={eventId}
+            venueColorMap={venueColorMap}
           />
           {/* Filter sidebar */}
           <div className="schedule-sidebar">

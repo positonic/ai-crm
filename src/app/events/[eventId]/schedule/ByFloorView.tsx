@@ -13,6 +13,7 @@ interface ByFloorViewProps {
     rooms: Array<{ id: string; name: string }>;
   }>;
   eventId: string;
+  venueColorMap?: Record<string, string>;
 }
 
 function formatTimeShort(date: Date): string {
@@ -28,6 +29,7 @@ export default function ByFloorView({
   sessions,
   venues,
   eventId,
+  venueColorMap,
 }: ByFloorViewProps) {
   const sessionsByVenue = useMemo(() => {
     const byVenue = new Map<string, ScheduleSession[]>();
@@ -154,6 +156,7 @@ export default function ByFloorView({
                 key={session.id}
                 session={session}
                 eventId={eventId}
+                venueColorMap={venueColorMap}
               />
             ))}
           </Stack>
@@ -166,11 +169,13 @@ export default function ByFloorView({
 function SessionBar({
   session,
   eventId,
+  venueColorMap,
 }: {
   session: ScheduleSession;
   eventId: string;
+  venueColorMap?: Record<string, string>;
 }) {
-  const color = session.sessionType?.color ?? "#94a3b8";
+  const color = venueColorMap?.[session.venueId ?? ""] ?? session.sessionType?.color ?? "#94a3b8";
 
   return (
     <Link

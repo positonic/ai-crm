@@ -13,6 +13,7 @@ interface TimetableViewProps {
     rooms: Array<{ id: string; name: string }>;
   }>;
   eventId: string;
+  venueColorMap?: Record<string, string>;
 }
 
 type Column = { venueId: string; roomId: string | null; label: string };
@@ -43,6 +44,7 @@ export default function TimetableView({
   sessions,
   venues,
   eventId,
+  venueColorMap,
 }: TimetableViewProps) {
   // Compute flat column list: venues with rooms expand to room-per-column
   const { columns, hasAnyRooms, venueSpans } = useMemo(() => {
@@ -266,7 +268,7 @@ export default function TimetableView({
           }
           if (colIndex === -1) return null;
           const color =
-            session.sessionType?.color ?? session.track?.color ?? "#94a3b8";
+            venueColorMap?.[session.venueId ?? ""] ?? session.sessionType?.color ?? session.track?.color ?? "#94a3b8";
 
           return (
             <Link
