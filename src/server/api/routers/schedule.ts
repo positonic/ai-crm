@@ -97,6 +97,7 @@ const userSelectFields = {
   name: true,
   email: true,
   image: true,
+  profile: { select: { company: true } },
 } as const;
 
 /**

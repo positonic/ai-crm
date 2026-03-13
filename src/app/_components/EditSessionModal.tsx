@@ -44,6 +44,7 @@ export interface SelectedSpeaker {
   name: string | null;
   email: string | null;
   image: string | null;
+  profile?: { company: string | null } | null;
 }
 
 export const PARTICIPANT_ROLES = [

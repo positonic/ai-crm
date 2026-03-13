@@ -663,9 +663,11 @@ export function SessionTableView({
             width: 200,
             render: (session) => {
               const names = [
-                ...session.sessionSpeakers.map((s) =>
-                  getDisplayName(s.user, "Unknown"),
-                ),
+                ...session.sessionSpeakers.map((s) => {
+                  const name = getDisplayName(s.user, "Unknown");
+                  const org = s.user.profile?.company;
+                  return org ? `${name} (${org})` : name;
+                }),
                 ...session.speakers,
               ];
               if (names.length === 0)
@@ -676,10 +678,14 @@ export function SessionTableView({
                 );
               return (
                 <Group gap={4} wrap="nowrap">
-                  {session.sessionSpeakers.slice(0, 3).map((s) => (
+                  {session.sessionSpeakers.slice(0, 3).map((s) => {
+                    const displayName = getDisplayName(s.user, "Unknown");
+                    const org = s.user.profile?.company;
+                    const tooltipLabel = org ? `${displayName} (${org})` : displayName;
+                    return (
                     <Tooltip
                       key={s.user.id}
-                      label={getDisplayName(s.user, "Unknown")}
+                      label={tooltipLabel}
                     >
                       <Avatar
                         src={s.user.image}
@@ -694,7 +700,8 @@ export function SessionTableView({
                         ).toUpperCase()}
                       </Avatar>
                     </Tooltip>
-                  ))}
+                  );
+                  })}
                   <Text size="xs" lineClamp={1}>
                     {names.join(", ")}
                   </Text>

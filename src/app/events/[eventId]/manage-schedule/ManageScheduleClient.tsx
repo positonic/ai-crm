@@ -1881,11 +1881,17 @@ function SessionCard({
               <Text size="sm" c="dimmed">
                 <IconUsers size={12} style={{ verticalAlign: "middle" }} />{" "}
                 {[
-                  ...session.sessionSpeakers.map((s) =>
-                    s.role !== "Speaker"
-                      ? `${getDisplayName(s.user, "Unknown")} (${s.role})`
-                      : getDisplayName(s.user, "Unknown"),
-                  ),
+                  ...session.sessionSpeakers.map((s) => {
+                    const name = getDisplayName(s.user, "Unknown");
+                    const org = s.user.profile?.company;
+                    const suffix = [
+                      org,
+                      s.role !== "Speaker" ? s.role : null,
+                    ]
+                      .filter(Boolean)
+                      .join(", ");
+                    return suffix ? `${name} (${suffix})` : name;
+                  }),
                   ...session.speakers,
                 ].join(", ")}
               </Text>
@@ -2794,11 +2800,17 @@ function SessionDetailModal({
       : `${String(durationMin)}m`;
 
   const speakerNames = [
-    ...session.sessionSpeakers.map((s) =>
-      s.role !== "Speaker"
-        ? `${getDisplayName(s.user, "Unknown")} (${s.role})`
-        : getDisplayName(s.user, "Unknown"),
-    ),
+    ...session.sessionSpeakers.map((s) => {
+      const name = getDisplayName(s.user, "Unknown");
+      const org = s.user.profile?.company;
+      const suffix = [
+        org,
+        s.role !== "Speaker" ? s.role : null,
+      ]
+        .filter(Boolean)
+        .join(", ");
+      return suffix ? `${name} (${suffix})` : name;
+    }),
     ...session.speakers,
   ];
 
@@ -2894,10 +2906,16 @@ function SessionDetailModal({
                       </Avatar>
                       <Text size="sm">
                         {getDisplayName(s.user, "Unknown")}
+                        {s.user.profile?.company && (
+                          <Text span size="xs" c="dimmed">
+                            {" "}
+                            ({s.user.profile.company})
+                          </Text>
+                        )}
                         {s.role !== "Speaker" && (
                           <Text span size="xs" c="dimmed">
                             {" "}
-                            ({s.role})
+                            · {s.role}
                           </Text>
                         )}
                       </Text>
