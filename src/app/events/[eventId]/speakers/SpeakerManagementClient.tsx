@@ -116,6 +116,10 @@ export default function SpeakerManagementClient({ eventId }: Props) {
   );
   const [selectedReminders, setSelectedReminders] = useState<string[]>([]);
   const [testEmail, setTestEmail] = useState("");
+  const [confirmDeleteSessionId, setConfirmDeleteSessionId] = useState<
+    string | null
+  >(null);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 
   const { data: sessionsData, isLoading: loadingSessions } =
     api.schedule.getSessionsWithSlidesStatus.useQuery({ eventId });
@@ -178,6 +182,48 @@ export default function SpeakerManagementClient({ eventId }: Props) {
         });
       },
     });
+
+  const utils = api.useUtils();
+
+  const deleteSessionMutation = api.schedule.deleteSession.useMutation({
+    onSuccess: () => {
+      notifications.show({
+        title: "Deleted",
+        message: "Session deleted",
+        color: "green",
+      });
+      void utils.schedule.getSessionsWithSlidesStatus.invalidate({ eventId });
+      setSelectedReminders([]);
+      setConfirmDeleteSessionId(null);
+    },
+    onError: (err: { message: string }) => {
+      notifications.show({
+        title: "Error",
+        message: err.message,
+        color: "red",
+      });
+    },
+  });
+
+  const bulkDeleteMutation = api.schedule.bulkDeleteSessions.useMutation({
+    onSuccess: (data) => {
+      notifications.show({
+        title: "Deleted",
+        message: `${String(data.deletedCount)} session${data.deletedCount !== 1 ? "s" : ""} deleted`,
+        color: "green",
+      });
+      void utils.schedule.getSessionsWithSlidesStatus.invalidate({ eventId });
+      setSelectedReminders([]);
+      setConfirmBulkDelete(false);
+    },
+    onError: (err: { message: string }) => {
+      notifications.show({
+        title: "Error",
+        message: err.message,
+        color: "red",
+      });
+    },
+  });
 
   // ── Application Queries ──
   const {
@@ -1025,6 +1071,15 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                         Remind speakers to update their sessions
                       </Button>
                       <Button
+                        leftSection={<IconTrash size={14} />}
+                        size="sm"
+                        color="red"
+                        variant="light"
+                        onClick={() => setConfirmBulkDelete(true)}
+                      >
+                        Delete Sessions
+                      </Button>
+                      <Button
                         variant="subtle"
                         size="sm"
                         onClick={() => setSelectedReminders([])}
@@ -1163,22 +1218,34 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                               )}
                             </Table.Td>
                             <Table.Td>
-                              {canRemind && (
-                                <Button
-                                  variant="light"
-                                  size="xs"
-                                  leftSection={<IconSend size={14} />}
+                              <Group gap="xs" wrap="nowrap">
+                                {canRemind && (
+                                  <Button
+                                    variant="light"
+                                    size="xs"
+                                    leftSection={<IconSend size={14} />}
+                                    onClick={() =>
+                                      handleSingleRemind(
+                                        row.sessionId,
+                                        row.speakerUserId,
+                                      )
+                                    }
+                                    loading={sendSlidesReminder.isPending}
+                                  >
+                                    Remind
+                                  </Button>
+                                )}
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="red"
+                                  size="sm"
                                   onClick={() =>
-                                    handleSingleRemind(
-                                      row.sessionId,
-                                      row.speakerUserId,
-                                    )
+                                    setConfirmDeleteSessionId(row.sessionId)
                                   }
-                                  loading={sendSlidesReminder.isPending}
                                 >
-                                  Remind
-                                </Button>
-                              )}
+                                  <IconTrash size={14} />
+                                </ActionIcon>
+                              </Group>
                             </Table.Td>
                           </Table.Tr>
                         );
@@ -1348,6 +1415,89 @@ export default function SpeakerManagementClient({ eventId }: Props) {
         opened={viewDrawerOpened}
         onClose={closeViewDrawer}
       />
+
+      {/* Single Session Delete Confirmation */}
+      <Modal
+        opened={!!confirmDeleteSessionId}
+        onClose={() => setConfirmDeleteSessionId(null)}
+        title="Delete Session"
+        size="sm"
+      >
+        <Stack>
+          <Text size="sm">
+            Are you sure you want to delete this session? This action cannot be
+            undone.
+          </Text>
+          <Group justify="flex-end">
+            <Button
+              variant="light"
+              onClick={() => setConfirmDeleteSessionId(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="red"
+              onClick={() => {
+                if (confirmDeleteSessionId) {
+                  deleteSessionMutation.mutate({ id: confirmDeleteSessionId });
+                }
+              }}
+              loading={deleteSessionMutation.isPending}
+            >
+              Delete
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* Bulk Session Delete Confirmation */}
+      <Modal
+        opened={confirmBulkDelete}
+        onClose={() => setConfirmBulkDelete(false)}
+        title="Delete Sessions"
+        size="sm"
+      >
+        <Stack>
+          {(() => {
+            const selectedSet = new Set(selectedReminders);
+            const uniqueSessionIds = [
+              ...new Set(
+                sessionRows
+                  .filter((r) => selectedSet.has(r.key))
+                  .map((r) => r.sessionId),
+              ),
+            ];
+            return (
+              <>
+                <Text size="sm">
+                  Are you sure you want to delete{" "}
+                  {uniqueSessionIds.length} session
+                  {uniqueSessionIds.length !== 1 ? "s" : ""}? This action
+                  cannot be undone.
+                </Text>
+                <Group justify="flex-end">
+                  <Button
+                    variant="light"
+                    onClick={() => setConfirmBulkDelete(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    color="red"
+                    onClick={() => {
+                      bulkDeleteMutation.mutate({ ids: uniqueSessionIds });
+                    }}
+                    loading={bulkDeleteMutation.isPending}
+                  >
+                    Delete {uniqueSessionIds.length} Session
+                    {uniqueSessionIds.length !== 1 ? "s" : ""}
+                  </Button>
+                </Group>
+              </>
+            );
+          })()}
+        </Stack>
+      </Modal>
     </Container>
   );
 }

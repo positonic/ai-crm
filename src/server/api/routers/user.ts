@@ -342,6 +342,35 @@ export const userRouter = createTRPCRouter({
       }
     }),
 
+  adminDeleteUser: protectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admin users can delete users",
+        });
+      }
+
+      try {
+        await ctx.db.user.delete({ where: { id: input.userId } });
+        return { success: true };
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          "code" in error &&
+          (error as { code: string }).code === "P2003"
+        ) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message:
+              "Cannot delete this user because they have related records. Remove their roles and applications first.",
+          });
+        }
+        throw error;
+      }
+    }),
+
   searchUsers: protectedProcedure
     .input(
       z.object({
