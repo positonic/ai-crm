@@ -115,6 +115,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
     null,
   );
   const [selectedReminders, setSelectedReminders] = useState<string[]>([]);
+  const [testEmail, setTestEmail] = useState("");
 
   const { data: sessionsData, isLoading: loadingSessions } =
     api.schedule.getSessionsWithSlidesStatus.useQuery({ eventId });
@@ -150,6 +151,24 @@ export default function SpeakerManagementClient({ eventId }: Props) {
           color: result.failureCount > 0 ? "yellow" : "green",
         });
         setSelectedReminders([]);
+      },
+      onError: (error) => {
+        notifications.show({
+          title: "Error",
+          message: error.message,
+          color: "red",
+        });
+      },
+    });
+
+  const sendTestSessionDetails =
+    api.schedule.sendTestSessionDetailsReminder.useMutation({
+      onSuccess: () => {
+        notifications.show({
+          title: "Test email sent",
+          message: `Test session details email sent to ${testEmail}`,
+          color: "green",
+        });
       },
       onError: (error) => {
         notifications.show({
@@ -903,6 +922,34 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                 </Group>
               </Card>
 
+              {/* Test email */}
+              <Card withBorder mb="md" p="md">
+                <Group gap="xs">
+                  <TextInput
+                    placeholder="Email address for test"
+                    value={testEmail}
+                    onChange={(e) => setTestEmail(e.currentTarget.value)}
+                    size="sm"
+                    style={{ flex: 1, maxWidth: 300 }}
+                  />
+                  <Button
+                    leftSection={<IconMail size={14} />}
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      sendTestSessionDetails.mutate({
+                        to: testEmail,
+                        includeCouponCode: true,
+                      })
+                    }
+                    loading={sendTestSessionDetails.isPending}
+                    disabled={!testEmail.includes("@")}
+                  >
+                    Send test email
+                  </Button>
+                </Group>
+              </Card>
+
               {/* Bulk action bar */}
               {selectedReminders.length > 0 && (
                 <Card withBorder mb="md" p="md">
@@ -929,9 +976,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                         onClick={handleBulkSessionDetailsRemind}
                         loading={sendSessionDetailsReminder.isPending}
                       >
-                        Send Session Details to{" "}
-                        {selectedReminders.length} Speaker
-                        {selectedReminders.length !== 1 ? "s" : ""}
+                        Remind speakers to update their sessions
                       </Button>
                       <Button
                         variant="subtle"

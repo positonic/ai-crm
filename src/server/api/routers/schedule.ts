@@ -2767,6 +2767,50 @@ export const scheduleRouter = createTRPCRouter({
       return result;
     }),
 
+  sendTestSessionDetailsReminder: protectedProcedure
+    .input(
+      z.object({
+        to: z.string().email(),
+        includeCouponCode: z.boolean().default(true),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!isAdminOrStaff(ctx.session.user.role)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Admin access required",
+        });
+      }
+
+      const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+      const emailService = getEmailService(ctx.db);
+
+      const result = await emailService.sendEmail({
+        to: input.to,
+        templateName: "sessionDetailsReminder",
+        templateData: {
+          speakerName: "Jane Doe",
+          eventName: "Intelligence at the Frontier",
+          sessionTitle: "Building Decentralized Public Goods Infrastructure",
+          sessionDate: "Saturday, March 15, 2026",
+          sessionTime: "2:00 PM – 2:30 PM",
+          sessionUrl: `${baseUrl}/events/intelligence-at-the-frontier/schedule/test-session`,
+          contactEmail: "beth@fundingthecommons.io",
+          venueName: "Floor 3 – Commons",
+          roomName: "Main Stage",
+          speakerCouponCode: input.includeCouponCode
+            ? "SPEAKER-JDOE-TEST"
+            : undefined,
+          scheduleUrl: `${baseUrl}/events/intelligence-at-the-frontier/schedule`,
+          signinUrl: `${baseUrl}/signin`,
+          signinScreenshotUrl: `${baseUrl}/images/signin-with-password.jpg`,
+        },
+        userId: ctx.session.user.id,
+      });
+
+      return result;
+    }),
+
   sendSessionDetailsReminder: protectedProcedure
     .input(
       z.object({
@@ -2907,6 +2951,9 @@ export const scheduleRouter = createTRPCRouter({
               venueName: session.venue?.name,
               roomName: session.room?.name,
               speakerCouponCode,
+              scheduleUrl: `${baseUrl}/events/${eventPath}/schedule`,
+              signinUrl: `${baseUrl}/signin`,
+              signinScreenshotUrl: `${baseUrl}/images/signin-with-password.jpg`,
             },
             eventId: event.id,
             userId: ctx.session.user.id,
