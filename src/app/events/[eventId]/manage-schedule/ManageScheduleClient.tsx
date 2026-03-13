@@ -331,6 +331,10 @@ function extractDurationMinutes(text: string | undefined): number | null {
 const JUNK_WORD_PATTERNS =
   /^(food|lunch|break|dinner|breakfast|pie time|is|served|registration|check[- ]?in|coffee|tea|networking)$/i;
 
+// Common CSV header words that indicate a repeated header row mid-file
+const HEADER_WORD_PATTERN =
+  /^(time|location|session|speakers?|presenters?|title|details|facilitators?|moderators?|duration|type|track|description|room|venue|date|format|category|abstract|summary|name)$/i;
+
 function isJunkRow(
   row: Record<string, string>,
   mapping: ColumnMapping,
@@ -375,6 +379,30 @@ function isJunkRow(
   if (
     rowValues.length > 0 &&
     rowValues.every((v) => !v || headerLower.includes(v))
+  )
+    return true;
+
+  // Detect repeated header rows with DIFFERENT column names (e.g., a second
+  // table header mid-CSV like "Time,Location + Duration,Session,Speakers (...)")
+  const nonEmptyValues = Object.values(row)
+    .map((v) => v?.trim())
+    .filter(Boolean);
+  if (nonEmptyValues.length >= 2) {
+    // Strip parenthetical suffixes, split on + / &, and check if first word is header-like
+    const headerLikeCount = nonEmptyValues.filter((v) => {
+      const cleaned = v.replace(/\s*\(.*?\)\s*/g, "").trim();
+      const parts = cleaned.split(/\s*[+/&]\s*/);
+      return parts.every((part) => HEADER_WORD_PATTERN.test(part.trim()));
+    }).length;
+    if (headerLikeCount >= 2 && headerLikeCount / nonEmptyValues.length >= 0.5)
+      return true;
+  }
+
+  // Detect bracket-enclosed metadata rows (e.g., "[ Signup Sheet ]") with no real session data
+  if (
+    time &&
+    /^\[.*\]$/.test(time) &&
+    !desc
   )
     return true;
 
