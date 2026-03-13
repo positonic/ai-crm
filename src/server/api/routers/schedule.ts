@@ -256,12 +256,12 @@ export const scheduleRouter = createTRPCRouter({
         }),
       ]);
 
-      // Sort venues by order field, then by natural number in name (e.g. "Floor 2" before "Floor 10")
+      // Sort venues by natural number in name (e.g. "Floor 2" before "Floor 10"), then by order field
       const venues = venuesUnsorted.sort((a, b) => {
-        if (a.order !== b.order) return a.order - b.order;
         const numA = parseInt(/\d+/.exec(a.name)?.[0] ?? "0", 10);
         const numB = parseInt(/\d+/.exec(b.name)?.[0] ?? "0", 10);
-        return numA - numB;
+        if (numA !== numB) return numA - numB;
+        return a.order - b.order;
       });
 
       // Derive unique floor leads with their venue IDs
