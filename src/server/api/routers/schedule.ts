@@ -2499,6 +2499,75 @@ export const scheduleRouter = createTRPCRouter({
       return { moved: input.sessionId, shifted };
     }),
 
+  resizeSession: protectedProcedure
+    .input(
+      z.object({
+        sessionId: z.string(),
+        newStartTime: z.coerce.date(),
+        newEndTime: z.coerce.date(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertCanManageSession(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        input.sessionId,
+      );
+      const speakerOnly = await isSessionSpeakerOnly(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        input.sessionId,
+      );
+      if (speakerOnly) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "Speakers cannot resize sessions. Contact a floor lead or admin.",
+        });
+      }
+
+      const newStart = new Date(input.newStartTime);
+      const newEnd = new Date(input.newEndTime);
+      const durationMs = newEnd.getTime() - newStart.getTime();
+
+      if (durationMs < 15 * 60 * 1000) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Session must be at least 15 minutes long.",
+        });
+      }
+
+      const session = await ctx.db.scheduleSession.findUnique({
+        where: { id: input.sessionId },
+        select: {
+          id: true,
+          event: { select: { startDate: true, endDate: true } },
+        },
+      });
+
+      if (!session) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Session not found",
+        });
+      }
+
+      validateSessionDateRange(
+        session.event.startDate,
+        session.event.endDate,
+        newStart,
+      );
+
+      await ctx.db.scheduleSession.update({
+        where: { id: input.sessionId },
+        data: { startTime: newStart, endTime: newEnd },
+      });
+
+      return { resized: input.sessionId };
+    }),
+
   // Admin: Get all venue owners for an event
   getVenueOwners: protectedProcedure
     .input(z.object({ eventId: z.string() }))

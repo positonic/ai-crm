@@ -188,6 +188,53 @@
   cursor: grabbing;
 }
 
+/* Resize handles */
+.ms-resize-handle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8px;
+  cursor: ns-resize;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.ms-resize-handle::after {
+  content: "";
+  position: absolute;
+  left: 25%;
+  right: 25%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--ms-grid-line-hour);
+}
+
+.ms-grid-session:hover .ms-resize-handle {
+  opacity: 1;
+}
+
+.ms-resize-handle-top {
+  top: 0;
+}
+
+.ms-resize-handle-top::after {
+  top: 2px;
+}
+
+.ms-resize-handle-bottom {
+  bottom: 0;
+}
+
+.ms-resize-handle-bottom::after {
+  bottom: 2px;
+}
+
+.ms-resizing {
+  opacity: 0.8;
+  box-shadow: 0 2px 12px var(--ms-session-hover-shadow);
+}
+
 /* Comment badge */
 .ms-comment-badge {
   display: inline-flex;

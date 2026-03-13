@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Text,
   Tooltip,
@@ -24,6 +24,7 @@ import {
 } from "@dnd-kit/core";
 import { getDisplayName } from "~/utils/userDisplay";
 import { useSessionDragDrop } from "./useSessionDragDrop";
+import { useSessionResize } from "./useSessionResize";
 import { type FloorSession } from "~/app/_components/EditSessionModal";
 
 interface SessionTimeGridProps {
@@ -104,7 +105,7 @@ function DroppableCell({
   );
 }
 
-// Draggable session block
+// Draggable session block with resize handles
 function DraggableSessionBlock({
   session,
   startRow,
@@ -114,6 +115,9 @@ function DraggableSessionBlock({
   isDragging,
   onOpenComments,
   onViewDetail,
+  onResize,
+  gridEarliestMs: _gridEarliestMs,
+  headerRows,
 }: {
   session: FloorSession;
   startRow: number;
@@ -123,14 +127,115 @@ function DraggableSessionBlock({
   isDragging: boolean;
   onOpenComments: (sessionId: string, sessionTitle: string) => void;
   onViewDetail?: (session: FloorSession) => void;
+  onResize?: (sessionId: string, newStart: Date, newEnd: Date) => void;
+  gridEarliestMs: number;
+  headerRows: number;
 }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: session.id,
     data: { session },
   });
 
+  const [resizeDelta, setResizeDelta] = useState<{
+    edge: "top" | "bottom";
+    slots: number;
+  } | null>(null);
+  const resizeRef = useRef<{
+    edge: "top" | "bottom";
+    startY: number;
+    originalStartMs: number;
+    originalEndMs: number;
+  } | null>(null);
+
+  const isResizing = resizeDelta !== null;
+
+  // Compute displayed rows accounting for resize preview
+  let displayStartRow = startRow;
+  let displayEndRow = endRow;
+  if (resizeDelta) {
+    if (resizeDelta.edge === "top") {
+      displayStartRow = Math.max(headerRows + 1, startRow + resizeDelta.slots);
+      // Ensure at least 1 slot
+      if (displayStartRow >= displayEndRow) {
+        displayStartRow = displayEndRow - 1;
+      }
+    } else {
+      displayEndRow = Math.max(startRow + 1, endRow + resizeDelta.slots);
+    }
+  }
+
+  const handleResizePointerDown = useCallback(
+    (edge: "top" | "bottom", e: React.PointerEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+
+      resizeRef.current = {
+        edge,
+        startY: e.clientY,
+        originalStartMs: new Date(session.startTime).getTime(),
+        originalEndMs: new Date(session.endTime).getTime(),
+      };
+    },
+    [session.startTime, session.endTime],
+  );
+
+  const handleResizePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!resizeRef.current) return;
+      const deltaY = e.clientY - resizeRef.current.startY;
+      const slotDelta = Math.round(deltaY / ROW_HEIGHT_PX);
+      setResizeDelta({ edge: resizeRef.current.edge, slots: slotDelta });
+    },
+    [],
+  );
+
+  const handleResizePointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      if (!resizeRef.current || !onResize) {
+        resizeRef.current = null;
+        setResizeDelta(null);
+        return;
+      }
+
+      const deltaY = e.clientY - resizeRef.current.startY;
+      const slotDelta = Math.round(deltaY / ROW_HEIGHT_PX);
+      const timeDelta = slotDelta * FIFTEEN_MIN_MS;
+
+      let newStartMs = resizeRef.current.originalStartMs;
+      let newEndMs = resizeRef.current.originalEndMs;
+
+      if (resizeRef.current.edge === "top") {
+        newStartMs += timeDelta;
+      } else {
+        newEndMs += timeDelta;
+      }
+
+      // Enforce minimum 15-minute duration
+      if (newEndMs - newStartMs < FIFTEEN_MIN_MS) {
+        if (resizeRef.current.edge === "top") {
+          newStartMs = newEndMs - FIFTEEN_MIN_MS;
+        } else {
+          newEndMs = newStartMs + FIFTEEN_MIN_MS;
+        }
+      }
+
+      // Don't mutate if nothing changed
+      if (
+        newStartMs !== resizeRef.current.originalStartMs ||
+        newEndMs !== resizeRef.current.originalEndMs
+      ) {
+        onResize(session.id, new Date(newStartMs), new Date(newEndMs));
+      }
+
+      resizeRef.current = null;
+      setResizeDelta(null);
+    },
+    [onResize, session.id],
+  );
+
   const style: React.CSSProperties = {
-    gridRow: `${String(startRow)} / ${String(endRow)}`,
+    gridRow: `${String(displayStartRow)} / ${String(displayEndRow)}`,
     gridColumn: colIndex + 2,
     backgroundColor: `${color}30`,
     borderLeft: `3px solid ${color}`,
@@ -138,7 +243,7 @@ function DraggableSessionBlock({
     transform: transform
       ? `translate(${String(transform.x)}px, ${String(transform.y)}px)`
       : undefined,
-    zIndex: isDragging ? 10 : 1,
+    zIndex: isDragging ? 10 : isResizing ? 10 : 1,
   };
 
   const speakerNames = [
@@ -151,17 +256,27 @@ function DraggableSessionBlock({
   return (
     <div
       ref={setNodeRef}
-      className="ms-grid-session"
+      className={`ms-grid-session ${isResizing ? "ms-resizing" : ""}`}
       style={{ ...style, cursor: onViewDetail ? "pointer" : undefined }}
-      {...listeners}
-      {...attributes}
+      {...(isResizing ? {} : listeners)}
+      {...(isResizing ? {} : attributes)}
       onClick={(e: React.MouseEvent) => {
-        if (!isDragging && onViewDetail) {
+        if (!isDragging && !isResizing && onViewDetail) {
           e.stopPropagation();
           onViewDetail(session);
         }
       }}
     >
+      {/* Top resize handle */}
+      {onResize && (
+        <div
+          className="ms-resize-handle ms-resize-handle-top"
+          onPointerDown={(e) => handleResizePointerDown("top", e)}
+          onPointerMove={handleResizePointerMove}
+          onPointerUp={handleResizePointerUp}
+        />
+      )}
+
       <Text fw={600} size="xs" lineClamp={2} style={{ lineHeight: 1.3 }}>
         {session.title}
       </Text>
@@ -195,6 +310,16 @@ function DraggableSessionBlock({
             </Group>
           </ActionIcon>
         </Tooltip>
+      )}
+
+      {/* Bottom resize handle */}
+      {onResize && (
+        <div
+          className="ms-resize-handle ms-resize-handle-bottom"
+          onPointerDown={(e) => handleResizePointerDown("bottom", e)}
+          onPointerMove={handleResizePointerMove}
+          onPointerUp={handleResizePointerUp}
+        />
       )}
     </div>
   );
@@ -252,6 +377,11 @@ export function SessionTimeGrid({
     venueId,
   );
 
+  const { handleResize, isPending: isResizing } = useSessionResize(
+    eventId,
+    venueId,
+  );
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
@@ -285,7 +415,7 @@ export function SessionTimeGrid({
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
 
   // Compute time slots and session grid positions for the selected day only
-  const { timeSlots, sessionsGrid, slotCount, dayFilteredSessions } =
+  const { timeSlots, sessionsGrid, slotCount, dayFilteredSessions, gridEarliestMs } =
     useMemo(() => {
       console.log("[SessionTimeGrid] useMemo START - computing time slots", {
         totalSessions: sessions.length,
@@ -303,6 +433,7 @@ export function SessionTimeGrid({
           sessionsGrid: [],
           slotCount: 0,
           dayFilteredSessions: [],
+          gridEarliestMs: 0,
         };
       }
 
@@ -314,6 +445,7 @@ export function SessionTimeGrid({
           sessionsGrid: [],
           slotCount: 0,
           dayFilteredSessions: [],
+          gridEarliestMs: 0,
         };
       }
 
@@ -337,6 +469,7 @@ export function SessionTimeGrid({
           sessionsGrid: [],
           slotCount: 0,
           dayFilteredSessions: [],
+          gridEarliestMs: 0,
         };
       }
 
@@ -420,6 +553,7 @@ export function SessionTimeGrid({
         sessionsGrid: grid,
         slotCount: row - 1,
         dayFilteredSessions: daySessions,
+        gridEarliestMs: roundedEarliest,
       };
     }, [sessions, headerRows, uniqueDays, selectedDayIndex, rooms.length]);
 
@@ -490,7 +624,7 @@ export function SessionTimeGrid({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      {(isPending ?? isRescheduling) && (
+      {(isPending ?? isRescheduling ?? isResizing) && (
         <Center py="xs">
           <Loader size="xs" />
         </Center>
@@ -652,6 +786,9 @@ export function SessionTimeGrid({
                 isDragging={activeDragSession?.id === session.id}
                 onOpenComments={onOpenComments}
                 onViewDetail={onViewDetail}
+                onResize={handleResize}
+                gridEarliestMs={gridEarliestMs}
+                headerRows={headerRows}
               />
             );
           })}
