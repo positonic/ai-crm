@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Stack,
   Text,
@@ -26,6 +26,7 @@ import {
   IconUserPlus,
   IconLink,
   IconDoor,
+  IconBuilding,
 } from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import { UserSearchSelect } from "~/app/_components/UserSearchSelect";
@@ -518,6 +519,11 @@ export interface EditSessionModalProps {
   session: FloorSession;
   eventId: string;
   venueId?: string;
+  venues?: Array<{
+    id: string;
+    name: string;
+    rooms: Array<{ id: string; name: string }>;
+  }>;
   rooms: Array<{ id: string; name: string }>;
   sessionTypes: Array<{ id: string; name: string; color: string }>;
   tracks: Array<{ id: string; name: string; color: string }>;
@@ -532,6 +538,7 @@ export default function EditSessionModal({
   session,
   eventId,
   venueId,
+  venues,
   rooms,
   sessionTypes,
   tracks,
@@ -563,7 +570,18 @@ export default function EditSessionModal({
     session.sessionTypeId,
   );
   const [trackId, setTrackId] = useState<string | null>(session.trackId);
+  const [selectedVenueId, setSelectedVenueId] = useState<string | null>(
+    session.venueId ?? venueId ?? null,
+  );
   const [isPublished, setIsPublished] = useState(session.isPublished);
+
+  const filteredRooms = useMemo(() => {
+    if (venues && selectedVenueId) {
+      const venue = venues.find((v) => v.id === selectedVenueId);
+      return venue?.rooms ?? [];
+    }
+    return rooms;
+  }, [venues, selectedVenueId, rooms]);
 
   const updateMutation = api.schedule.updateSession.useMutation({
     onSuccess: () => {
@@ -575,6 +593,7 @@ export default function EditSessionModal({
       if (venueId) {
         void utils.schedule.getFloorSessions.invalidate({ eventId, venueId });
       }
+      void utils.schedule.getAllFloorSessions.invalidate({ eventId });
       void utils.schedule.getMyFloors.invalidate({ eventId });
       onSuccess?.();
       onClose();
@@ -629,6 +648,7 @@ export default function EditSessionModal({
         userId: s.user.id,
         role: s.role,
       })),
+      venueId: selectedVenueId ?? null,
       roomId: roomId ?? null,
       sessionTypeId: sessionTypeId ?? null,
       trackId: trackId ?? null,
@@ -719,11 +739,28 @@ export default function EditSessionModal({
                   : undefined
               }
             />
-            {rooms.length > 0 && (
+            {venues && venues.length > 0 && (
+              <Select
+                label="Venue / Floor"
+                placeholder="Select venue"
+                data={venues.map((v) => ({ value: v.id, label: v.name }))}
+                value={selectedVenueId}
+                onChange={(val) => {
+                  setSelectedVenueId(val);
+                  setRoomId(null);
+                }}
+                clearable
+                leftSection={<IconBuilding size={14} />}
+              />
+            )}
+            {filteredRooms.length > 0 && (
               <Select
                 label="Room"
                 placeholder="Select room"
-                data={rooms.map((r) => ({ value: r.id, label: r.name }))}
+                data={filteredRooms.map((r) => ({
+                  value: r.id,
+                  label: r.name,
+                }))}
                 value={roomId}
                 onChange={setRoomId}
                 clearable

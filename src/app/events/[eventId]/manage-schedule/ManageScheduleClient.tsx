@@ -921,6 +921,7 @@ export default function ManageScheduleClient({
             eventId={eventId}
             venueId={activeVenueId}
             venue={floorsData.venues.find((v) => v.id === activeVenueId)}
+            allVenues={floorsData.venues}
             isAdmin={floorsData.isAdmin}
           />
         ) : null}
@@ -975,7 +976,9 @@ function AllFloorsView({ eventId, venues, isAdmin }: AllFloorsViewProps) {
   });
 
   const allRooms = useMemo(() => {
-    return venues.flatMap((v) => v.rooms);
+    return venues.flatMap((v) =>
+      v.rooms.map((r) => ({ ...r, venueId: v.id })),
+    );
   }, [venues]);
 
   const deleteSessionMutation = api.schedule.deleteSession.useMutation({
@@ -1035,6 +1038,20 @@ function AllFloorsView({ eventId, venues, isAdmin }: AllFloorsViewProps) {
     },
   });
 
+  const updateSessionMutation = api.schedule.updateSession.useMutation({
+    onSuccess: () => {
+      void utils.schedule.getAllFloorSessions.invalidate({ eventId });
+      void utils.schedule.getMyFloors.invalidate({ eventId });
+    },
+    onError: (err: { message: string }) => {
+      notifications.show({
+        title: "Error",
+        message: err.message,
+        color: "red",
+      });
+    },
+  });
+
   const detailSessionVenue = useMemo(() => {
     if (!detailSession?.venueId) return undefined;
     return venues.find((v) => v.id === detailSession.venueId);
@@ -1080,6 +1097,7 @@ function AllFloorsView({ eventId, venues, isAdmin }: AllFloorsViewProps) {
                   session={session as FloorSession}
                   eventId={eventId}
                   venueId={session.venueId ?? ""}
+                  venues={venues}
                   rooms={
                     venues.find((v) => v.id === session.venueId)?.rooms ?? []
                   }
@@ -1122,6 +1140,11 @@ function AllFloorsView({ eventId, venues, isAdmin }: AllFloorsViewProps) {
               isBulkAssigningRoom={bulkAssignRoomMutation.isPending}
               onViewDetail={setDetailSession}
               showFloorColumn
+              onUpdateSession={(data) =>
+                updateSessionMutation.mutate(data)
+              }
+              isUpdating={updateSessionMutation.isPending}
+              venues={venues.map((v) => ({ id: v.id, name: v.name }))}
             />
           )}
         </>
@@ -1139,6 +1162,7 @@ function AllFloorsView({ eventId, venues, isAdmin }: AllFloorsViewProps) {
         onClose={() => setDetailSession(null)}
         eventId={eventId}
         venueId={detailSession?.venueId ?? ""}
+        venues={venues}
         rooms={detailSessionVenue?.rooms ?? []}
         sessionTypes={filterData?.sessionTypes ?? []}
         tracks={filterData?.tracks ?? []}
@@ -1172,10 +1196,15 @@ interface FloorManagerProps {
       };
     }[];
   };
+  allVenues?: Array<{
+    id: string;
+    name: string;
+    rooms: Array<{ id: string; name: string }>;
+  }>;
   isAdmin: boolean;
 }
 
-function FloorManager({ eventId, venueId, venue, isAdmin }: FloorManagerProps) {
+function FloorManager({ eventId, venueId, venue, allVenues, isAdmin }: FloorManagerProps) {
   const [editingMeta, setEditingMeta] = useState(false);
   const [metaName, setMetaName] = useState(venue?.name ?? "");
   const [metaDescription, setMetaDescription] = useState(
@@ -1343,6 +1372,21 @@ function FloorManager({ eventId, venueId, venue, isAdmin }: FloorManagerProps) {
         message: `${String(data.updatedCount)} session${data.updatedCount !== 1 ? "s" : ""} updated`,
         color: "green",
       });
+      void utils.schedule.getFloorSessions.invalidate({ eventId, venueId });
+      void utils.schedule.getAllFloorSessions.invalidate({ eventId });
+      void utils.schedule.getMyFloors.invalidate({ eventId });
+    },
+    onError: (err: { message: string }) => {
+      notifications.show({
+        title: "Error",
+        message: err.message,
+        color: "red",
+      });
+    },
+  });
+
+  const updateSessionMutation = api.schedule.updateSession.useMutation({
+    onSuccess: () => {
       void utils.schedule.getFloorSessions.invalidate({ eventId, venueId });
       void utils.schedule.getAllFloorSessions.invalidate({ eventId });
       void utils.schedule.getMyFloors.invalidate({ eventId });
@@ -1633,6 +1677,7 @@ function FloorManager({ eventId, venueId, venue, isAdmin }: FloorManagerProps) {
                   session={session as FloorSession}
                   eventId={eventId}
                   venueId={venueId}
+                  venues={allVenues}
                   rooms={venue?.rooms ?? []}
                   sessionTypes={filterData?.sessionTypes ?? []}
                   tracks={filterData?.tracks ?? []}
@@ -1673,6 +1718,10 @@ function FloorManager({ eventId, venueId, venue, isAdmin }: FloorManagerProps) {
               isBulkDeleting={bulkDeleteMutation.isPending}
               isBulkAssigningRoom={bulkAssignRoomMutation.isPending}
               onViewDetail={setDetailSession}
+              onUpdateSession={(data) =>
+                updateSessionMutation.mutate(data)
+              }
+              isUpdating={updateSessionMutation.isPending}
             />
           )}
 
@@ -1707,6 +1756,7 @@ function FloorManager({ eventId, venueId, venue, isAdmin }: FloorManagerProps) {
         onClose={() => setDetailSession(null)}
         eventId={eventId}
         venueId={venueId}
+        venues={allVenues}
         rooms={venue?.rooms ?? []}
         sessionTypes={filterData?.sessionTypes ?? []}
         tracks={filterData?.tracks ?? []}
@@ -1724,6 +1774,11 @@ interface SessionCardProps {
   session: FloorSession;
   eventId: string;
   venueId: string;
+  venues?: Array<{
+    id: string;
+    name: string;
+    rooms: Array<{ id: string; name: string }>;
+  }>;
   rooms: VenueRoom[];
   sessionTypes: { id: string; name: string; color: string }[];
   tracks: { id: string; name: string; color: string }[];
@@ -1739,6 +1794,7 @@ function SessionCard({
   session,
   eventId,
   venueId,
+  venues,
   rooms,
   sessionTypes,
   tracks,
@@ -1880,6 +1936,7 @@ function SessionCard({
         session={session}
         eventId={eventId}
         venueId={venueId}
+        venues={venues}
         rooms={rooms}
         sessionTypes={sessionTypes}
         tracks={tracks}
@@ -2691,6 +2748,11 @@ interface SessionDetailModalProps {
   onClose: () => void;
   eventId: string;
   venueId: string;
+  venues?: Array<{
+    id: string;
+    name: string;
+    rooms: Array<{ id: string; name: string }>;
+  }>;
   rooms: VenueRoom[];
   sessionTypes: { id: string; name: string; color: string }[];
   tracks: { id: string; name: string; color: string }[];
@@ -2702,6 +2764,7 @@ function SessionDetailModal({
   onClose,
   eventId,
   venueId,
+  venues,
   rooms,
   sessionTypes,
   tracks,
@@ -2883,6 +2946,7 @@ function SessionDetailModal({
         session={session}
         eventId={eventId}
         venueId={venueId}
+        venues={venues}
         rooms={rooms}
         sessionTypes={sessionTypes}
         tracks={tracks}
