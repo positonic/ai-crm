@@ -366,6 +366,34 @@ export default function SchedulePageClient({
     [updateUrlParams],
   );
 
+  // Assign a distinct color to each venue for visual differentiation across floors
+  const VENUE_COLORS = [
+    "#6366f1", // indigo
+    "#10b981", // emerald
+    "#f59e0b", // amber
+    "#ef4444", // red
+    "#8b5cf6", // violet
+    "#06b6d4", // cyan
+    "#ec4899", // pink
+    "#84cc16", // lime
+    "#f97316", // orange
+    "#14b8a6", // teal
+  ];
+  const venues =
+    filterData?.venues?.map((v) => ({
+      id: v.id,
+      name: v.name,
+      rooms: v.rooms ?? [],
+    })) ?? [];
+  const venueColorMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const [i, v] of venues.entries()) {
+      map[v.id] = VENUE_COLORS[i % VENUE_COLORS.length] ?? "#94a3b8";
+    }
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterData?.venues]);
+
   if (scheduleLoading) {
     return (
       <Center h={400}>
@@ -383,33 +411,6 @@ export default function SchedulePageClient({
   }
 
   const daySessions = selectedDay ? (sessionsByDay.get(selectedDay) ?? []) : [];
-  const venues =
-    filterData?.venues?.map((v) => ({
-      id: v.id,
-      name: v.name,
-      rooms: v.rooms ?? [],
-    })) ?? [];
-
-  // Assign a distinct color to each venue for visual differentiation across floors
-  const VENUE_COLORS = [
-    "#6366f1", // indigo
-    "#10b981", // emerald
-    "#f59e0b", // amber
-    "#ef4444", // red
-    "#8b5cf6", // violet
-    "#06b6d4", // cyan
-    "#ec4899", // pink
-    "#84cc16", // lime
-    "#f97316", // orange
-    "#14b8a6", // teal
-  ];
-  const venueColorMap = useMemo(() => {
-    const map: Record<string, string> = {};
-    for (const [i, v] of venues.entries()) {
-      map[v.id] = VENUE_COLORS[i % VENUE_COLORS.length] ?? "#94a3b8";
-    }
-    return map;
-  }, [venues]);
 
   return (
     <Container size="xl" py={embed ? "sm" : "xl"}>
