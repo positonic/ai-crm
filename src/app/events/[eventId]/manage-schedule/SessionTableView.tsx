@@ -19,6 +19,7 @@ import {
   IconMessageCircle,
   IconSearch,
   IconFile,
+  IconDoor,
 } from "@tabler/icons-react";
 import { DataTable, type DataTableSortStatus } from "mantine-datatable";
 import { getDisplayName } from "~/utils/userDisplay";
@@ -32,9 +33,11 @@ interface SessionTableViewProps {
   onEdit: (session: FloorSession) => void;
   onDelete: (sessionId: string) => void;
   onBulkDelete?: (sessionIds: string[]) => void;
+  onBulkAssignRoom?: (sessionIds: string[], roomId: string) => void;
   onOpenComments: (sessionId: string, sessionTitle: string) => void;
   isDeleting: boolean;
   isBulkDeleting?: boolean;
+  isBulkAssigningRoom?: boolean;
   onViewDetail?: (session: FloorSession) => void;
   showFloorColumn?: boolean;
 }
@@ -78,9 +81,11 @@ export function SessionTableView({
   onEdit,
   onDelete,
   onBulkDelete,
+  onBulkAssignRoom,
   onOpenComments,
   isDeleting,
   isBulkDeleting,
+  isBulkAssigningRoom,
   onViewDetail,
   showFloorColumn,
 }: SessionTableViewProps) {
@@ -90,6 +95,7 @@ export function SessionTableView({
   const [trackFilter, setTrackFilter] = useState<string | null>(null);
   const [floorFilter, setFloorFilter] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkRoomId, setBulkRoomId] = useState<string | null>(null);
   const [sortStatus, setSortStatus] = useState<
     DataTableSortStatus<FloorSession>
   >({
@@ -271,21 +277,51 @@ export function SessionTableView({
       </Group>
 
       {/* Bulk actions bar */}
-      {onBulkDelete && selectedIds.size > 0 && (
+      {selectedIds.size > 0 && (
         <Group gap="sm" mb="sm">
           <Text size="sm" fw={500}>
             {selectedIds.size} selected
           </Text>
-          <Button
-            size="xs"
-            color="red"
-            variant="light"
-            leftSection={<IconTrash size={14} />}
-            loading={isBulkDeleting}
-            onClick={() => onBulkDelete(Array.from(selectedIds))}
-          >
-            Delete selected
-          </Button>
+          {onBulkAssignRoom && roomOptions.length > 0 && (
+            <>
+              <Select
+                placeholder="Room"
+                size="xs"
+                clearable
+                data={roomOptions}
+                value={bulkRoomId}
+                onChange={setBulkRoomId}
+                leftSection={<IconDoor size={14} />}
+                style={{ minWidth: 150 }}
+              />
+              <Button
+                size="xs"
+                variant="light"
+                leftSection={<IconDoor size={14} />}
+                loading={isBulkAssigningRoom}
+                disabled={!bulkRoomId}
+                onClick={() => {
+                  if (bulkRoomId) {
+                    onBulkAssignRoom(Array.from(selectedIds), bulkRoomId);
+                  }
+                }}
+              >
+                Assign room for selected
+              </Button>
+            </>
+          )}
+          {onBulkDelete && (
+            <Button
+              size="xs"
+              color="red"
+              variant="light"
+              leftSection={<IconTrash size={14} />}
+              loading={isBulkDeleting}
+              onClick={() => onBulkDelete(Array.from(selectedIds))}
+            >
+              Delete selected
+            </Button>
+          )}
           <Button
             size="xs"
             variant="subtle"
@@ -308,7 +344,7 @@ export function SessionTableView({
         }
         style={onViewDetail ? { cursor: "pointer" } : undefined}
         columns={[
-          ...(onBulkDelete
+          ...(onBulkDelete ?? onBulkAssignRoom
             ? [
                 {
                   accessor: "select" as const,

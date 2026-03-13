@@ -1010,6 +1010,28 @@ export const scheduleRouter = createTRPCRouter({
       return { deletedCount: result.count };
     }),
 
+  // Bulk assign room to sessions (admin or staff only)
+  bulkAssignRoom: protectedProcedure
+    .input(
+      z.object({
+        ids: z.array(z.string()).min(1),
+        roomId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!isAdminOrStaff(ctx.session.user.role)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins and staff can bulk assign rooms.",
+        });
+      }
+      const result = await ctx.db.scheduleSession.updateMany({
+        where: { id: { in: input.ids } },
+        data: { roomId: input.roomId },
+      });
+      return { updatedCount: result.count };
+    }),
+
   // ──────────────────────────────────────────
   // Session slides
   // ──────────────────────────────────────────

@@ -41,7 +41,6 @@
 
   .schedule-sidebar {
     order: -1;
-    position: static;
   }
 }
 
@@ -81,6 +80,12 @@
 .schedule-sidebar {
   position: sticky;
   top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .schedule-sidebar {
+    position: static;
+  }
 }
 
 .schedule-filter-section {
