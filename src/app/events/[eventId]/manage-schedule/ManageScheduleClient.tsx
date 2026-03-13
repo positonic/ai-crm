@@ -807,11 +807,13 @@ export default function ManageScheduleClient({
     api.schedule.getMyFloors.useQuery({ eventId });
 
   // Set default active venue once loaded
-  if (floorsData?.venues && floorsData.venues.length > 0 && !activeVenueId) {
-    setActiveVenueId(
-      floorsData.venues.length > 1 ? "all" : floorsData.venues[0]!.id,
-    );
-  }
+  useEffect(() => {
+    if (floorsData?.venues && floorsData.venues.length > 0 && !activeVenueId) {
+      setActiveVenueId(
+        floorsData.venues.length > 1 ? "all" : floorsData.venues[0]!.id,
+      );
+    }
+  }, [floorsData?.venues, activeVenueId]);
 
   if (floorsLoading) {
     return (
