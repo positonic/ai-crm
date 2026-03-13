@@ -719,6 +719,9 @@ export default function SessionDetailPage() {
           prefillFirstName={prefillParts?.first}
           prefillLastName={prefillParts?.last}
           sessionTitle={session.title}
+          sessionDate={formatDateTime(session.startTime)}
+          sessionTime={`${formatTime(session.startTime)} - ${formatTime(session.endTime)}`}
+          roomName={session.room?.name}
         />
       )}
 

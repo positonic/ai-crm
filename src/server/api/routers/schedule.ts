@@ -222,7 +222,7 @@ export const scheduleRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const event = await resolveEventId(ctx.db, input.eventId);
 
-      const [venues, sessionTypes, tracks] = await Promise.all([
+      const [venuesUnsorted, sessionTypes, tracks] = await Promise.all([
         ctx.db.scheduleVenue.findMany({
           where: { eventId: event.id },
           orderBy: { order: "asc" },
@@ -255,6 +255,14 @@ export const scheduleRouter = createTRPCRouter({
           orderBy: { order: "asc" },
         }),
       ]);
+
+      // Sort venues by order field, then by natural number in name (e.g. "Floor 2" before "Floor 10")
+      const venues = venuesUnsorted.sort((a, b) => {
+        if (a.order !== b.order) return a.order - b.order;
+        const numA = parseInt(/\d+/.exec(a.name)?.[0] ?? "0", 10);
+        const numB = parseInt(/\d+/.exec(b.name)?.[0] ?? "0", 10);
+        return numA - numB;
+      });
 
       // Derive unique floor leads with their venue IDs
       const floorManagerMap = new Map<
@@ -1529,6 +1537,9 @@ export const scheduleRouter = createTRPCRouter({
         lastName: z.string().optional(),
         venueId: z.string().optional(),
         sessionTitle: z.string().optional(),
+        sessionDate: z.string().optional(),
+        sessionTime: z.string().optional(),
+        roomName: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -1640,6 +1651,11 @@ export const scheduleRouter = createTRPCRouter({
               profileUrl: `${baseUrl}/events/${event.slug}`,
               contactEmail:
                 process.env.ADMIN_EMAIL ?? "beth@fundingthecommons.io",
+              signinUrl: `${baseUrl}/auth/signin`,
+              scheduleUrl: `${baseUrl}/events/${event.slug}/schedule`,
+              sessionDate: input.sessionDate,
+              sessionTime: input.sessionTime,
+              roomName: input.roomName,
             },
             eventId: event.id,
             userId: user.id,

@@ -325,6 +325,9 @@ interface SpeakerSelectorProps {
   isAdmin?: boolean;
   eventId: string;
   sessionTitle?: string;
+  sessionDate?: string;
+  sessionTime?: string;
+  roomName?: string;
 }
 
 export function SpeakerSelector({
@@ -338,6 +341,9 @@ export function SpeakerSelector({
   isAdmin,
   eventId,
   sessionTitle,
+  sessionDate,
+  sessionTime,
+  roomName,
 }: SpeakerSelectorProps) {
   const useFloorSearch = venueId && !isAdmin;
   const [quickAddOpened, { open: openQuickAdd, close: closeQuickAdd }] =
@@ -494,6 +500,9 @@ export function SpeakerSelector({
         prefillFirstName={prefillParts?.first}
         prefillLastName={prefillParts?.last}
         sessionTitle={sessionTitle}
+        sessionDate={sessionDate}
+        sessionTime={sessionTime}
+        roomName={roomName}
       />
     </Stack>
   );
@@ -683,6 +692,32 @@ export default function EditSessionModal({
               isAdmin={isAdmin}
               eventId={eventId}
               sessionTitle={title}
+              sessionDate={
+                startTime
+                  ? startTime.toLocaleDateString("en-US", {
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })
+                  : undefined
+              }
+              sessionTime={
+                startTime && endTime
+                  ? `${startTime.toLocaleTimeString("en-US", {
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })} – ${endTime.toLocaleTimeString("en-US", {
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}`
+                  : undefined
+              }
+              roomName={
+                roomId
+                  ? rooms.find((r) => r.id === roomId)?.name
+                  : undefined
+              }
             />
             {rooms.length > 0 && (
               <Select

@@ -1,5 +1,5 @@
 import React from "react";
-import { Section, Text, Button } from "@react-email/components";
+import { Section, Text, Button, Hr } from "@react-email/components";
 import { BaseTemplate } from "./base";
 
 export interface SpeakerInvitedProps {
@@ -11,6 +11,11 @@ export interface SpeakerInvitedProps {
   profileUrl: string;
   faqUrl?: string;
   contactEmail: string;
+  sessionDate?: string;
+  sessionTime?: string;
+  roomName?: string;
+  scheduleUrl?: string;
+  signinUrl?: string;
 }
 
 export const SpeakerInvitedTemplate: React.FC<SpeakerInvitedProps> = ({
@@ -22,6 +27,11 @@ export const SpeakerInvitedTemplate: React.FC<SpeakerInvitedProps> = ({
   profileUrl,
   faqUrl,
   contactEmail,
+  sessionDate,
+  sessionTime,
+  roomName,
+  scheduleUrl,
+  signinUrl,
 }) => {
   const previewText = `You've been added as a speaker at ${eventName}`;
 
@@ -39,15 +49,49 @@ export const SpeakerInvitedTemplate: React.FC<SpeakerInvitedProps> = ({
 
         <Section style={detailsBox}>
           <Text style={detailsHeading}>Session Details</Text>
-          <Text style={detailsText}>Talk: {talkTitle}</Text>
-          {venueName && <Text style={detailsText}>Floor: {venueName}</Text>}
-          <Text style={detailsText}>Added by: {invitedByName}</Text>
+          <Text style={detailsText}>
+            <strong>Session:</strong> {talkTitle}
+          </Text>
+          {sessionDate && (
+            <Text style={detailsText}>
+              <strong>Date:</strong> {sessionDate}
+            </Text>
+          )}
+          {sessionTime && (
+            <Text style={detailsText}>
+              <strong>Time:</strong> {sessionTime}
+            </Text>
+          )}
+          {venueName && (
+            <Text style={detailsText}>
+              <strong>Floor:</strong> {venueName}
+            </Text>
+          )}
+          {roomName && (
+            <Text style={detailsText}>
+              <strong>Room:</strong> {roomName}
+            </Text>
+          )}
+          <Text style={detailsText}>
+            <strong>Added by:</strong> {invitedByName}
+          </Text>
         </Section>
 
         <Text style={subheading}>Next Steps</Text>
 
         <ol style={list}>
-          <li>Review and update your speaker profile and session details</li>
+          <li>
+            Sign in to the platform and review your speaker profile and session
+            details
+          </li>
+          {scheduleUrl && (
+            <li>
+              View the{" "}
+              <a href={scheduleUrl} style={link}>
+                full event schedule
+              </a>
+            </li>
+          )}
           {faqUrl && (
             <li>
               Check the{" "}
@@ -60,11 +104,47 @@ export const SpeakerInvitedTemplate: React.FC<SpeakerInvitedProps> = ({
           <li>Mark your calendar for the event</li>
         </ol>
 
-        <Section style={buttonContainer}>
-          <Button style={button} href={profileUrl}>
-            Review Your Speaker Profile
-          </Button>
-        </Section>
+        <Hr style={divider} />
+
+        <Text style={subheading}>How to Access the Platform</Text>
+
+        <Text style={paragraph}>
+          To view and update your speaker profile, sign in to the platform:
+        </Text>
+
+        {signinUrl ? (
+          <>
+            <Section style={buttonContainer}>
+              <Button style={button} href={signinUrl}>
+                Sign In to Your Profile
+              </Button>
+            </Section>
+
+            <Text style={paragraph}>
+              Select &ldquo;Sign in with email link instead&rdquo; to receive a
+              magic sign-in link to your email. If we&apos;ve already created a
+              profile for you, the system will send a sign-in link. If not,
+              please create a new account using the same email address.
+            </Text>
+          </>
+        ) : (
+          <Section style={buttonContainer}>
+            <Button style={button} href={profileUrl}>
+              Review Your Speaker Profile
+            </Button>
+          </Section>
+        )}
+
+        <Text style={paragraph}>
+          If you don&apos;t have time to complete your profile yet, please email
+          your session title, headshot, and preferred name + organization to{" "}
+          <a href={`mailto:${contactEmail}`} style={link}>
+            {contactEmail}
+          </a>{" "}
+          so we can list you on the website and agenda.
+        </Text>
+
+        <Hr style={divider} />
 
         <Text style={paragraph}>
           If you have any questions, please reach out to us at{" "}
@@ -128,7 +208,7 @@ const detailsHeading = {
 };
 
 const detailsText = {
-  fontSize: "14px",
+  fontSize: "15px",
   color: "#334155",
   margin: "8px 0",
 };
@@ -141,9 +221,14 @@ const list = {
   paddingLeft: "20px",
 };
 
+const divider = {
+  borderColor: "#e5e7eb",
+  margin: "24px 0",
+};
+
 const buttonContainer = {
   textAlign: "center" as const,
-  margin: "32px 0",
+  margin: "24px 0",
 };
 
 const button = {
