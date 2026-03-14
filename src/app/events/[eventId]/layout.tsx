@@ -23,8 +23,9 @@ export default async function EventLayout({
   const isScheduleCard =
     pathname.includes("/schedule-card/") ||
     pathname.includes("/schedule-cards/");
+  const isPrintSchedule = pathname.includes("/print-schedule");
 
-  if (isScheduleCard) {
+  if (isScheduleCard || isPrintSchedule) {
     return <>{children}</>;
   }
 

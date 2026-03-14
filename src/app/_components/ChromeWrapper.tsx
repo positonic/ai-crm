@@ -11,7 +11,8 @@ export function ChromeWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isStandalone =
     pathname.includes("/schedule-card/") ||
-    pathname.includes("/schedule-cards/");
+    pathname.includes("/schedule-cards/") ||
+    pathname.includes("/print-schedule");
 
   if (isStandalone) return null;
 
