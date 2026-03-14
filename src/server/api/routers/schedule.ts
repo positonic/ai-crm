@@ -105,30 +105,13 @@ const userSelectFields = {
  * Only enforced for non-admin users.
  */
 async function validateSpeakersAreFloorApplicants(
-  db: PrismaClient,
-  userRole: string | undefined | null,
-  venueId: string,
-  speakerUserIds: string[],
+  _db: PrismaClient,
+  _userRole: string | undefined | null,
+  _venueId: string,
+  _speakerUserIds: string[],
 ): Promise<void> {
-  if (isAdminOrStaff(userRole)) return;
-  if (speakerUserIds.length === 0) return;
-
-  const validApplicantCount = await db.applicationVenue.count({
-    where: {
-      venueId,
-      application: {
-        userId: { in: speakerUserIds },
-      },
-    },
-  });
-
-  if (validApplicantCount < speakerUserIds.length) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message:
-        "One or more selected participants have not applied for this floor. Floor leads can only add applicants for their floor.",
-    });
-  }
+  // Validation removed — any user can add any participant to any session
+  return;
 }
 
 export const scheduleRouter = createTRPCRouter({
