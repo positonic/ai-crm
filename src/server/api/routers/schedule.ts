@@ -662,10 +662,12 @@ export const scheduleRouter = createTRPCRouter({
     .input(
       z.object({
         eventId: z.string(),
-        names: z.array(z.string()).min(1).max(200),
+        names: z.array(z.string()).max(200),
       }),
     )
     .query(async ({ ctx, input }) => {
+      if (input.names.length === 0) return {};
+
       const event = await resolveEventId(ctx.db, input.eventId);
 
       // Single query: fetch ALL users who have applied for this event (with profile)
