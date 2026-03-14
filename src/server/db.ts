@@ -6,6 +6,8 @@ const createPrismaClient = () => {
   const url = new URL(env.DATABASE_URL);
   url.searchParams.set("connection_limit", "10");
   url.searchParams.set("pool_timeout", "30");
+  url.searchParams.set("connect_timeout", "10");
+  url.searchParams.set("keepalives", "1");
 
   return new PrismaClient({
     log:

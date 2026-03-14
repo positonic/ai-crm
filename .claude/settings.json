@@ -19,7 +19,8 @@
       "WebFetch(domain:biomejs.dev)",
       "WebSearch",
       "WebFetch(domain:pdsls.dev)",
-      "WebFetch(domain:www.hyperscan.dev)"
+      "WebFetch(domain:www.hyperscan.dev)",
+      "Bash(railway --help)"
     ],
     "additionalDirectories": [
       "/tmp",

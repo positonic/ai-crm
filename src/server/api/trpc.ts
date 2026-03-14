@@ -10,6 +10,7 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
@@ -79,6 +80,74 @@ export const createCallerFactory = t.createCallerFactory;
 export const createTRPCRouter = t.router;
 
 /**
+ * Check if a thrown error is a transient Prisma connection error worth retrying.
+ */
+function isTransientPrismaError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const name = (error as { name?: string }).name ?? "";
+  const message = (error as { message?: string }).message ?? "";
+  const code = (error as { code?: string }).code ?? "";
+
+  // PrismaClientInitializationError — can't reach the database
+  if (name === "PrismaClientInitializationError") return true;
+
+  // PrismaClientKnownRequestError with transient codes
+  if (name === "PrismaClientKnownRequestError") {
+    // P1001: Can't reach database server
+    // P1002: Database server timed out
+    // P2024: Timed out fetching a new connection from the pool
+    if (["P1001", "P1002", "P2024"].includes(code)) return true;
+  }
+
+  // Connection closed by server (pool exhaustion / proxy restart)
+  if (message.includes("Server has closed the connection")) return true;
+  if (message.includes("Can't reach database server")) return true;
+
+  return false;
+}
+
+const RETRY_DELAYS = [200, 500]; // ms — up to 2 retries
+
+/**
+ * Middleware that retries tRPC procedures on transient database connection errors.
+ * Retries up to 2 times with brief delays (200ms, 500ms) before giving up.
+ */
+const dbRetryMiddleware = t.middleware(async ({ next, path }) => {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
+    try {
+      return await next();
+    } catch (error) {
+      lastError = error;
+
+      // Only retry transient Prisma errors
+      // For TRPCErrors, check the cause (Prisma errors get wrapped)
+      const errorToCheck =
+        error instanceof TRPCError ? error.cause ?? error : error;
+      if (!isTransientPrismaError(errorToCheck)) throw error;
+
+      // Don't retry if we've exhausted attempts
+      if (attempt >= RETRY_DELAYS.length) break;
+
+      const delay = RETRY_DELAYS[attempt]!;
+      console.warn(
+        `[TRPC] ${path} transient DB error (attempt ${attempt + 1}/${RETRY_DELAYS.length + 1}), retrying in ${delay}ms`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  // All retries exhausted — log to Sentry and rethrow
+  Sentry.captureException(lastError, {
+    tags: { component: "dbRetryMiddleware", path },
+    extra: { retriesExhausted: true, maxAttempts: RETRY_DELAYS.length + 1 },
+  });
+  throw lastError;
+});
+
+/**
  * Middleware for timing procedure execution and adding an artificial delay in development.
  *
  * You can remove this if you don't like it, but it can help catch unwanted waterfalls by simulating
@@ -108,7 +177,9 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
  * guarantee that a user querying is authorized, but you can still access user session data if they
  * are logged in.
  */
-export const publicProcedure = t.procedure.use(timingMiddleware);
+export const publicProcedure = t.procedure
+  .use(dbRetryMiddleware)
+  .use(timingMiddleware);
 
 /**
  * Protected (authenticated) procedure
@@ -119,6 +190,7 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  * @see https://trpc.io/docs/procedures
  */
 export const protectedProcedure = t.procedure
+  .use(dbRetryMiddleware)
   .use(timingMiddleware)
   .use(({ ctx, next }) => {
     if (!ctx.session?.user) {
