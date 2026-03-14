@@ -71,8 +71,8 @@ export default function PrintScheduleClient({
 
     let sessions = scheduleData.sessions as ScheduleSession[];
 
-    // Filter to venue if specified
-    if (filteredVenueId) {
+    // Filter to venue if specified (skip for "all")
+    if (filteredVenueId && venueFilter !== "all") {
       sessions = sessions.filter((s) => s.venueId === filteredVenueId);
     }
 
@@ -144,7 +144,46 @@ export default function PrintScheduleClient({
   }
 
   const eventName = scheduleData.event.name;
-  const filteredVenueName = venueFilter
+
+  // Index mode: no venue filter → show links to each floor's printable page
+  if (!venueFilter) {
+    return (
+      <div className="print-schedule">
+        <h1>{eventName}</h1>
+        <p className="print-subtitle">Printable Schedules by Floor</p>
+
+        <ul className="print-index-list">
+          {venues.map((venue) => {
+            const sessionCount = (scheduleData.sessions as ScheduleSession[]).filter(
+              (s) => s.venueId === venue.id,
+            ).length;
+            return (
+              <li key={venue.id}>
+                <a
+                  href={`/events/${eventId}/print-schedule?venue=${encodeURIComponent(venue.name)}`}
+                >
+                  {venue.name}
+                </a>
+                <span className="print-index-count">
+                  {sessionCount} session{sessionCount !== 1 ? "s" : ""}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+
+        <p style={{ marginTop: "1.5rem" }}>
+          <a href={`/events/${eventId}/print-schedule?venue=all`}>
+            View all floors (single page)
+          </a>
+        </p>
+      </div>
+    );
+  }
+
+  // "all" venue filter → show everything without filtering
+  const showAllFloors = venueFilter === "all";
+  const filteredVenueName = !showAllFloors
     ? (venues.find((v) => v.id === filteredVenueId)?.name ?? venueFilter)
     : null;
 
@@ -160,16 +199,9 @@ export default function PrintScheduleClient({
         <button type="button" onClick={() => window.print()}>
           Print
         </button>
-        <button
-          type="button"
-          onClick={() =>
-            window.open(
-              `/events/${eventId}/schedule${venueFilter ? `?venue=${encodeURIComponent(venueFilter)}` : ""}`,
-            )
-          }
-        >
-          Back to Schedule
-        </button>
+        <a href={`/events/${eventId}/print-schedule`}>
+          ← All Floors
+        </a>
       </div>
 
       {grouped.map((day) => (
@@ -178,7 +210,7 @@ export default function PrintScheduleClient({
 
           {day.venues.map((venue) => (
             <div key={venue.id} className="print-venue-section">
-              {!filteredVenueId && <h3>{venue.name}</h3>}
+              {(showAllFloors || !filteredVenueId) && <h3>{venue.name}</h3>}
               <SessionTable sessions={venue.sessions} />
             </div>
           ))}
