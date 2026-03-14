@@ -50,12 +50,20 @@ const EMAIL_SAFETY_CONFIG = {
   requireConfirmationInProd: EMAIL_MODE === "production",
 };
 
+export interface EmailAttachment {
+  Name: string;
+  Content: string; // Base64 encoded
+  ContentType: string;
+  ContentID?: string | null;
+}
+
 export interface SendEmailParams {
   to: string;
   subject: string;
   htmlContent: string;
   textContent?: string;
   messageStream?: string;
+  attachments?: EmailAttachment[];
 }
 
 export interface SendEmailResult {
@@ -215,6 +223,12 @@ export async function sendEmail(
       HtmlBody: finalHtmlContent,
       TextBody: finalTextContent,
       MessageStream: params.messageStream ?? "outbound",
+      Attachments: params.attachments?.map((a) => ({
+        Name: a.Name,
+        Content: a.Content,
+        ContentType: a.ContentType,
+        ContentID: a.ContentID ?? null,
+      })),
     });
 
     return {

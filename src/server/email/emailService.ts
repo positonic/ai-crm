@@ -5,7 +5,7 @@ import type {
   EmailStatus,
   Prisma,
 } from "@prisma/client";
-import { sendEmail as sendViaPostmark } from "~/lib/email";
+import { sendEmail as sendViaPostmark, type EmailAttachment } from "~/lib/email";
 import { templates, type TemplateName, templateToEmailType } from "./templates";
 import { captureEmailError } from "~/utils/errorCapture";
 import type {
@@ -79,6 +79,7 @@ interface SendEmailParams {
   applicationId?: string;
   eventId?: string;
   userId?: string;
+  attachments?: EmailAttachment[];
 }
 
 export interface EmailResult {
@@ -135,6 +136,7 @@ export class EmailService {
         subject,
         htmlContent: html,
         textContent: text,
+        attachments: params.attachments,
       });
 
       // 4. Update status based on result

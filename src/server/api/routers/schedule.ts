@@ -18,6 +18,7 @@ import {
 } from "~/server/api/utils/scheduleAuth";
 import { getEmailService } from "~/server/email/emailService";
 import { captureEmailError } from "~/utils/errorCapture";
+import { generateIcsEvent } from "~/utils/ics";
 
 const PARTICIPANT_ROLES = [
   "Speaker",
@@ -3092,6 +3093,19 @@ export const scheduleRouter = createTRPCRouter({
         }
 
         try {
+          // Generate .ics calendar invite attachment
+          const locationParts = [session.venue?.name, session.room?.name].filter(Boolean);
+          const icsContent = generateIcsEvent({
+            uid: session.id,
+            summary: session.title,
+            description: `View session details: ${sessionUrl}`,
+            location: locationParts.join(" - "),
+            startTime: session.startTime,
+            endTime: session.endTime,
+            organizerEmail: contactEmail,
+          });
+          const icsBase64 = Buffer.from(icsContent).toString("base64");
+
           const result = await emailService.sendEmail({
             to: user.email,
             templateName: "sessionDetailsReminder",
@@ -3112,6 +3126,11 @@ export const scheduleRouter = createTRPCRouter({
             },
             eventId: event.id,
             userId: ctx.session.user.id,
+            attachments: [{
+              Name: "session.ics",
+              Content: icsBase64,
+              ContentType: "text/calendar; method=PUBLISH",
+            }],
           });
 
           if (result.success) {
