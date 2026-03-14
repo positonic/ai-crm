@@ -16,6 +16,8 @@ export interface SessionDetailsReminderProps {
   scheduleUrl?: string;
   signinUrl?: string;
   signinScreenshotUrl?: string;
+  googleCalendarUrl?: string;
+  outlookCalendarUrl?: string;
 }
 
 export const SessionDetailsReminderTemplate: React.FC<
@@ -34,6 +36,8 @@ export const SessionDetailsReminderTemplate: React.FC<
   scheduleUrl,
   signinUrl,
   signinScreenshotUrl,
+  googleCalendarUrl,
+  outlookCalendarUrl,
 }) => {
   const previewText = `Your session details for ${eventName}`;
 
@@ -110,6 +114,28 @@ export const SessionDetailsReminderTemplate: React.FC<
             </Text>
           )}
         </Section>
+
+        {(googleCalendarUrl ?? outlookCalendarUrl) && (
+          <Section style={calendarLinks}>
+            <Text style={calendarLinksText}>
+              <strong>Add to your calendar:</strong>{" "}
+              {googleCalendarUrl && (
+                <a href={googleCalendarUrl} style={link}>
+                  Google Calendar
+                </a>
+              )}
+              {googleCalendarUrl && outlookCalendarUrl && " · "}
+              {outlookCalendarUrl && (
+                <a href={outlookCalendarUrl} style={link}>
+                  Outlook
+                </a>
+              )}
+            </Text>
+            <Text style={calendarNote}>
+              A calendar file (.ics) is also attached to this email.
+            </Text>
+          </Section>
+        )}
 
         <Hr style={divider} />
 
@@ -340,6 +366,23 @@ const detailsText = {
   fontSize: "15px",
   color: "#334155",
   margin: "8px 0",
+};
+
+const calendarLinks = {
+  textAlign: "center" as const,
+  margin: "12px 0 0",
+};
+
+const calendarLinksText = {
+  fontSize: "15px",
+  color: "#334155",
+  margin: "0",
+};
+
+const calendarNote = {
+  fontSize: "13px",
+  color: "#6b7280",
+  margin: "4px 0 0",
 };
 
 const divider = {

@@ -18,7 +18,7 @@ import {
 } from "~/server/api/utils/scheduleAuth";
 import { getEmailService } from "~/server/email/emailService";
 import { captureEmailError } from "~/utils/errorCapture";
-import { generateIcsEvent } from "~/utils/ics";
+import { generateIcsEvent, generateGoogleCalendarUrl, generateOutlookCalendarUrl } from "~/utils/ics";
 
 const PARTICIPANT_ROLES = [
   "Speaker",
@@ -3095,7 +3095,7 @@ export const scheduleRouter = createTRPCRouter({
         try {
           // Generate .ics calendar invite attachment
           const locationParts = [session.venue?.name, session.room?.name].filter(Boolean);
-          const icsContent = generateIcsEvent({
+          const icsParams = {
             uid: session.id,
             summary: session.title,
             description: `View session details: ${sessionUrl}`,
@@ -3103,7 +3103,9 @@ export const scheduleRouter = createTRPCRouter({
             startTime: session.startTime,
             endTime: session.endTime,
             organizerEmail: contactEmail,
-          });
+            attendeeEmail: user.email,
+          };
+          const icsContent = generateIcsEvent(icsParams);
           const icsBase64 = Buffer.from(icsContent).toString("base64");
 
           const result = await emailService.sendEmail({
@@ -3123,13 +3125,15 @@ export const scheduleRouter = createTRPCRouter({
               scheduleUrl: `${baseUrl}/events/${eventPath}/schedule`,
               signinUrl: `${baseUrl}/signin`,
               signinScreenshotUrl: `${baseUrl}/images/signin-with-password.jpg`,
+              googleCalendarUrl: generateGoogleCalendarUrl(icsParams),
+              outlookCalendarUrl: generateOutlookCalendarUrl(icsParams),
             },
             eventId: event.id,
             userId: ctx.session.user.id,
             attachments: [{
               Name: "session.ics",
               Content: icsBase64,
-              ContentType: "text/calendar; method=PUBLISH",
+              ContentType: "text/calendar; method=REQUEST",
             }],
           });
 
