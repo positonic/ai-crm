@@ -4,8 +4,8 @@ import { env } from "~/env";
 
 const createPrismaClient = () => {
   const url = new URL(env.DATABASE_URL);
-  url.searchParams.set("connection_limit", "3");
-  url.searchParams.set("pool_timeout", "15");
+  url.searchParams.set("connection_limit", "10");
+  url.searchParams.set("pool_timeout", "30");
 
   return new PrismaClient({
     log:
