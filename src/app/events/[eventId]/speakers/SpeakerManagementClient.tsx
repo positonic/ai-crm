@@ -114,6 +114,9 @@ export default function SpeakerManagementClient({ eventId }: Props) {
   const [sessionsFloorFilter, setSessionsFloorFilter] = useState<string | null>(
     null,
   );
+  const [sessionsDateFilter, setSessionsDateFilter] = useState<string | null>(
+    null,
+  );
   const [selectedReminders, setSelectedReminders] = useState<string[]>([]);
   const [testEmail, setTestEmail] = useState("");
   const [confirmDeleteSessionId, setConfirmDeleteSessionId] = useState<
@@ -340,6 +343,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
       slidesUploadedAt: Date | null;
       venueId: string | null;
       venueName: string | null;
+      startTime: Date | null;
     }> = [];
     for (const session of sessionsData.sessions) {
       const venueId = session.venueId ?? null;
@@ -357,6 +361,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
           slidesUploadedAt: session.slidesUploadedAt,
           venueId,
           venueName,
+          startTime: session.startTime ?? null,
         });
       } else {
         for (const sp of session.sessionSpeakers) {
@@ -373,6 +378,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
             slidesUploadedAt: session.slidesUploadedAt,
             venueId,
             venueName,
+            startTime: session.startTime ?? null,
           });
         }
       }
@@ -380,10 +386,47 @@ export default function SpeakerManagementClient({ eventId }: Props) {
     return rows;
   }, [sessionsData]);
 
+  const availableSessionDates = useMemo(() => {
+    const dateSet = new Set<string>();
+    for (const row of sessionRows) {
+      if (row.startTime) {
+        const dateStr = new Date(row.startTime).toLocaleDateString("en-US", {
+          timeZone: "America/Los_Angeles",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        });
+        dateSet.add(dateStr);
+      }
+    }
+    return Array.from(dateSet)
+      .sort()
+      .map((d) => ({
+        value: d,
+        label: new Date(d + "T12:00:00").toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        }),
+      }));
+  }, [sessionRows]);
+
   const filteredSessionRows = useMemo(() => {
     let rows = sessionRows;
     if (sessionsFloorFilter) {
       rows = rows.filter((r) => r.venueId === sessionsFloorFilter);
+    }
+    if (sessionsDateFilter) {
+      rows = rows.filter((r) => {
+        if (!r.startTime) return false;
+        const dateStr = new Date(r.startTime).toLocaleDateString("en-US", {
+          timeZone: "America/Los_Angeles",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        });
+        return dateStr === sessionsDateFilter;
+      });
     }
     if (showMissingSlidesOnly) {
       rows = rows.filter((r) => !r.slidesUrl);
@@ -398,7 +441,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
       );
     }
     return rows;
-  }, [sessionRows, sessionsFloorFilter, showMissingSlidesOnly, sessionsSearch]);
+  }, [sessionRows, sessionsFloorFilter, sessionsDateFilter, showMissingSlidesOnly, sessionsSearch]);
 
   // ── Memoized derived computations (must be before early returns) ──
   const remindableRows = useMemo(
@@ -986,6 +1029,17 @@ export default function SpeakerManagementClient({ eventId }: Props) {
                     value={sessionsSearch}
                     onChange={(e) => setSessionsSearch(e.currentTarget.value)}
                     style={{ flex: 1 }}
+                  />
+                  <Select
+                    placeholder="All dates"
+                    data={availableSessionDates}
+                    value={sessionsDateFilter}
+                    onChange={(val) => {
+                      setSessionsDateFilter(val);
+                      setSelectedReminders([]);
+                    }}
+                    clearable
+                    w={180}
                   />
                   <Select
                     placeholder="All floors"

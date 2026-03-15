@@ -71,3 +71,7 @@ db-backups/
 .env.sentry-build-plugin
 /public/uploads/**
 !/public/uploads/.gitkeep
+
+# CSV data files
+public/csvs/
+scripts/*.csv

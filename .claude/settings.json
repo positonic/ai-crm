@@ -20,7 +20,9 @@
       "WebSearch",
       "WebFetch(domain:pdsls.dev)",
       "WebFetch(domain:www.hyperscan.dev)",
-      "Bash(railway --help)"
+      "Bash(railway --help)",
+      "Read(//Users/james/Downloads/Telegram Desktop/Private & Shared 2/**)",
+      "Bash(git rm:*)"
     ],
     "additionalDirectories": [
       "/tmp",
