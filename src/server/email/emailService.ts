@@ -8,6 +8,7 @@ import type {
 import { sendEmail as sendViaPostmark, type EmailAttachment } from "~/lib/email";
 import { templates, type TemplateName, templateToEmailType } from "./templates";
 import { captureEmailError } from "~/utils/errorCapture";
+import { getDisplayName } from "~/utils/userDisplay";
 import type {
   ApplicationAcceptedProps,
   ApplicationRejectedProps,
@@ -205,10 +206,7 @@ export class EmailService {
     let templateName: TemplateName;
     let templateData: TemplateProps;
 
-    const applicantName =
-      (application.user?.firstName ?? application.user?.surname)
-        ? `${application.user.firstName ?? ""} ${application.user.surname ?? ""}`.trim()
-        : (application.user?.name ?? application.user?.email ?? "Applicant");
+    const applicantName = getDisplayName(application.user, "Applicant");
     const applicantFirstName =
       application.user?.firstName ??
       application.user?.name?.split(" ")[0] ??

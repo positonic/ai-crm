@@ -8,6 +8,7 @@ import { TRPCError } from "@trpc/server";
 import { type EmailResult } from "~/server/email/emailService";
 import { env } from "~/env";
 import { type PrismaClient } from "@prisma/client";
+import { getDisplayName } from "~/utils/userDisplay";
 
 /**
  * Resolve event identifier - accepts both CUID and slug.
@@ -1551,10 +1552,7 @@ export const projectRouter = createTRPCRouter({
       // Use void to explicitly ignore the promise (fire-and-forget pattern)
       void (async () => {
         try {
-          const commenterName =
-            comment.user.name ??
-            `${comment.user.firstName ?? ""} ${comment.user.surname ?? ""}`.trim() ??
-            "Someone";
+          const commenterName = getDisplayName(comment.user, "Someone");
 
           const updateUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://platform.fundingthecommons.io"}/events/${input.eventId}/updates/${input.updateId}`;
 
@@ -1656,10 +1654,7 @@ export const projectRouter = createTRPCRouter({
           const emailPromises = recipients
             .filter((recipient) => recipient?.email)
             .map(async (recipient): Promise<EmailResult> => {
-              const recipientName =
-                recipient!.name ??
-                `${recipient!.firstName ?? ""} ${recipient!.surname ?? ""}`.trim() ??
-                "Team Member";
+              const recipientName = getDisplayName(recipient, "Team Member");
 
               return emailService.sendUpdateCommentEmail({
                 recipientEmail: recipient!.email!,

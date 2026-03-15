@@ -7,6 +7,7 @@ import {
   publicProcedure,
 } from "~/server/api/trpc";
 import { env } from "~/env";
+import { getDisplayName } from "~/utils/userDisplay";
 
 // Helper function to send message to Telegram channel
 async function sendTelegramNotification(message: string) {
@@ -744,10 +745,7 @@ ${tags.length > 0 ? `🏷️ Tags: ${tags.join(", ")}` : ""}
       // Send notifications asynchronously (fire-and-forget)
       void (async () => {
         try {
-          const commenterName =
-            comment.user.name ??
-            `${comment.user.firstName ?? ""} ${comment.user.surname ?? ""}`.trim() ??
-            "Someone";
+          const commenterName = getDisplayName(comment.user, "Someone");
 
           const baseUrl =
             process.env.NEXT_PUBLIC_APP_URL ??
@@ -808,10 +806,7 @@ ${tags.length > 0 ? `🏷️ Tags: ${tags.join(", ")}` : ""}
           for (const recipient of recipients) {
             if (!recipient.email) continue;
 
-            const recipientName =
-              recipient.name ??
-              `${recipient.firstName ?? ""} ${recipient.surname ?? ""}`.trim() ??
-              "User";
+            const recipientName = getDisplayName(recipient, "User");
 
             const isReply = parentComment?.userId === recipient.id;
 

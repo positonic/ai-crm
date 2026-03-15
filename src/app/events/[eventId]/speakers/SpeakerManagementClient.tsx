@@ -52,6 +52,7 @@ import {
   BulkInviteModal,
   CurrentRoleHoldersTable,
 } from "~/app/admin/_components/invitations";
+import { getDisplayName } from "~/utils/userDisplay";
 
 interface Props {
   eventId: string;
@@ -370,8 +371,7 @@ export default function SpeakerManagementClient({ eventId }: Props) {
             sessionId: session.id,
             sessionTitle: session.title,
             speakerUserId: sp.user.id,
-            speakerName:
-              sp.user.firstName ?? sp.user.name ?? sp.user.email ?? "Unknown",
+            speakerName: getDisplayName(sp.user, "Unknown"),
             speakerEmail: sp.user.email ?? "",
             slidesUrl: session.slidesUrl,
             slidesFileName: session.slidesFileName,

@@ -32,6 +32,7 @@ import {
 } from "@tabler/icons-react";
 import { api } from "~/trpc/react";
 import { useInvitationMutations } from "~/app/admin/_components/invitations";
+import { getDisplayName } from "~/utils/userDisplay";
 
 interface FloorOwnersClientProps {
   eventId: string;
@@ -184,9 +185,7 @@ function AssignFloorOwnerForm({ eventId, venues }: AssignFormProps) {
   });
 
   const userOptions = (searchResults ?? []).map((user) => {
-    const name =
-      `${user.firstName ?? ""} ${user.surname ?? ""}`.trim() ||
-      (user.name ?? "Unknown");
+    const name = getDisplayName(user, "Unknown");
     const email = user.email ? ` (${user.email})` : "";
     return { value: user.id, label: `${name}${email}` };
   });
@@ -427,9 +426,7 @@ function VenueOwnerCard({
       ) : (
         <Stack gap="xs">
           {owners.map((owner) => {
-            const displayName =
-              `${owner.user.firstName ?? ""} ${owner.user.surname ?? ""}`.trim() ||
-              (owner.user.name ?? owner.user.email ?? "Unknown");
+            const displayName = getDisplayName(owner.user, "Unknown");
 
             return (
               <Group key={owner.id} justify="space-between">

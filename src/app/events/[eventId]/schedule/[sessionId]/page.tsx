@@ -615,11 +615,7 @@ export default function SessionDetailPage() {
                 // Matched to a user profile — render as clickable card
                 const avatarSrc =
                   resolved.profile?.avatarUrl ?? resolved.image ?? undefined;
-                const displayName =
-                  [resolved.firstName, resolved.surname]
-                    .filter(Boolean)
-                    .join(" ") ||
-                  (resolved.name ?? speakerName);
+                const displayName = getDisplayName(resolved, speakerName);
                 const titleParts = [
                   resolved.profile?.jobTitle,
                   resolved.profile?.company,

@@ -47,6 +47,7 @@ import {
 import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
 import { getAvatarUrl, getAvatarInitials } from "~/utils/avatarUtils";
+import { getDisplayName } from "~/utils/userDisplay";
 
 const speakerApplicationSchema = z.object({
   // Session details
@@ -265,9 +266,7 @@ export default function SpeakerApplicationForm({
     const options: { value: string; label: string }[] = [];
 
     for (const fm of floorManagers) {
-      const displayName = fm.firstName
-        ? `${fm.firstName}${fm.surname ? ` ${fm.surname}` : ""}`
-        : (fm.name ?? "Unknown");
+      const displayName = getDisplayName(fm, "Unknown");
 
       const managerVenueNames = venues
         .filter((v) => fm.venueIds.includes(v.id))

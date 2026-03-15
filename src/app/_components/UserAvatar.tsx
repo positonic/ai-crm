@@ -2,7 +2,7 @@
 
 import { Avatar, type AvatarProps } from "@mantine/core";
 import { getAvatarUrl, getAvatarInitials } from "~/utils/avatarUtils";
-import { getDisplayName } from "~/utils/userDisplay";
+import { getDisplayName, getFullName } from "~/utils/userDisplay";
 
 interface UserData {
   customAvatarUrl?: string | null;
@@ -40,11 +40,7 @@ export function UserAvatar({
 
   const avatarInitials = showInitials
     ? getAvatarInitials({
-        name:
-          user.name ??
-          (user.firstName && user.surname
-            ? `${user.firstName} ${user.surname}`
-            : null),
+        name: getFullName(user),
         email: user.email,
       })
     : "";

@@ -24,6 +24,7 @@ import {
 import { api } from "~/trpc/react";
 import { getKudosTier } from "~/utils/kudosCalculation";
 import { UserAvatar } from "~/app/_components/UserAvatar";
+import { getDisplayName } from "~/utils/userDisplay";
 
 export function KudosLeaderboardClient() {
   const { data: leaderboard, isLoading: leaderboardLoading } =
@@ -84,10 +85,7 @@ export function KudosLeaderboardClient() {
             <Stack gap="md">
               {leaderboard?.map((entry, index) => {
                 const tier = getKudosTier(entry.kudos);
-                const displayName =
-                  entry.user.firstName && entry.user.surname
-                    ? `${entry.user.firstName} ${entry.user.surname}`
-                    : (entry.user.name ?? entry.user.email);
+                const displayName = getDisplayName(entry.user);
 
                 return (
                   <Paper key={entry.user.id} withBorder p="lg" radius="md">

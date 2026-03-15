@@ -13,6 +13,7 @@ import { verifyPassword } from "~/utils/password";
 import { sendEmail } from "~/lib/email";
 import { MagicLinkTemplate } from "~/server/email/templates/magicLink";
 import { acceptPendingInvitations } from "./acceptInvitations";
+import { getFullName } from "~/utils/userDisplay";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -111,10 +112,7 @@ export const authConfig = {
         const userForAuth = {
           id: user.id,
           email: user.email,
-          name:
-            (`${user.firstName ?? ""} ${user.surname ?? ""}`.trim() ||
-              user.name) ??
-            null,
+          name: getFullName(user),
           role: user.role ?? undefined,
         };
 

@@ -18,6 +18,7 @@ import {
 } from "~/server/api/utils/scheduleAuth";
 import { getEmailService } from "~/server/email/emailService";
 import { captureEmailError } from "~/utils/errorCapture";
+import { getDisplayName } from "~/utils/userDisplay";
 import { generateIcsEvent, generateGoogleCalendarUrl, generateOutlookCalendarUrl } from "~/utils/ics";
 
 const PARTICIPANT_ROLES = [
@@ -2100,11 +2101,7 @@ export const scheduleRouter = createTRPCRouter({
           const eventPath = event.slug ?? event.id;
           const manageFloorUrl = `${baseUrl}/events/${eventPath}/manage-schedule`;
 
-          const fullName = [user.firstName, user.surname]
-            .filter(Boolean)
-            .join(" ");
-          const floorOwnerName =
-            fullName.length > 0 ? fullName : (user.name ?? "there");
+          const floorOwnerName = getDisplayName(user, "there");
           const assignedByName =
             ctx.session.user.name ??
             ctx.session.user.email ??
@@ -2800,7 +2797,7 @@ export const scheduleRouter = createTRPCRouter({
           continue;
         }
 
-        const speakerName = user.firstName ?? user.name ?? user.email;
+        const speakerName = getDisplayName(user);
         const sessionUrl = `${baseUrl}/events/${eventPath}/schedule/${session.id}`;
 
         const sessionDate = session.startTime.toLocaleDateString("en-US", {
@@ -3041,7 +3038,7 @@ export const scheduleRouter = createTRPCRouter({
           continue;
         }
 
-        const speakerName = user.firstName ?? user.name ?? user.email;
+        const speakerName = getDisplayName(user);
         const sessionUrl = `${baseUrl}/events/${eventPath}/schedule/${session.id}`;
 
         const sessionDate = session.startTime.toLocaleDateString("en-US", {

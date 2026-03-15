@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { getDisplayName } from "~/utils/userDisplay";
 import {
   Container,
   Title,
@@ -130,12 +131,8 @@ export function AIInteractionsClient() {
 
   const totalPages = data ? Math.ceil(data.total / ITEMS_PER_PAGE) : 0;
 
-  const getUserDisplayName = (user: InteractionDetail["user"]): string => {
-    if (user.firstName ?? user.surname) {
-      return [user.firstName, user.surname].filter(Boolean).join(" ");
-    }
-    return user.name ?? user.email ?? "Unknown";
-  };
+  const getUserDisplayName = (user: InteractionDetail["user"]): string =>
+    getDisplayName(user, "Unknown");
 
   const tableRows = useMemo(() => {
     if (!data?.interactions) return null;

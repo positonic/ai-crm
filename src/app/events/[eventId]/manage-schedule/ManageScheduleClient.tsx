@@ -782,9 +782,7 @@ function UnlinkedSpeakersPanel({ eventId }: { eventId: string }) {
                     loading={linkMutation.isPending}
                   >
                     Link{" "}
-                    {[candidate.firstName, candidate.surname]
-                      .filter(Boolean)
-                      .join(" ") || candidate.name}
+                    {getDisplayName(candidate)}
                     {candidate.confidence === "partial" ? " (?)" : ""}
                   </Button>
                 ))}

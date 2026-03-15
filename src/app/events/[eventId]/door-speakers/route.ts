@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { db } from "~/server/db";
+import { getDisplayName } from "~/utils/userDisplay";
 
 export const dynamic = "force-dynamic";
 
@@ -59,10 +60,7 @@ export async function GET(
     for (const sp of sessionSpeakers) {
       if (speakerMap.has(sp.user.id)) continue;
 
-      const fullName =
-        sp.user.firstName && sp.user.surname
-          ? `${sp.user.firstName} ${sp.user.surname}`
-          : (sp.user.name ?? "");
+      const fullName = getDisplayName(sp.user, "");
 
       speakerMap.set(sp.user.id, {
         fullName,

@@ -629,15 +629,8 @@ export default function ImpactPage({ params }: ImpactPageProps) {
                   image: string | null;
                 };
 
-                const fromName =
-                  from?.firstName && from?.surname
-                    ? `${from.firstName} ${from.surname}`
-                    : (from?.name ?? from?.email ?? "Unknown");
-
-                const toName =
-                  to?.firstName && to?.surname
-                    ? `${to.firstName} ${to.surname}`
-                    : (to?.name ?? to?.email ?? "Unknown");
+                const fromName = getDisplayName(from, "Unknown");
+                const toName = getDisplayName(to, "Unknown");
 
                 let icon = <IconSparkles size={16} />;
                 let title = "";

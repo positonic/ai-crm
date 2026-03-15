@@ -246,10 +246,7 @@ export default function ExpandedView({ sessions, eventId, resolvedSpeakers, venu
                                 undefined)
                               : undefined;
                             const displayName = resolved
-                              ? ([resolved.firstName, resolved.surname]
-                                  .filter(Boolean)
-                                  .join(" ") ||
-                                (resolved.name ?? speakerName))
+                              ? getDisplayName(resolved, speakerName)
                               : speakerName;
 
                             return (

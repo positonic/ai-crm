@@ -6,6 +6,7 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
+import { getDisplayName } from "~/utils/userDisplay";
 
 // Input schemas
 const CreateThreadSchema = z.object({
@@ -392,10 +393,7 @@ export const forumRouter = createTRPCRouter({
       // Send notifications asynchronously (fire-and-forget)
       void (async () => {
         try {
-          const commenterName =
-            comment.user.name ??
-            `${comment.user.firstName ?? ""} ${comment.user.surname ?? ""}`.trim() ??
-            "Someone";
+          const commenterName = getDisplayName(comment.user, "Someone");
 
           const baseUrl =
             process.env.NEXT_PUBLIC_APP_URL ??
@@ -453,10 +451,7 @@ export const forumRouter = createTRPCRouter({
           for (const recipient of recipients) {
             if (!recipient.email) continue;
 
-            const recipientName =
-              recipient.name ??
-              `${recipient.firstName ?? ""} ${recipient.surname ?? ""}`.trim() ??
-              "Community Member";
+            const recipientName = getDisplayName(recipient, "Community Member");
 
             const isReply = parentComment?.userId === recipient.id;
 

@@ -6,6 +6,7 @@ import {
 } from "~/server/api/trpc";
 import { hashPassword } from "~/utils/password";
 import { TRPCError } from "@trpc/server";
+import { getFullName } from "~/utils/userDisplay";
 
 export const userRouter = createTRPCRouter({
   create: publicProcedure
@@ -41,7 +42,7 @@ export const userRouter = createTRPCRouter({
         data: {
           firstName: input.firstName,
           surname: input.surname ?? "",
-          name: `${input.firstName} ${input.surname ?? ""}`.trim(), // Maintain legacy field during transition
+          name: getFullName({ firstName: input.firstName, surname: input.surname }) ?? "", // Maintain legacy field during transition
           email: input.email,
           password: hashedPassword,
         },
@@ -306,7 +307,7 @@ export const userRouter = createTRPCRouter({
         });
         const firstName = input.firstName ?? existing?.firstName ?? "";
         const surname = input.surname ?? existing?.surname ?? "";
-        data.name = `${firstName} ${surname}`.trim();
+        data.name = getFullName({ firstName, surname }) ?? "";
       }
 
       try {

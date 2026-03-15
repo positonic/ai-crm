@@ -3,6 +3,7 @@ import { type PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { env } from "~/env.js";
 import * as Sentry from "@sentry/nextjs";
+import { getDisplayName } from "~/utils/userDisplay";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -148,11 +149,7 @@ export class ActivityCertService {
         const user = ss.user;
         const existing = speakerMap.get(user.id);
 
-        const fullName = [user.firstName, user.surname]
-          .filter(Boolean)
-          .join(" ");
-        const displayName =
-          fullName.length > 0 ? fullName : (user.name ?? "Unknown");
+        const displayName = getDisplayName(user, "Unknown");
 
         if (existing) {
           existing.sessions.push(session.title);

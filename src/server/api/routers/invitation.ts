@@ -13,6 +13,7 @@ import {
   isAdminOrStaff,
   getUserOwnedVenueIds,
 } from "~/server/api/utils/scheduleAuth";
+import { getDisplayName } from "~/utils/userDisplay";
 
 // Helper function to check if user has admin/staff role
 function checkAdminAccess(userRole?: string | null) {
@@ -31,10 +32,7 @@ function getInviterName(user: {
   name?: string | null;
   email?: string | null;
 }): string {
-  if (user.firstName ?? user.surname) {
-    return `${user.firstName ?? ""} ${user.surname ?? ""}`.trim();
-  }
-  return user.name ?? user.email ?? "Event Admin";
+  return getDisplayName(user, "Event Admin");
 }
 
 // Helper function to send invitation email based on invitation type

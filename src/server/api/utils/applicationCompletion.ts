@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { getEmailService } from "~/server/email/emailService";
+import { getDisplayName } from "~/utils/userDisplay";
 
 export interface ApplicationCompletionResult {
   isComplete: boolean;
@@ -245,10 +246,7 @@ export async function sendSubmissionNotification(
   const eventSlug = application.event.slug ?? application.eventId;
   const applicationUrl = `${baseUrl}/events/${eventSlug}/apply`;
 
-  const applicantName =
-    (application.user.firstName ?? application.user.surname)
-      ? `${application.user.firstName ?? ""} ${application.user.surname ?? ""}`.trim()
-      : (application.user.name ?? application.user.email ?? "there");
+  const applicantName = getDisplayName(application.user, "there");
 
   const applicantFirstName =
     application.user.firstName ??

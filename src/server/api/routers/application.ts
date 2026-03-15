@@ -13,6 +13,7 @@ import {
   sendSubmissionNotification,
 } from "~/server/api/utils/applicationCompletion";
 import { captureApiError, captureEmailError } from "~/utils/errorCapture";
+import { getDisplayName } from "~/utils/userDisplay";
 import {
   assertAdminOrEventFloorOwner,
   isAdminOrStaff,
@@ -3010,10 +3011,7 @@ export const applicationRouter = createTRPCRouter({
         .filter((app) => app.user)
         .map((app) => {
           const user = app.user!;
-          const displayName =
-            user.firstName && user.surname
-              ? `${user.firstName} ${user.surname}`
-              : (user.name ?? "Unknown Resident");
+          const displayName = getDisplayName(user, "Unknown Resident");
 
           return {
             type: "resident",
@@ -3064,10 +3062,7 @@ export const applicationRouter = createTRPCRouter({
         .filter((app) => app.user)
         .map((app) => {
           const user = app.user!;
-          const displayName =
-            user.firstName && user.surname
-              ? `${user.firstName} ${user.surname}`
-              : (user.name ?? "Unknown Resident");
+          const displayName = getDisplayName(user, "Unknown Resident");
 
           return {
             type: "resident",
@@ -3210,10 +3205,7 @@ export const applicationRouter = createTRPCRouter({
         .filter((app) => app.user)
         .map((app) => {
           const user = app.user!;
-          const displayName =
-            user.firstName && user.surname
-              ? `${user.firstName} ${user.surname}`
-              : (user.name ?? "Unknown Resident");
+          const displayName = getDisplayName(user, "Unknown Resident");
 
           return {
             type: "resident",
