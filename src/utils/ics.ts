@@ -128,14 +128,21 @@ export function generateGoogleCalendarUrl(params: IcsEventParams): string {
 
 /**
  * Generate an Outlook.com "Add Event" URL.
- * Outlook uses ISO strings but we append the timezone offset.
+ * DB stores PT values in UTC fields, so we use formatDateLocal to get the
+ * raw numeric values and build an ISO-like string that Outlook interprets
+ * in the given timezone.
  */
 export function generateOutlookCalendarUrl(params: IcsEventParams): string {
+  const fmt = (d: Date) => {
+    const local = formatDateLocal(d);
+    // Convert 20260315T100000 → 2026-03-15T10:00:00
+    return `${local.slice(0, 4)}-${local.slice(4, 6)}-${local.slice(6, 8)}T${local.slice(9, 11)}:${local.slice(11, 13)}:${local.slice(13, 15)}`;
+  };
   const url = new URL("https://outlook.live.com/calendar/0/action/compose");
   url.searchParams.set("rru", "addevent");
   url.searchParams.set("subject", params.summary);
-  url.searchParams.set("startdt", params.startTime.toISOString());
-  url.searchParams.set("enddt", params.endTime.toISOString());
+  url.searchParams.set("startdt", fmt(params.startTime));
+  url.searchParams.set("enddt", fmt(params.endTime));
   if (params.location) url.searchParams.set("location", params.location);
   if (params.description) url.searchParams.set("body", params.description);
   return url.toString();
