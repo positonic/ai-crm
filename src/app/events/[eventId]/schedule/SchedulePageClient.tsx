@@ -313,7 +313,19 @@ export default function SchedulePageClient({
 
   // Stage 3: Group by time slot (agenda view only)
   const [activeDay, setActiveDay] = useState<string | null>(null);
-  const selectedDay = activeDay ?? days[0] ?? null;
+
+  // Default to today's day if it exists in the schedule, otherwise first day
+  const todayKey = useMemo(() => {
+    const now = new Date();
+    return now.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      timeZone: "UTC",
+    });
+  }, []);
+  const selectedDay =
+    activeDay ?? (days.includes(todayKey) ? todayKey : days[0]) ?? null;
 
   useEffect(() => {
     if (activeDay && !days.includes(activeDay)) {
