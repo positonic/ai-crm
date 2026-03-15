@@ -390,13 +390,14 @@ export default function SpeakerManagementClient({ eventId }: Props) {
     const dateSet = new Set<string>();
     for (const row of sessionRows) {
       if (row.startTime) {
-        const dateStr = new Date(row.startTime).toLocaleDateString("en-US", {
+        // Get YYYY-MM-DD in Pacific time
+        const parts = new Intl.DateTimeFormat("en-CA", {
           timeZone: "America/Los_Angeles",
           year: "numeric",
           month: "2-digit",
           day: "2-digit",
-        });
-        dateSet.add(dateStr);
+        }).format(new Date(row.startTime));
+        dateSet.add(parts);
       }
     }
     return Array.from(dateSet)
@@ -419,12 +420,12 @@ export default function SpeakerManagementClient({ eventId }: Props) {
     if (sessionsDateFilter) {
       rows = rows.filter((r) => {
         if (!r.startTime) return false;
-        const dateStr = new Date(r.startTime).toLocaleDateString("en-US", {
+        const dateStr = new Intl.DateTimeFormat("en-CA", {
           timeZone: "America/Los_Angeles",
           year: "numeric",
           month: "2-digit",
           day: "2-digit",
-        });
+        }).format(new Date(r.startTime));
         return dateStr === sessionsDateFilter;
       });
     }
