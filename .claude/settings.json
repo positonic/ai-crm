@@ -22,7 +22,8 @@
       "WebFetch(domain:www.hyperscan.dev)",
       "Bash(railway --help)",
       "Read(//Users/james/Downloads/Telegram Desktop/Private & Shared 2/**)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "WebFetch(domain:elevenlabs.io)"
     ],
     "additionalDirectories": [
       "/tmp",

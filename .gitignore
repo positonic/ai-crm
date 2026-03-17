@@ -75,3 +75,5 @@ db-backups/
 # CSV data files
 public/csvs/
 scripts/*.csv
+
+audio/

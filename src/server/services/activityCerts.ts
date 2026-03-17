@@ -259,6 +259,44 @@ export class ActivityCertService {
   }
 
   /**
+   * Delete old AT Proto records for an event (activity cert + hyperboard).
+   */
+  async deleteEventRecords(
+    activityCertUri: string,
+    hyperboardUri: string | null,
+  ): Promise<void> {
+    const { agent, did } = await this.getPlatformAgent();
+
+    const parseUri = (uri: string) => {
+      const match = /^at:\/\/(did:[^/]+)\/([^/]+)\/([^/]+)$/.exec(uri);
+      if (!match) return null;
+      return { did: match[1]!, collection: match[2]!, rkey: match[3]! };
+    };
+
+    // Delete activity cert record
+    const activityParsed = parseUri(activityCertUri);
+    if (activityParsed) {
+      await agent.com.atproto.repo.deleteRecord({
+        repo: did,
+        collection: activityParsed.collection,
+        rkey: activityParsed.rkey,
+      });
+    }
+
+    // Delete hyperboard record
+    if (hyperboardUri) {
+      const boardParsed = parseUri(hyperboardUri);
+      if (boardParsed) {
+        await agent.com.atproto.repo.deleteRecord({
+          repo: did,
+          collection: boardParsed.collection,
+          rkey: boardParsed.rkey,
+        });
+      }
+    }
+  }
+
+  /**
    * Publish an event as an activity cert with speakers as contributors
    * and create a hyperboard for it.
    */

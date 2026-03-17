@@ -302,6 +302,95 @@ export const hypercertsRouter = createTRPCRouter({
     }),
 
   /**
+   * Delete old records and re-publish an event activity cert
+   */
+  republishEventActivityCert: protectedProcedure
+    .input(
+      z.object({
+        eventId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!isAdminOrStaff(ctx.session.user.role)) {
+        const event = await ctx.db.event.findUnique({
+          where: { id: input.eventId },
+          select: { createdById: true },
+        });
+
+        if (!event) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Event not found",
+          });
+        }
+
+        if (event.createdById !== ctx.session.user.id) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message:
+              "Only admins or event creators can republish activity certs",
+          });
+        }
+      }
+
+      const existingEvent = await ctx.db.event.findUnique({
+        where: { id: input.eventId },
+        select: {
+          activityCertUri: true,
+          hyperboardUri: true,
+        },
+      });
+
+      if (!existingEvent?.activityCertUri) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "No activity cert has been published for this event yet",
+        });
+      }
+
+      const service = createActivityCertService(ctx.db);
+
+      // Delete old AT Proto records
+      await service.deleteEventRecords(
+        existingEvent.activityCertUri,
+        existingEvent.hyperboardUri,
+      );
+
+      // Clear old URIs
+      await ctx.db.event.update({
+        where: { id: input.eventId },
+        data: {
+          activityCertUri: null,
+          activityCertCid: null,
+          hyperboardUri: null,
+          hyperboardCid: null,
+          activityCertPublishedAt: null,
+        },
+      });
+
+      // Re-publish
+      const result = await service.publishEventActivityCert(input.eventId);
+
+      await ctx.db.event.update({
+        where: { id: input.eventId },
+        data: {
+          activityCertUri: result.activityUri,
+          activityCertCid: result.activityCid,
+          hyperboardUri: result.boardUri,
+          hyperboardCid: result.boardCid,
+          activityCertPublishedAt: new Date(),
+        },
+      });
+
+      return {
+        success: true,
+        activityUri: result.activityUri,
+        boardUri: result.boardUri,
+        contributorCount: result.contributorCount,
+      };
+    }),
+
+  /**
    * Get activity cert publish status for an event
    */
   getEventActivityCertStatus: protectedProcedure

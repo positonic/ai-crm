@@ -36,6 +36,7 @@ import {
   IconTicket,
   IconCertificate,
   IconTarget,
+  IconRefresh,
 } from "@tabler/icons-react";
 import { useState } from "react";
 import Link from "next/link";
@@ -220,6 +221,25 @@ export default function AdminEventDetailClient({
       onError: (error) => {
         notifications.show({
           title: "Failed to Publish",
+          message: error.message,
+          color: "red",
+        });
+      },
+    });
+
+  const republishActivityCert =
+    api.hypercerts.republishEventActivityCert.useMutation({
+      onSuccess: (data) => {
+        notifications.show({
+          title: "Activity Cert Re-published",
+          message: `Re-published with ${String(data.contributorCount)} contributor${data.contributorCount === 1 ? "" : "s"}`,
+          color: "green",
+        });
+        void activityCertStatus.refetch();
+      },
+      onError: (error) => {
+        notifications.show({
+          title: "Failed to Re-publish",
           message: error.message,
           color: "red",
         });
@@ -535,6 +555,25 @@ export default function AdminEventDetailClient({
                     >
                       {activityCertStatus.data.activityUri}
                     </Text>
+                    <Button
+                      size="sm"
+                      variant="light"
+                      color="orange"
+                      leftSection={
+                        republishActivityCert.isPending ? (
+                          <Loader size={14} />
+                        ) : (
+                          <IconRefresh size={14} />
+                        )
+                      }
+                      onClick={() =>
+                        republishActivityCert.mutate({ eventId: event.id })
+                      }
+                      loading={republishActivityCert.isPending}
+                      style={{ alignSelf: "flex-start" }}
+                    >
+                      Delete &amp; Re-publish
+                    </Button>
                   </Stack>
                 ) : (
                   <Stack gap="xs">

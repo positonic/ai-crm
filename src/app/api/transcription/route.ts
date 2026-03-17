@@ -25,6 +25,7 @@ interface CreateTranscriptionBody {
   summary?: string;
   notes?: string;
   eventId?: string;
+  eventSlug?: string;
   deliberationId?: string;
   source?: TranscriptionSource;
   sourceSessionId?: string;
@@ -57,6 +58,21 @@ async function handlePost(request: NextRequest) {
         },
         { status: 400 },
       );
+    }
+
+    // Resolve eventSlug to eventId if provided
+    if (body.eventSlug && !body.eventId) {
+      const event = await db.event.findUnique({
+        where: { slug: body.eventSlug },
+        select: { id: true },
+      });
+      if (!event) {
+        return Response.json(
+          { error: `Event not found with slug: ${body.eventSlug}` },
+          { status: 404 },
+        );
+      }
+      body.eventId = event.id;
     }
 
     // Determine status: if transcript provided and no explicit status, mark COMPLETED
