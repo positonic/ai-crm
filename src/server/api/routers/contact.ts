@@ -21,12 +21,22 @@ interface TelegramContactsResult {
   users?: TelegramUser[];
 }
 
+import { TRPCError } from "@trpc/server";
 import {
   createTRPCRouter,
   protectedProcedure,
-  publicProcedure,
 } from "~/server/api/trpc";
 import { convertHtmlToText } from "~/utils/htmlToText";
+
+// Contact data contains PII (emails, phones, socials) - restrict to staff/admin
+function assertStaffOrAdmin(role: string | undefined) {
+  if (role !== "staff" && role !== "admin") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Only staff and admin users can access contact data",
+    });
+  }
+}
 
 type Context = {
   db: PrismaClient;
@@ -559,20 +569,21 @@ async function upsertContact(
 }
 
 export const contactRouter = createTRPCRouter({
-  getContacts: publicProcedure.query(async ({ ctx }) => {
+  getContacts: protectedProcedure.query(async ({ ctx }) => {
+    assertStaffOrAdmin(ctx.session.user.role);
     const contacts = await ctx.db.contact.findMany({
       include: {
         sponsor: true,
       },
     });
-    console.log(contacts);
 
     return contacts ?? null;
   }),
 
-  getContact: publicProcedure
+  getContact: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
+      assertStaffOrAdmin(ctx.session.user.role);
       const contact = await ctx.db.contact.findUnique({
         where: { id: input.id },
         include: {
@@ -586,7 +597,7 @@ export const contactRouter = createTRPCRouter({
       return contact;
     }),
 
-  getContactCommunications: publicProcedure
+  getContactCommunications: protectedProcedure
     .input(
       z.object({
         contactId: z.string(),
@@ -594,6 +605,7 @@ export const contactRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      assertStaffOrAdmin(ctx.session.user.role);
       // Get the contact to find their email and telegram
       const contact = await ctx.db.contact.findUnique({
         where: { id: input.contactId },
@@ -655,7 +667,7 @@ export const contactRouter = createTRPCRouter({
       return communications;
     }),
 
-  assignContactToSponsor: publicProcedure
+  assignContactToSponsor: protectedProcedure
     .input(
       z.object({
         contactId: z.string(),
@@ -663,6 +675,7 @@ export const contactRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      assertStaffOrAdmin(ctx.session.user.role);
       const contact = await ctx.db.contact.update({
         where: { id: input.contactId },
         data: { sponsorId: input.sponsorId },
@@ -673,13 +686,14 @@ export const contactRouter = createTRPCRouter({
       return contact;
     }),
 
-  removeContactFromSponsor: publicProcedure
+  removeContactFromSponsor: protectedProcedure
     .input(
       z.object({
         contactId: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      assertStaffOrAdmin(ctx.session.user.role);
       const contact = await ctx.db.contact.update({
         where: { id: input.contactId },
         data: { sponsorId: null },

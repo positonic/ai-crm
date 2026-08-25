@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 import { getDisplayName } from "~/utils/userDisplay";
 
@@ -16,6 +17,14 @@ export async function GET(
   context: { params: Promise<{ eventId: string }> },
 ) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+    if (session.user.role !== "staff" && session.user.role !== "admin") {
+      return new Response("Forbidden", { status: 403 });
+    }
+
     const { eventId: eventIdOrSlug } = await context.params;
     console.log("[door-speakers] Resolving event:", eventIdOrSlug);
 

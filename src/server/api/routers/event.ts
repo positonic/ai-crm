@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { Client as NotionClient } from "@notionhq/client";
 import type { Prisma } from "@prisma/client";
 
@@ -587,9 +588,18 @@ export const eventRouter = createTRPCRouter({
       return result;
     }),
 
-  syncUsersToNotion: publicProcedure
+  syncUsersToNotion: protectedProcedure
     .input(z.object({ events: z.array(EventDataSchema) }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
+      if (
+        ctx.session.user.role !== "staff" &&
+        ctx.session.user.role !== "admin"
+      ) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only staff and admin users can sync users to Notion",
+        });
+      }
       const result = await syncUsersToNotion(input.events);
       return result;
     }),
