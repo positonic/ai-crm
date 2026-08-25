@@ -6,10 +6,12 @@ import { getDisplayName } from "~/utils/userDisplay";
 export const dynamic = "force-dynamic";
 
 function escapeCsvField(field: string): string {
-  if (field.includes(",") || field.includes('"') || field.includes("\n")) {
-    return `"${field.replace(/"/g, '""')}"`;
+  // Prefix formula-leading characters so spreadsheet apps treat the value as text
+  const sanitized = /^[=+\-@]/.test(field) ? `'${field}` : field;
+  if (/[",\n\r]/.test(sanitized)) {
+    return `"${sanitized.replace(/"/g, '""')}"`;
   }
-  return field;
+  return sanitized;
 }
 
 export async function GET(

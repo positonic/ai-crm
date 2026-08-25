@@ -1,15 +1,19 @@
 import type { NextRequest } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
+import { captureApiError } from "~/utils/errorCapture";
 import { getDisplayName } from "~/utils/userDisplay";
 
 export const dynamic = "force-dynamic";
 
 function escapeCsvField(field: string): string {
-  if (field.includes(",") || field.includes('"') || field.includes("\n")) {
-    return `"${field.replace(/"/g, '""')}"`;
+  // Prefix formula-leading characters so spreadsheet apps treat the value as text
+  const sanitized = /^[=+\-@]/.test(field) ? `'${field}` : field;
+  if (/[",\n\r]/.test(sanitized)) {
+    return `"${sanitized.replace(/"/g, '""')}"`;
   }
-  return field;
+  return sanitized;
 }
 
 function csvResponse(rows: string[], filename: string): Response {
@@ -25,16 +29,17 @@ export async function GET(
   _request: NextRequest,
   context: { params: Promise<{ type: string }> },
 ) {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return new Response("Unauthorized", { status: 401 });
-    }
-    if (session.user.role !== "staff" && session.user.role !== "admin") {
-      return new Response("Forbidden", { status: 403 });
-    }
+  const session = await auth();
+  if (!session?.user) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+  if (session.user.role !== "staff" && session.user.role !== "admin") {
+    return new Response("Forbidden", { status: 403 });
+  }
 
-    const { type } = await context.params;
+  const { type } = await context.params;
+
+  try {
     const date = new Date().toISOString().slice(0, 10);
 
     if (type === "contacts") {
@@ -63,6 +68,13 @@ export async function GET(
             .join(","),
         );
       }
+
+      Sentry.logger.info("Admin CSV export generated", {
+        userId: session.user.id,
+        exportType: "contacts",
+        rowCount: rows.length - 1,
+        method: "GET",
+      });
       return csvResponse(rows, `contacts-${date}.csv`);
     }
 
@@ -86,6 +98,13 @@ export async function GET(
             .join(","),
         );
       }
+
+      Sentry.logger.info("Admin CSV export generated", {
+        userId: session.user.id,
+        exportType: "users",
+        rowCount: rows.length - 1,
+        method: "GET",
+      });
       return csvResponse(rows, `users-${date}.csv`);
     }
 
@@ -93,7 +112,12 @@ export async function GET(
       status: 404,
     });
   } catch (error) {
-    console.error("[admin-export] Failed to generate CSV:", error);
+    captureApiError(error, {
+      userId: session.user.id,
+      route: "admin.export",
+      method: "GET",
+      input: { type },
+    });
     return new Response("Internal server error", { status: 500 });
   }
 }
