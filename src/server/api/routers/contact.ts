@@ -24,7 +24,7 @@ interface TelegramContactsResult {
 import {
   createTRPCRouter,
   protectedProcedure,
-  publicProcedure,
+  adminOrStaffProcedure,
 } from "~/server/api/trpc";
 import { convertHtmlToText } from "~/utils/htmlToText";
 
@@ -559,18 +559,17 @@ async function upsertContact(
 }
 
 export const contactRouter = createTRPCRouter({
-  getContacts: publicProcedure.query(async ({ ctx }) => {
+  getContacts: adminOrStaffProcedure.query(async ({ ctx }) => {
     const contacts = await ctx.db.contact.findMany({
       include: {
         sponsor: true,
       },
     });
-    console.log(contacts);
 
     return contacts ?? null;
   }),
 
-  getContact: publicProcedure
+  getContact: adminOrStaffProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       const contact = await ctx.db.contact.findUnique({
@@ -586,7 +585,7 @@ export const contactRouter = createTRPCRouter({
       return contact;
     }),
 
-  getContactCommunications: publicProcedure
+  getContactCommunications: adminOrStaffProcedure
     .input(
       z.object({
         contactId: z.string(),
@@ -655,7 +654,7 @@ export const contactRouter = createTRPCRouter({
       return communications;
     }),
 
-  assignContactToSponsor: publicProcedure
+  assignContactToSponsor: adminOrStaffProcedure
     .input(
       z.object({
         contactId: z.string(),
@@ -673,7 +672,7 @@ export const contactRouter = createTRPCRouter({
       return contact;
     }),
 
-  removeContactFromSponsor: publicProcedure
+  removeContactFromSponsor: adminOrStaffProcedure
     .input(
       z.object({
         contactId: z.string(),

@@ -5,6 +5,8 @@ import {
   createTRPCRouter,
   publicProcedure,
   protectedProcedure,
+  adminProcedure,
+  adminOrStaffProcedure,
 } from "~/server/api/trpc";
 
 export const roleRouter = createTRPCRouter({
@@ -29,7 +31,7 @@ export const roleRouter = createTRPCRouter({
   }),
 
   // Get a user's global roles
-  getUserGlobalRoles: publicProcedure
+  getUserGlobalRoles: adminProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ ctx, input }) => {
       const userRoles = await ctx.db.userGlobalRole.findMany({
@@ -97,7 +99,7 @@ export const roleRouter = createTRPCRouter({
     }),
 
   // Create a new global role (admin only)
-  createGlobalRole: protectedProcedure
+  createGlobalRole: adminProcedure
     .input(
       z.object({
         name: z.string().min(1),
@@ -106,7 +108,6 @@ export const roleRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // TODO: Add admin check here once we implement it
       const role = await ctx.db.globalRole.create({
         data: {
           name: input.name,
@@ -118,7 +119,7 @@ export const roleRouter = createTRPCRouter({
     }),
 
   // Assign role to user (admin only)
-  assignGlobalRole: protectedProcedure
+  assignGlobalRole: adminProcedure
     .input(
       z.object({
         userId: z.string(),
@@ -126,7 +127,6 @@ export const roleRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // TODO: Add admin check here once we implement it
 
       // Check if assignment already exists
       const existing = await ctx.db.userGlobalRole.findUnique({
@@ -168,7 +168,7 @@ export const roleRouter = createTRPCRouter({
     }),
 
   // Remove role from user (admin only)
-  removeGlobalRole: protectedProcedure
+  removeGlobalRole: adminProcedure
     .input(
       z.object({
         userId: z.string(),
@@ -176,7 +176,6 @@ export const roleRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // TODO: Add admin check here once we implement it
 
       const deleted = await ctx.db.userGlobalRole.deleteMany({
         where: {
@@ -196,8 +195,7 @@ export const roleRouter = createTRPCRouter({
     }),
 
   // Get all users with their global roles (admin only)
-  getUsersWithRoles: protectedProcedure.query(async ({ ctx }) => {
-    // TODO: Add admin check here once we implement it
+  getUsersWithRoles: adminProcedure.query(async ({ ctx }) => {
 
     const users = await ctx.db.user.findMany({
       select: {
@@ -219,7 +217,7 @@ export const roleRouter = createTRPCRouter({
   }),
 
   // Get all users with their event roles and applications
-  getAllUsersWithEventRoles: protectedProcedure
+  getAllUsersWithEventRoles: adminProcedure
     .input(
       z.object({
         search: z.string().optional(),
@@ -228,7 +226,6 @@ export const roleRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      // TODO: Add admin check here once we implement it
 
       const users = await ctx.db.user.findMany({
         where: {
@@ -299,7 +296,7 @@ export const roleRouter = createTRPCRouter({
     }),
 
   // Assign event role to existing user
-  assignEventRole: protectedProcedure
+  assignEventRole: adminOrStaffProcedure
     .input(
       z.object({
         userId: z.string(),
@@ -308,7 +305,6 @@ export const roleRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // TODO: Add admin check here once we implement it
 
       // Check if assignment already exists
       const existing = await ctx.db.userRole.findUnique({
@@ -377,7 +373,7 @@ export const roleRouter = createTRPCRouter({
     }),
 
   // Remove event role from user
-  removeEventRole: protectedProcedure
+  removeEventRole: adminOrStaffProcedure
     .input(
       z.object({
         userId: z.string(),
@@ -386,7 +382,6 @@ export const roleRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // TODO: Add admin check here once we implement it
 
       const deleted = await ctx.db.userRole.deleteMany({
         where: {
@@ -407,7 +402,7 @@ export const roleRouter = createTRPCRouter({
     }),
 
   // Update user's global role (admin -> staff -> user)
-  updateUserGlobalRole: protectedProcedure
+  updateUserGlobalRole: adminProcedure
     .input(
       z.object({
         userId: z.string(),
@@ -415,7 +410,6 @@ export const roleRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // TODO: Add admin check here once we implement it
 
       const user = await ctx.db.user.update({
         where: { id: input.userId },
@@ -434,10 +428,9 @@ export const roleRouter = createTRPCRouter({
     }),
 
   // Get user details with all roles and applications
-  getUserDetails: protectedProcedure
+  getUserDetails: adminProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ ctx, input }) => {
-      // TODO: Add admin check here once we implement it
 
       const user = await ctx.db.user.findUnique({
         where: { id: input.userId },
@@ -499,8 +492,7 @@ export const roleRouter = createTRPCRouter({
     }),
 
   // Get user statistics
-  getUserStats: protectedProcedure.query(async ({ ctx }) => {
-    // TODO: Add admin check here once we implement it
+  getUserStats: adminProcedure.query(async ({ ctx }) => {
 
     const [totalUsers, adminCount, staffCount, usersWithRoles] =
       await Promise.all([
@@ -621,8 +613,7 @@ export const roleRouter = createTRPCRouter({
   }),
 
   // Ensure mentor role exists
-  ensureMentorRole: protectedProcedure.mutation(async ({ ctx }) => {
-    // TODO: Add admin check here once we implement it
+  ensureMentorRole: adminOrStaffProcedure.mutation(async ({ ctx }) => {
 
     const mentorRole = await ctx.db.role.findFirst({
       where: { name: "mentor" },
@@ -641,7 +632,7 @@ export const roleRouter = createTRPCRouter({
   }),
 
   // Ensure speaker role exists
-  ensureSpeakerRole: protectedProcedure.mutation(async ({ ctx }) => {
+  ensureSpeakerRole: adminOrStaffProcedure.mutation(async ({ ctx }) => {
     const speakerRole = await ctx.db.role.findFirst({
       where: { name: "speaker" },
     });

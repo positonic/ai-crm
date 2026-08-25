@@ -641,17 +641,25 @@ export const profileRouter = createTRPCRouter({
         nextCursor = nextItem!.id;
       }
 
-      // Strip sensitive admin fields for non-admin callers
-      const members = isAdmin
-        ? users
-        : users.map(
-            ({
-              adminLabels: _al,
-              adminNotes: _an,
-              adminWorkExperience: _aw,
-              ...rest
-            }) => rest,
-          );
+      // Never expose the password hash through the member directory — strip it
+      // for every caller. Account fields (email, emailVerified) and internal
+      // admin fields are restricted to admin/staff callers only; for everyone
+      // else they are nulled out (keeping a consistent response shape).
+      const members = users.map((user) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- drop password hash from the response
+        const { password: _pw, ...rest } = user;
+        if (isAdmin) return rest;
+        return {
+          ...rest,
+          email: null,
+          emailVerified: null,
+          adminNotes: null,
+          adminLabels: [] as string[],
+          adminWorkExperience: null,
+          adminUpdatedBy: null,
+          adminUpdatedAt: null,
+        };
+      });
 
       return {
         members,

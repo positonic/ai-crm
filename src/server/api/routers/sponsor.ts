@@ -4,6 +4,7 @@ import {
   createTRPCRouter,
   publicProcedure,
   protectedProcedure,
+  adminOrStaffProcedure,
 } from "~/server/api/trpc";
 
 export const sponsorRouter = createTRPCRouter({
@@ -34,7 +35,7 @@ export const sponsorRouter = createTRPCRouter({
       return sponsor;
     }),
 
-  getSponsors: publicProcedure.query(async ({ ctx }) => {
+  getSponsors: adminOrStaffProcedure.query(async ({ ctx }) => {
     const sponsors = await ctx.db.sponsor.findMany({
       include: {
         contacts: true,
@@ -49,7 +50,7 @@ export const sponsorRouter = createTRPCRouter({
     return sponsors;
   }),
 
-  getSponsor: publicProcedure
+  getSponsor: adminOrStaffProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       const sponsor = await ctx.db.sponsor.findUnique({
@@ -66,7 +67,7 @@ export const sponsorRouter = createTRPCRouter({
       return sponsor;
     }),
 
-  getSponsorCommunications: publicProcedure
+  getSponsorCommunications: adminOrStaffProcedure
     .input(
       z.object({
         sponsorId: z.string(),
@@ -148,7 +149,7 @@ export const sponsorRouter = createTRPCRouter({
     }),
 
   // Get sponsor residency data including visit requests and deliverables
-  getSponsorResidencyData: publicProcedure
+  getSponsorResidencyData: protectedProcedure
     .input(z.object({ eventSponsorId: z.string() }))
     .query(async ({ ctx, input }) => {
       const eventSponsor = await ctx.db.eventSponsor.findUnique({
@@ -168,7 +169,7 @@ export const sponsorRouter = createTRPCRouter({
     }),
 
   // Create a visit request
-  createVisitRequest: publicProcedure
+  createVisitRequest: protectedProcedure
     .input(
       z.object({
         eventSponsorId: z.string(),
@@ -202,7 +203,7 @@ export const sponsorRouter = createTRPCRouter({
     }),
 
   // Update visit request status
-  updateVisitRequestStatus: publicProcedure
+  updateVisitRequestStatus: protectedProcedure
     .input(
       z.object({
         visitRequestId: z.string(),
@@ -230,7 +231,7 @@ export const sponsorRouter = createTRPCRouter({
     }),
 
   // Create deliverable
-  createDeliverable: publicProcedure
+  createDeliverable: protectedProcedure
     .input(
       z.object({
         eventSponsorId: z.string(),
@@ -256,7 +257,7 @@ export const sponsorRouter = createTRPCRouter({
     }),
 
   // Update deliverable status
-  updateDeliverableStatus: publicProcedure
+  updateDeliverableStatus: protectedProcedure
     .input(
       z.object({
         deliverableId: z.string(),
@@ -289,7 +290,7 @@ export const sponsorRouter = createTRPCRouter({
     }),
 
   // Bulk create default deliverables for a sponsor
-  createDefaultDeliverables: publicProcedure
+  createDefaultDeliverables: protectedProcedure
     .input(z.object({ eventSponsorId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const defaultDeliverables = [

@@ -373,7 +373,7 @@ export function ProfilesClient() {
                           Array.isArray(member.adminLabels) &&
                           member.adminLabels.length > 0 && (
                             <Group gap={4} mb="xs">
-                              {(member.adminLabels as string[])
+                              {member.adminLabels
                                 .slice(0, 3)
                                 .map((label) => (
                                   <Badge
