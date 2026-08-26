@@ -208,9 +208,11 @@ describe("Schedule Router", () => {
     });
   });
 
-  // ── Test 5: Speaker must be floor applicant when added by floor lead ──
+  // ── Test 5: Floor leads may add any participant, applicant or not ─────
+  // Floor-applicant validation was intentionally removed in f71fd69
+  // ("feat: remove speaker validation for session participants").
   describe("floor applicant validation", () => {
-    it("floor lead cannot add speakers who haven't applied for their floor", async () => {
+    it("floor lead can add speakers who haven't applied for their floor", async () => {
       const db = getTestDb();
       const floorLead = await createTestUser(
         { role: "user", name: "Strict Lead" },
@@ -241,22 +243,23 @@ describe("Schedule Router", () => {
       const startTime = new Date(event.startDate.getTime() + 2 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
-      try {
-        await caller.schedule.createSession({
-          eventId: event.id,
-          title: "Invalid Speaker Session",
-          startTime,
-          endTime,
-          venueId: venue.id,
-          linkedSpeakers: [{ userId: nonApplicant.id, role: "Speaker" }],
-          isPublished: true,
-        });
-        expect.unreachable("Should have thrown FORBIDDEN");
-      } catch (error) {
-        expect(error).toBeInstanceOf(TRPCError);
-        expect((error as TRPCError).code).toBe("FORBIDDEN");
-        expect((error as TRPCError).message).toContain("floor");
-      }
+      const result = await caller.schedule.createSession({
+        eventId: event.id,
+        title: "Open Speaker Session",
+        startTime,
+        endTime,
+        venueId: venue.id,
+        linkedSpeakers: [{ userId: nonApplicant.id, role: "Speaker" }],
+        isPublished: true,
+      });
+
+      expect(result.id).toBeDefined();
+
+      const sessionSpeakers = await db.sessionSpeaker.findMany({
+        where: { sessionId: result.id },
+      });
+      expect(sessionSpeakers).toHaveLength(1);
+      expect(sessionSpeakers[0]?.userId).toBe(nonApplicant.id);
     });
   });
 });
