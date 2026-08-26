@@ -21,12 +21,23 @@ interface TelegramContactsResult {
   users?: TelegramUser[];
 }
 
+import { TRPCError } from "@trpc/server";
 import {
   createTRPCRouter,
   protectedProcedure,
   adminOrStaffProcedure,
 } from "~/server/api/trpc";
 import { convertHtmlToText } from "~/utils/htmlToText";
+
+// Contact data contains PII (emails, phones, socials) - restrict to staff/admin
+function assertStaffOrAdmin(role: string | undefined) {
+  if (role !== "staff" && role !== "admin") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Only staff and admin users can access contact data",
+    });
+  }
+}
 
 type Context = {
   db: PrismaClient;
@@ -572,6 +583,7 @@ export const contactRouter = createTRPCRouter({
   getContact: adminOrStaffProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
+      assertStaffOrAdmin(ctx.session.user.role);
       const contact = await ctx.db.contact.findUnique({
         where: { id: input.id },
         include: {
@@ -593,6 +605,7 @@ export const contactRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      assertStaffOrAdmin(ctx.session.user.role);
       // Get the contact to find their email and telegram
       const contact = await ctx.db.contact.findUnique({
         where: { id: input.contactId },
@@ -662,6 +675,7 @@ export const contactRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      assertStaffOrAdmin(ctx.session.user.role);
       const contact = await ctx.db.contact.update({
         where: { id: input.contactId },
         data: { sponsorId: input.sponsorId },
@@ -679,6 +693,7 @@ export const contactRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      assertStaffOrAdmin(ctx.session.user.role);
       const contact = await ctx.db.contact.update({
         where: { id: input.contactId },
         data: { sponsorId: null },
