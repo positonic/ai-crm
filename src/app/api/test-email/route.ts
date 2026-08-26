@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { sendEmail } from "~/lib/email";
 import { env } from "~/env";
+import { auth } from "~/server/auth";
 
 export async function GET() {
+  // Restrict this diagnostic email-send endpoint to authenticated admins.
+  const session = await auth();
+  if (session?.user?.role !== "admin") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   // Get current email configuration
   const emailConfig = {
     mode: env.EMAIL_MODE,

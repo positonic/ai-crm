@@ -203,3 +203,53 @@ export const protectedProcedure = t.procedure
       },
     });
   });
+
+/**
+ * Admin-only procedure
+ *
+ * Requires an authenticated session whose user has the global `admin` role.
+ * Use for any query or mutation that manages roles/permissions or exposes
+ * platform-wide administrative data.
+ */
+export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  // The JWT role claim is only set at sign-in, so check it first as a cheap
+  // filter but verify against the DB before granting access — otherwise a
+  // demoted user keeps admin power for the lifetime of their token.
+  if (ctx.session.user.role !== "admin") {
+    throw new TRPCError({ code: "FORBIDDEN" });
+  }
+  const dbUser = await ctx.db.user.findUnique({
+    where: { id: ctx.session.user.id },
+    select: { role: true },
+  });
+  if (dbUser?.role !== "admin") {
+    throw new TRPCError({ code: "FORBIDDEN" });
+  }
+  return next({ ctx });
+});
+
+/**
+ * Admin-or-staff procedure
+ *
+ * Requires an authenticated session whose user has the global `admin` or
+ * `staff` role. Use for privileged operational data (e.g. CRM, communications)
+ * that staff need but the general public and ordinary members must not see.
+ */
+export const adminOrStaffProcedure = protectedProcedure.use(
+  async ({ ctx, next }) => {
+    // Same as adminProcedure: the JWT role claim is only set at sign-in, so
+    // verify the current role against the DB before granting access.
+    const role = ctx.session.user.role;
+    if (role !== "admin" && role !== "staff") {
+      throw new TRPCError({ code: "FORBIDDEN" });
+    }
+    const dbUser = await ctx.db.user.findUnique({
+      where: { id: ctx.session.user.id },
+      select: { role: true },
+    });
+    if (dbUser?.role !== "admin" && dbUser?.role !== "staff") {
+      throw new TRPCError({ code: "FORBIDDEN" });
+    }
+    return next({ ctx });
+  },
+);

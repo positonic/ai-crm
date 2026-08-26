@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  adminOrStaffProcedure,
+} from "~/server/api/trpc";
 
 // TypeScript types based on CoinGecko API response
 const RoiSchema = z
@@ -40,7 +44,7 @@ const CoinGeckoApiResponseSchema = z.object({
 });
 
 export const coinGeckoRouter = createTRPCRouter({
-  fetchAndStoreCategoryCoins: publicProcedure
+  fetchAndStoreCategoryCoins: adminOrStaffProcedure
     .input(
       z.object({
         category: z.string(),
@@ -253,7 +257,7 @@ export const coinGeckoRouter = createTRPCRouter({
       return coins;
     }),
 
-  linkSponsorToCategory: publicProcedure
+  linkSponsorToCategory: adminOrStaffProcedure
     .input(
       z.object({
         sponsorId: z.string(),

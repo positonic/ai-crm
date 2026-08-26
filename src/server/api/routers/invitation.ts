@@ -593,27 +593,31 @@ export const invitationRouter = createTRPCRouter({
       return invitations;
     }),
 
-  // Get pending invitations for a specific email
-  getPendingByEmail: publicProcedure
-    .input(z.object({ email: z.string().email() }))
-    .query(async ({ ctx, input }) => {
-      const invitations = await ctx.db.invitation.findMany({
-        where: {
-          email: { equals: input.email.toLowerCase(), mode: "insensitive" },
-          status: "PENDING",
-          expiresAt: {
-            gt: new Date(),
-          },
+  // Get pending invitations for the currently authenticated user's email.
+  // Scoped to the session email to avoid leaking whether an arbitrary address
+  // has invitations (account/email enumeration).
+  getPendingByEmail: protectedProcedure.query(async ({ ctx }) => {
+    const email = ctx.session.user.email;
+    if (!email) {
+      return [];
+    }
+    const invitations = await ctx.db.invitation.findMany({
+      where: {
+        email: { equals: email.toLowerCase(), mode: "insensitive" },
+        status: "PENDING",
+        expiresAt: {
+          gt: new Date(),
         },
-        include: {
-          event: true,
-          role: true,
-        },
-        orderBy: { createdAt: "desc" },
-      });
+      },
+      include: {
+        event: true,
+        role: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-      return invitations;
-    }),
+    return invitations;
+  }),
 
   // Accept invitation by token
   acceptByToken: publicProcedure

@@ -7,6 +7,7 @@ import {
   createTRPCRouter,
   publicProcedure,
   protectedProcedure,
+  adminOrStaffProcedure,
 } from "~/server/api/trpc";
 import { getEventSlugService } from "~/server/services/eventSlugService";
 
@@ -515,7 +516,7 @@ export const eventRouter = createTRPCRouter({
     return events;
   }),
 
-  addSponsorToEvent: publicProcedure
+  addSponsorToEvent: adminOrStaffProcedure
     .input(
       z.object({
         eventId: z.string(),
@@ -550,7 +551,7 @@ export const eventRouter = createTRPCRouter({
       return eventSponsor;
     }),
 
-  updateSponsorQualified: publicProcedure
+  updateSponsorQualified: adminOrStaffProcedure
     .input(
       z.object({
         eventId: z.string(),
@@ -581,14 +582,14 @@ export const eventRouter = createTRPCRouter({
       return eventSponsor;
     }),
 
-  syncEventsToNotion: publicProcedure
+  syncEventsToNotion: adminOrStaffProcedure
     .input(z.object({ events: z.array(EventDataSchema) }))
     .mutation(async ({ input }) => {
       const result = await syncEventsToNotion(input.events);
       return result;
     }),
 
-  syncUsersToNotion: protectedProcedure
+  syncUsersToNotion: adminOrStaffProcedure
     .input(z.object({ events: z.array(EventDataSchema) }))
     .mutation(async ({ ctx, input }) => {
       if (

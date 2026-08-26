@@ -25,6 +25,7 @@ import { TRPCError } from "@trpc/server";
 import {
   createTRPCRouter,
   protectedProcedure,
+  adminOrStaffProcedure,
 } from "~/server/api/trpc";
 import { convertHtmlToText } from "~/utils/htmlToText";
 
@@ -569,8 +570,7 @@ async function upsertContact(
 }
 
 export const contactRouter = createTRPCRouter({
-  getContacts: protectedProcedure.query(async ({ ctx }) => {
-    assertStaffOrAdmin(ctx.session.user.role);
+  getContacts: adminOrStaffProcedure.query(async ({ ctx }) => {
     const contacts = await ctx.db.contact.findMany({
       include: {
         sponsor: true,
@@ -580,7 +580,7 @@ export const contactRouter = createTRPCRouter({
     return contacts ?? null;
   }),
 
-  getContact: protectedProcedure
+  getContact: adminOrStaffProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       assertStaffOrAdmin(ctx.session.user.role);
@@ -597,7 +597,7 @@ export const contactRouter = createTRPCRouter({
       return contact;
     }),
 
-  getContactCommunications: protectedProcedure
+  getContactCommunications: adminOrStaffProcedure
     .input(
       z.object({
         contactId: z.string(),
@@ -667,7 +667,7 @@ export const contactRouter = createTRPCRouter({
       return communications;
     }),
 
-  assignContactToSponsor: protectedProcedure
+  assignContactToSponsor: adminOrStaffProcedure
     .input(
       z.object({
         contactId: z.string(),
@@ -686,7 +686,7 @@ export const contactRouter = createTRPCRouter({
       return contact;
     }),
 
-  removeContactFromSponsor: protectedProcedure
+  removeContactFromSponsor: adminOrStaffProcedure
     .input(
       z.object({
         contactId: z.string(),
