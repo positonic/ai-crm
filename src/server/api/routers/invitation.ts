@@ -609,15 +609,15 @@ export const invitationRouter = createTRPCRouter({
           gt: new Date(),
         },
       },
-        include: {
-          event: true,
-          role: true,
-        },
-        orderBy: { createdAt: "desc" },
-      });
+      include: {
+        event: true,
+        role: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-      return invitations;
-    }),
+    return invitations;
+  }),
 
   // Accept invitation by token
   acceptByToken: publicProcedure

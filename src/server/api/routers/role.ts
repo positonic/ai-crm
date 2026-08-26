@@ -8,6 +8,10 @@ import {
   adminProcedure,
   adminOrStaffProcedure,
 } from "~/server/api/trpc";
+import {
+  assertAdminOrEventFloorOwner,
+  isAdminOrStaff,
+} from "~/server/api/utils/scheduleAuth";
 
 export const roleRouter = createTRPCRouter({
   // Get all global roles
@@ -217,7 +221,7 @@ export const roleRouter = createTRPCRouter({
   }),
 
   // Get all users with their event roles and applications
-  getAllUsersWithEventRoles: adminProcedure
+  getAllUsersWithEventRoles: protectedProcedure
     .input(
       z.object({
         search: z.string().optional(),
@@ -226,6 +230,19 @@ export const roleRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      // Admin/staff may list users globally; floor leads only when scoped to
+      // an event they own a venue in (mirrors application.getEventApplications,
+      // which authorizes the same speaker-management page).
+      if (input.eventId) {
+        await assertAdminOrEventFloorOwner(
+          ctx.db,
+          ctx.session.user.id,
+          ctx.session.user.role,
+          input.eventId,
+        );
+      } else if (!isAdminOrStaff(ctx.session.user.role)) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
 
       const users = await ctx.db.user.findMany({
         where: {
@@ -291,6 +308,16 @@ export const roleRouter = createTRPCRouter({
           { name: "asc" },
         ],
       });
+
+      // Floor leads don't get internal admin fields.
+      if (!isAdminOrStaff(ctx.session.user.role)) {
+        return users.map((user) => ({
+          ...user,
+          adminNotes: null,
+          adminLabels: [] as string[],
+          adminWorkExperience: null,
+        }));
+      }
 
       return users;
     }),
